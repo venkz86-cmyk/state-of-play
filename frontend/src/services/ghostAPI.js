@@ -94,7 +94,7 @@ class GhostAPI {
       publication: this.getPublicationType(post),
       is_premium: post.visibility === 'paid' || post.visibility === 'members',
       theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
-      image_url: post.feature_image,
+      image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
       read_time: post.reading_time || 5,
       created_at: post.published_at,
