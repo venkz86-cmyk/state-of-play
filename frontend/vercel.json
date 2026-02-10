@@ -1,4 +1,14 @@
 {
   "installCommand": "yarn install",
-  "buildCommand": "yarn build"
+  "buildCommand": "yarn build",
+  "rewrites": [
+    {
+      "source": "/content/:path*",
+      "destination": "https://the-state-of-play.ghost.io/content/:path*"
+    },
+    {
+      "source": "/((?!content|api|static|_next|favicon|manifest|robots).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
