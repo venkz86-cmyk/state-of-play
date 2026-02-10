@@ -181,6 +181,9 @@ export const Home = () => {
           </div>
         </div>
       </section>
+      
+      {/* Newsletter Signup */}
+      <NewsletterSignup />
     </div>
   );
 };
