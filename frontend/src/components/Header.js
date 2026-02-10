@@ -8,9 +8,9 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { User, LogOut, Menu, Search } from 'lucide-react';
 import { useState } from 'react';
 
-// Logo URLs - you can replace the dark mode version with your own
+// Logo URLs
 const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg";
-const LOGO_DARK = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg"; // Replace with dark mode logo URL
+const LOGO_DARK = "https://customer-assets.emergentagent.com/job_dcd955ba-7b95-4793-aa4a-cd2ca65f8014/artifacts/npfiook4_TSOP-Logo%20Final%3AB%26W.jpg";
 
 export const Header = () => {
   const { user, logout } = useAuth();
