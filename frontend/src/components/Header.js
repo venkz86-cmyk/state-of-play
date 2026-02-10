@@ -207,6 +207,43 @@ export const Header = () => {
               <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">Contact</Button>
               </Link>
+              
+              {/* Mobile Auth Buttons */}
+              <div className="border-t border-border mt-2 pt-2">
+                {user ? (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">
+                          {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{user.name || user.email?.split('@')[0]}</p>
+                        {user.is_paid && (
+                          <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold">PRO</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => { logout(); setMobileMenuOpen(false); }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2 px-2">
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-primary text-white">Subscribe</Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
         )}
