@@ -91,14 +91,22 @@ export const ArticlePage = () => {
 
   const articleUrl = `https://www.stateofplay.club/${article?.id || id}`;
   const ogImage = article?.image_url || 'https://the-state-of-play.ghost.io/content/images/2024/01/tsop-default.png';
-  const pageTitle = article.title + ' | The State of Play';
   const ogDescription = article?.subtitle || 'Premium sports business intelligence from India';
+
+  // Update page title dynamically
+  useEffect(() => {
+    if (article?.title) {
+      document.title = `${article.title} | The State of Play`;
+    }
+    return () => {
+      document.title = 'The State of Play | Sports Business Intelligence';
+    };
+  }, [article?.title]);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Dynamic SEO Meta Tags */}
       <Helmet>
-        <title>{pageTitle}</title>
         <meta name="description" content={ogDescription} />
         
         {/* Open Graph / Facebook / WhatsApp */}
