@@ -34,7 +34,6 @@ function App() {
                 <Route path="/state-of-play" element={<StateOfPlay />} />
                 <Route path="/left-field" element={<LeftField />} />
                 <Route path="/outfield" element={<Outfield />} />
-                <Route path="/article/:id" element={<ArticlePage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -44,6 +43,8 @@ function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/archive" element={<Archive />} />
+                {/* Article route MUST be last - catches /:slug */}
+                <Route path="/:id" element={<ArticlePage />} />
               </Routes>
             </main>
             <Footer />
