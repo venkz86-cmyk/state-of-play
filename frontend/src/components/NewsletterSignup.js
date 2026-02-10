@@ -58,13 +58,13 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-primary via-primary-700 to-primary-900 text-white p-10">
+    <div className="bg-foreground text-white p-10">
       <div className="text-center max-w-md mx-auto">
-        <div className="inline-flex items-center justify-center bg-white/10 p-3 rounded-full mb-4">
+        <div className="inline-flex items-center justify-center bg-primary p-3 rounded-full mb-4">
           <Mail className="h-6 w-6" />
         </div>
         <h3 className="text-2xl font-heading font-bold mb-2">Don't miss a story</h3>
-        <p className="text-white/80 text-sm mb-6">
+        <p className="text-white/70 text-sm mb-6">
           Get notified every Friday when we publish a new deep dive on Indian sports business.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -74,12 +74,12 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="your@email.com"
-            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-white outline-none"
+            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-primary outline-none"
           />
           <button
             type="submit"
             disabled={loading}
-            className="bg-white text-primary px-6 py-3 font-bold hover:bg-white/90 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+            className="bg-primary text-white px-6 py-3 font-bold hover:bg-primary-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -91,7 +91,7 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
             )}
           </button>
         </form>
-        <p className="text-xs text-white/60 mt-4">Free to join. Upgrade anytime for full access.</p>
+        <p className="text-xs text-white/50 mt-4">Free to join. Upgrade anytime for full access.</p>
       </div>
     </div>
   );
