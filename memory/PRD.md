@@ -68,7 +68,7 @@ Backend (FastAPI)
 9. **Free Member Handling** - Personalized "Upgrade" paywall for free members (vs generic "Subscribe" for visitors)
 10. **Reading Progress Bar** - Visual progress indicator at top of article pages
 11. **Enhanced Read Time** - Prominent read time pill on articles
-12. **Dark Mode** - Full dark theme support with CSS variables, toggle in header (Fixed Feb 2026)
+12. **Dark Mode (Complete)** - Full dark theme support across ALL pages including Newsletter, Footer, About, Contact, Privacy, Terms, Membership, Login, Signup, Outfield. Logo automatically inverts for dark mode. (Fixed Feb 2026)
 13. **Font Size Toggle** - Adjustable article font size (80%-140%) with persistence (Fixed Feb 2026)
 14. **Social Share Buttons** - Twitter, LinkedIn, WhatsApp, Copy Link
 15. **Search Modal** - Keyboard shortcut (⌘K) search functionality
