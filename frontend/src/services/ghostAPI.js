@@ -15,6 +15,7 @@ class GhostAPI {
         key: GHOST_CONTENT_KEY,
         limit: options.limit || 15,
         include: 'tags,authors',
+        fields: 'id,slug,title,custom_excerpt,excerpt,html,feature_image,published_at,updated_at,reading_time,visibility',
         ...options.filters
       });
 
