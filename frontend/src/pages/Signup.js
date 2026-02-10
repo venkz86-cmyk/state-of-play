@@ -73,9 +73,17 @@ export const Signup = () => {
         </div>
 
         <p className="text-center text-sm text-muted-foreground font-body">
-          Already a subscriber?{' '}\n          <Link to="/login" className="text-primary hover:underline font-medium">\n            Sign in\n          </Link>\n        </p>\n\n        {/* How it works */}\n        <div className="mt-8 pt-6 border-t border-border">
+          Already a subscriber?{' '}
+          <Link to="/login" className="text-primary hover:underline font-medium">
+            Sign in
+          </Link>
+        </p>
+
+        {/* How it works */}
+        <div className="mt-8 pt-6 border-t border-border">
           <h3 className="text-sm font-bold mb-3">What happens next?</h3>
-          <ol className="space-y-2 text-xs text-foreground/70">\n            <li>1. Complete payment via Razorpay</li>
+          <ol className="space-y-2 text-xs text-foreground/70">
+            <li>1. Complete payment via Razorpay</li>
             <li>2. Your account is created automatically</li>
             <li>3. Check your email for a verification link</li>
             <li>4. Click the link to access premium content</li>
