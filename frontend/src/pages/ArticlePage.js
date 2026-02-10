@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { ghostAPI } from '../services/ghostAPI';
 import { Button } from '../components/ui/button';
 import { Clock, Calendar, Lock, Shield, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export const ArticlePage = () => {
   const { id } = useParams();
@@ -21,8 +19,8 @@ export const ArticlePage = () => {
 
   const fetchArticle = async () => {
     try {
-      const response = await axios.get(`${API}/articles/${id}`);
-      setArticle(response.data);
+      const post = await ghostAPI.getPost(id);
+      setArticle(post);
     } catch (error) {
       console.error('Failed to fetch article:', error);
     } finally {
