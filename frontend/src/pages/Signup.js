@@ -28,7 +28,7 @@ export const Signup = () => {
         </div>
 
         {/* Pricing Display */}
-        <div className="bg-white border-2 border-primary/20 p-8 mb-6 text-center">
+        <div className="bg-card border-2 border-primary/20 p-8 mb-6 text-center">
           {pricing.loading ? (
             <div className="py-4">
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
