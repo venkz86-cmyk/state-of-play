@@ -302,6 +302,18 @@ export const ArticlePage = () => {
           )}
         </div>
       </article>
+      
+      {/* Related Articles */}
+      {canAccessContent && relatedArticles.length > 0 && (
+        <RelatedArticles articles={relatedArticles} currentSlug={article.slug} />
+      )}
+      
+      {/* Newsletter Signup for non-subscribers */}
+      {!canAccessContent && (
+        <div className="container mx-auto px-6 max-w-4xl pb-16">
+          <NewsletterSignup variant="inline" />
+        </div>
+      )}
     </div>
   );
 };
