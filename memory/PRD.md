@@ -68,6 +68,16 @@ Backend (FastAPI)
 9. **Free Member Handling** - Personalized "Upgrade" paywall for free members (vs generic "Subscribe" for visitors)
 10. **Reading Progress Bar** - Visual progress indicator at top of article pages
 11. **Enhanced Read Time** - Prominent read time pill on articles
+12. **Dark Mode** - Full dark theme support with CSS variables, toggle in header (Fixed Feb 2026)
+13. **Font Size Toggle** - Adjustable article font size (80%-140%) with persistence (Fixed Feb 2026)
+14. **Social Share Buttons** - Twitter, LinkedIn, WhatsApp, Copy Link
+15. **Search Modal** - Keyboard shortcut (⌘K) search functionality
+16. **Related Articles** - Shows related content at article end
+17. **Copy Quote** - Select text to copy quotes
+18. **Archive Page** - Browse all articles
+19. **Reading History** - "Continue Reading" section tracking viewed articles
+20. **Newsletter Signup** - Ghost-integrated newsletter widgets
+21. **Photo Captions** - Display image credits from Ghost
 
 ### 🔄 Partially Implemented
 1. **Ghost Members Authentication** - Login UI complete, direct API call blocked by Ghost CORS. Works via Ghost Portal redirect.
