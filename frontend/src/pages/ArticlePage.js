@@ -11,7 +11,6 @@ export const ArticlePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { openPayment } = useRazorpayPayment();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
 
