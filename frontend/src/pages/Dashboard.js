@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
+import { RazorpayButton } from '../components/RazorpayButton';
 import axios from 'axios';
-import { toast } from 'sonner';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export const Dashboard = () => {
-  const { user, fetchUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,58 +31,6 @@ export const Dashboard = () => {
       console.error('Failed to fetch subscription:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSubscribe = async () => {
-    try {
-      const orderResponse = await axios.post(`${API}/payment/create-order`, {
-        amount: 99900,
-        currency: 'INR'
-      });
-
-      const options = {
-        key: orderResponse.data.key_id,
-        amount: orderResponse.data.amount,
-        currency: orderResponse.data.currency,
-        order_id: orderResponse.data.order_id,
-        name: 'The State of Play',
-        description: 'Annual Subscription',
-        image: 'https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg',
-        handler: async (response) => {
-          try {
-            await axios.post(`${API}/payment/verify`, {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-            toast.success('Subscription activated successfully!');
-            await fetchUser();
-            await fetchSubscriptionStatus();
-          } catch (error) {
-            toast.error('Payment verification failed');
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email
-        },
-        theme: {
-          color: '#2E5AAC'
-        }
-      };
-
-      // Load Razorpay script dynamically
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => {
-        const razorpayInstance = new window.Razorpay(options);
-        razorpayInstance.open();
-      };
-      document.body.appendChild(script);
-    } catch (error) {
-      toast.error('Failed to initiate payment');
     }
   };
 
@@ -109,11 +56,11 @@ export const Dashboard = () => {
             <div className="space-y-3 font-body">
               <div>
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="text-base font-medium">{user.name}</p>
+                <p className="text-base font-medium">{user?.name || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="text-base font-medium">{user.email}</p>
+                <p className="text-base font-medium">{user?.email || 'Not provided'}</p>
               </div>
             </div>
           </div>
@@ -136,17 +83,11 @@ export const Dashboard = () => {
                 </>
               ) : (
                 <>
-                  <div className="flex items-center space-x-2 text-muted-foreground">
+                  <div className="flex items-center space-x-2 text-muted-foreground mb-4">
                     <XCircle className="h-5 w-5" />
                     <span className="font-medium">No Active Subscription</span>
                   </div>
-                  <Button
-                    onClick={handleSubscribe}
-                    className="w-full mt-4 rounded-none bg-primary text-white hover:bg-primary/90 font-medium uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-                    data-testid="btn-dashboard-subscribe"
-                  >
-                    Subscribe Now - ₹999/year
-                  </Button>
+                  <RazorpayButton />
                 </>
               )}
             </div>
