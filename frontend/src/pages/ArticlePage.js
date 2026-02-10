@@ -47,6 +47,9 @@ export const ArticlePage = () => {
       console.log('Received post:', post);
       setArticle(post);
       
+      // Add to reading history
+      addToReadingHistory(post);
+      
       // Fetch related articles
       const allPosts = await ghostAPI.getPosts({ limit: 10 });
       setRelatedArticles(allPosts);
