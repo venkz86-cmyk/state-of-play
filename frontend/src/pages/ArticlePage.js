@@ -19,7 +19,9 @@ export const ArticlePage = () => {
 
   const fetchArticle = async () => {
     try {
+      console.log('Fetching article with slug:', id);
       const post = await ghostAPI.getPost(id);
+      console.log('Received post:', post);
       setArticle(post);
     } catch (error) {
       console.error('Failed to fetch article:', error);
