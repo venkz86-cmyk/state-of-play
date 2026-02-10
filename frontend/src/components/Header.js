@@ -19,7 +19,7 @@ export const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-border shadow-sm">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -44,12 +44,15 @@ export const Header = () => {
                 >
                   <span>{item.label}</span>
                   {item.comingSoon && (
-                    <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm uppercase">
+                    <span className="absolute -top-2 -right-2 bg-accent text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase shadow-md border border-accent/20">
                       Soon
                     </span>
                   )}
                   {item.isPremium && (
                     <span className="ml-1.5 text-premium text-xs">★</span>
+                  )}
+                  {isActive(item.path) && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full" />
                   )}
                 </Button>
               </Link>
@@ -58,19 +61,37 @@ export const Header = () => {
             <div className="h-6 w-px bg-border mx-2" />
             
             <Link to="/about">
-              <Button variant="ghost" className="font-body font-medium" data-testid="nav-about">
+              <Button 
+                variant="ghost" 
+                className={`font-body font-medium relative ${
+                  isActive('/about') ? 'text-foreground' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                data-testid="nav-about"
+              >
                 About
+                {isActive('/about') && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full" />
+                )}
               </Button>
             </Link>
             <Link to="/contact">
-              <Button variant="ghost" className="font-body font-medium" data-testid="nav-contact">
+              <Button 
+                variant="ghost" 
+                className={`font-body font-medium relative ${
+                  isActive('/contact') ? 'text-foreground' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                data-testid="nav-contact"
+              >
                 Contact
+                {isActive('/contact') && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full" />
+                )}
               </Button>
             </Link>
           </nav>
 
           {/* User Actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {user ? (
               <>
                 <Link to="/dashboard">
@@ -108,7 +129,7 @@ export const Header = () => {
                 <Link to="/signup">
                   <Button 
                     size="sm" 
-                    className="bg-primary text-white hover:bg-primary-700 font-semibold px-6 transition-all hover:shadow-lg hover:scale-105"
+                    className="bg-primary text-white hover:bg-primary-700 font-semibold px-6 transition-all hover:shadow-lg hover:-translate-y-0.5"
                     data-testid="btn-signup-header"
                   >
                     Subscribe
@@ -130,8 +151,8 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 animate-slide-up">
-            <nav className="flex flex-col space-y-2">
+          <div className="md:hidden pb-4 border-t border-border mt-2 pt-2">
+            <nav className="flex flex-col space-y-1">
               {navItems.map((item) => (
                 <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)}>
                   <Button 
@@ -139,7 +160,11 @@ export const Header = () => {
                     className={`w-full justify-start ${item.color}`}
                   >
                     {item.label}
-                    {item.comingSoon && <span className="ml-2 text-xs">(Soon)</span>}
+                    {item.comingSoon && (
+                      <span className="ml-2 bg-accent text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm uppercase">
+                        Soon
+                      </span>
+                    )}
                   </Button>
                 </Link>
               ))}

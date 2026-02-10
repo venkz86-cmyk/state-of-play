@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ArticleCard } from '../components/ArticleCard';
 import { Button } from '../components/ui/button';
-import { ArrowRight, Newspaper, Zap } from 'lucide-react';
+import { ArrowRight, Newspaper, Zap, Sparkles } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -45,32 +45,34 @@ export const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-primary-50 border-b-2 border-primary/10">
-        <div className="container mx-auto px-4 md:px-8 max-w-7xl py-20 md:py-28">
+      <section className="relative bg-white border-b border-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 via-transparent to-secondary-50/20 pointer-events-none" />
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl py-24 md:py-32 relative z-10">
           <div className="max-w-4xl">
-            <div className="inline-block bg-primary/10 border border-primary/20 px-4 py-2 mb-6 animate-fade-in">
+            <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-4 py-2.5 mb-8 group hover:bg-primary/10 transition-colors">
+              <Sparkles className="h-4 w-4 text-primary" />
               <span className="text-xs font-mono font-bold tracking-widest uppercase text-primary">Premium Sports Business Intelligence</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-[0.95] mb-6 text-foreground animate-fade-in">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-heading font-black tracking-tight leading-[0.95] mb-8 text-balance">
               The business of sport from an{' '}
               <span className="text-primary relative inline-block">
                 India lens
-                <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 200 8" fill="none">
-                  <path d="M0 4C50 2 100 6 150 3C175 1.5 200 4 200 4" stroke="#2E5AAC" strokeWidth="3" strokeLinecap="round"/>
+                <svg className="absolute -bottom-3 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
+                  <path d="M0 6C50 3 100 9 150 4C175 2 200 6 200 6" stroke="#2E5AAC" strokeWidth="4" strokeLinecap="round"/>
                 </svg>
               </span>
             </h1>
-            <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-10 max-w-3xl">
+            <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-12 max-w-3xl">
               Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/signup">
                 <Button 
                   size="lg" 
-                  className="bg-primary text-white hover:bg-primary-700 font-bold px-8 py-6 text-base transition-all hover:shadow-2xl hover:scale-105 group"
+                  className="bg-primary text-white hover:bg-primary-700 font-bold px-10 py-7 text-lg transition-all hover:shadow-2xl hover:-translate-y-0.5 group"
                   data-testid="btn-hero-subscribe"
                 >
-                  <Newspaper className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                  <Newspaper className="mr-2 h-5 w-5 group-hover:rotate-3 transition-transform" />
                   Subscribe Now
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -79,7 +81,7 @@ export const Home = () => {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white font-bold px-8 py-6 text-base transition-all group"
+                  className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white font-bold px-10 py-7 text-lg transition-all group"
                   data-testid="btn-hero-free-content"
                 >
                   <Zap className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
@@ -93,11 +95,11 @@ export const Home = () => {
 
       {/* Featured Article */}
       {featuredArticle && (
-        <section className="py-16 bg-white">
+        <section className="py-20 bg-gradient-to-b from-white to-gray-50">
           <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-3xl font-heading font-bold tracking-tight mb-1">Featured Story</h2>
+                <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">Featured Story</h2>
                 <p className="text-sm text-muted-foreground font-mono uppercase tracking-wider">Editor's Pick</p>
               </div>
             </div>
@@ -109,25 +111,25 @@ export const Home = () => {
       )}
 
       {/* Latest Stories */}
-      <section className="py-16 bg-gradient-to-b from-white to-primary-50/30">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-          <div className="mb-12">
-            <h2 className="text-3xl font-heading font-bold tracking-tight mb-2">Latest Stories</h2>
+          <div className="mb-14">
+            <h2 className="text-4xl font-heading font-bold tracking-tight mb-3">Latest Stories</h2>
             <p className="text-base text-muted-foreground font-body">From The State of Play & The Left Field</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {articles.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-16">
             <Link to="/state-of-play">
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold px-8 transition-all"
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold px-10 py-6 text-base transition-all hover:-translate-y-0.5"
               >
                 View All Stories
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -138,24 +140,24 @@ export const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
+      <section className="py-28 bg-primary text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]">
           <div className="absolute inset-0" style={{
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
           }} />
         </div>
-        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-heading font-bold tracking-tight mb-6">
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl text-center relative z-10">
+          <h2 className="text-5xl md:text-6xl font-heading font-bold tracking-tight mb-8">
             Join the insider's circle
           </h2>
-          <p className="text-xl leading-relaxed text-white/90 font-body mb-10 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl leading-relaxed text-white/90 font-body mb-12 max-w-3xl mx-auto">
             Subscribe to unlock premium analysis, exclusive interviews, and deep dives into the business of Indian sports.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
             <Link to="/signup">
               <Button 
                 size="lg" 
-                className="bg-white text-primary hover:bg-gray-100 font-bold px-10 py-6 text-base transition-all hover:shadow-2xl hover:scale-105"
+                className="bg-white text-primary hover:bg-gray-50 font-bold px-12 py-7 text-lg transition-all hover:shadow-2xl hover:-translate-y-0.5"
                 data-testid="btn-cta-subscribe"
               >
                 Start Your Subscription
@@ -166,9 +168,9 @@ export const Home = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-primary font-semibold px-8 py-6 text-base transition-all"
+                className="border-2 border-white text-white hover:bg-white hover:text-primary font-semibold px-10 py-7 text-lg transition-all"
               >
-                View Membership Benefits
+                View Benefits
               </Button>
             </Link>
           </div>
