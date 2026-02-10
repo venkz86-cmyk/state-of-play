@@ -139,11 +139,30 @@ export const ArticlePage = () => {
                 data-testid="article-content"
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
-              {/* End of article indicator */}
-              <div className="mt-16 pt-8 border-t-2 border-border text-center">
-                <p className="text-sm text-muted-foreground font-body">
+              {/* End of article + Comments Section */}
+              <div className="mt-16 pt-8 border-t-2 border-border">
+                <p className="text-sm text-muted-foreground font-body text-center mb-8">
                   Thanks for reading The State of Play
                 </p>
+                
+                {/* Comments CTA */}
+                <div className="bg-primary-50 border-2 border-primary/20 p-8 text-center">
+                  <h3 className="text-xl font-heading font-bold mb-3">Join the Discussion</h3>
+                  <p className="text-sm text-foreground/70 mb-6 max-w-md mx-auto">
+                    Have thoughts on this story? Share your comments and join the conversation.
+                  </p>
+                  <a 
+                    href={`https://the-state-of-play.ghost.io/${article.slug}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 bg-primary text-white hover:bg-primary-700 font-semibold px-6 py-3 transition-all"
+                  >
+                    <span>View Comments</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             </>
           ) : (
