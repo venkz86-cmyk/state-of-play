@@ -166,15 +166,8 @@ export const ArticlePage = () => {
                       </div>
                     </div>
                     
-                    <Button 
-                      onClick={() => openPayment(window.location.href)}
-                      size="lg"
-                      className="bg-primary text-white hover:bg-primary-700 font-bold px-10 py-6 text-base transition-all hover:shadow-2xl hover:scale-105 w-full mb-4"
-                      data-testid="btn-paywall-subscribe"
-                    >
-                      <Lock className="mr-2 h-5 w-5" />
-                      Subscribe Now
-                    </Button>
+                    {/* Razorpay Payment Button */}
+                    <RazorpayButton className="mb-4" />
                     
                     <p className="text-xs text-muted-foreground">
                       Already a member?{' '}
