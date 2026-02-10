@@ -29,6 +29,10 @@ export const Login = () => {
       const result = await verifyMember(email);
       
       if (result.success) {
+        const firstName = result.member?.name?.split(' ')[0] || 'there';
+        toast.success(`Welcome back, ${firstName}!`, {
+          description: result.member?.is_paid ? 'Your PRO access is active.' : 'Good to see you again.'
+        });
         setStep('success');
         // Redirect after 2 seconds
         setTimeout(() => navigate('/'), 2000);
