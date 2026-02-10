@@ -82,7 +82,7 @@ export const Home = () => {
                   data-testid="btn-hero-free-content"
                 >
                   <Zap className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  Read Free Stories
+                  Free Briefings
                 </Button>
               </a>
             </div>
