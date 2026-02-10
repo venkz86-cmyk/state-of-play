@@ -2,6 +2,7 @@ import "@/index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
 import { StateOfPlay } from "./pages/StateOfPlay";
 import { LeftField } from "./pages/LeftField";
@@ -13,27 +14,34 @@ import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 import { Membership } from "./pages/Membership";
 import { Outfield } from "./pages/Outfield";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="App min-h-screen">
+        <div className="App min-h-screen flex flex-col">
           <Header />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/state-of-play" element={<StateOfPlay />} />
-            <Route path="/left-field" element={<LeftField />} />
-            <Route path="/outfield" element={<Outfield />} />
-            <Route path="/article/:id" element={<ArticlePage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/membership" element={<Membership />} />
-          </Routes>
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/state-of-play" element={<StateOfPlay />} />
+              <Route path="/left-field" element={<LeftField />} />
+              <Route path="/outfield" element={<Outfield />} />
+              <Route path="/article/:id" element={<ArticlePage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/membership" element={<Membership />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+            </Routes>
+          </main>
+          <Footer />
           <Toaster position="top-right" />
         </div>
       </BrowserRouter>
