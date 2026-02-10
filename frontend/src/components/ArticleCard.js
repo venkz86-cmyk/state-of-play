@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, TrendingUp } from 'lucide-react';
+import { Clock, TrendingUp, Lock } from 'lucide-react';
 
 export const ArticleCard = ({ article, featured = false }) => {
   const publicationColor = article.publication === 'The State of Play' ? 'border-primary/20' : 'border-secondary/20';
@@ -9,7 +9,7 @@ export const ArticleCard = ({ article, featured = false }) => {
   if (featured) {
     return (
       <Link to={`/article/${article.id}`} data-testid={`featured-article-${article.id}`}>
-        <article className={`group relative overflow-hidden bg-white border-2 ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-2xl cursor-pointer h-full`}>
+        <article className={`group relative overflow-hidden bg-card border-2 ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-2xl cursor-pointer h-full`}>
           {article.image_url && (
             <div className="relative w-full aspect-[16/9] overflow-hidden">
               <img 
@@ -18,8 +18,9 @@ export const ArticleCard = ({ article, featured = false }) => {
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className={`absolute top-4 right-4 ${badgeColor} text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 font-mono shadow-lg`}>
-                {isPremium ? 'PREMIUM' : 'FREE'}
+              <div className={`absolute top-4 right-4 ${badgeColor} text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 font-mono shadow-lg flex items-center space-x-1.5`}>
+                {isPremium && <Lock className="h-3 w-3" />}
+                <span>{isPremium ? 'PREMIUM' : 'FREE'}</span>
               </div>
               {isPremium && (
                 <div className="absolute top-4 left-4 bg-premium text-white p-2 rounded-full shadow-lg">
@@ -61,7 +62,7 @@ export const ArticleCard = ({ article, featured = false }) => {
 
   return (
     <Link to={`/article/${article.id}`} data-testid={`article-card-${article.id}`}>
-      <article className={`group relative overflow-hidden bg-white border ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-xl cursor-pointer h-full`}>
+      <article className={`group relative overflow-hidden bg-card border ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-xl cursor-pointer h-full`}>
         {article.image_url && (
           <div className="relative w-full aspect-[16/10] overflow-hidden">
             <img 
@@ -69,8 +70,9 @@ export const ArticleCard = ({ article, featured = false }) => {
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className={`absolute top-3 left-3 ${badgeColor} text-white text-[8px] font-bold uppercase tracking-widest px-2 py-1 font-mono`}>
-              {isPremium ? 'PREMIUM' : 'FREE'}
+            <div className={`absolute top-3 left-3 ${badgeColor} text-white text-[8px] font-bold uppercase tracking-widest px-2 py-1 font-mono flex items-center space-x-1`}>
+              {isPremium && <Lock className="h-2.5 w-2.5" />}
+              <span>{isPremium ? 'PREMIUM' : 'FREE'}</span>
             </div>
           </div>
         )}
