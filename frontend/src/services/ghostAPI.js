@@ -52,21 +52,23 @@ class GhostAPI {
         }
       } catch (directError) {
         // Paid posts return 404 on direct fetch, continue to fallback
+        console.log('Direct fetch failed, trying list fallback for:', slug);
       }
 
-      // Fallback: fetch from list with slug filter (gets metadata for paid posts)
+      // Fallback: fetch recent posts and find by slug (gets metadata for paid posts)
       const listParams = new URLSearchParams({
         key: GHOST_CONTENT_KEY,
         include: 'tags,authors',
-        filter: `slug:${slug}`
+        limit: 'all'
       });
 
       const listResponse = await axios.get(`${this.contentURL}/posts/?${listParams}`);
       
-      if (listResponse.data?.posts?.length > 0) {
-        const post = listResponse.data.posts[0];
-        // For paid posts, html might be returned but we should still show paywall
-        return this.transformPost(post);
+      if (listResponse.data?.posts) {
+        const post = listResponse.data.posts.find(p => p.slug === slug);
+        if (post) {
+          return this.transformPost(post);
+        }
       }
 
       console.error('No post found for slug:', slug);
