@@ -84,6 +84,9 @@ class GhostAPI {
     // Get author name
     const authorName = post.authors?.[0]?.name || post.primary_author?.name || 'The State of Play';
 
+    // Check if this is a paid/members-only post
+    const isPremium = post.visibility === 'paid' || post.visibility === 'members';
+
     // Handle paywall content
     let fullContent = post.html || '';
     let previewContent = '';
@@ -92,7 +95,8 @@ class GhostAPI {
     if (fullContent.includes('<!--more-->')) {
       const parts = fullContent.split('<!--more-->');
       previewContent = parts[0];
-      fullContent = parts.join('');
+      // For premium posts, DON'T include full content - only preview
+      fullContent = isPremium ? '' : parts.join('');
     } else {
       // Extract first 2-3 paragraphs using regex
       const pTagMatches = fullContent.match(/<p[^>]*>.*?<\/p>/gs);
@@ -101,6 +105,11 @@ class GhostAPI {
         previewContent = pTagMatches.slice(0, 3).join('');
       } else {
         previewContent = `<p>${post.excerpt || post.custom_excerpt || ''}</p>`;
+      }
+      
+      // For premium posts, DON'T include full content - only preview
+      if (isPremium) {
+        fullContent = '';
       }
     }
 
@@ -112,7 +121,7 @@ class GhostAPI {
       preview_content: previewContent,
       author: authorName,
       publication: this.getPublicationType(post),
-      is_premium: post.visibility === 'paid' || post.visibility === 'members',
+      is_premium: isPremium,
       theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
       image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
