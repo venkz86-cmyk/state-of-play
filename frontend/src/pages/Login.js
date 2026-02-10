@@ -46,29 +46,38 @@ export const Login = () => {
               </div>
               
               <div>
-                <p className="text-sm font-bold mb-1">Step 2: Enter your email</p>
+                <p className="text-sm font-bold mb-1">Step 2: Enter your email & verification code</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Enter <strong>{email}</strong> in the sign-in form.
+                  Enter <strong>{email}</strong>, then check your inbox for a 6-digit code.
                 </p>
               </div>
               
-              <div>
-                <p className="text-sm font-bold mb-1">Step 3: Check email for verification code</p>
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm font-bold mb-1">Step 3: Return here after signing in</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  You'll receive a 6-digit code via email. Enter it to complete sign-in.
+                  Once you've entered the code, come back to this site to read premium content.
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setShowInstructions(false);
-                setEmail('');
-              }}
-              className="text-sm text-primary hover:underline font-semibold"
-            >
-              ← Try a different email
-            </button>
+            <div className="space-y-3">
+              <Link 
+                to="/"
+                className="inline-flex items-center justify-center w-full bg-secondary text-white px-4 py-3 font-semibold hover:bg-secondary/90 transition-colors"
+              >
+                I've signed in — Take me to articles
+              </Link>
+              
+              <button
+                onClick={() => {
+                  setShowInstructions(false);
+                  setEmail('');
+                }}
+                className="text-sm text-primary hover:underline font-semibold"
+              >
+                ← Try a different email
+              </button>
+            </div>
           </div>
         </div>
       </div>
