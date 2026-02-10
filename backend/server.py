@@ -508,6 +508,7 @@ async def get_full_article_content(request: ArticleContentRequest):
             # Now fetch the full article using Admin API
             article_response = await http_client.get(
                 f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
+                params={'formats': 'html'},
                 headers={'Authorization': f'Ghost {token}'}
             )
             
