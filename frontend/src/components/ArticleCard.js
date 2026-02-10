@@ -62,7 +62,7 @@ export const ArticleCard = ({ article, featured = false }) => {
   }
 
   return (
-    <Link to={`/article/${article.id}`} data-testid={`article-card-${article.id}`}>
+    <Link to={`/${article.id}`} data-testid={`article-card-${article.id}`}>
       <article className={`group relative overflow-hidden bg-card border ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-xl cursor-pointer h-full`}>
         {article.image_url && (
           <div className="relative w-full aspect-[16/10] overflow-hidden">
