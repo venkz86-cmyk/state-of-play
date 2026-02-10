@@ -17,7 +17,7 @@ export const RelatedArticles = ({ articles, currentSlug }) => {
           {related.map((article) => (
             <Link
               key={article.id}
-              to={`/article/${article.id}`}
+              to={`/${article.id}`}
               className="group bg-card border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg"
             >
               {article.image_url && (
