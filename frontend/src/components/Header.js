@@ -98,17 +98,21 @@ export const Header = () => {
           </nav>
 
           {/* User Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {/* Search Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSearchOpen(true)}
-              className="text-foreground/60 hover:text-foreground"
+              className="text-foreground/60 hover:text-foreground hidden sm:flex items-center space-x-1"
               data-testid="btn-search"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
+              <span className="text-xs text-muted-foreground">⌘K</span>
             </Button>
+            
+            {/* Dark Mode Toggle */}
+            <DarkModeToggle />
             
             {user ? (
               <>
