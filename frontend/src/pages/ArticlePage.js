@@ -71,6 +71,33 @@ export const ArticlePage = () => {
     }
   };
 
+  // Fetch full content for paid members
+  useEffect(() => {
+    const fetchFullContent = async () => {
+      if (article?.is_premium && user?.is_paid && user?.email) {
+        try {
+          const API = process.env.REACT_APP_BACKEND_URL;
+          const response = await fetch(`${API}/api/ghost/article-content`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug: article.id, email: user.email })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.html) {
+              setArticle(prev => ({ ...prev, content: data.html }));
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch full content:', error);
+        }
+      }
+    };
+    
+    fetchFullContent();
+  }, [article?.is_premium, article?.id, user?.is_paid, user?.email]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
