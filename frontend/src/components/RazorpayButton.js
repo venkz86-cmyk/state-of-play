@@ -7,7 +7,8 @@ export const RazorpayButton = ({ className }) => {
   const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (!containerRef.current || pricing.loading || scriptLoadedRef.current) return;
+    const container = containerRef.current;
+    if (!container || pricing.loading || scriptLoadedRef.current) return;
 
     // Payment button IDs based on location
     const paymentButtonId = pricing.country === 'IN' 
@@ -17,7 +18,7 @@ export const RazorpayButton = ({ className }) => {
     console.log('Loading Razorpay button for country:', pricing.country, 'Button ID:', paymentButtonId);
 
     // Clear the container
-    containerRef.current.innerHTML = '';
+    container.innerHTML = '';
 
     // Create form
     const form = document.createElement('form');
@@ -38,12 +39,12 @@ export const RazorpayButton = ({ className }) => {
     };
 
     form.appendChild(script);
-    containerRef.current.appendChild(form);
+    container.appendChild(form);
 
     // Cleanup
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+      if (container) {
+        container.innerHTML = '';
       }
       scriptLoadedRef.current = false;
     };
