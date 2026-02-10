@@ -14,10 +14,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
+    // If no backend URL, skip auth check
+    if (!API) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       // Check if user has Ghost session via our backend proxy
       const response = await axios.get(`${API}/api/ghost/member`, {
-        withCredentials: true
+        withCredentials: true,
+        timeout: 5000
       });
       
       if (response.data) {
@@ -27,7 +34,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      // Not logged in
+      // Not logged in or backend not available
       setUser(null);
     } finally {
       setLoading(false);
@@ -35,6 +42,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const sendMagicLink = async (email) => {
+    if (!API) {
+      throw new Error('Backend not available');
+    }
     try {
       const response = await axios.post(
         `${API}/api/ghost/send-magic-link`,
