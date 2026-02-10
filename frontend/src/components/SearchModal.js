@@ -52,7 +52,7 @@ export const SearchModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div 
-        className="bg-white w-full max-w-2xl mx-auto mt-20 shadow-2xl border-2 border-border"
+        className="bg-card w-full max-w-2xl mx-auto mt-20 shadow-2xl border-2 border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center border-b-2 border-border p-4">
@@ -63,9 +63,9 @@ export const SearchModal = ({ isOpen, onClose }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search articles..."
-            className="flex-1 outline-none text-lg font-body"
+            className="flex-1 outline-none text-lg font-body bg-transparent text-foreground"
           />
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+          <button onClick={onClose} className="p-1 hover:bg-muted rounded">
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
@@ -88,7 +88,7 @@ export const SearchModal = ({ isOpen, onClose }) => {
               key={article.id}
               to={`/article/${article.id}`}
               onClick={onClose}
-              className="block p-4 hover:bg-gray-50 border-b border-border/50 transition-colors"
+              className="block p-4 hover:bg-muted border-b border-border/50 transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
