@@ -70,6 +70,8 @@ export const ArticleCard = ({ article, featured = false }) => {
             <img 
               src={article.image_url} 
               alt={article.title}
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className={`absolute top-3 left-3 ${badgeColor} text-white text-[8px] font-bold uppercase tracking-widest px-2 py-1 font-mono flex items-center space-x-1`}>
