@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Button } from './ui/button';
 import { SearchModal } from './SearchModal';
 import { DarkModeToggle } from './DarkModeToggle';
@@ -7,8 +8,13 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { User, LogOut, Menu, Search } from 'lucide-react';
 import { useState } from 'react';
 
+// Logo URLs - you can replace the dark mode version with your own
+const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg";
+const LOGO_DARK = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg"; // Replace with dark mode logo URL
+
 export const Header = () => {
   const { user, logout } = useAuth();
+  const { isDark } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -32,9 +38,9 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <img 
-              src="https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg" 
+              src={isDark ? LOGO_DARK : LOGO_LIGHT}
               alt="The State of Play" 
-              className="h-14 w-auto transition-transform group-hover:scale-105"
+              className={`h-14 w-auto transition-transform group-hover:scale-105 ${isDark ? 'brightness-0 invert' : ''}`}
             />
           </Link>
 
