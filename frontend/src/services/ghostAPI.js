@@ -3,6 +3,15 @@ import axios from 'axios';
 const GHOST_URL = process.env.REACT_APP_GHOST_URL;
 const GHOST_CONTENT_KEY = process.env.REACT_APP_GHOST_CONTENT_API_KEY;
 
+// Fix image URLs - Ghost might return URLs with custom domain that don't resolve
+// We need to transform them back to the Ghost CDN
+const fixImageUrl = (url) => {
+  if (!url) return url;
+  // Replace custom domain with Ghost domain for images
+  return url.replace('https://www.stateofplay.club/content/', `${GHOST_URL}/content/`)
+            .replace('https://stateofplay.club/content/', `${GHOST_URL}/content/`);
+};
+
 class GhostAPI {
   constructor() {
     this.contentURL = `${GHOST_URL}/ghost/api/content`;
