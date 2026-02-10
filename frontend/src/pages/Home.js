@@ -94,22 +94,27 @@ export const Home = () => {
 
       {/* Featured Article */}
       {featuredArticle && (
-        <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+        <section className="py-20 bg-gradient-to-b from-white to-gray-50 dark:from-background dark:to-background">
           <div className="container mx-auto px-4 md:px-8 max-w-7xl">
             <div className="flex items-end justify-between mb-10">
               <div>
                 <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">The Big Story</h2>
               </div>
             </div>
-            <div className="max-w-5xl">
-              <ArticleCard article={featuredArticle} featured={true} />
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-3">
+                <ArticleCard article={featuredArticle} featured={true} />
+              </div>
+              <div className="lg:col-span-1">
+                <ReadingHistory variant="inline" />
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* Latest Stories */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">
           <div className="mb-14">
             <h2 className="text-4xl font-heading font-bold tracking-tight mb-3">Latest Stories</h2>
