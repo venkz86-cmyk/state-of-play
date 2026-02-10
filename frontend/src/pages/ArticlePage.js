@@ -91,37 +91,35 @@ export const ArticlePage = () => {
 
   const articleUrl = `https://www.stateofplay.club/${article?.id || id}`;
   const ogImage = article?.image_url || 'https://the-state-of-play.ghost.io/content/images/2024/01/tsop-default.png';
-  const ogTitle = article?.title ? `${article.title}` : 'The State of Play';
+  const pageTitle = article.title + ' | The State of Play';
   const ogDescription = article?.subtitle || 'Premium sports business intelligence from India';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Dynamic SEO Meta Tags */}
-      {article && (
-        <Helmet>
-          <title>{`${article.title} | The State of Play`}</title>
-          <meta name="description" content={ogDescription} />
-          
-          {/* Open Graph / Facebook / WhatsApp */}
-          <meta property="og:type" content="article" />
-          <meta property="og:url" content={articleUrl} />
-          <meta property="og:title" content={article.title} />
-          <meta property="og:description" content={ogDescription} />
-          <meta property="og:image" content={ogImage} />
-          <meta property="og:site_name" content="The State of Play" />
-          
-          {/* Twitter */}
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:url" content={articleUrl} />
-          <meta name="twitter:title" content={article.title} />
-          <meta name="twitter:description" content={ogDescription} />
-          <meta name="twitter:image" content={ogImage} />
-          
-          {/* Article specific */}
-          <meta property="article:author" content={article.author || 'The State of Play'} />
-          {article.created_at && <meta property="article:published_time" content={article.created_at} />}
-        </Helmet>
-      )}
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={ogDescription} />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={articleUrl} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:site_name" content="The State of Play" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={articleUrl} />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={ogImage} />
+        
+        {/* Article specific */}
+        <meta property="article:author" content={article.author || 'The State of Play'} />
+        <meta property="article:published_time" content={article.created_at || ''} />
+      </Helmet>
 
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800 z-50">
