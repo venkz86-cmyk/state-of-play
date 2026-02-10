@@ -94,7 +94,7 @@ export const Home = () => {
 
       {/* Featured Article */}
       {featuredArticle && (
-        <section className="py-20 bg-gradient-to-b from-white to-gray-50 dark:from-background dark:to-background">
+        <section className="py-20 bg-gradient-to-b from-background to-muted/30 dark:from-background dark:to-muted/10">
           <div className="container mx-auto px-4 md:px-8 max-w-7xl">
             <div className="flex items-end justify-between mb-10">
               <div>
