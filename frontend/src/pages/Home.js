@@ -44,8 +44,8 @@ export const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-white border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 via-transparent to-secondary-50/20 pointer-events-none" />
+      <section className="relative bg-background border-b border-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
         <div className="container mx-auto px-4 md:px-8 max-w-7xl py-24 md:py-32 relative z-10">
           <div className="max-w-4xl">
             <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-4 py-2.5 mb-8 group hover:bg-primary/10 transition-colors">
