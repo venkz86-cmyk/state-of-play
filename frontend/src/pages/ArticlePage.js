@@ -204,15 +204,15 @@ export const ArticlePage = () => {
                   dangerouslySetInnerHTML={{ __html: article.preview_content }}
                 />
                 {/* Fade Effect */}
-                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
               </div>
               
               {/* Hard Paywall - Different messaging for free members vs visitors */}
               <div className="relative py-16" data-testid="paywall-overlay">
-                <div className="absolute inset-0 bg-gradient-to-b from-primary-50/50 to-primary-100/80" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-primary/10" />
                 
                 <div className="relative z-10 max-w-xl mx-auto">
-                  <div className="bg-white border-2 border-primary shadow-2xl p-10 text-center">
+                  <div className="bg-card border-2 border-primary shadow-2xl p-10 text-center">
                     {/* Icon */}
                     <div className="relative inline-flex items-center justify-center mb-6">
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
