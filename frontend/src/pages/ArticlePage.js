@@ -131,10 +131,11 @@ export const ArticlePage = () => {
               <Calendar className="h-4 w-4" />
               <span>{format(new Date(article.created_at), 'MMM dd, yyyy')}</span>
             </div>
-            <div className="flex items-center space-x-1.5 bg-primary/5 px-3 py-1 rounded-full">
+            <div className="flex items-center space-x-1.5 bg-primary/5 dark:bg-primary/20 px-3 py-1 rounded-full">
               <Clock className="h-4 w-4 text-primary" />
               <span className="font-semibold text-primary">{article.read_time} min read</span>
             </div>
+            {canAccessContent && <ReadingTimeLeft totalMinutes={article.read_time} />}
             <div className="flex-1" />
             <FontSizeToggle />
             <ShareButtons title={article.title} />
