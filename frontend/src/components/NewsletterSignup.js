@@ -32,8 +32,8 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
         <div className="flex items-start space-x-3 mb-4">
           <Mail className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
           <div>
-            <p className="font-bold text-sm mb-1">Join the free briefing</p>
-            <p className="text-xs text-foreground/70">Sharp analysis on Indian sports business. Every week.</p>
+            <p className="font-bold text-sm mb-1">Get notified when we publish</p>
+            <p className="text-xs text-foreground/70">New stories delivered to your inbox every Friday.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="flex space-x-2">
@@ -63,9 +63,9 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
         <div className="inline-flex items-center justify-center bg-white/10 p-3 rounded-full mb-4">
           <Mail className="h-6 w-6" />
         </div>
-        <h3 className="text-2xl font-heading font-bold mb-2">The free weekly briefing</h3>
+        <h3 className="text-2xl font-heading font-bold mb-2">Don't miss a story</h3>
         <p className="text-white/80 text-sm mb-6">
-          One sharp take on the business of Indian sport. No spam, just signal — delivered every week.
+          Get notified every Friday when we publish a new deep dive on Indian sports business.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <input
@@ -85,13 +85,13 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                <span>Subscribe</span>
+                <span>Sign Up Free</span>
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
         </form>
-        <p className="text-xs text-white/60 mt-4">Free forever. Unsubscribe anytime.</p>
+        <p className="text-xs text-white/60 mt-4">Free to join. Upgrade anytime for full access.</p>
       </div>
     </div>
   );
