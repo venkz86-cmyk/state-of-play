@@ -191,6 +191,9 @@ export const Header = () => {
           </div>
         )}
       </div>
+      
+      {/* Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 };
