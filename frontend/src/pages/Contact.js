@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -8,8 +8,11 @@ export const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    toast.success('Message sent! We\'ll get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
+    // Open mailto link with form data
+    const subject = encodeURIComponent(`Contact from ${formData.name}`);
+    const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
+    window.location.href = `mailto:venkat@stateofplay.club?subject=${subject}&body=${body}`;
+    toast.success('Opening your email client...');
   };
 
   return (
@@ -20,7 +23,7 @@ export const Contact = () => {
             Get in touch
           </h1>
           <p className="text-xl leading-relaxed text-foreground/70 font-body">
-            Have a story tip? Want to collaborate? Or just want to say hello? We'd love to hear from you.
+            Have a story tip? Want to collaborate? Or just want to say hello? I'd love to hear from you.
           </p>
         </div>
 
@@ -77,15 +80,15 @@ export const Contact = () => {
           {/* Contact Info */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-xl font-heading font-bold mb-6">Reach us directly</h3>
+              <h3 className="text-xl font-heading font-bold mb-6">Reach me directly</h3>
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
                   <Mail className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-semibold text-sm mb-1">Email</p>
-                    <a href="mailto:hello@stateofplay.club" className="text-foreground/70 hover:text-primary transition-colors">
-                      hello@stateofplay.club
+                    <a href="mailto:venkat@stateofplay.club" className="text-foreground/70 hover:text-primary transition-colors">
+                      venkat@stateofplay.club
                     </a>
                   </div>
                 </div>
@@ -94,19 +97,19 @@ export const Contact = () => {
                   <MapPin className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-semibold text-sm mb-1">Location</p>
-                    <p className="text-foreground/70">Mumbai, India</p>
+                    <p className="text-foreground/70">Bengaluru, India 🇮🇳</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-primary-50 border-2 border-primary/20 p-6">
-              <h4 className="font-heading font-bold mb-2">For Press Inquiries</h4>
+              <h4 className="font-heading font-bold mb-2">Story Tips</h4>
               <p className="text-sm text-foreground/70 mb-3">
-                Media and press-related questions
+                Have an exclusive tip or lead?
               </p>
-              <a href="mailto:press@stateofplay.club" className="text-primary hover:underline font-semibold text-sm">
-                press@stateofplay.club
+              <a href="mailto:venkat@stateofplay.club" className="text-primary hover:underline font-semibold text-sm">
+                venkat@stateofplay.club
               </a>
             </div>
           </div>
