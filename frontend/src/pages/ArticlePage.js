@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ghostAPI } from '../services/ghostAPI';
 import { RazorpayButton } from '../components/RazorpayButton';
-import { Button } from '../components/ui/button';
-import { Clock, Calendar, Shield, TrendingUp } from 'lucide-react';
+import { Clock, Calendar, Shield, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const ArticlePage = () => {
@@ -13,10 +12,24 @@ export const ArticlePage = () => {
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [readProgress, setReadProgress] = useState(0);
 
   useEffect(() => {
     fetchArticle();
   }, [id]);
+
+  // Reading progress tracker
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      setReadProgress(Math.min(progress, 100));
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchArticle = async () => {
     try {
@@ -50,12 +63,25 @@ export const ArticlePage = () => {
     );
   }
 
-  const canAccessContent = !article.is_premium || (user && user.is_subscriber);
+  // Determine user status and content access
+  const isLoggedIn = !!user;
+  const isPaidMember = user?.is_subscriber || user?.paid;
+  const isFreeMember = isLoggedIn && !isPaidMember;
+  const canAccessContent = !article.is_premium || isPaidMember;
+  
   const publicationColor = article.publication === 'The State of Play' ? 'bg-primary' : 'bg-secondary';
   const publicationText = article.publication === 'The State of Play' ? 'PREMIUM' : 'FREE';
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 z-50">
+        <div 
+          className="h-full bg-primary transition-all duration-150 ease-out"
+          style={{ width: `${readProgress}%` }}
+        />
+      </div>
+
       {/* Article Header */}
       <article className="container mx-auto px-6 max-w-4xl py-16">
         <div className="mb-10">
@@ -80,15 +106,15 @@ export const ArticlePage = () => {
             </p>
           )}
           
-          <div className="flex items-center space-x-6 text-sm text-muted-foreground font-body pb-8 border-b-2 border-border">
+          <div className="flex items-center flex-wrap gap-4 text-sm text-muted-foreground font-body pb-8 border-b-2 border-border">
             <span className="font-bold text-foreground text-base">{article.author}</span>
             <div className="flex items-center space-x-1.5">
               <Calendar className="h-4 w-4" />
               <span>{format(new Date(article.created_at), 'MMM dd, yyyy')}</span>
             </div>
-            <div className="flex items-center space-x-1.5">
-              <Clock className="h-4 w-4" />
-              <span>{article.read_time} min read</span>
+            <div className="flex items-center space-x-1.5 bg-primary/5 px-3 py-1 rounded-full">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-primary">{article.read_time} min read</span>
             </div>
           </div>
         </div>
@@ -106,11 +132,19 @@ export const ArticlePage = () => {
         {/* Content with Hard Paywall */}
         <div className="relative">
           {canAccessContent ? (
-            <div 
-              className="prose prose-lg max-w-none font-body article-content" 
-              data-testid="article-content"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
+            <>
+              <div 
+                className="prose prose-lg max-w-none font-body article-content" 
+                data-testid="article-content"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
+              {/* End of article indicator */}
+              <div className="mt-16 pt-8 border-t-2 border-border text-center">
+                <p className="text-sm text-muted-foreground font-body">
+                  Thanks for reading The State of Play
+                </p>
+              </div>
+            </>
           ) : (
             <>
               {/* Preview Content */}
@@ -123,7 +157,7 @@ export const ArticlePage = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none" />
               </div>
               
-              {/* Hard Paywall */}
+              {/* Hard Paywall - Different messaging for free members vs visitors */}
               <div className="relative py-16" data-testid="paywall-overlay">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary-50/50 to-primary-100/80" />
                 
@@ -133,48 +167,91 @@ export const ArticlePage = () => {
                     <div className="relative inline-flex items-center justify-center mb-6">
                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
                       <div className="relative bg-primary text-white p-5 rounded-full">
-                        <Shield className="h-10 w-10" />
+                        {isFreeMember ? <Sparkles className="h-10 w-10" /> : <Shield className="h-10 w-10" />}
                       </div>
                     </div>
                     
-                    <div className="mb-3">
-                      <span className="inline-block bg-premium text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4">
-                        Premium Content
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-3xl font-heading font-bold mb-4 text-foreground">
-                      Subscribe to unlock this story
-                    </h3>
-                    
-                    <p className="text-base text-foreground/70 mb-8 font-body leading-relaxed">
-                      Get unlimited access to premium analysis, exclusive interviews, and deep dives into Indian sports business.
-                    </p>
-                    
-                    <div className="space-y-3 mb-8">
-                      <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span>Premium stories & analysis</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span>Exclusive interviews</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span>Ad-free reading</span>
-                      </div>
-                    </div>
+                    {isFreeMember ? (
+                      <>
+                        {/* Personalized message for free members */}
+                        <div className="mb-3">
+                          <span className="inline-block bg-secondary text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4">
+                            Free Member
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-3xl font-heading font-bold mb-4 text-foreground">
+                          Upgrade to unlock this story
+                        </h3>
+                        
+                        <p className="text-base text-foreground/70 mb-4 font-body leading-relaxed">
+                          Hey {user?.name || 'there'}! You're enjoying our free content. 
+                          Upgrade to premium for unlimited access to stories like this.
+                        </p>
+                        
+                        <div className="bg-primary/5 border border-primary/20 p-4 mb-6 text-left">
+                          <p className="text-sm font-bold text-foreground mb-2">As a premium member, you'll get:</p>
+                          <ul className="space-y-2 text-sm text-foreground/80">
+                            <li className="flex items-center space-x-2">
+                              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+                              <span>All premium stories & deep-dive analysis</span>
+                            </li>
+                            <li className="flex items-center space-x-2">
+                              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+                              <span>Exclusive interviews & insider access</span>
+                            </li>
+                            <li className="flex items-center space-x-2">
+                              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+                              <span>Ad-free reading experience</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Standard message for visitors */}
+                        <div className="mb-3">
+                          <span className="inline-block bg-premium text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4">
+                            Premium Content
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-3xl font-heading font-bold mb-4 text-foreground">
+                          Subscribe to unlock this story
+                        </h3>
+                        
+                        <p className="text-base text-foreground/70 mb-8 font-body leading-relaxed">
+                          Get unlimited access to premium analysis, exclusive interviews, and deep dives into Indian sports business.
+                        </p>
+                        
+                        <div className="space-y-3 mb-8">
+                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <span>Premium stories & analysis</span>
+                          </div>
+                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <span>Exclusive interviews</span>
+                          </div>
+                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <span>Ad-free reading</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                     
                     {/* Razorpay Payment Button */}
                     <RazorpayButton className="mb-4" />
                     
-                    <p className="text-xs text-muted-foreground">
-                      Already a member?{' '}
-                      <button onClick={() => navigate('/login')} className="text-primary hover:underline font-semibold">
-                        Sign in
-                      </button>
-                    </p>
+                    {!isLoggedIn && (
+                      <p className="text-xs text-muted-foreground">
+                        Already a member?{' '}
+                        <button onClick={() => navigate('/login')} className="text-primary hover:underline font-semibold">
+                          Sign in
+                        </button>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
