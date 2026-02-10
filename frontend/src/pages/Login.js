@@ -1,34 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Mail, AlertCircle } from 'lucide-react';
+import { Mail, AlertCircle, ExternalLink } from 'lucide-react';
+
+const GHOST_URL = process.env.REACT_APP_GHOST_URL;
 
 export const Login = () => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
-  const { sendMagicLink } = useAuth();
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      await sendMagicLink(email);
-      setSent(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    // Show instructions for using Ghost's native login
+    setShowInstructions(true);
   };
 
-  if (sent) {
+  if (showInstructions) {
     return (
       <div className="min-h-screen flex items-center justify-center py-24 px-4 bg-gradient-to-br from-primary-50/30 via-white to-white">
         <div className="w-full max-w-md">
@@ -37,27 +26,44 @@ export const Login = () => {
               <Mail className="h-10 w-10 text-primary" />
             </div>
             
-            <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Check your inbox</h1>
+            <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Access Your Account</h1>
             
-            <p className="text-base text-foreground/70 font-body mb-2">
-              We've sent a secure login link to:
+            <p className="text-base text-foreground/70 font-body mb-4">
+              To sign in to <strong className="text-primary">{email}</strong>, you can:
             </p>
-            <p className="text-lg font-bold text-primary mb-6">{email}</p>
             
-            <div className="bg-primary-50 border border-primary/20 p-4 mb-6 text-left">
-              <p className="text-sm text-foreground/80 font-body leading-relaxed">
-                Click the link in your email to sign in and access premium content.
-              </p>
+            <div className="bg-primary-50 border border-primary/20 p-5 mb-6 text-left space-y-4">
+              <div>
+                <p className="text-sm font-bold text-foreground mb-1">1. Check your email</p>
+                <p className="text-xs text-foreground/70 leading-relaxed">
+                  When you subscribed, you received a magic link email. Click that link to sign in.
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-bold text-foreground mb-1">2. Request a new magic link</p>
+                <p className="text-xs text-foreground/70 leading-relaxed">
+                  Visit The State of Play on Ghost to request a new sign-in link:
+                </p>
+                <a 
+                  href={`${GHOST_URL}/#/portal/signin`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-sm text-primary hover:underline font-semibold mt-2"
+                >
+                  Open Ghost Sign-in Portal <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              </div>
             </div>
 
             <button
               onClick={() => {
-                setSent(false);
+                setShowInstructions(false);
                 setEmail('');
               }}
               className="text-sm text-primary hover:underline font-semibold"
             >
-              Didn't receive it? Send again →
+              ← Try a different email
             </button>
           </div>
         </div>
@@ -101,19 +107,12 @@ export const Login = () => {
             />
           </div>
 
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
           <Button
             type="submit"
-            disabled={loading}
             className="w-full bg-primary text-white hover:bg-primary-700 font-bold py-6 text-base transition-all hover:shadow-xl"
             data-testid="btn-login-submit"
           >
-            {loading ? 'Sending login link...' : 'Send Login Link'}
+            Continue
           </Button>
         </form>
 
