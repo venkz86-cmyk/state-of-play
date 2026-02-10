@@ -122,21 +122,26 @@ export const Header = () => {
             
             {user ? (
               <>
-                <Link to="/dashboard">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="font-body"
-                    data-testid="btn-dashboard"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    {user.name}
-                  </Button>
-                </Link>
+                <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                  <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">
+                      {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {user.name || user.email?.split('@')[0]}
+                  </span>
+                  {user.is_paid && (
+                    <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold">
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={logout}
+                  className="text-muted-foreground hover:text-foreground"
                   data-testid="btn-logout"
                 >
                   <LogOut className="h-4 w-4" />
