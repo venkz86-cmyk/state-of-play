@@ -362,6 +362,30 @@ GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 class MagicLinkRequest(BaseModel):
     email: EmailStr
 
+@api_router.get("/ghost/integrity-token")
+async def get_ghost_integrity_token():
+    """Proxy endpoint to get Ghost integrity token"""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                f'{GHOST_URL}/members/api/integrity-token/',
+                headers={
+                    'app-pragma': 'no-cache',
+                    'x-ghost-version': '5.98'
+                }
+            )
+            
+            if response.status_code == 200:
+                return {"token": response.text}
+            else:
+                logger.error(f"Failed to get integrity token: {response.status_code}")
+                return {"token": None, "error": "Failed to get integrity token"}
+    except Exception as e:
+        logger.error(f"Integrity token error: {e}")
+        return {"token": None, "error": str(e)}
+
 @api_router.post("/ghost/send-magic-link")
 async def send_ghost_magic_link(request: MagicLinkRequest):
     """Proxy endpoint to send Ghost magic link"""
@@ -369,22 +393,47 @@ async def send_ghost_magic_link(request: MagicLinkRequest):
     
     try:
         async with httpx.AsyncClient() as http_client:
+            # First, get the integrity token
+            token_response = await http_client.get(
+                f'{GHOST_URL}/members/api/integrity-token/',
+                headers={
+                    'app-pragma': 'no-cache',
+                    'x-ghost-version': '5.98'
+                }
+            )
+            
+            integrity_token = token_response.text if token_response.status_code == 200 else None
+            
+            # Now send the magic link request
+            payload = {
+                'email': request.email,
+                'emailType': 'signin'
+            }
+            
+            if integrity_token:
+                payload['integrityToken'] = integrity_token
+            
             response = await http_client.post(
                 f'{GHOST_URL}/members/api/send-magic-link/',
-                json={
-                    'email': request.email,
-                    'emailType': 'signin'
-                },
+                json=payload,
                 headers={'Content-Type': 'application/json'}
             )
             
             if response.status_code == 201 or response.status_code == 200:
                 return {"success": True, "message": "Magic link sent successfully"}
             else:
-                error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
-                error_message = error_data.get('errors', [{}])[0].get('message', 'Failed to send magic link')
+                # Try to parse error response
+                try:
+                    error_data = response.json()
+                    error_message = error_data.get('errors', [{}])[0].get('message', 'Failed to send magic link')
+                except:
+                    error_message = f"Ghost returned status {response.status_code}"
+                
+                logger.error(f"Ghost magic link error: {error_message}")
                 raise HTTPException(status_code=response.status_code, detail=error_message)
-    except httpx.RequestError as e:
+    except HTTPException:
+        raise
+    except Exception as e:
         logger.error(f"Ghost magic link error: {e}")
         raise HTTPException(status_code=500, detail="Failed to communicate with Ghost")
 
