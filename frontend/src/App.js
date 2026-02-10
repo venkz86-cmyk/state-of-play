@@ -24,37 +24,39 @@ import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <div className="App min-h-screen flex flex-col bg-background text-foreground">
-            <Header />
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/state-of-play" element={<StateOfPlay />} />
-                <Route path="/left-field" element={<LeftField />} />
-                <Route path="/outfield" element={<Outfield />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/membership" element={<Membership />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/archive" element={<Archive />} />
-                {/* Article route MUST be last - catches /:slug */}
-                <Route path="/:id" element={<ArticlePage />} />
-              </Routes>
-            </main>
-            <Footer />
-            <BackToTop />
-            <Toaster position="top-right" />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <div className="App min-h-screen flex flex-col bg-background text-foreground">
+              <Header />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/state-of-play" element={<StateOfPlay />} />
+                  <Route path="/left-field" element={<LeftField />} />
+                  <Route path="/outfield" element={<Outfield />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/membership" element={<Membership />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/archive" element={<Archive />} />
+                  {/* Article route MUST be last - catches /:slug */}
+                  <Route path="/:id" element={<ArticlePage />} />
+                </Routes>
+              </main>
+              <Footer />
+              <BackToTop />
+              <Toaster position="top-right" />
+            </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
