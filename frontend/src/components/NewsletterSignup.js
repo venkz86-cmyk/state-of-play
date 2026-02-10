@@ -32,8 +32,8 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
         <div className="flex items-start space-x-3 mb-4">
           <Mail className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
           <div>
-            <p className="font-bold text-sm mb-1">Get The State of Play in your inbox</p>
-            <p className="text-xs text-foreground/70">Weekly insights on Indian sports business</p>
+            <p className="font-bold text-sm mb-1">Join the free briefing</p>
+            <p className="text-xs text-foreground/70">Sharp analysis on Indian sports business. Every week.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="flex space-x-2">
@@ -63,9 +63,9 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
         <div className="inline-flex items-center justify-center bg-white/10 p-3 rounded-full mb-4">
           <Mail className="h-6 w-6" />
         </div>
-        <h3 className="text-2xl font-heading font-bold mb-2">Stay informed</h3>
+        <h3 className="text-2xl font-heading font-bold mb-2">The free weekly briefing</h3>
         <p className="text-white/80 text-sm mb-6">
-          Get weekly insights on the business of Indian sports delivered to your inbox.
+          One sharp take on the business of Indian sport. No spam, just signal — delivered every week.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <input
@@ -91,7 +91,7 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
             )}
           </button>
         </form>
-        <p className="text-xs text-white/60 mt-4">Free newsletter. Unsubscribe anytime.</p>
+        <p className="text-xs text-white/60 mt-4">Free forever. Unsubscribe anytime.</p>
       </div>
     </div>
   );
