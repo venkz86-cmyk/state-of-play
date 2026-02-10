@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ghostAPI } from '../services/ghostAPI';
-import { useRazorpayPayment } from '../hooks/useRazorpayPayment';
+import { RazorpayButton } from '../components/RazorpayButton';
 import { Button } from '../components/ui/button';
-import { Clock, Calendar, Lock, Shield, TrendingUp } from 'lucide-react';
+import { Clock, Calendar, Shield, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const ArticlePage = () => {
