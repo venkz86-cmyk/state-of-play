@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 // Logo URLs
 const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg";
-const LOGO_DARK = "https://customer-assets.emergentagent.com/job_dcd955ba-7b95-4793-aa4a-cd2ca65f8014/artifacts/npfiook4_TSOP-Logo%20Final%3AB%26W.jpg";
+const LOGO_DARK = "https://customer-assets.emergentagent.com/job_dcd955ba-7b95-4793-aa4a-cd2ca65f8014/artifacts/gykve31s_Publication%20Icon.jpg";
 
 export const Header = () => {
   const { user, logout } = useAuth();
@@ -40,7 +40,7 @@ export const Header = () => {
             <img 
               src={isDark ? LOGO_DARK : LOGO_LIGHT}
               alt="The State of Play" 
-              className={`h-14 w-auto transition-transform group-hover:scale-105 ${isDark ? 'brightness-0 invert' : ''}`}
+              className="h-14 w-auto transition-transform group-hover:scale-105"
             />
           </Link>
 
