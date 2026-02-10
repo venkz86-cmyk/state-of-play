@@ -151,9 +151,9 @@ export const Header = () => {
               <>
                 <Link to="/login">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    className="font-body hidden md:inline-flex"
+                    className="font-body hidden sm:inline-flex border-primary text-primary hover:bg-primary hover:text-white"
                     data-testid="btn-login-header"
                   >
                     Login
