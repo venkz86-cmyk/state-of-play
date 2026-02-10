@@ -89,14 +89,17 @@ export const ArticlePage = () => {
   const publicationText = article.publication === 'The State of Play' ? 'PREMIUM' : 'FREE';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800 z-50">
         <div 
           className="h-full bg-primary transition-all duration-150 ease-out"
           style={{ width: `${readProgress}%` }}
         />
       </div>
+      
+      {/* Copy Quote Popup */}
+      {canAccessContent && <CopyQuote />}
 
       {/* Article Header */}
       <article className="container mx-auto px-6 max-w-4xl py-16">
