@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-const GHOST_URL = process.env.REACT_APP_GHOST_URL;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -15,13 +15,16 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // Check if user has Ghost session cookie
-      const response = await axios.get(`${GHOST_URL}/members/api/member/`, {
+      // Check if user has Ghost session via our backend proxy
+      const response = await axios.get(`${API}/api/ghost/member`, {
         withCredentials: true
       });
       
       if (response.data) {
-        setUser(response.data);
+        setUser({
+          ...response.data,
+          is_subscriber: response.data.paid || false
+        });
       }
     } catch (error) {
       // Not logged in
@@ -34,20 +37,19 @@ export const AuthProvider = ({ children }) => {
   const sendMagicLink = async (email) => {
     try {
       const response = await axios.post(
-        `${GHOST_URL}/members/api/send-magic-link/`,
-        { email, emailType: 'signin' },
-        { withCredentials: true }
+        `${API}/api/ghost/send-magic-link`,
+        { email }
       );
       return { success: true };
     } catch (error) {
-      throw new Error(error.response?.data?.errors?.[0]?.message || 'Failed to send magic link');
+      throw new Error(error.response?.data?.detail || 'Failed to send magic link');
     }
   };
 
   const logout = async () => {
-    // Clear Ghost session
+    // Clear user state
     setUser(null);
-    // Optionally call Ghost logout endpoint
+    // Redirect to home
     window.location.href = '/';
   };
 
