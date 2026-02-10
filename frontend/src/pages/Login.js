@@ -101,7 +101,7 @@ export const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white border-2 border-border focus:border-primary px-4 py-3 outline-none transition-colors w-full font-body"
+              className="bg-background border-2 border-border focus:border-primary px-4 py-3 outline-none transition-colors w-full font-body"
               placeholder="your@email.com"
               data-testid="input-email"
             />
