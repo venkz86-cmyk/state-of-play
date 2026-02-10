@@ -355,6 +355,62 @@ async def get_geo_location(request: Request):
         logger.error(f"Geo location error: {e}")
         return {"country_code": "US", "status": "error"}
 
+# Ghost API proxy endpoints
+GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
+GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
+
+@api_router.post("/ghost/send-magic-link")
+async def send_ghost_magic_link(request: MagicLinkRequest):
+    """Proxy endpoint to send Ghost magic link"""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.post(
+                f'{GHOST_URL}/members/api/send-magic-link/',
+                json={
+                    'email': request.email,
+                    'emailType': 'signin'
+                },
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            if response.status_code == 201 or response.status_code == 200:
+                return {"success": True, "message": "Magic link sent successfully"}
+            else:
+                error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                error_message = error_data.get('errors', [{}])[0].get('message', 'Failed to send magic link')
+                raise HTTPException(status_code=response.status_code, detail=error_message)
+    except httpx.RequestError as e:
+        logger.error(f"Ghost magic link error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to communicate with Ghost")
+
+@api_router.get("/ghost/member")
+async def get_ghost_member(request: Request):
+    """Proxy endpoint to get Ghost member details from session"""
+    import httpx
+    
+    # Forward the cookies from the original request
+    cookies = request.cookies
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                f'{GHOST_URL}/members/api/member/',
+                cookies=cookies
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return None
+    except Exception as e:
+        logger.error(f"Ghost member fetch error: {e}")
+        return None
+
 app.include_router(api_router)
 
 app.add_middleware(
