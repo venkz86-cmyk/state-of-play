@@ -121,13 +121,21 @@ export const ArticlePage = () => {
         </div>
 
         {article.image_url && (
-          <div className="relative w-full aspect-[16/9] mb-12 overflow-hidden border-2 border-border">
-            <img 
-              src={article.image_url} 
-              alt={article.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <figure className="mb-12">
+            <div className="relative w-full aspect-[16/9] overflow-hidden border-2 border-border">
+              <img 
+                src={article.image_url} 
+                alt={article.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {article.image_caption && (
+              <figcaption 
+                className="mt-3 text-sm text-muted-foreground font-body text-center italic"
+                dangerouslySetInnerHTML={{ __html: article.image_caption }}
+              />
+            )}
+          </figure>
         )}
 
         {/* Content with Hard Paywall */}
