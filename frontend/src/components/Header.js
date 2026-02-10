@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { SearchModal } from './SearchModal';
+import { DarkModeToggle } from './DarkModeToggle';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { User, LogOut, Menu, Search } from 'lucide-react';
 import { useState } from 'react';
 
@@ -10,6 +12,9 @@ export const Header = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({ onSearchOpen: () => setSearchOpen(true) });
 
   const isActive = (path) => location.pathname === path;
 
