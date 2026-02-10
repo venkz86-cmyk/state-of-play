@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ghostAPI } from '../services/ghostAPI';
+import { useRazorpayPayment } from '../hooks/useRazorpayPayment';
 import { Button } from '../components/ui/button';
 import { Clock, Calendar, Lock, Shield, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,6 +11,7 @@ export const ArticlePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openPayment } = useRazorpayPayment();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -166,7 +168,7 @@ export const ArticlePage = () => {
                     </div>
                     
                     <Button 
-                      onClick={() => navigate('/signup')}
+                      onClick={() => openPayment(window.location.href)}
                       size="lg"
                       className="bg-primary text-white hover:bg-primary-700 font-bold px-10 py-6 text-base transition-all hover:shadow-2xl hover:scale-105 w-full mb-4"
                       data-testid="btn-paywall-subscribe"
