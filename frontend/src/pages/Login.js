@@ -26,33 +26,37 @@ export const Login = () => {
               <Mail className="h-10 w-10 text-primary" />
             </div>
             
-            <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Access Your Account</h1>
+            <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Sign In</h1>
             
-            <p className="text-base text-muted-foreground font-body mb-4">
-              To sign in to <strong className="text-primary">{email}</strong>, you can:
+            <p className="text-base text-muted-foreground font-body mb-6">
+              To access your account at <strong className="text-primary">{email}</strong>:
             </p>
             
             <div className="bg-muted border border-primary/20 p-5 mb-6 text-left space-y-4">
               <div>
-                <p className="text-sm font-bold mb-1">1. Check your email</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  When you subscribed, you received a magic link email. Click that link to sign in.
-                </p>
-              </div>
-              
-              <div>
-                <p className="text-sm font-bold mb-1">2. Request a new magic link</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Visit The State of Play on Ghost to request a new sign-in link:
-                </p>
+                <p className="text-sm font-bold mb-2">Step 1: Open the sign-in portal</p>
                 <a 
                   href={`${GHOST_URL}/#/portal/signin`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-sm text-primary hover:underline font-semibold mt-2"
+                  className="inline-flex items-center justify-center w-full bg-primary text-white px-4 py-3 font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Open Ghost Sign-in Portal <ExternalLink className="h-3 w-3 ml-1" />
+                  Open Sign-in Portal <ExternalLink className="h-4 w-4 ml-2" />
                 </a>
+              </div>
+              
+              <div>
+                <p className="text-sm font-bold mb-1">Step 2: Enter your email</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Enter <strong>{email}</strong> in the sign-in form.
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-bold mb-1">Step 3: Check email for verification code</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  You'll receive a 6-digit code via email. Enter it to complete sign-in.
+                </p>
               </div>
             </div>
 
