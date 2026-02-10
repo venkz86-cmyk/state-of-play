@@ -64,7 +64,7 @@ body {
 /* Article reading experience */
 .article-content {
   font-family: 'Merriweather', Georgia, serif;
-  font-size: 1.125rem;
+  font-size: calc(1.125rem * var(--article-font-scale, 100) / 100);
   line-height: 1.8;
   color: #1a1a1a;
   max-width: 100%;
@@ -72,7 +72,7 @@ body {
 
 .article-content p {
   margin-bottom: 1.75rem;
-  font-size: 1.125rem;
+  font-size: calc(1.125rem * var(--article-font-scale, 100) / 100);
   line-height: 1.8;
 }
 
