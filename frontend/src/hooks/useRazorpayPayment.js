@@ -1,34 +1,40 @@
 import { useGeoPricing } from './useGeoPricing';
+import { useState, useCallback, useRef } from 'react';
 
 export const useRazorpayPayment = () => {
   const pricing = useGeoPricing();
+  const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef(null);
 
-  const openPayment = (returnUrl = window.location.href) => {
+  const openPayment = useCallback((returnUrl = window.location.href) => {
+    // Don't proceed if pricing is still loading
+    if (pricing.loading) {
+      console.log('Waiting for pricing to load...');
+      return;
+    }
+
+    setIsLoading(true);
+
     // Payment button IDs based on location
     const paymentButtonId = pricing.country === 'IN' 
       ? 'pl_ROAFZZjAvjHhfQ'  // India: ₹2,499
       : 'pl_ROAIM0inFWbpC2';  // International: $120
 
-    // Check if script already loaded
-    const existingScript = document.querySelector(`script[data-payment_button_id="${paymentButtonId}"]`);
-    
-    if (existingScript) {
-      // Script exists, trigger it
-      existingScript.click();
-      return;
-    }
+    console.log('Opening Razorpay payment for country:', pricing.country, 'Button ID:', paymentButtonId);
+
+    // Remove any existing Razorpay forms
+    const existingForms = document.querySelectorAll('.razorpay-payment-form');
+    existingForms.forEach(form => form.remove());
 
     // Create form and load Razorpay button
     const form = document.createElement('form');
-    form.style.display = 'none';
+    form.className = 'razorpay-payment-form';
+    form.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; opacity: 0;';
     
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
     script.setAttribute('data-payment_button_id', paymentButtonId);
     script.async = true;
-    
-    // Add return URL as data attribute (Razorpay will use this)
-    script.setAttribute('data-redirect_url', returnUrl);
     
     form.appendChild(script);
     document.body.appendChild(form);
@@ -38,11 +44,20 @@ export const useRazorpayPayment = () => {
       setTimeout(() => {
         const button = form.querySelector('button');
         if (button) {
+          console.log('Razorpay button found, triggering click');
           button.click();
+        } else {
+          console.error('Razorpay button not found in form');
         }
-      }, 500);
+        setIsLoading(false);
+      }, 800);
     };
-  };
 
-  return { openPayment, pricing };
+    script.onerror = () => {
+      console.error('Failed to load Razorpay script');
+      setIsLoading(false);
+    };
+  }, [pricing.country, pricing.loading]);
+
+  return { openPayment, pricing, isLoading };
 };
