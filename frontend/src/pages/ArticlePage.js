@@ -148,6 +148,8 @@ export const ArticlePage = () => {
               <img 
                 src={article.image_url} 
                 alt={article.title}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 className="w-full h-full object-cover"
               />
             </div>
