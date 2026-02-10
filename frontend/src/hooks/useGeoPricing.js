@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
 export const useGeoPricing = () => {
   const [pricing, setPricing] = useState({
     currency: 'INR',
@@ -14,8 +16,8 @@ export const useGeoPricing = () => {
   useEffect(() => {
     const detectLocation = async () => {
       try {
-        // Try multiple free geolocation APIs for reliability
-        const response = await fetch('https://ipapi.co/json/');
+        // Use our backend proxy to detect location (avoids CORS issues)
+        const response = await fetch(`${API}/api/geo/location`);
         const data = await response.json();
         
         const countryCode = data.country_code;
