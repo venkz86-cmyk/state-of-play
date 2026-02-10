@@ -86,7 +86,7 @@ export const SearchModal = ({ isOpen, onClose }) => {
           {results.map((article) => (
             <Link
               key={article.id}
-              to={`/article/${article.id}`}
+              to={`/${article.id}`}
               onClick={onClose}
               className="block p-4 hover:bg-muted border-b border-border/50 transition-colors"
             >
