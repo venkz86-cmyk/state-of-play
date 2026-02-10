@@ -153,13 +153,13 @@ export const Header = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="font-body hidden sm:inline-flex border-primary text-primary hover:bg-primary hover:text-white"
+                    className="font-body border-primary text-primary hover:bg-primary hover:text-white"
                     data-testid="btn-login-header"
                   >
                     Login
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/signup" className="hidden sm:inline-flex">
                   <Button 
                     size="sm" 
                     className="bg-primary text-white hover:bg-primary-700 font-semibold px-6 transition-all hover:shadow-lg hover:-translate-y-0.5"
