@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { ghostAPI } from '../services/ghostAPI';
 import { ArticleCard } from '../components/ArticleCard';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { ArrowRight } from 'lucide-react';
 
 export const StateOfPlay = () => {
   const [articles, setArticles] = useState([]);
@@ -14,8 +13,12 @@ export const StateOfPlay = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await axios.get(`${API}/articles?publication=The State of Play`);
-      setArticles(response.data);
+      const posts = await ghostAPI.getPosts({ limit: 50 });
+      // Filter for State of Play articles (not tagged as Left Field)
+      const stateOfPlayArticles = posts.filter(article => 
+        article.publication === 'The State of Play'
+      );
+      setArticles(stateOfPlayArticles);
     } catch (error) {
       console.error('Failed to fetch articles:', error);
     } finally {
@@ -26,7 +29,7 @@ export const StateOfPlay = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground font-body">Loading...</p>
+        <p className="text-muted-foreground font-body">Loading stories from Ghost...</p>
       </div>
     );
   }
@@ -46,15 +49,17 @@ export const StateOfPlay = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {articles.length > 0 ? (
-            articles.map((article) => (
+        {articles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {articles.map((article) => (
               <ArticleCard key={article.id} article={article} />
-            ))
-          ) : (
-            <p className="text-muted-foreground font-body col-span-3">No articles found.</p>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground font-body">No articles found. Publish your first premium story in Ghost!</p>
+          </div>
+        )}
       </div>
     </div>
   );
