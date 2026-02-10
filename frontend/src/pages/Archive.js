@@ -102,7 +102,7 @@ export const Archive = () => {
               {monthArticles.map((article) => (
                 <Link
                   key={article.id}
-                  to={`/article/${article.id}`}
+                  to={`/${article.id}`}
                   className="block group"
                 >
                   <article className="flex items-start justify-between p-4 border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all">
