@@ -1,14 +1,10 @@
-import { useRazorpayPayment } from '../hooks/useRazorpayPayment';
-import { Button } from '../components/ui/button';
+import { useGeoPricing } from '../hooks/useGeoPricing';
+import { RazorpayButton } from '../components/RazorpayButton';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Signup = () => {
-  const { openPayment, pricing, isLoading } = useRazorpayPayment();
-
-  const handleSubscribe = () => {
-    openPayment(window.location.origin + '/dashboard');
-  };
+  const pricing = useGeoPricing();
 
   return (
     <div className="min-h-screen flex items-center justify-center py-24 px-4">
@@ -48,21 +44,8 @@ export const Signup = () => {
             </>
           )}
           
-          <Button
-            onClick={handleSubscribe}
-            disabled={pricing.loading || isLoading}
-            className="w-full bg-primary text-white hover:bg-primary-700 font-bold py-6 text-lg transition-all hover:shadow-xl mb-4 disabled:opacity-50"
-            data-testid="btn-razorpay-subscribe"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Loading Payment...
-              </>
-            ) : (
-              'Subscribe Now'
-            )}
-          </Button>
+          {/* Razorpay Payment Button */}
+          <RazorpayButton className="mb-4" />
           
           <p className="text-xs text-muted-foreground">
             Secured by Razorpay • Annual subscription
