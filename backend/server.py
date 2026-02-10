@@ -2,7 +2,6 @@ from fastapi import FastAPI, APIRouter, HTTPException, Header, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
@@ -11,21 +10,34 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
-import bcrypt
-import razorpay
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB is optional - only initialize if URL is provided
+mongo_url = os.environ.get('MONGO_URL', '')
+client = None
+db = None
+if mongo_url and 'placeholder' not in mongo_url:
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        client = AsyncIOMotorClient(mongo_url)
+        db = client[os.environ.get('DB_NAME', 'stateofplay')]
+    except Exception as e:
+        logging.warning(f"MongoDB connection failed: {e}")
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key')
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24 * 7
 
-razorpay_client = razorpay.Client(auth=(os.environ.get('RAZORPAY_KEY_ID'), os.environ.get('RAZORPAY_KEY_SECRET')))
+# Razorpay is optional
+razorpay_client = None
+try:
+    import razorpay
+    if os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'):
+        razorpay_client = razorpay.Client(auth=(os.environ.get('RAZORPAY_KEY_ID'), os.environ.get('RAZORPAY_KEY_SECRET')))
+except Exception as e:
+    logging.warning(f"Razorpay initialization failed: {e}")
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
