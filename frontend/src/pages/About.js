@@ -4,9 +4,9 @@ import { Button } from '../components/ui/button';
 
 export const About = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-50 via-white to-primary-50 border-b-2 border-primary/10">
+      <section className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-b-2 border-primary/10">
         <div className="container mx-auto px-4 md:px-8 max-w-5xl py-20 md:py-28">
           <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-tight mb-6 text-center">
             About
@@ -17,7 +17,7 @@ export const About = () => {
       {/* Mission */}
       <section className="py-20">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
-          <div className="bg-white border-2 border-primary/20 p-12 mb-16">
+          <div className="bg-card border-2 border-primary/20 p-12 mb-16">
             <p className="text-xl leading-relaxed text-foreground/90 font-body mb-6">
               <strong className="text-primary">The State of Play</strong> is a weekly, subscription-only newsletter that provides in-depth, original insight into the business of sport — with sharp reporting, analysis, and a distinct editorial voice grounded in India.
             </p>
