@@ -7,6 +7,9 @@ import { ShareButtons } from '../components/ShareButtons';
 import { FontSizeToggle } from '../components/FontSizeToggle';
 import { RelatedArticles } from '../components/RelatedArticles';
 import { NewsletterSignup } from '../components/NewsletterSignup';
+import { ReadingTimeLeft } from '../components/ReadingTimeLeft';
+import { CopyQuote } from '../components/CopyQuote';
+import { addToReadingHistory } from '../components/ReadingHistory';
 import { Clock, Calendar, Shield, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
