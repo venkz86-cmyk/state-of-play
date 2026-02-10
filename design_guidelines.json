@@ -1,0 +1,158 @@
+{
+  "identity": {
+    "name": "The State of Play",
+    "mission": "To be the 'Insider's Desk' for Indian sports business—blending financial rigour with editorial elegance.",
+    "emotional_tone": "Authoritative, Sophisticated, Exclusive, Insightful, Kinetic",
+    "personas": {
+      "primary": "The Industry Insider (Values depth, data, and exclusivity)",
+      "secondary": "The Aspiring Professional (Values access and learning)"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "heading": {
+        "family": "Playfair Display, serif",
+        "usage": "Main headlines, article titles, section headers. Use for impact.",
+        "weights": ["400", "700", "900"],
+        "letter_spacing": "tracking-tight"
+      },
+      "body": {
+        "family": "Manrope, sans-serif",
+        "usage": "Article text, UI elements, navigation, buttons.",
+        "weights": ["400", "500", "600"],
+        "line_height": "leading-relaxed"
+      },
+      "accent": {
+        "family": "JetBrains Mono, monospace",
+        "usage": "Data points, timestamps, 'Insider' tags, chart labels.",
+        "weights": ["400", "500"]
+      }
+    },
+    "scale": {
+      "display": "text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9]",
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl font-semibold tracking-tight",
+      "h3": "text-2xl font-medium",
+      "body_lg": "text-lg md:text-xl leading-8 text-foreground/90",
+      "body_base": "text-base leading-7 text-foreground/80",
+      "caption": "text-xs md:text-sm font-medium tracking-wider uppercase text-muted-foreground"
+    }
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#2E5AAC",
+      "foreground": "#FFFFFF",
+      "50": "#E6EEFF",
+      "100": "#CCE0FF",
+      "900": "#1A3366"
+    },
+    "secondary": {
+      "DEFAULT": "#047857",
+      "foreground": "#FFFFFF",
+      "description": "Used for 'The Left Field' free tier branding (Emerald Green)"
+    },
+    "background": {
+      "light": "#F9F9F7",
+      "dark": "#0A0A0A",
+      "paper": "#FFFFFF"
+    },
+    "surface": {
+      "light": "#FFFFFF",
+      "dark": "#121212",
+      "glass_light": "rgba(255, 255, 255, 0.7)",
+      "glass_dark": "rgba(10, 10, 10, 0.6)"
+    },
+    "text": {
+      "primary": "#1A1A1A",
+      "secondary": "#4A4A4A",
+      "muted": "#71717A"
+    },
+    "semantic": {
+      "paywall_overlay": "bg-gradient-to-b from-transparent to-background/95",
+      "premium_badge": "#C6A663"
+    }
+  },
+  "layout_strategy": {
+    "container": {
+      "default": "container mx-auto px-4 md:px-8 max-w-7xl",
+      "narrow": "max-w-3xl mx-auto px-6"
+    },
+    "spacing": {
+      "section_gap": "py-24 md:py-32",
+      "element_gap": "space-y-8"
+    },
+    "grids": {
+      "bento_hero": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "editorial_list": "grid grid-cols-1 md:grid-cols-3 gap-12",
+      "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-white rounded-none px-8 py-3 font-medium uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
+      "secondary": "bg-transparent border border-primary text-primary rounded-none px-8 py-3 font-medium uppercase tracking-widest hover:bg-primary/5 transition-all"
+    },
+    "cards": {
+      "editorial": "group relative overflow-hidden bg-transparent border-b border-border/40 pb-8 hover:opacity-80 transition-opacity cursor-pointer",
+      "premium": "bg-card border border-border/50 p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+    },
+    "badges": {
+      "premium": "bg-[#C6A663] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm",
+      "free": "bg-secondary text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm"
+    },
+    "paywall": {
+      "overlay": "absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background flex flex-col items-center justify-end pb-20 backdrop-blur-[2px]",
+      "message_box": "bg-background/80 border border-primary/20 p-8 text-center max-w-md mx-auto backdrop-blur-md shadow-2xl"
+    },
+    "inputs": {
+      "style": "bg-transparent border-b border-border focus:border-primary px-0 py-2 rounded-none focus:ring-0 outline-none transition-colors w-full placeholder:text-muted-foreground/50"
+    }
+  },
+  "visual_enhancers": {
+    "texture": "Use a subtle 'noise' texture overlay at 2-3% opacity on the main background to simulate paper grain.",
+    "shadows": "Use 'hard' shadows for buttons (retro-tech feel) and 'soft, diffuse' shadows for modals (luxury feel).",
+    "borders": "Use 1px borders with 10-15% opacity. Don't use heavy borders.",
+    "gradients": "NO GRADIENTS on buttons. Use subtle gradients only for the 'Paywall Blur' or 'Hero Image Overlays'."
+  },
+  "assets": {
+    "images": {
+      "hero_cricket": {
+        "url": "https://images.unsplash.com/photo-1750716413444-c8a957fcf35c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxjcmlja2V0JTIwc3RhZGl1bSUyMG5pZ2h0JTIwcGFub3JhbWljfGVufDB8fHx8MTc3MDcxODM0OHww&ixlib=rb-4.1.0&q=85",
+        "alt": "Panoramic view of a lit cricket stadium at night",
+        "category": "hero"
+      },
+      "hero_athlete": {
+        "url": "https://images.unsplash.com/photo-1764093369645-0b04338873f8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxhdGhsZXRlJTIwc2lsaG91ZXR0ZSUyMHRyYWluaW5nJTIwZm9jdXN8ZW58MHx8fHwxNzcwNzE4MzQ4fDA&ixlib=rb-4.1.0&q=85",
+        "alt": "Athletes training on track in silhouette",
+        "category": "section_bg"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px (Fine/Elegant)"
+    }
+  },
+  "motion": {
+    "page_transition": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}",
+    "hover": "hover:translate-y-[-2px] transition-transform duration-300",
+    "stagger": "staggerChildren: 0.1"
+  },
+  "instructions_to_main_agent": [
+    "1. FILE EXTENSION: Use .js and .jsx for all React files. Do NOT use .ts or .tsx.",
+    "2. THEME: Implement a 'Paper White' Light Mode as default. Use Royal Blue (#2E5AAC) strictly for Primary Actions and Brand Marks.",
+    "3. PAYWALL: The paywall must be 'soft' visually but 'hard' functionally. Show the first 2 paragraphs, then fade out into a 'Join the Club' CTA.",
+    "4. AUTH: Ensure Login/Signup flows are clean, centered, and distraction-free. Use the Razorpay email requirement as a validation step.",
+    "5. NAVIGATION: Create a distinct visual separation between 'The State of Play' (Premium/Blue) and 'The Left Field' (Free/Green) in the navigation.",
+    "6. CONTENT CARD: Do not use standard 'Card' components with shadows. Use 'Editorial' style: Image Top, Typography below, minimal borders, lots of whitespace.",
+    "7. IMAGES: Use the provided Unsplash URLs for hero sections. Use CSS filters (grayscale + slight blue tint) to unify disparate images.",
+    "8. SHADCN: Customize all Shadcn components to remove rounded-xl. We want sharp corners (rounded-sm or rounded-none) for a 'Business/News' feel.",
+    "9. DATA-TESTID: Add data-testid to all interactive elements (buttons, inputs, links) as 'role-context-name' (e.g., 'btn-login-submit')."
+  ],
+  "universal_guidelines": [
+    "Avoid generic AI designs.",
+    "Use 2-3x more spacing than typical.",
+    "Interactive elements must have micro-animations.",
+    "No transparent backgrounds on overlays.",
+    "Use sonner for toasts."
+  ]
+}
