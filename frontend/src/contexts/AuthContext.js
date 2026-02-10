@@ -1,70 +1,88 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
 
 const API = process.env.REACT_APP_BACKEND_URL;
+const STORAGE_KEY = 'tsop_member';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Load saved member on mount
   useEffect(() => {
-    checkAuth();
+    const savedMember = localStorage.getItem(STORAGE_KEY);
+    if (savedMember) {
+      try {
+        const member = JSON.parse(savedMember);
+        setUser(member);
+      } catch (e) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+    setLoading(false);
   }, []);
 
-  const checkAuth = async () => {
-    // If no backend URL, skip auth check
-    if (!API) {
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      // Check if user has Ghost session via our backend proxy
-      const response = await axios.get(`${API}/api/ghost/member`, {
-        withCredentials: true,
-        timeout: 5000
-      });
-      
-      if (response.data) {
-        setUser({
-          ...response.data,
-          is_subscriber: response.data.paid || false
-        });
-      }
-    } catch (error) {
-      // Not logged in or backend not available
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendMagicLink = async (email) => {
+  // Verify member status with Ghost via backend
+  const verifyMember = useCallback(async (email) => {
     if (!API) {
       throw new Error('Backend not available');
     }
+    
     try {
-      const response = await axios.post(
-        `${API}/api/ghost/send-magic-link`,
-        { email }
-      );
-      return { success: true };
+      const response = await axios.post(`${API}/api/ghost/verify-member`, { email });
+      const data = response.data;
+      
+      if (data.is_member) {
+        const member = {
+          email: data.email,
+          name: data.name,
+          is_paid: data.is_paid,
+          is_free: data.is_member && !data.is_paid,
+          status: data.status,
+          verified_at: new Date().toISOString()
+        };
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(member));
+        setUser(member);
+        
+        return { success: true, member };
+      } else {
+        return { 
+          success: false, 
+          error: data.status === 'not_configured' 
+            ? 'Member verification not configured' 
+            : 'Email not found. Please subscribe first.'
+        };
+      }
     } catch (error) {
-      throw new Error(error.response?.data?.detail || 'Failed to send magic link');
+      throw new Error(error.response?.data?.detail || 'Failed to verify member');
     }
-  };
+  }, []);
 
-  const logout = async () => {
-    // Clear user state
+  // Logout - clear saved member
+  const logout = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
     setUser(null);
-    // Redirect to home
-    window.location.href = '/';
-  };
+  }, []);
+
+  // Check if user can access premium content
+  const canAccessPremium = user?.is_paid || false;
+  const isFreeMember = user?.is_free || false;
+  const isLoggedIn = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, loading, sendMagicLink, logout, checkAuth }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      verifyMember, 
+      logout,
+      canAccessPremium,
+      isFreeMember,
+      isLoggedIn
+    }}>
       {children}
     </AuthContext.Provider>
   );
