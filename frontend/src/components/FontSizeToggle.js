@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Minus, Plus, RotateCcw } from 'lucide-react';
+import { Minus, Plus, Type } from 'lucide-react';
 
 export const FontSizeToggle = () => {
   const [fontSize, setFontSize] = useState(() => {
@@ -7,7 +7,18 @@ export const FontSizeToggle = () => {
   });
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--article-font-scale', `${fontSize}%`);
+    // Apply font scale to article content
+    const articleContent = document.querySelector('.article-content');
+    if (articleContent) {
+      articleContent.style.fontSize = `${1.125 * fontSize / 100}rem`;
+    }
+    
+    // Also apply to all paragraphs within article
+    const paragraphs = document.querySelectorAll('.article-content p');
+    paragraphs.forEach(p => {
+      p.style.fontSize = `${1.125 * fontSize / 100}rem`;
+    });
+    
     localStorage.setItem('articleFontSize', fontSize.toString());
   }, [fontSize]);
 
@@ -28,10 +39,11 @@ export const FontSizeToggle = () => {
       
       <button
         onClick={reset}
-        className="px-2 py-1 text-xs font-medium text-foreground/70 hover:bg-foreground/10 rounded-sm transition-colors min-w-[3rem]"
+        className="px-2 py-1 text-xs font-medium text-foreground/70 hover:bg-foreground/10 rounded-sm transition-colors min-w-[3rem] flex items-center justify-center space-x-1"
         title="Reset font size"
       >
-        {fontSize}%
+        <Type className="h-3 w-3" />
+        <span>{fontSize}%</span>
       </button>
       
       <button
