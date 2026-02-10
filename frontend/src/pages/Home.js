@@ -97,7 +97,6 @@ export const Home = () => {
             <div className="flex items-end justify-between mb-10">
               <div>
                 <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">Featured Story</h2>
-                <p className="text-sm text-muted-foreground font-mono uppercase tracking-wider">From Ghost CMS</p>
               </div>
             </div>
             <div className="max-w-5xl">
