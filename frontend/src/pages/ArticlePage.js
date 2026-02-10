@@ -307,7 +307,7 @@ export const ArticlePage = () => {
               </div>
               
               {/* Bottom blur to prevent reading */}
-              <div className="h-48 bg-gradient-to-b from-primary-100/80 to-white" />
+              <div className="h-48 bg-gradient-to-b from-primary/10 to-background" />
             </>
           )}
         </div>
