@@ -89,7 +89,7 @@ class GhostAPI {
     // Check if this is a paid/members-only post
     const isPremium = post.visibility === 'paid' || post.visibility === 'members';
 
-    // Handle paywall content
+    // Get full content
     let fullContent = post.html || '';
     let previewContent = '';
     
@@ -97,21 +97,15 @@ class GhostAPI {
     if (fullContent.includes('<!--more-->')) {
       const parts = fullContent.split('<!--more-->');
       previewContent = parts[0];
-      // For premium posts, DON'T include full content - only preview
-      fullContent = isPremium ? '' : parts.join('');
+      fullContent = parts.join('');
     } else {
-      // Extract first 2-3 paragraphs using regex
+      // Extract first 2-3 paragraphs for preview
       const pTagMatches = fullContent.match(/<p[^>]*>.*?<\/p>/gs);
       
       if (pTagMatches && pTagMatches.length > 0) {
         previewContent = pTagMatches.slice(0, 3).join('');
       } else {
         previewContent = `<p>${post.excerpt || post.custom_excerpt || ''}</p>`;
-      }
-      
-      // For premium posts, DON'T include full content - only preview
-      if (isPremium) {
-        fullContent = '';
       }
     }
 
