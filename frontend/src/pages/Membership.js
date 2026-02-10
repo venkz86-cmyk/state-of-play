@@ -1,8 +1,10 @@
 import { Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { useGeoPricing } from '../hooks/useGeoPricing';
 
 export const Membership = () => {
+  const pricing = useGeoPricing();
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl py-20">
