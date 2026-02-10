@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import axios from 'axios';
 import { toast } from 'sonner';
-import useRazorpay from 'react-razorpay';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -13,7 +12,6 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 export const Dashboard = () => {
   const { user, fetchUser } = useAuth();
   const navigate = useNavigate();
-  const [Razorpay] = useRazorpay();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,8 +72,15 @@ export const Dashboard = () => {
         }
       };
 
-      const razorpayInstance = new Razorpay(options);
-      razorpayInstance.open();
+      // Load Razorpay script dynamically
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => {
+        const razorpayInstance = new window.Razorpay(options);
+        razorpayInstance.open();
+      };
+      document.body.appendChild(script);
     } catch (error) {
       toast.error('Failed to initiate payment');
     }
