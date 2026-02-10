@@ -7,18 +7,9 @@ export const FontSizeToggle = () => {
   });
 
   useEffect(() => {
-    // Apply font scale to article content
-    const articleContent = document.querySelector('.article-content');
-    if (articleContent) {
-      articleContent.style.fontSize = `${1.125 * fontSize / 100}rem`;
-    }
-    
-    // Also apply to all paragraphs within article
-    const paragraphs = document.querySelectorAll('.article-content p');
-    paragraphs.forEach(p => {
-      p.style.fontSize = `${1.125 * fontSize / 100}rem`;
-    });
-    
+    // Apply font size via CSS variable on document root
+    const calculatedSize = `${1.125 * fontSize / 100}rem`;
+    document.documentElement.style.setProperty('--article-font-size', calculatedSize);
     localStorage.setItem('articleFontSize', fontSize.toString());
   }, [fontSize]);
 
