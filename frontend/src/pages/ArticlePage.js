@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { ghostAPI } from '../services/ghostAPI';
 import { RazorpayButton } from '../components/RazorpayButton';
