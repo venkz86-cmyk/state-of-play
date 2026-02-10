@@ -74,7 +74,7 @@ export const ReadingHistory = ({ variant = 'sidebar' }) => {
           {history.slice(0, 3).map((item) => (
             <Link
               key={item.id}
-              to={`/article/${item.id}`}
+              to={`/${item.id}`}
               className="flex items-center space-x-3 group"
             >
               {item.image_url && (
