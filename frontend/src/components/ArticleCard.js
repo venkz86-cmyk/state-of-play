@@ -8,7 +8,7 @@ export const ArticleCard = ({ article, featured = false }) => {
 
   if (featured) {
     return (
-      <Link to={`/article/${article.id}`} data-testid={`featured-article-${article.id}`}>
+      <Link to={`/${article.id}`} data-testid={`featured-article-${article.id}`}>
         <article className={`group relative overflow-hidden bg-card border-2 ${publicationColor} hover:border-primary/40 transition-all duration-300 hover:shadow-2xl cursor-pointer h-full`}>
           {article.image_url && (
             <div className="relative w-full aspect-[16/9] overflow-hidden">
