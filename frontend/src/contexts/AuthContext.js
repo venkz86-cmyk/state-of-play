@@ -3,63 +3,56 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const GHOST_URL = process.env.REACT_APP_GHOST_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    checkAuth();
+  }, []);
 
-  const fetchUser = async () => {
+  const checkAuth = async () => {
     try {
-      const response = await axios.get(`${API}/auth/me`);
-      setUser(response.data);
+      // Check if user has Ghost session cookie
+      const response = await axios.get(`${GHOST_URL}/members/api/member/`, {
+        withCredentials: true
+      });
+      
+      if (response.data) {
+        setUser(response.data);
+      }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
+      // Not logged in
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
-    const response = await axios.post(`${API}/auth/login`, { email, password });
-    const { token, user } = response.data;
-    setToken(token);
-    setUser(user);
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return user;
+  const sendMagicLink = async (email) => {
+    try {
+      const response = await axios.post(
+        `${GHOST_URL}/members/api/send-magic-link/`,
+        { email, emailType: 'signin' },
+        { withCredentials: true }
+      );
+      return { success: true };
+    } catch (error) {
+      throw new Error(error.response?.data?.errors?.[0]?.message || 'Failed to send magic link');
+    }
   };
 
-  const signup = async (email, password, name) => {
-    const response = await axios.post(`${API}/auth/signup`, { email, password, name });
-    const { token, user } = response.data;
-    setToken(token);
-    setUser(user);
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return user;
-  };
-
-  const logout = () => {
+  const logout = async () => {
+    // Clear Ghost session
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    // Optionally call Ghost logout endpoint
+    window.location.href = '/';
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, sendMagicLink, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

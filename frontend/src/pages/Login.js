@@ -1,84 +1,126 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { toast } from 'sonner';
+import { Mail, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const { sendMagicLink } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      await login(email, password);
-      toast.success('Welcome back!');
-      navigate('/');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Login failed');
+      await sendMagicLink(email);
+      setSent(true);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (sent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-24 px-4 bg-gradient-to-br from-primary-50/30 via-white to-white">
+        <div className="w-full max-w-md">
+          <div className="bg-white border-2 border-primary/20 p-10 shadow-xl text-center">
+            <div className="inline-flex items-center justify-center bg-primary/10 p-4 rounded-full mb-6">
+              <Mail className="h-10 w-10 text-primary" />
+            </div>
+            
+            <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Check your inbox</h1>
+            
+            <p className="text-base text-foreground/70 font-body mb-2">
+              We've sent a secure login link to:
+            </p>
+            <p className="text-lg font-bold text-primary mb-6">{email}</p>
+            
+            <div className="bg-primary-50 border border-primary/20 p-4 mb-6 text-left">
+              <p className="text-sm text-foreground/80 font-body leading-relaxed">
+                Click the link in your email to sign in and access premium content.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setSent(false);
+                setEmail('');
+              }}
+              className="text-sm text-primary hover:underline font-semibold"
+            >
+              Didn't receive it? Send again →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-24 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-heading font-bold tracking-tight mb-2">Welcome back</h1>
-          <p className="text-base text-muted-foreground font-body">Login to access your account</p>
+          <p className="text-base text-muted-foreground font-body">Sign in to your account</p>
+        </div>
+
+        {/* Important Email Notice */}
+        <div className="bg-accent/10 border-2 border-accent/30 p-4 mb-6">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground mb-1">Use your payment email</p>
+              <p className="text-xs text-foreground/70 leading-relaxed">
+                Sign in with the same email you used for your Razorpay subscription.
+              </p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium font-body">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium font-body">Email Address</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-transparent border-b border-border focus:border-primary px-0 py-2 rounded-none focus:ring-0 outline-none transition-colors w-full"
+              className="bg-white border-2 border-border focus:border-primary px-4 py-3 outline-none transition-colors w-full font-body"
               placeholder="your@email.com"
               data-testid="input-email"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium font-body">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="bg-transparent border-b border-border focus:border-primary px-0 py-2 rounded-none focus:ring-0 outline-none transition-colors w-full"
-              placeholder="••••••••"
-              data-testid="input-password"
-            />
-          </div>
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full rounded-none bg-primary text-white hover:bg-primary/90 font-medium uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            className="w-full bg-primary text-white hover:bg-primary-700 font-bold py-6 text-base transition-all hover:shadow-xl"
             data-testid="btn-login-submit"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Sending login link...' : 'Send Login Link'}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground font-body mt-6">
-          Don't have an account?{' '}
+          New to The State of Play?{' '}
           <Link to="/signup" className="text-primary hover:underline font-medium">
-            Sign up
+            Subscribe now
           </Link>
         </p>
       </div>
