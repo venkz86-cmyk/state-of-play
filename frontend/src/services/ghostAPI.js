@@ -55,12 +55,24 @@ class GhostAPI {
     // Get author name - check authors array first, then primary_author
     const authorName = post.authors?.[0]?.name || post.primary_author?.name || 'The State of Play';
 
+    // Handle paywall - Ghost uses excerpt or <!--more--> for preview
+    // Split content at <!--more--> if it exists, otherwise use excerpt
+    let previewContent = post.excerpt || post.custom_excerpt || '';
+    let fullContent = post.html || '';
+    
+    // Check if content has <!--more--> marker
+    if (fullContent.includes('<!--more-->')) {
+      const parts = fullContent.split('<!--more-->');
+      previewContent = parts[0];
+      fullContent = parts.join(''); // Remove the marker for full content
+    }
+
     return {
       id: post.slug,
       title: post.title,
       subtitle: post.custom_excerpt || post.excerpt,
-      content: post.html,
-      preview_content: post.excerpt || post.custom_excerpt || post.title,
+      content: fullContent,
+      preview_content: previewContent,
       author: authorName,
       publication: this.getPublicationType(post),
       is_premium: post.visibility === 'paid' || post.visibility === 'members',
