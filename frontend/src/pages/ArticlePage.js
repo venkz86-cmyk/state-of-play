@@ -92,7 +92,7 @@ export const ArticlePage = () => {
 
   // Determine user status and content access
   const isLoggedIn = !!user;
-  const isPaidMember = user?.is_subscriber || user?.paid;
+  const isPaidMember = user?.is_paid || user?.is_subscriber || user?.paid;
   const isFreeMember = isLoggedIn && !isPaidMember;
   const canAccessContent = !article.is_premium || isPaidMember;
   
