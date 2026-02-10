@@ -82,11 +82,22 @@ export const Membership = () => {
                 Premium
               </div>
               <h3 className="text-3xl font-heading font-bold mb-3">The State of Play</h3>
-              <div className="text-5xl font-heading font-black mb-2">
-                ₹2,499<span className="text-xl font-body text-white/70 font-normal">/year</span>
-              </div>
-              <p className="text-sm text-white/80 mb-1">+ GST (for Indian readers)</p>
-              <p className="text-sm text-white/80">$120/year (International)</p>
+              {pricing.loading ? (
+                <div className="text-3xl font-heading mb-4">Loading pricing...</div>
+              ) : (
+                <>
+                  <div className="text-5xl font-heading font-black mb-2">
+                    {pricing.symbol}{pricing.amount}<span className="text-xl font-body text-white/70 font-normal">{pricing.period}</span>
+                  </div>
+                  <p className="text-sm text-white/80 mb-2">{pricing.note}</p>
+                  {pricing.country === 'IN' && (
+                    <p className="text-xs text-white/60">International: $120/year</p>
+                  )}
+                  {pricing.country !== 'IN' && (
+                    <p className="text-xs text-white/60">India: ₹2,499/year + GST</p>
+                  )}
+                </>
+              )}
             </div>
 
             <ul className="space-y-4 mb-10">
