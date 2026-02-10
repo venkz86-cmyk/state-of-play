@@ -461,6 +461,77 @@ async def verify_ghost_member(request: MemberVerifyRequest):
         status='not_configured' if not GHOST_ADMIN_API_KEY else 'error'
     )
 
+class ArticleContentRequest(BaseModel):
+    slug: str
+    email: str
+
+class ArticleContentResponse(BaseModel):
+    slug: str
+    html: str
+    title: str
+    feature_image: Optional[str] = None
+
+@api_router.post("/ghost/article-content", response_model=ArticleContentResponse)
+async def get_full_article_content(request: ArticleContentRequest):
+    """Get full article content for verified paid members using Admin API"""
+    import httpx
+    
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail="Admin API not configured")
+    
+    token = create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail="Failed to create admin token")
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            # First verify the user is a paid member
+            member_response = await http_client.get(
+                f'{GHOST_URL}/ghost/api/admin/members/',
+                params={'filter': f'email:{request.email}'},
+                headers={'Authorization': f'Ghost {token}'}
+            )
+            
+            if member_response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Failed to verify membership")
+            
+            members = member_response.json().get('members', [])
+            if not members:
+                raise HTTPException(status_code=401, detail="Not a member")
+            
+            member = members[0]
+            is_paid = member.get('status') == 'paid' or member.get('status') == 'comped' or len(member.get('subscriptions', [])) > 0
+            
+            if not is_paid:
+                raise HTTPException(status_code=403, detail="Paid membership required")
+            
+            # Now fetch the full article using Admin API
+            article_response = await http_client.get(
+                f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
+                headers={'Authorization': f'Ghost {token}'}
+            )
+            
+            if article_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Article not found")
+            
+            posts = article_response.json().get('posts', [])
+            if not posts:
+                raise HTTPException(status_code=404, detail="Article not found")
+            
+            post = posts[0]
+            return ArticleContentResponse(
+                slug=post.get('slug'),
+                html=post.get('html', ''),
+                title=post.get('title', ''),
+                feature_image=post.get('feature_image')
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching article content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 class MagicLinkRequest(BaseModel):
     email: EmailStr
 
