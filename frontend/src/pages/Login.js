@@ -19,30 +19,30 @@ export const Login = () => {
 
   if (showInstructions) {
     return (
-      <div className="min-h-screen flex items-center justify-center py-24 px-4 bg-gradient-to-br from-primary-50/30 via-white to-white">
+      <div className="min-h-screen flex items-center justify-center py-24 px-4 bg-gradient-to-br from-primary/5 via-background to-background">
         <div className="w-full max-w-md">
-          <div className="bg-white border-2 border-primary/20 p-10 shadow-xl text-center">
+          <div className="bg-card border-2 border-primary/20 p-10 shadow-xl text-center">
             <div className="inline-flex items-center justify-center bg-primary/10 p-4 rounded-full mb-6">
               <Mail className="h-10 w-10 text-primary" />
             </div>
             
             <h1 className="text-3xl font-heading font-bold tracking-tight mb-4">Access Your Account</h1>
             
-            <p className="text-base text-foreground/70 font-body mb-4">
+            <p className="text-base text-muted-foreground font-body mb-4">
               To sign in to <strong className="text-primary">{email}</strong>, you can:
             </p>
             
-            <div className="bg-primary-50 border border-primary/20 p-5 mb-6 text-left space-y-4">
+            <div className="bg-muted border border-primary/20 p-5 mb-6 text-left space-y-4">
               <div>
-                <p className="text-sm font-bold text-foreground mb-1">1. Check your email</p>
-                <p className="text-xs text-foreground/70 leading-relaxed">
+                <p className="text-sm font-bold mb-1">1. Check your email</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   When you subscribed, you received a magic link email. Click that link to sign in.
                 </p>
               </div>
               
               <div>
-                <p className="text-sm font-bold text-foreground mb-1">2. Request a new magic link</p>
-                <p className="text-xs text-foreground/70 leading-relaxed">
+                <p className="text-sm font-bold mb-1">2. Request a new magic link</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Visit The State of Play on Ghost to request a new sign-in link:
                 </p>
                 <a 
