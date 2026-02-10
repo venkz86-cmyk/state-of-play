@@ -113,12 +113,13 @@ export const ArticlePage = () => {
           ) : (
             <>
               {/* Preview Content */}
-              <div className="prose prose-lg max-w-none font-body mb-8 relative">
-                <div className="text-lg leading-9 text-foreground whitespace-pre-wrap">
-                  {article.preview_content}
-                </div>
+              <div className="relative">
+                <div 
+                  className="prose prose-lg max-w-none font-body article-content"
+                  dangerouslySetInnerHTML={{ __html: article.preview_content }}
+                />
                 {/* Fade Effect */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/95 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none" />
               </div>
               
               {/* Hard Paywall */}
