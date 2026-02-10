@@ -101,7 +101,7 @@ export const ReadingHistory = ({ variant = 'sidebar' }) => {
   }
 
   return (
-    <div className="bg-white border border-border p-4">
+    <div className="bg-card border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-bold flex items-center">
           <History className="h-4 w-4 mr-1.5 text-primary" />
@@ -109,7 +109,7 @@ export const ReadingHistory = ({ variant = 'sidebar' }) => {
         </h4>
         <button
           onClick={handleClear}
-          className="p-1 hover:bg-foreground/5 rounded transition-colors"
+          className="p-1 hover:bg-muted rounded transition-colors"
           title="Clear history"
         >
           <X className="h-3.5 w-3.5 text-muted-foreground" />
