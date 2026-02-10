@@ -94,6 +94,17 @@ export const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
+            {/* Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="text-foreground/60 hover:text-foreground"
+              data-testid="btn-search"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            
             {user ? (
               <>
                 <Link to="/dashboard">
