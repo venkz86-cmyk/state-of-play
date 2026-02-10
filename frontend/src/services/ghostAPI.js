@@ -31,7 +31,8 @@ class GhostAPI {
     try {
       const params = new URLSearchParams({
         key: GHOST_CONTENT_KEY,
-        include: 'tags,authors'
+        include: 'tags,authors',
+        fields: 'id,slug,title,custom_excerpt,excerpt,html,feature_image,published_at,updated_at,reading_time,visibility,primary_author,primary_tag,authors,tags'
       });
 
       const response = await axios.get(`${this.contentURL}/posts/slug/${slug}/?${params}`);
@@ -46,16 +47,19 @@ class GhostAPI {
   transformPost(post) {
     if (!post) return null;
 
+    // Get author name - check authors array first, then primary_author
+    const authorName = post.authors?.[0]?.name || post.primary_author?.name || 'The State of Play';
+
     return {
       id: post.slug,
       title: post.title,
       subtitle: post.custom_excerpt || post.excerpt,
       content: post.html,
-      preview_content: post.excerpt || post.custom_excerpt || '',
-      author: post.primary_author?.name || 'The State of Play',
+      preview_content: post.excerpt || post.custom_excerpt || post.title,
+      author: authorName,
       publication: this.getPublicationType(post),
       is_premium: post.visibility === 'paid' || post.visibility === 'members',
-      theme: post.primary_tag?.name || 'Sports Business',
+      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
       image_url: post.feature_image,
       read_time: post.reading_time || 5,
       created_at: post.published_at,
