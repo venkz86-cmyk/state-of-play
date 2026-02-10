@@ -28,12 +28,12 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
 
   if (variant === 'inline') {
     return (
-      <div className="bg-primary-50 border-2 border-primary/20 p-6">
+      <div className="bg-muted border-2 border-primary/20 p-6">
         <div className="flex items-start space-x-3 mb-4">
           <Mail className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p className="font-bold text-sm mb-1">Get notified when we publish</p>
-            <p className="text-xs text-foreground/70">New stories delivered to your inbox every Friday.</p>
+            <p className="text-xs text-muted-foreground">New stories delivered to your inbox every Friday.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="flex space-x-2">
@@ -43,12 +43,12 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="your@email.com"
-            className="flex-1 px-3 py-2 border border-border text-sm focus:border-primary outline-none"
+            className="flex-1 px-3 py-2 border border-border bg-background text-foreground text-sm focus:border-primary outline-none"
           />
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50"
+            className="bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
           </button>
