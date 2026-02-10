@@ -6,14 +6,14 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 export const Membership = () => {
   const pricing = useGeoPricing();
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl py-20">
         {/* Header */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-6xl font-heading font-black tracking-tight leading-tight mb-6">
             Choose your membership
           </h1>
-          <p className="text-xl leading-relaxed text-foreground/70 font-body max-w-2xl mx-auto">
+          <p className="text-xl leading-relaxed text-muted-foreground font-body max-w-2xl mx-auto">
             Get unlimited access to premium sports business journalism
           </p>
         </div>
@@ -21,7 +21,7 @@ export const Membership = () => {
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-24">
           {/* Free */}
-          <div className="bg-white border-2 border-border p-10 hover:shadow-xl transition-all">
+          <div className="bg-card border-2 border-border p-10 hover:shadow-xl transition-all">
             <div className="mb-8">
               <div className="inline-block bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider px-3 py-1 mb-4 font-mono">
                 Free
