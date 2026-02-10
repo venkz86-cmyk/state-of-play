@@ -103,11 +103,11 @@ export const ArticlePage = () => {
         {/* Content with Hard Paywall */}
         <div className="relative">
           {canAccessContent ? (
-            <div className="prose prose-lg max-w-none font-body" data-testid="article-content">
-              <div className="text-lg leading-9 text-foreground whitespace-pre-wrap">
-                {article.content}
-              </div>
-            </div>
+            <div 
+              className="prose prose-lg max-w-none font-body article-content" 
+              data-testid="article-content"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
           ) : (
             <>
               {/* Preview Content */}
