@@ -89,8 +89,38 @@ export const ArticlePage = () => {
   const publicationColor = article.publication === 'The State of Play' ? 'bg-primary' : 'bg-secondary';
   const publicationText = article.publication === 'The State of Play' ? 'PREMIUM' : 'FREE';
 
+  const articleUrl = `https://www.stateofplay.club/${article?.id || id}`;
+  const ogImage = article?.image_url || 'https://www.stateofplay.club/default-og-image.jpg';
+  const ogTitle = article?.title || 'The State of Play';
+  const ogDescription = article?.subtitle || 'Premium sports business intelligence from India';
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Dynamic SEO Meta Tags */}
+      <Helmet>
+        <title>{ogTitle} | The State of Play</title>
+        <meta name="description" content={ogDescription} />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={articleUrl} />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:site_name" content="The State of Play" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={articleUrl} />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={ogImage} />
+        
+        {/* Article specific */}
+        {article?.author && <meta property="article:author" content={article.author} />}
+        {article?.created_at && <meta property="article:published_time" content={article.created_at} />}
+      </Helmet>
+
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800 z-50">
         <div 
