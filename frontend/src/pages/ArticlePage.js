@@ -28,6 +28,16 @@ export const ArticlePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Update page title when article loads
+  useEffect(() => {
+    if (article?.title) {
+      document.title = `${article.title} | The State of Play`;
+    }
+    return () => {
+      document.title = 'The State of Play | Sports Business Intelligence';
+    };
+  }, [article?.title]);
+
   // Reading progress tracker
   useEffect(() => {
     const handleScroll = () => {
