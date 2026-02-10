@@ -43,14 +43,34 @@ class GhostAPI {
         include: 'tags,authors'
       });
 
-      const response = await axios.get(`${this.contentURL}/posts/slug/${slug}/?${params}`);
-      
-      if (!response.data || !response.data.posts || response.data.posts.length === 0) {
-        console.error('No post found for slug:', slug);
-        return null;
+      // First try direct slug fetch (works for public posts)
+      try {
+        const response = await axios.get(`${this.contentURL}/posts/slug/${slug}/?${params}`);
+        
+        if (response.data?.posts?.length > 0) {
+          return this.transformPost(response.data.posts[0]);
+        }
+      } catch (directError) {
+        // Paid posts return 404 on direct fetch, continue to fallback
       }
+
+      // Fallback: fetch from list with slug filter (gets metadata for paid posts)
+      const listParams = new URLSearchParams({
+        key: GHOST_CONTENT_KEY,
+        include: 'tags,authors',
+        filter: `slug:${slug}`
+      });
+
+      const listResponse = await axios.get(`${this.contentURL}/posts/?${listParams}`);
       
-      return this.transformPost(response.data.posts[0]);
+      if (listResponse.data?.posts?.length > 0) {
+        const post = listResponse.data.posts[0];
+        // For paid posts, html might be returned but we should still show paywall
+        return this.transformPost(post);
+      }
+
+      console.error('No post found for slug:', slug);
+      return null;
     } catch (error) {
       console.error('Ghost API Error fetching post:', error.message);
       return null;
