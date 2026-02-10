@@ -67,14 +67,94 @@ body {
   font-size: 1.125rem;
   line-height: 1.8;
   color: #1a1a1a;
+  max-width: 100%;
 }
 
 .article-content p {
+  margin-bottom: 1.75rem;
+  font-size: 1.125rem;
+  line-height: 1.8;
+}
+
+.article-content h2 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 3rem;
   margin-bottom: 1.5rem;
+  color: #0a0a0a;
+  border-left: 4px solid #2E5AAC;
+  padding-left: 1.5rem;
+}
+
+.article-content h3 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
 }
 
 .article-content strong {
   font-weight: 700;
+  color: #0a0a0a;
+}
+
+.article-content em {
+  font-style: italic;
+  color: #2E5AAC;
+}
+
+.article-content a {
+  color: #2E5AAC;
+  text-decoration: underline;
+  text-decoration-color: #2E5AAC;
+  text-underline-offset: 3px;
+  transition: all 0.2s;
+}
+
+.article-content a:hover {
+  color: #1A3366;
+  text-decoration-thickness: 2px;
+}
+
+.article-content blockquote {
+  border-left: 4px solid #D4AF37;
+  background: #FFF9E6;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #1a1a1a;
+}
+
+.article-content ul, .article-content ol {
+  margin: 1.5rem 0;
+  padding-left: 2rem;
+}
+
+.article-content li {
+  margin-bottom: 0.75rem;
+}
+
+/* Ghost Card/Callout styling */
+.article-content .kg-card {
+  margin: 2rem 0;
+}
+
+.article-content .kg-callout-card {
+  background: #EBF1FF;
+  border: 2px solid #2E5AAC;
+  border-radius: 0;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+}
+
+.article-content .kg-callout-text {
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 /* Premium texture overlay */
