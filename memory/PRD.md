@@ -16,6 +16,11 @@ Build a premium, sophisticated website for a sports business publication called 
 - Ghost Members API via magic links (passwordless)
 - Flow: User subscribes → Zapier creates Ghost member → Ghost sends magic link → User clicks to authenticate
 
+### Member Types
+1. **Visitors**: Not logged in, see generic paywall
+2. **Free Members**: Registered in Ghost, receive newsletters, see personalized "Upgrade" paywall
+3. **Paid Members**: Full access to all content
+
 ### Payments
 - **Razorpay Payment Buttons** (user's existing setup)
 - India Button ID: `pl_ROAFZZjAvjHhfQ` (₹2,499/year + GST)
