@@ -76,7 +76,7 @@ export const LeftField = () => {
                 className="group"
                 data-testid={`substack-article-${article.id}`}
               >
-                <article className="group relative overflow-hidden bg-white border border-border/40 hover:border-secondary/40 transition-all duration-300 hover:shadow-xl cursor-pointer h-full">
+                <article className="group relative overflow-hidden bg-card border border-border/40 hover:border-secondary/40 transition-all duration-300 hover:shadow-xl cursor-pointer h-full">
                   <div className="p-6">
                     <div className="inline-block bg-secondary/10 text-secondary text-[9px] font-bold uppercase tracking-widest px-2 py-1 font-mono mb-3">
                       FREE
