@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { ArticleCard } from '../components/ArticleCard';
+import { NewsletterSignup } from '../components/NewsletterSignup';
 import { Button } from '../components/ui/button';
 import { ArrowRight, Newspaper, Zap, Sparkles } from 'lucide-react';
 
