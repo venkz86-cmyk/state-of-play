@@ -43,6 +43,10 @@ export const ArticlePage = () => {
       const post = await ghostAPI.getPost(id);
       console.log('Received post:', post);
       setArticle(post);
+      
+      // Fetch related articles
+      const allPosts = await ghostAPI.getPosts({ limit: 10 });
+      setRelatedArticles(allPosts);
     } catch (error) {
       console.error('Failed to fetch article:', error);
     } finally {
