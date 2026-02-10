@@ -323,6 +323,38 @@ async def get_substack_feed():
         logger.error(f"Substack feed error: {e}")
         return []
 
+@api_router.get("/geo/location")
+async def get_geo_location(request: Request):
+    """Proxy endpoint to get user's geolocation based on IP"""
+    import httpx
+    
+    # Get client IP from headers (may be forwarded through proxy)
+    client_ip = request.headers.get('x-forwarded-for', request.client.host if request.client else None)
+    if client_ip:
+        client_ip = client_ip.split(',')[0].strip()
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            # Use ip-api.com for geolocation (free, no API key required)
+            if client_ip and client_ip not in ['127.0.0.1', 'localhost', '::1']:
+                response = await http_client.get(f'http://ip-api.com/json/{client_ip}')
+            else:
+                response = await http_client.get('http://ip-api.com/json/')
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "country_code": data.get('countryCode', 'US'),
+                    "country": data.get('country', 'Unknown'),
+                    "city": data.get('city', ''),
+                    "status": "success"
+                }
+            else:
+                return {"country_code": "US", "status": "fallback"}
+    except Exception as e:
+        logger.error(f"Geo location error: {e}")
+        return {"country_code": "US", "status": "error"}
+
 app.include_router(api_router)
 
 app.add_middleware(
