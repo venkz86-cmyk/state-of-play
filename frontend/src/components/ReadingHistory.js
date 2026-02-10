@@ -82,7 +82,6 @@ export const ReadingHistory = ({ variant = 'sidebar' }) => {
                   src={item.image_url}
                   alt=""
                   referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
                   className="w-16 h-12 object-cover flex-shrink-0"
                 />
               )}
