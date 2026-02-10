@@ -1,10 +1,10 @@
 import { useRazorpayPayment } from '../hooks/useRazorpayPayment';
 import { Button } from '../components/ui/button';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Signup = () => {
-  const { openPayment, pricing } = useRazorpayPayment();
+  const { openPayment, pricing, isLoading } = useRazorpayPayment();
 
   const handleSubscribe = () => {
     openPayment(window.location.origin + '/dashboard');
@@ -33,7 +33,12 @@ export const Signup = () => {
 
         {/* Pricing Display */}
         <div className="bg-white border-2 border-primary/20 p-8 mb-6 text-center">
-          {!pricing.loading && (
+          {pricing.loading ? (
+            <div className="py-4">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
+              <p className="text-sm text-muted-foreground">Loading pricing...</p>
+            </div>
+          ) : (
             <>
               <div className="text-5xl font-heading font-black text-primary mb-2">
                 {pricing.symbol}{pricing.amount}
@@ -45,10 +50,18 @@ export const Signup = () => {
           
           <Button
             onClick={handleSubscribe}
-            className="w-full bg-primary text-white hover:bg-primary-700 font-bold py-6 text-lg transition-all hover:shadow-xl mb-4"
+            disabled={pricing.loading || isLoading}
+            className="w-full bg-primary text-white hover:bg-primary-700 font-bold py-6 text-lg transition-all hover:shadow-xl mb-4 disabled:opacity-50"
             data-testid="btn-razorpay-subscribe"
           >
-            Subscribe Now
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Loading Payment...
+              </>
+            ) : (
+              'Subscribe Now'
+            )}
           </Button>
           
           <p className="text-xs text-muted-foreground">
