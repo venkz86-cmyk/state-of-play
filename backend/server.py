@@ -358,6 +358,96 @@ async def get_geo_location(request: Request):
 # Ghost API proxy endpoints
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+GHOST_CONTENT_API_KEY = os.environ.get('GHOST_CONTENT_API_KEY', '')
+
+def create_ghost_admin_token():
+    """Create JWT token for Ghost Admin API authentication"""
+    if not GHOST_ADMIN_API_KEY:
+        return None
+    
+    # Ghost Admin API key format: {id}:{secret}
+    try:
+        key_id, secret = GHOST_ADMIN_API_KEY.split(':')
+    except ValueError:
+        logger.error("Invalid GHOST_ADMIN_API_KEY format. Expected 'id:secret'")
+        return None
+    
+    # Create JWT token
+    iat = int(datetime.now(timezone.utc).timestamp())
+    header = {'alg': 'HS256', 'typ': 'JWT', 'kid': key_id}
+    payload = {
+        'iat': iat,
+        'exp': iat + 5 * 60,  # 5 minutes
+        'aud': '/admin/'
+    }
+    
+    # Decode the secret from hex
+    import binascii
+    secret_bytes = binascii.unhexlify(secret)
+    
+    token = jwt.encode(payload, secret_bytes, algorithm='HS256', headers=header)
+    return token
+
+class MemberVerifyRequest(BaseModel):
+    email: EmailStr
+
+class MemberVerifyResponse(BaseModel):
+    is_member: bool
+    is_paid: bool
+    email: str
+    name: Optional[str] = None
+    status: Optional[str] = None
+
+@api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
+async def verify_ghost_member(request: MemberVerifyRequest):
+    """Verify if an email is a Ghost member and their subscription status"""
+    import httpx
+    
+    # Try Admin API first (most reliable)
+    if GHOST_ADMIN_API_KEY:
+        token = create_ghost_admin_token()
+        if token:
+            try:
+                async with httpx.AsyncClient() as http_client:
+                    response = await http_client.get(
+                        f'{GHOST_URL}/ghost/api/admin/members/',
+                        params={'filter': f'email:{request.email}'},
+                        headers={'Authorization': f'Ghost {token}'}
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        members = data.get('members', [])
+                        
+                        if members:
+                            member = members[0]
+                            # Check subscription status
+                            is_paid = member.get('status') == 'paid' or len(member.get('subscriptions', [])) > 0
+                            
+                            return MemberVerifyResponse(
+                                is_member=True,
+                                is_paid=is_paid,
+                                email=member.get('email', request.email),
+                                name=member.get('name'),
+                                status=member.get('status', 'free')
+                            )
+                        else:
+                            return MemberVerifyResponse(
+                                is_member=False,
+                                is_paid=False,
+                                email=request.email,
+                                status='not_found'
+                            )
+            except Exception as e:
+                logger.error(f"Ghost Admin API error: {e}")
+    
+    # Fallback: Member is not found or Admin API not configured
+    return MemberVerifyResponse(
+        is_member=False,
+        is_paid=False,
+        email=request.email,
+        status='not_configured' if not GHOST_ADMIN_API_KEY else 'error'
+    )
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
