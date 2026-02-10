@@ -65,6 +65,9 @@ Backend (FastAPI)
 6. **Paywall System** - Hard paywall on premium articles with fade effect
 7. **Login Flow** - Email entry with instructions for Ghost magic link access
 8. **All Core Pages** - Home, State of Play, Left Field, Outfield, About, Contact, Membership, Signup, Login
+9. **Free Member Handling** - Personalized "Upgrade" paywall for free members (vs generic "Subscribe" for visitors)
+10. **Reading Progress Bar** - Visual progress indicator at top of article pages
+11. **Enhanced Read Time** - Prominent read time pill on articles
 
 ### 🔄 Partially Implemented
 1. **Ghost Members Authentication** - Login UI complete, direct API call blocked by Ghost CORS. Works via Ghost Portal redirect.
