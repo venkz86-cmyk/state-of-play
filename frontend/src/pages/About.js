@@ -105,7 +105,7 @@ export const About = () => {
           </div>
 
           {/* Author Section */}
-          <div className="bg-primary-50 border-2 border-primary/20 p-12">
+          <div className="bg-muted border-2 border-primary/20 p-12">
             <h2 className="text-3xl font-heading font-bold mb-6">Who's Behind It?</h2>
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex-1">
