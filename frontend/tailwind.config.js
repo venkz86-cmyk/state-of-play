@@ -60,9 +60,19 @@ module.exports = {
         premium: "#D4AF37",
       },
       fontFamily: {
-        heading: ['Playfair Display', 'serif'],
-        body: ['Manrope', 'sans-serif'],
+        heading: ['Merriweather', 'Georgia', 'serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+      },
+      fontSize: {
+        'display': ['4.5rem', { lineHeight: '1', letterSpacing: '-0.02em', fontWeight: '900' }],
+        '5xl': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.01em' }],
+        '4xl': ['2.25rem', { lineHeight: '1.2', letterSpacing: '-0.01em' }],
+        '3xl': ['1.875rem', { lineHeight: '1.25' }],
+        '2xl': ['1.5rem', { lineHeight: '1.3' }],
+        'xl': ['1.25rem', { lineHeight: '1.4' }],
+        'lg': ['1.125rem', { lineHeight: '1.6' }],
+        'base': ['1rem', { lineHeight: '1.6' }],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,28 +80,13 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: 0 },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
-        },
         "fade-in": {
           from: { opacity: 0, transform: "translateY(10px)" },
           to: { opacity: 1, transform: "translateY(0)" },
         },
-        "slide-up": {
-          from: { transform: "translateY(100%)" },
-          to: { transform: "translateY(0)" },
-        },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
-        "slide-up": "slide-up 0.4s ease-out",
       },
     },
   },
