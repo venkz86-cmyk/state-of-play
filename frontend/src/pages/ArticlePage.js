@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ghostAPI } from '../services/ghostAPI';
 import { RazorpayButton } from '../components/RazorpayButton';
+import { ShareButtons } from '../components/ShareButtons';
+import { FontSizeToggle } from '../components/FontSizeToggle';
+import { RelatedArticles } from '../components/RelatedArticles';
+import { NewsletterSignup } from '../components/NewsletterSignup';
 import { Clock, Calendar, Shield, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -11,6 +15,7 @@ export const ArticlePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [article, setArticle] = useState(null);
+  const [relatedArticles, setRelatedArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [readProgress, setReadProgress] = useState(0);
 
