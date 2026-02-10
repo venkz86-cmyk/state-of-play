@@ -300,6 +300,29 @@ async def get_subscription_status(current_user: User = Depends(get_current_user)
         "is_active": is_active
     }
 
+@api_router.get("/substack/feed")
+async def get_substack_feed():
+    try:
+        import feedparser
+        feed = feedparser.parse('https://theleftfield.substack.com/feed')
+        
+        articles = []
+        for entry in feed.entries[:15]:
+            articles.append({
+                "id": entry.get('id', entry.link),
+                "title": entry.get('title', ''),
+                "subtitle": entry.get('summary', '')[:200],
+                "author": entry.get('author', 'The Left Field'),
+                "external_url": entry.get('link', ''),
+                "created_at": entry.get('published', ''),
+                "image_url": None
+            })
+        
+        return articles
+    except Exception as e:
+        logger.error(f"Substack feed error: {e}")
+        return []
+
 app.include_router(api_router)
 
 app.add_middleware(
