@@ -16,13 +16,13 @@ export const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl py-20">
         <div className="max-w-2xl mb-16">
           <h1 className="text-5xl md:text-6xl font-heading font-black tracking-tight leading-tight mb-6">
             Get in touch
           </h1>
-          <p className="text-xl leading-relaxed text-foreground/70 font-body">
+          <p className="text-xl leading-relaxed text-muted-foreground font-body">
             Have a story tip? Want to collaborate? Or just want to say hello? I'd love to hear from you.
           </p>
         </div>
@@ -38,7 +38,7 @@ export const Contact = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border-2 border-border focus:border-primary outline-none transition-colors font-body"
+                  className="w-full px-4 py-3 border-2 border-border bg-background text-foreground focus:border-primary outline-none transition-colors font-body"
                   placeholder="Your name"
                 />
               </div>
@@ -50,7 +50,7 @@ export const Contact = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border-2 border-border focus:border-primary outline-none transition-colors font-body"
+                  className="w-full px-4 py-3 border-2 border-border bg-background text-foreground focus:border-primary outline-none transition-colors font-body"
                   placeholder="your@email.com"
                 />
               </div>
@@ -62,7 +62,7 @@ export const Contact = () => {
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   required
                   rows={6}
-                  className="w-full px-4 py-3 border-2 border-border focus:border-primary outline-none transition-colors font-body resize-none"
+                  className="w-full px-4 py-3 border-2 border-border bg-background text-foreground focus:border-primary outline-none transition-colors font-body resize-none"
                   placeholder="Tell us what's on your mind..."
                 />
               </div>
@@ -70,7 +70,7 @@ export const Contact = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="bg-primary text-white hover:bg-primary-700 font-bold px-8 py-6 text-base transition-all hover:shadow-xl"
+                className="bg-primary text-white hover:bg-primary/90 font-bold px-8 py-6 text-base transition-all hover:shadow-xl"
               >
                 Send Message
               </Button>
@@ -87,7 +87,7 @@ export const Contact = () => {
                   <Mail className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-semibold text-sm mb-1">Email</p>
-                    <a href="mailto:venkat@stateofplay.club" className="text-foreground/70 hover:text-primary transition-colors">
+                    <a href="mailto:venkat@stateofplay.club" className="text-muted-foreground hover:text-primary transition-colors">
                       venkat@stateofplay.club
                     </a>
                   </div>
@@ -97,15 +97,15 @@ export const Contact = () => {
                   <MapPin className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-semibold text-sm mb-1">Location</p>
-                    <p className="text-foreground/70">Bengaluru, India 🇮🇳</p>
+                    <p className="text-muted-foreground">Bengaluru, India</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-primary-50 border-2 border-primary/20 p-6">
+            <div className="bg-muted border-2 border-primary/20 p-6">
               <h4 className="font-heading font-bold mb-2">Story Tips</h4>
-              <p className="text-sm text-foreground/70 mb-3">
+              <p className="text-sm text-muted-foreground mb-3">
                 Have an exclusive tip or lead?
               </p>
               <a href="mailto:venkat@stateofplay.club" className="text-primary hover:underline font-semibold text-sm">
