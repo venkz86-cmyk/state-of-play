@@ -96,7 +96,7 @@ export const Home = () => {
           <div className="container mx-auto px-4 md:px-8 max-w-7xl">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">Featured Story</h2>
+                <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">The Big Story</h2>
               </div>
             </div>
             <div className="max-w-5xl">
