@@ -130,7 +130,7 @@ export const Membership = () => {
             <Link to="/signup">
               <Button 
                 size="lg"
-                className="w-full bg-white text-primary hover:bg-gray-50 font-bold text-base py-6 transition-all hover:shadow-xl"
+                className="w-full bg-white text-primary hover:bg-white/90 font-bold text-base py-6 transition-all hover:shadow-xl"
               >
                 Subscribe Now
               </Button>
