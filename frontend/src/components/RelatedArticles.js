@@ -26,7 +26,6 @@ export const RelatedArticles = ({ articles, currentSlug }) => {
                     src={article.image_url}
                     alt={article.title}
                     referrerPolicy="no-referrer"
-                    crossOrigin="anonymous"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
