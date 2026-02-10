@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { ghostAPI } from '../services/ghostAPI';
 import { ArticleCard } from '../components/ArticleCard';
 import { Button } from '../components/ui/button';
 import { ArrowRight, Newspaper, Zap, Sparkles } from 'lucide-react';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export const Home = () => {
   const [articles, setArticles] = useState([]);
@@ -18,11 +16,10 @@ export const Home = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await axios.get(`${API}/articles?limit=10`);
-      const allArticles = response.data;
-      if (allArticles.length > 0) {
-        setFeaturedArticle(allArticles[0]);
-        setArticles(allArticles.slice(1, 7));
+      const posts = await ghostAPI.getPosts({ limit: 10 });
+      if (posts.length > 0) {
+        setFeaturedArticle(posts[0]);
+        setArticles(posts.slice(1, 7));
       }
     } catch (error) {
       console.error('Failed to fetch articles:', error);
@@ -36,7 +33,7 @@ export const Home = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
-          <p className="text-muted-foreground font-body">Loading...</p>
+          <p className="text-muted-foreground font-body">Loading stories from Ghost...</p>
         </div>
       </div>
     );
@@ -77,7 +74,7 @@ export const Home = () => {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link to="/left-field">
+              <a href="https://theleftfield.substack.com" target="_blank" rel="noopener noreferrer">
                 <Button 
                   size="lg" 
                   variant="outline"
@@ -87,7 +84,7 @@ export const Home = () => {
                   <Zap className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
                   Read Free Stories
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -100,7 +97,7 @@ export const Home = () => {
             <div className="flex items-end justify-between mb-10">
               <div>
                 <h2 className="text-4xl font-heading font-bold tracking-tight mb-2">Featured Story</h2>
-                <p className="text-sm text-muted-foreground font-mono uppercase tracking-wider">Editor's Pick</p>
+                <p className="text-sm text-muted-foreground font-mono uppercase tracking-wider">From Ghost CMS</p>
               </div>
             </div>
             <div className="max-w-5xl">
@@ -115,27 +112,35 @@ export const Home = () => {
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">
           <div className="mb-14">
             <h2 className="text-4xl font-heading font-bold tracking-tight mb-3">Latest Stories</h2>
-            <p className="text-base text-muted-foreground font-body">From The State of Play & The Left Field</p>
+            <p className="text-base text-muted-foreground font-body">Published on The State of Play</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
-            ))}
-          </div>
+          {articles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {articles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground">No articles found. Publish your first story in Ghost!</p>
+            </div>
+          )}
 
-          <div className="text-center mt-16">
-            <Link to="/state-of-play">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold px-10 py-6 text-base transition-all hover:-translate-y-0.5"
-              >
-                View All Stories
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          {articles.length > 0 && (
+            <div className="text-center mt-16">
+              <Link to="/state-of-play">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold px-10 py-6 text-base transition-all hover:-translate-y-0.5"
+                >
+                  View All Stories
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
