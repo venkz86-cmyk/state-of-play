@@ -15,7 +15,6 @@ class GhostAPI {
         key: GHOST_CONTENT_KEY,
         limit: options.limit || 15,
         include: 'tags,authors',
-        fields: 'id,slug,title,custom_excerpt,excerpt,html,feature_image,published_at,updated_at,reading_time,visibility',
         ...options.filters
       });
 
@@ -32,14 +31,19 @@ class GhostAPI {
     try {
       const params = new URLSearchParams({
         key: GHOST_CONTENT_KEY,
-        include: 'tags,authors',
-        fields: 'id,slug,title,custom_excerpt,excerpt,html,feature_image,published_at,updated_at,reading_time,visibility,primary_author,primary_tag,authors,tags'
+        include: 'tags,authors'
       });
 
       const response = await axios.get(`${this.contentURL}/posts/slug/${slug}/?${params}`);
+      
+      if (!response.data || !response.data.posts || response.data.posts.length === 0) {
+        console.error('No post found for slug:', slug);
+        return null;
+      }
+      
       return this.transformPost(response.data.posts[0]);
     } catch (error) {
-      console.error('Ghost API Error:', error);
+      console.error('Ghost API Error fetching post:', error.message);
       return null;
     }
   }
