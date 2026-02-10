@@ -62,16 +62,36 @@ class GhostAPI {
     // Check if content has <!--more--> marker for paywall placement
     if (fullContent.includes('<!--more-->')) {
       const parts = fullContent.split('<!--more-->');
-      previewContent = parts[0]; // Content before paywall
-      fullContent = parts.join(''); // Remove marker for full content
+      previewContent = parts[0];
+      fullContent = parts.join('');
     } else {
-      // If no <!--more--> marker, use first few paragraphs as preview
-      // Extract first 2-3 paragraphs (roughly 300-500 chars of actual content)
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = fullContent;
-      const paragraphs = Array.from(tempDiv.querySelectorAll('p'));\n      \n      if (paragraphs.length > 0) {\n        // Take first 2-3 paragraphs\n        const previewParas = paragraphs.slice(0, 3);\n        previewContent = previewParas.map(p => p.outerHTML).join('');\n      } else {\n        // Fallback: use excerpt if no paragraphs found\n        previewContent = `<p>${post.excerpt || post.custom_excerpt || ''}</p>`;\n      }\n    }
+      // Extract first 2-3 paragraphs using regex
+      const pTagMatches = fullContent.match(/<p[^>]*>.*?<\/p>/gs);
+      
+      if (pTagMatches && pTagMatches.length > 0) {
+        previewContent = pTagMatches.slice(0, 3).join('');
+      } else {
+        previewContent = `<p>${post.excerpt || post.custom_excerpt || ''}</p>`;
+      }
+    }
 
-    return {\n      id: post.slug,\n      title: post.title,\n      subtitle: post.custom_excerpt || post.excerpt,\n      content: fullContent,\n      preview_content: previewContent,\n      author: authorName,\n      publication: this.getPublicationType(post),\n      is_premium: post.visibility === 'paid' || post.visibility === 'members',\n      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',\n      image_url: post.feature_image,\n      read_time: post.reading_time || 5,\n      created_at: post.published_at,\n      updated_at: post.updated_at,\n      slug: post.slug\n    };\n  }
+    return {
+      id: post.slug,
+      title: post.title,
+      subtitle: post.custom_excerpt || post.excerpt,
+      content: fullContent,
+      preview_content: previewContent,
+      author: authorName,
+      publication: this.getPublicationType(post),
+      is_premium: post.visibility === 'paid' || post.visibility === 'members',
+      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
+      image_url: post.feature_image,
+      read_time: post.reading_time || 5,
+      created_at: post.published_at,
+      updated_at: post.updated_at,
+      slug: post.slug
+    };
+  }
 
   transformPosts(posts) {
     return posts.map(post => this.transformPost(post));
