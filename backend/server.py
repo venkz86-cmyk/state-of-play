@@ -877,27 +877,15 @@ async def generate_og_image(slug: str):
             )
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
         
-        # --- TITLE ---
-        wrapped_title = textwrap.fill(title, width=38)
-        title_lines = wrapped_title.split('\n')[:2]  # Max 2 lines for title
+        # --- TITLE (larger for mobile readability) ---
+        wrapped_title = textwrap.fill(title, width=32)
+        title_lines = wrapped_title.split('\n')[:3]  # Max 3 lines
         
-        title_line_height = 58
-        title_start_y = 140
+        title_line_height = 62
+        title_start_y = 150
         
         for i, line in enumerate(title_lines):
             draw.text((50, title_start_y + i * title_line_height), line, fill=white, font=title_font)
-        
-        # --- EXCERPT below title ---
-        if excerpt:
-            excerpt_start_y = title_start_y + len(title_lines) * title_line_height + 25
-            
-            # Wrap excerpt to fit - wider lines since font is smaller
-            wrapped_excerpt = textwrap.fill(excerpt, width=65)
-            excerpt_lines = wrapped_excerpt.split('\n')[:3]  # Max 3 lines
-            
-            excerpt_line_height = 32
-            for i, line in enumerate(excerpt_lines):
-                draw.text((50, excerpt_start_y + i * excerpt_line_height), line, fill=light_gray, font=excerpt_font)
         
         # Convert to RGB
         img = img.convert('RGB')
