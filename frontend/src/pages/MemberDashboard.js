@@ -138,7 +138,8 @@ export const MemberDashboard = () => {
     };
   };
 
-  if (loading) {
+  // Show loading while auth is loading or data is being fetched
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
