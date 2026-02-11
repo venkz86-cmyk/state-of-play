@@ -722,10 +722,10 @@ async def get_ghost_member(request: Request):
 # Dynamic OG Image Generator for social sharing
 @api_router.get("/og-image/{slug}")
 async def generate_og_image(slug: str):
-    """Generate a branded OG image for social media sharing - Morning Context style"""
+    """Generate a branded OG image for social media sharing - mobile optimized"""
     import httpx
     from fastapi.responses import Response, RedirectResponse
-    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+    from PIL import Image, ImageDraw, ImageFont, ImageEnhance
     from io import BytesIO
     import textwrap
     
@@ -748,7 +748,6 @@ async def generate_og_image(slug: str):
         
         # Extract metadata
         title = article.get('title', 'The State of Play')
-        excerpt = article.get('excerpt') or article.get('custom_excerpt') or ''
         feature_image_url = article.get('feature_image')
         
         # Get category/tag
@@ -763,7 +762,7 @@ async def generate_og_image(slug: str):
         # Image dimensions (1200x630 - standard OG size)
         width, height = 1200, 630
         
-        # Try to fetch and use the feature image
+        # Try to fetch the feature image
         bg_img = None
         if feature_image_url:
             try:
@@ -771,19 +770,16 @@ async def generate_og_image(slug: str):
                     img_response = await img_client.get(feature_image_url)
                     if img_response.status_code == 200:
                         bg_img = Image.open(BytesIO(img_response.content))
-                        # Resize to cover the canvas
                         bg_img = bg_img.convert('RGB')
                         
-                        # Calculate scaling to cover
+                        # Scale to cover
                         img_ratio = bg_img.width / bg_img.height
                         target_ratio = width / height
                         
                         if img_ratio > target_ratio:
-                            # Image is wider - scale by height
                             new_height = height
                             new_width = int(height * img_ratio)
                         else:
-                            # Image is taller - scale by width
                             new_width = width
                             new_height = int(width / img_ratio)
                         
@@ -794,138 +790,105 @@ async def generate_og_image(slug: str):
                         top = (new_height - height) // 2
                         bg_img = bg_img.crop((left, top, left + width, top + height))
                         
-                        # Slightly darken the image for better text readability
+                        # Darken significantly for text readability
                         enhancer = ImageEnhance.Brightness(bg_img)
-                        bg_img = enhancer.enhance(0.7)
+                        bg_img = enhancer.enhance(0.5)
             except Exception as e:
                 logger.error(f"Failed to fetch feature image: {e}")
                 bg_img = None
         
-        # If no feature image, use solid color background
+        # Fallback to solid color
         if bg_img is None:
-            bg_img = Image.new('RGB', (width, height), (35, 75, 160))
+            bg_img = Image.new('RGB', (width, height), (20, 50, 100))
         
         img = bg_img.copy()
         draw = ImageDraw.Draw(img)
         
-        # Create overlay for better text readability
-        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-        overlay_draw = ImageDraw.Draw(overlay)
-        
-        # Add gradient overlay at top and bottom
-        for i in range(200):
-            alpha = int(180 * (1 - i / 200))
-            overlay_draw.line([(0, i), (width, i)], fill=(0, 0, 0, alpha))
-        for i in range(200):
-            alpha = int(150 * (1 - i / 200))
-            overlay_draw.line([(0, height - 1 - i), (width, height - 1 - i)], fill=(0, 0, 0, alpha))
-        
+        # Add dark overlay for better contrast
+        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 140))
         img = img.convert('RGBA')
         img = Image.alpha_composite(img, overlay)
         draw = ImageDraw.Draw(img)
         
-        # Try to load fonts
+        # Load fonts - LARGER sizes for mobile
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
-            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-            excerpt_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
+            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
         except:
             title_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
             brand_font = ImageFont.load_default()
-            excerpt_font = ImageFont.load_default()
         
-        # Brand colors
-        primary_blue = (35, 75, 160)
-        accent_coral = (255, 107, 107)  # Coral/salmon for premium
+        # Colors
         white = (255, 255, 255)
+        coral = (255, 100, 100)
+        blue = (35, 75, 160)
         
-        # Draw badges at top
-        badge_y = 40
-        badge_x = 50
+        # --- TOP SECTION: Badges ---
+        badge_y = 50
+        badge_x = 60
         
-        # Premium badge (coral background)
         if is_premium:
             premium_text = "PREMIUM"
-            premium_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
-            premium_width = premium_bbox[2] - premium_bbox[0]
-            premium_height = premium_bbox[3] - premium_bbox[1]
+            p_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
+            p_w, p_h = p_bbox[2] - p_bbox[0], p_bbox[3] - p_bbox[1]
+            pad = 14
             
-            # Draw badge with coral background
-            padding = 12
             draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + premium_width + padding * 2, badge_y + premium_height + padding * 2],
-                radius=6,
-                fill=accent_coral
+                [badge_x, badge_y, badge_x + p_w + pad*2, badge_y + p_h + pad*2],
+                radius=8,
+                fill=coral
             )
-            draw.text((badge_x + padding, badge_y + padding), premium_text, fill=white, font=badge_font)
-            badge_x += premium_width + padding * 2 + 15
+            draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
+            badge_x += p_w + pad*2 + 20
         
-        # Category badge (white background)
         if category:
-            cat_bbox = draw.textbbox((0, 0), category, font=badge_font)
-            cat_width = cat_bbox[2] - cat_bbox[0]
-            cat_height = cat_bbox[3] - cat_bbox[1]
+            c_bbox = draw.textbbox((0, 0), category, font=badge_font)
+            c_w, c_h = c_bbox[2] - c_bbox[0], c_bbox[3] - c_bbox[1]
+            pad = 14
             
-            padding = 12
             draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + cat_width + padding * 2, badge_y + cat_height + padding * 2],
-                radius=6,
+                [badge_x, badge_y, badge_x + c_w + pad*2, badge_y + c_h + pad*2],
+                radius=8,
                 fill=white
             )
-            draw.text((badge_x + padding, badge_y + padding), category, fill=primary_blue, font=badge_font)
+            draw.text((badge_x + pad, badge_y + pad), category, fill=blue, font=badge_font)
         
-        # Draw title with background highlight
-        title_y = 120
-        wrapped_title = textwrap.fill(title, width=32)
-        lines = wrapped_title.split('\n')[:3]  # Max 3 lines
+        # --- MIDDLE SECTION: Title (large, bold, centered-ish) ---
+        # Wrap title for mobile readability - shorter lines
+        wrapped = textwrap.fill(title, width=28)
+        lines = wrapped.split('\n')[:3]
         
-        line_height = 65
+        # Calculate total title height
+        line_height = 72
+        total_title_height = len(lines) * line_height
+        title_start_y = (height - total_title_height) // 2 - 20
+        
         for i, line in enumerate(lines):
-            line_bbox = draw.textbbox((0, 0), line, font=title_font)
-            line_width = line_bbox[2] - line_bbox[0]
-            line_h = line_bbox[3] - line_bbox[1]
-            
-            # Draw background rectangle for each line
-            padding_x = 15
-            padding_y = 8
-            draw.rectangle(
-                [50 - padding_x, title_y + i * line_height - padding_y, 
-                 50 + line_width + padding_x, title_y + i * line_height + line_h + padding_y],
-                fill=primary_blue
-            )
-            draw.text((50, title_y + i * line_height), line, fill=white, font=title_font)
+            draw.text((60, title_start_y + i * line_height), line, fill=white, font=title_font)
         
-        # Draw excerpt at bottom
-        if excerpt:
-            excerpt_short = excerpt[:150] + '...' if len(excerpt) > 150 else excerpt
-            wrapped_excerpt = textwrap.fill(excerpt_short, width=70)
-            excerpt_lines = wrapped_excerpt.split('\n')[:2]
-            
-            excerpt_y = height - 120
-            for i, line in enumerate(excerpt_lines):
-                draw.text((50, excerpt_y + i * 28), line, fill=white, font=excerpt_font)
+        # --- BOTTOM SECTION: Brand ---
+        # Draw "The State of Play" with a subtle background
+        brand_text = "THE STATE OF PLAY"
+        b_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+        b_w = b_bbox[2] - b_bbox[0]
         
-        # Draw brand name bottom right
-        brand_text = "The State of Play"
-        brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
-        brand_width = brand_bbox[2] - brand_bbox[0]
+        brand_x = 60
+        brand_y = height - 80
         
-        # Brand with background
-        draw.rounded_rectangle(
-            [width - brand_width - 70, height - 60, width - 30, height - 25],
-            radius=4,
-            fill=(255, 255, 255, 220)
-        )
-        draw.text((width - brand_width - 50, height - 55), brand_text, fill=primary_blue, font=brand_font)
+        # White text on dark background (the image itself is darkened)
+        draw.text((brand_x, brand_y), brand_text, fill=white, font=brand_font)
         
-        # Convert to RGB for PNG output
+        # Add a subtle line above the brand
+        draw.line([(brand_x, brand_y - 15), (brand_x + 200, brand_y - 15)], fill=(255, 255, 255, 150), width=3)
+        
+        # Convert to RGB
         img = img.convert('RGB')
         
-        # Convert to bytes
+        # Save
         img_byte_arr = BytesIO()
-        img.save(img_byte_arr, format='PNG', optimize=True, quality=85)
+        img.save(img_byte_arr, format='PNG', optimize=True, quality=90)
         img_byte_arr.seek(0)
         
         return Response(
