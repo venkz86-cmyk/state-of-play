@@ -813,13 +813,11 @@ async def generate_og_image(slug: str):
         
         # Load fonts
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
             badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-            excerpt_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
         except:
             title_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
-            excerpt_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
