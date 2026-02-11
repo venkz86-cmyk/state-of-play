@@ -13,6 +13,7 @@ import { ArticlePage } from "./pages/ArticlePage";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
+import { MemberDashboard } from "./pages/MemberDashboard";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 import { Membership } from "./pages/Membership";
@@ -39,6 +40,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/account" element={<MemberDashboard />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/membership" element={<Membership />} />
