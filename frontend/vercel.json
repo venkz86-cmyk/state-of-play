@@ -1,10 +1,26 @@
 {
   "installCommand": "yarn install",
   "buildCommand": "yarn build",
+  "functions": {
+    "api/og/[slug].js": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  },
   "rewrites": [
     {
       "source": "/content/:path*",
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
+    },
+    {
+      "source": "/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest).*"
+        }
+      ],
+      "destination": "/api/og/:slug"
     },
     {
       "source": "/((?!content|api|static|_next|favicon|manifest|robots).*)",
