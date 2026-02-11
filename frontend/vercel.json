@@ -1,14 +1,22 @@
 {
   "installCommand": "yarn install",
   "buildCommand": "yarn build",
-  "framework": null,
+  "functions": {
+    "api/share.js": {
+      "runtime": "@vercel/edge"
+    }
+  },
   "rewrites": [
     {
       "source": "/content/:path*",
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
     },
     {
-      "source": "/((?!content|api|static|_next|favicon|manifest|robots).*)",
+      "source": "/s/:slug",
+      "destination": "/api/share?slug=:slug"
+    },
+    {
+      "source": "/((?!content|api|static|_next|favicon|manifest|robots|s).*)",
       "destination": "/index.html"
     }
   ]
