@@ -878,7 +878,7 @@ async def generate_og_image(slug: str):
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
         
         # --- TITLE ---
-        wrapped_title = textwrap.fill(title, width=35)
+        wrapped_title = textwrap.fill(title, width=38)
         title_lines = wrapped_title.split('\n')[:2]  # Max 2 lines for title
         
         title_line_height = 58
