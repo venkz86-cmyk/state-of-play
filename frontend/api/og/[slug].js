@@ -1,6 +1,6 @@
 // Ghost API configuration
 const GHOST_URL = 'https://the-state-of-play.ghost.io';
-const GHOST_CONTENT_API_KEY = '03dfda5a2d0c082e9c47c08b0b';
+const GHOST_CONTENT_API_KEY = process.env.REACT_APP_GHOST_CONTENT_API_KEY || 'a9be7f9fb8a0b1ef144d56ed8f';
 
 // Bot detection patterns for social media crawlers
 const BOT_PATTERNS = [
