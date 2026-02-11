@@ -16,24 +16,27 @@ import {
   RefreshCw,
   ExternalLink
 } from 'lucide-react';
-import { format, formatDistanceToNow, isPast, differenceInDays } from 'date-fns';
+import { format, isPast, differenceInDays } from 'date-fns';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 export const MemberDashboard = () => {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [memberDetails, setMemberDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
     fetchMemberDetails();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, authLoading, navigate, user?.email]);
 
   const fetchMemberDetails = async () => {
     if (!user?.email) return;
