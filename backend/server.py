@@ -433,15 +433,16 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                         
                         if members:
                             member = members[0]
-                            # Check subscription status
-                            is_paid = member.get('status') == 'paid' or len(member.get('subscriptions', [])) > 0
+                            # Check subscription status - comped members are also paid
+                            status = member.get('status', 'free')
+                            is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
                             
                             return MemberVerifyResponse(
                                 is_member=True,
                                 is_paid=is_paid,
                                 email=member.get('email', request.email),
                                 name=member.get('name'),
-                                status=member.get('status', 'free')
+                                status=status
                             )
                         else:
                             return MemberVerifyResponse(
@@ -460,6 +461,90 @@ async def verify_ghost_member(request: MemberVerifyRequest):
         email=request.email,
         status='not_configured' if not GHOST_ADMIN_API_KEY else 'error'
     )
+
+class MemberDetailsResponse(BaseModel):
+    is_member: bool
+    is_paid: bool
+    email: str
+    name: Optional[str] = None
+    status: str
+    created_at: Optional[str] = None
+    subscription_start: Optional[str] = None
+    subscription_end: Optional[str] = None
+    subscription_status: Optional[str] = None
+    avatar_image: Optional[str] = None
+    note: Optional[str] = None
+
+@api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
+async def get_member_details(request: MemberVerifyRequest):
+    """Get detailed member info including subscription dates"""
+    import httpx
+    
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail="Admin API not configured")
+    
+    token = create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail="Failed to create admin token")
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                f'{GHOST_URL}/ghost/api/admin/members/',
+                params={'filter': f'email:{request.email}', 'include': 'subscriptions'},
+                headers={'Authorization': f'Ghost {token}'}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                members = data.get('members', [])
+                
+                if members:
+                    member = members[0]
+                    status = member.get('status', 'free')
+                    is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
+                    
+                    # Get subscription details
+                    subscriptions = member.get('subscriptions', [])
+                    subscription_start = None
+                    subscription_end = None
+                    subscription_status = None
+                    
+                    if subscriptions:
+                        # Get the most recent/active subscription
+                        sub = subscriptions[0]
+                        subscription_start = sub.get('start_date') or sub.get('created_at')
+                        subscription_end = sub.get('current_period_end')
+                        subscription_status = sub.get('status', 'active')
+                    elif status == 'comped':
+                        # For comped members, use created_at as start and set end to 1 year from now
+                        subscription_start = member.get('created_at')
+                        # Comped memberships typically don't have an end date
+                        subscription_status = 'comped'
+                    
+                    return MemberDetailsResponse(
+                        is_member=True,
+                        is_paid=is_paid,
+                        email=member.get('email', request.email),
+                        name=member.get('name'),
+                        status=status,
+                        created_at=member.get('created_at'),
+                        subscription_start=subscription_start,
+                        subscription_end=subscription_end,
+                        subscription_status=subscription_status,
+                        avatar_image=member.get('avatar_image'),
+                        note=member.get('note')
+                    )
+                else:
+                    return MemberDetailsResponse(
+                        is_member=False,
+                        is_paid=False,
+                        email=request.email,
+                        status='not_found'
+                    )
+    except Exception as e:
+        logger.error(f"Ghost member details error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 class ArticleContentRequest(BaseModel):
     slug: str
