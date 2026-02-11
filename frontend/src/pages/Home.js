@@ -45,54 +45,85 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-background border-b border-border">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-        <div className="container mx-auto px-4 md:px-8 max-w-7xl py-24 md:py-32 relative z-10">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-4 py-2.5 mb-8 group hover:bg-primary/10 transition-colors">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-xs font-mono font-bold tracking-widest uppercase text-primary">Premium Sports Business Intelligence</span>
-            </div>
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-heading font-black tracking-tight leading-[0.95] mb-8 text-balance">
-              The business of sport from an{' '}
-              <span className="text-primary relative inline-block">
-                India lens
-                <svg className="absolute -bottom-3 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
-                  <path d="M0 6C50 3 100 9 150 4C175 2 200 6 200 6" stroke="#2E5AAC" strokeWidth="4" strokeLinecap="round"/>
-                </svg>
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-12 max-w-3xl">
-              Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/signup">
-                <Button 
-                  size="lg" 
-                  className="bg-primary text-white hover:bg-primary-700 font-bold px-10 py-7 text-lg transition-all hover:shadow-2xl hover:-translate-y-0.5 group"
-                  data-testid="btn-hero-subscribe"
-                >
-                  <Newspaper className="mr-2 h-5 w-5 group-hover:rotate-3 transition-transform" />
-                  Subscribe Now
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <a href="https://theleftfield.substack.com" target="_blank" rel="noopener noreferrer">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white font-bold px-10 py-7 text-lg transition-all group"
-                  data-testid="btn-hero-free-content"
-                >
-                  <Zap className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                  Free Briefings
-                </Button>
-              </a>
+      {/* Hero Section - Different for logged-in vs. logged-out users */}
+      {canAccessPremium ? (
+        /* Logged-in PRO user - Welcome back section */
+        <section className="bg-background border-b border-border">
+          <div className="container mx-auto px-4 md:px-8 max-w-7xl py-12">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <p className="text-sm font-medium text-primary mb-1">Welcome back</p>
+                <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
+                  {user?.name || 'Premium Member'}
+                </h1>
+                <p className="text-muted-foreground mt-1">Here's what's new in sports business</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/state-of-play">
+                  <Button variant="outline" size="sm" className="font-medium">
+                    <Newspaper className="mr-2 h-4 w-4" />
+                    Latest Stories
+                  </Button>
+                </Link>
+                <Link to="/account">
+                  <Button variant="ghost" size="sm" className="font-medium">
+                    My Account
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        /* Logged-out user - Full marketing hero */
+        <section className="relative bg-background border-b border-border">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+          <div className="container mx-auto px-4 md:px-8 max-w-7xl py-24 md:py-32 relative z-10">
+            <div className="max-w-4xl">
+              <div className="inline-flex items-center space-x-2 bg-primary/5 border border-primary/10 px-4 py-2.5 mb-8 group hover:bg-primary/10 transition-colors">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-xs font-mono font-bold tracking-widest uppercase text-primary">Premium Sports Business Intelligence</span>
+              </div>
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-heading font-black tracking-tight leading-[0.95] mb-8 text-balance">
+                The business of sport from an{' '}
+                <span className="text-primary relative inline-block">
+                  India lens
+                  <svg className="absolute -bottom-3 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
+                    <path d="M0 6C50 3 100 9 150 4C175 2 200 6 200 6" stroke="#2E5AAC" strokeWidth="4" strokeLinecap="round"/>
+                  </svg>
+                </span>
+              </h1>
+              <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-12 max-w-3xl">
+                Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/signup">
+                  <Button 
+                    size="lg" 
+                    className="bg-primary text-white hover:bg-primary-700 font-bold px-10 py-7 text-lg transition-all hover:shadow-2xl hover:-translate-y-0.5 group"
+                    data-testid="btn-hero-subscribe"
+                  >
+                    <Newspaper className="mr-2 h-5 w-5 group-hover:rotate-3 transition-transform" />
+                    Subscribe Now
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+                <a href="https://theleftfield.substack.com" target="_blank" rel="noopener noreferrer">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white font-bold px-10 py-7 text-lg transition-all group"
+                    data-testid="btn-hero-free-content"
+                  >
+                    <Zap className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                    Free Briefings
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Article */}
       {featuredArticle && (
