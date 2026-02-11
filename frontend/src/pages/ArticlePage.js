@@ -352,7 +352,15 @@ export const ArticlePage = () => {
                           </div>
                           <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
                             <TrendingUp className="h-4 w-4 text-primary" />
+                            <span>Full archive access</span>
+                          </div>
+                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
+                            <TrendingUp className="h-4 w-4 text-primary" />
                             <span>Ad-free reading</span>
+                          </div>
+                          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <span>Priority event access <span className="text-xs">(Coming soon)</span></span>
                           </div>
                         </div>
                       </>
