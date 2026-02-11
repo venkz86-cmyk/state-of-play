@@ -892,7 +892,8 @@ async def get_og_meta(slug: str, request: Request):
         # Extract metadata
         title = article.get('title', 'The State of Play')
         description = article.get('excerpt') or article.get('custom_excerpt') or "India's premium sports business publication"
-        image = article.get('feature_image') or 'https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png'
+        # Use dynamic OG image instead of feature image for social sharing
+        image = f"https://state-of-play-backend.onrender.com/api/og-image/{slug}"
         article_url = f"https://www.stateofplay.club/{slug}"
         author = article.get('primary_author', {}).get('name', 'The State of Play') if article.get('primary_author') else 'The State of Play'
         published_time = article.get('published_at', '')
