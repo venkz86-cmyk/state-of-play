@@ -722,16 +722,16 @@ async def get_ghost_member(request: Request):
 # Dynamic OG Image Generator for social sharing
 @api_router.get("/og-image/{slug}")
 async def generate_og_image(slug: str):
-    """Generate a branded OG image for social media sharing"""
+    """Generate a branded OG image for social media sharing - Morning Context style"""
     import httpx
-    from fastapi.responses import Response
-    from PIL import Image, ImageDraw, ImageFont
+    from fastapi.responses import Response, RedirectResponse
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
     from io import BytesIO
     import textwrap
     
     try:
         # Fetch article from Ghost
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
                 f"{GHOST_URL}/ghost/api/content/posts/slug/{slug}/",
                 params={'key': GHOST_CONTENT_API_KEY, 'include': 'tags,authors'}
@@ -748,108 +748,198 @@ async def generate_og_image(slug: str):
         
         # Extract metadata
         title = article.get('title', 'The State of Play')
+        excerpt = article.get('excerpt') or article.get('custom_excerpt') or ''
+        feature_image_url = article.get('feature_image')
         
         # Get category/tag
         tags = article.get('tags', [])
-        category = 'ANALYSIS'  # Default
+        category = None
         if tags:
-            tag_name = tags[0].get('name', '').upper()
-            if tag_name:
-                category = tag_name
+            category = tags[0].get('name', '').upper()
         
         # Determine if premium
         is_premium = article.get('visibility') in ['paid', 'members']
         
-        # Create image (1200x630 - standard OG size)
+        # Image dimensions (1200x630 - standard OG size)
         width, height = 1200, 630
         
-        # Background color - deep blue like your brand
-        bg_color = (35, 75, 160)  # #234ba0
+        # Try to fetch and use the feature image
+        bg_img = None
+        if feature_image_url:
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as img_client:
+                    img_response = await img_client.get(feature_image_url)
+                    if img_response.status_code == 200:
+                        bg_img = Image.open(BytesIO(img_response.content))
+                        # Resize to cover the canvas
+                        bg_img = bg_img.convert('RGB')
+                        
+                        # Calculate scaling to cover
+                        img_ratio = bg_img.width / bg_img.height
+                        target_ratio = width / height
+                        
+                        if img_ratio > target_ratio:
+                            # Image is wider - scale by height
+                            new_height = height
+                            new_width = int(height * img_ratio)
+                        else:
+                            # Image is taller - scale by width
+                            new_width = width
+                            new_height = int(width / img_ratio)
+                        
+                        bg_img = bg_img.resize((new_width, new_height), Image.LANCZOS)
+                        
+                        # Center crop
+                        left = (new_width - width) // 2
+                        top = (new_height - height) // 2
+                        bg_img = bg_img.crop((left, top, left + width, top + height))
+                        
+                        # Slightly darken the image for better text readability
+                        enhancer = ImageEnhance.Brightness(bg_img)
+                        bg_img = enhancer.enhance(0.7)
+            except Exception as e:
+                logger.error(f"Failed to fetch feature image: {e}")
+                bg_img = None
         
-        img = Image.new('RGB', (width, height), bg_color)
+        # If no feature image, use solid color background
+        if bg_img is None:
+            bg_img = Image.new('RGB', (width, height), (35, 75, 160))
+        
+        img = bg_img.copy()
         draw = ImageDraw.Draw(img)
         
-        # Try to load fonts, fall back to default if not available
+        # Create overlay for better text readability
+        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        overlay_draw = ImageDraw.Draw(overlay)
+        
+        # Add gradient overlay at top and bottom
+        for i in range(200):
+            alpha = int(180 * (1 - i / 200))
+            overlay_draw.line([(0, i), (width, i)], fill=(0, 0, 0, alpha))
+        for i in range(200):
+            alpha = int(150 * (1 - i / 200))
+            overlay_draw.line([(0, height - 1 - i), (width, height - 1 - i)], fill=(0, 0, 0, alpha))
+        
+        img = img.convert('RGBA')
+        img = Image.alpha_composite(img, overlay)
+        draw = ImageDraw.Draw(img)
+        
+        # Try to load fonts
         try:
-            # Try system fonts
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
-            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
-            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+            excerpt_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
         except:
-            # Fallback to default
             title_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
             brand_font = ImageFont.load_default()
+            excerpt_font = ImageFont.load_default()
         
-        # Draw badge area (top left)
-        badge_y = 60
-        badge_x = 60
+        # Brand colors
+        primary_blue = (35, 75, 160)
+        accent_coral = (255, 107, 107)  # Coral/salmon for premium
+        white = (255, 255, 255)
         
-        # Premium badge
+        # Draw badges at top
+        badge_y = 40
+        badge_x = 50
+        
+        # Premium badge (coral background)
         if is_premium:
             premium_text = "PREMIUM"
             premium_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
             premium_width = premium_bbox[2] - premium_bbox[0]
+            premium_height = premium_bbox[3] - premium_bbox[1]
             
-            # Draw premium badge background
+            # Draw badge with coral background
+            padding = 12
             draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + premium_width + 24, badge_y + 36],
-                radius=4,
-                fill=(255, 255, 255)
+                [badge_x, badge_y, badge_x + premium_width + padding * 2, badge_y + premium_height + padding * 2],
+                radius=6,
+                fill=accent_coral
             )
-            draw.text((badge_x + 12, badge_y + 6), premium_text, fill=bg_color, font=badge_font)
-            badge_x += premium_width + 40
+            draw.text((badge_x + padding, badge_y + padding), premium_text, fill=white, font=badge_font)
+            badge_x += premium_width + padding * 2 + 15
         
-        # Category badge
-        cat_bbox = draw.textbbox((0, 0), category, font=badge_font)
-        cat_width = cat_bbox[2] - cat_bbox[0]
+        # Category badge (white background)
+        if category:
+            cat_bbox = draw.textbbox((0, 0), category, font=badge_font)
+            cat_width = cat_bbox[2] - cat_bbox[0]
+            cat_height = cat_bbox[3] - cat_bbox[1]
+            
+            padding = 12
+            draw.rounded_rectangle(
+                [badge_x, badge_y, badge_x + cat_width + padding * 2, badge_y + cat_height + padding * 2],
+                radius=6,
+                fill=white
+            )
+            draw.text((badge_x + padding, badge_y + padding), category, fill=primary_blue, font=badge_font)
         
-        # Draw category badge (outline style)
-        draw.rounded_rectangle(
-            [badge_x, badge_y, badge_x + cat_width + 24, badge_y + 36],
-            radius=4,
-            outline=(255, 255, 255),
-            width=2
-        )
-        draw.text((badge_x + 12, badge_y + 6), category, fill=(255, 255, 255), font=badge_font)
-        
-        # Draw title (wrapped)
-        title_y = 160
-        max_width = width - 120  # padding on both sides
-        
-        # Wrap title text
-        wrapped_title = textwrap.fill(title, width=35)
+        # Draw title with background highlight
+        title_y = 120
+        wrapped_title = textwrap.fill(title, width=32)
         lines = wrapped_title.split('\n')[:3]  # Max 3 lines
         
+        line_height = 65
         for i, line in enumerate(lines):
-            draw.text((60, title_y + i * 70), line, fill=(255, 255, 255), font=title_font)
+            line_bbox = draw.textbbox((0, 0), line, font=title_font)
+            line_width = line_bbox[2] - line_bbox[0]
+            line_h = line_bbox[3] - line_bbox[1]
+            
+            # Draw background rectangle for each line
+            padding_x = 15
+            padding_y = 8
+            draw.rectangle(
+                [50 - padding_x, title_y + i * line_height - padding_y, 
+                 50 + line_width + padding_x, title_y + i * line_height + line_h + padding_y],
+                fill=primary_blue
+            )
+            draw.text((50, title_y + i * line_height), line, fill=white, font=title_font)
         
-        # Draw bottom brand bar
-        bar_y = height - 80
-        draw.text((60, bar_y), "The State of Play", fill=(255, 255, 255, 200), font=brand_font)
+        # Draw excerpt at bottom
+        if excerpt:
+            excerpt_short = excerpt[:150] + '...' if len(excerpt) > 150 else excerpt
+            wrapped_excerpt = textwrap.fill(excerpt_short, width=70)
+            excerpt_lines = wrapped_excerpt.split('\n')[:2]
+            
+            excerpt_y = height - 120
+            for i, line in enumerate(excerpt_lines):
+                draw.text((50, excerpt_y + i * 28), line, fill=white, font=excerpt_font)
         
-        # Add subtle accent line
-        draw.line([(60, bar_y - 20), (300, bar_y - 20)], fill=(255, 255, 255, 100), width=2)
+        # Draw brand name bottom right
+        brand_text = "The State of Play"
+        brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+        brand_width = brand_bbox[2] - brand_bbox[0]
+        
+        # Brand with background
+        draw.rounded_rectangle(
+            [width - brand_width - 70, height - 60, width - 30, height - 25],
+            radius=4,
+            fill=(255, 255, 255, 220)
+        )
+        draw.text((width - brand_width - 50, height - 55), brand_text, fill=primary_blue, font=brand_font)
+        
+        # Convert to RGB for PNG output
+        img = img.convert('RGB')
         
         # Convert to bytes
         img_byte_arr = BytesIO()
-        img.save(img_byte_arr, format='PNG', optimize=True)
+        img.save(img_byte_arr, format='PNG', optimize=True, quality=85)
         img_byte_arr.seek(0)
         
         return Response(
             content=img_byte_arr.getvalue(),
             media_type="image/png",
             headers={
-                "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                "Cache-Control": "public, max-age=86400",
                 "Content-Disposition": f"inline; filename={slug}-og.png"
             }
         )
         
     except Exception as e:
         logger.error(f"OG image generation error for {slug}: {e}")
-        # Return a 1x1 transparent pixel as fallback
-        from fastapi.responses import RedirectResponse
-        # Redirect to original feature image if generation fails
+        # Fallback to original feature image
         return RedirectResponse(
             url=f"https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png",
             status_code=302
