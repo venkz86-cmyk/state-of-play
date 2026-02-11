@@ -1,21 +1,51 @@
 import { useState } from 'react';
-import { Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export const NewsletterSignup = ({ variant = 'default' }) => {
+  const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  // Hide this component for logged-in users (they're already subscribed)
+  if (user) {
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
-    // Open Ghost subscription page with email pre-filled
-    setTimeout(() => {
+    try {
+      // Try to subscribe via Ghost Members API
+      const response = await fetch('https://the-state-of-play.ghost.io/members/api/send-magic-link/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          emailType: 'subscribe',
+        }),
+      });
+      
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        // Fallback: open Ghost portal for signup
+        window.open(`https://the-state-of-play.ghost.io/#/portal/signup?email=${encodeURIComponent(email)}`, '_blank');
+        setSubmitted(true);
+      }
+    } catch (err) {
+      // Fallback: open Ghost portal for signup
       window.open(`https://the-state-of-play.ghost.io/#/portal/signup?email=${encodeURIComponent(email)}`, '_blank');
       setSubmitted(true);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   if (submitted) {
