@@ -21,7 +21,7 @@ import { format, isPast, differenceInDays } from 'date-fns';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 export const MemberDashboard = () => {
-  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [memberDetails, setMemberDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,12 +31,15 @@ export const MemberDashboard = () => {
     // Wait for auth to finish loading
     if (authLoading) return;
     
-    if (!isLoggedIn) {
+    // If no user after auth loaded, redirect to login
+    if (!user) {
       navigate('/login');
       return;
     }
+    
+    // User exists, fetch details
     fetchMemberDetails();
-  }, [isLoggedIn, authLoading, navigate, user?.email]);
+  }, [authLoading, user, navigate]);
 
   const fetchMemberDetails = async () => {
     if (!user?.email) return;
