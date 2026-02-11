@@ -51,7 +51,10 @@ export const NewsletterSignup = ({ variant = 'default' }) => {
   if (submitted) {
     return (
       <div className={`${variant === 'inline' ? 'p-4' : 'p-8'} bg-secondary/10 border border-secondary/20 text-center`}>
-        <p className="text-secondary font-semibold">Check your email to confirm! ✓</p>
+        <div className="flex items-center justify-center space-x-2">
+          <CheckCircle className="h-5 w-5 text-secondary" />
+          <p className="text-secondary font-semibold">Check your email to confirm!</p>
+        </div>
       </div>
     );
   }
