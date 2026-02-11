@@ -821,7 +821,6 @@ async def generate_og_image(slug: str):
         
         # Colors
         white = (255, 255, 255)
-        light_gray = (220, 220, 220)
         coral = (255, 100, 100)
         blue = (35, 75, 160)
         
