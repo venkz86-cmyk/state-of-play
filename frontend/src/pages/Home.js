@@ -6,8 +6,10 @@ import { NewsletterSignup } from '../components/NewsletterSignup';
 import { ReadingHistory } from '../components/ReadingHistory';
 import { Button } from '../components/ui/button';
 import { ArrowRight, Newspaper, Zap, Sparkles } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Home = () => {
+  const { user, canAccessPremium } = useAuth();
   const [articles, setArticles] = useState([]);
   const [featuredArticle, setFeaturedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
