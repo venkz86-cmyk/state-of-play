@@ -750,6 +750,7 @@ async def generate_og_image(slug: str):
         
         # Extract metadata
         title = article.get('title', 'The State of Play')
+        excerpt = article.get('custom_excerpt') or article.get('excerpt') or ''
         feature_image_url = article.get('feature_image')
         
         # Get category/tag
@@ -794,7 +795,7 @@ async def generate_og_image(slug: str):
                         
                         # Darken for readability
                         enhancer = ImageEnhance.Brightness(bg_img)
-                        bg_img = enhancer.enhance(0.45)
+                        bg_img = enhancer.enhance(0.4)
             except Exception as e:
                 logger.error(f"Failed to fetch feature image: {e}")
         
@@ -805,21 +806,24 @@ async def generate_og_image(slug: str):
         img = bg_img.copy()
         
         # Add dark overlay
-        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 120))
+        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 130))
         img = img.convert('RGBA')
         img = Image.alpha_composite(img, overlay)
         draw = ImageDraw.Draw(img)
         
         # Load fonts
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
-            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+            excerpt_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
         except:
             title_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
+            excerpt_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
+        light_gray = (220, 220, 220)
         coral = (255, 100, 100)
         blue = (35, 75, 160)
         
@@ -831,59 +835,69 @@ async def generate_og_image(slug: str):
                     logo = Image.open(BytesIO(logo_response.content))
                     logo = logo.convert('RGBA')
                     
-                    # Scale logo to reasonable size (height ~60px)
-                    logo_height = 55
+                    # Scale logo
+                    logo_height = 50
                     logo_ratio = logo.width / logo.height
                     logo_width = int(logo_height * logo_ratio)
                     logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
                     
-                    # Paste logo at top left
-                    img.paste(logo, (50, 45), logo)
+                    img.paste(logo, (50, 40), logo)
         except Exception as e:
             logger.error(f"Failed to fetch logo: {e}")
         
         # --- BADGES at top right ---
-        badge_y = 50
-        badge_x = width - 60  # Start from right
+        badge_y = 45
+        badge_x = width - 50
         
         if category:
             c_bbox = draw.textbbox((0, 0), category, font=badge_font)
             c_w, c_h = c_bbox[2] - c_bbox[0], c_bbox[3] - c_bbox[1]
-            pad = 12
+            pad = 10
             badge_x = badge_x - c_w - pad*2
             
             draw.rounded_rectangle(
                 [badge_x, badge_y, badge_x + c_w + pad*2, badge_y + c_h + pad*2],
-                radius=6,
+                radius=5,
                 fill=white
             )
             draw.text((badge_x + pad, badge_y + pad), category, fill=blue, font=badge_font)
-            badge_x -= 15
+            badge_x -= 12
         
         if is_premium:
             premium_text = "PREMIUM"
             p_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
             p_w, p_h = p_bbox[2] - p_bbox[0], p_bbox[3] - p_bbox[1]
-            pad = 12
+            pad = 10
             badge_x = badge_x - p_w - pad*2
             
             draw.rounded_rectangle(
                 [badge_x, badge_y, badge_x + p_w + pad*2, badge_y + p_h + pad*2],
-                radius=6,
+                radius=5,
                 fill=coral
             )
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
         
-        # --- TITLE (centered vertically, left aligned) ---
-        wrapped = textwrap.fill(title, width=30)
-        lines = wrapped.split('\n')[:3]
+        # --- TITLE ---
+        wrapped_title = textwrap.fill(title, width=35)
+        title_lines = wrapped_title.split('\n')[:2]  # Max 2 lines for title
         
-        line_height = 68
-        total_height = len(lines) * line_height
-        title_start_y = (height - total_height) // 2
+        title_line_height = 58
+        title_start_y = 140
         
-        for i, line in enumerate(lines):
-            draw.text((50, title_start_y + i * line_height), line, fill=white, font=title_font)
+        for i, line in enumerate(title_lines):
+            draw.text((50, title_start_y + i * title_line_height), line, fill=white, font=title_font)
+        
+        # --- EXCERPT below title ---
+        if excerpt:
+            excerpt_start_y = title_start_y + len(title_lines) * title_line_height + 25
+            
+            # Wrap excerpt to fit - wider lines since font is smaller
+            wrapped_excerpt = textwrap.fill(excerpt, width=65)
+            excerpt_lines = wrapped_excerpt.split('\n')[:3]  # Max 3 lines
+            
+            excerpt_line_height = 32
+            for i, line in enumerate(excerpt_lines):
+                draw.text((50, excerpt_start_y + i * excerpt_line_height), line, fill=light_gray, font=excerpt_font)
         
         # Convert to RGB
         img = img.convert('RGB')
