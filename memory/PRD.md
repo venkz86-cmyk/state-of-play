@@ -1,6 +1,7 @@
 # The State of Play - Premium Content Platform
 
 ## Latest Updates (Feb 11, 2026)
+- **Social Sharing/OG Tags Fix**: Added Vercel serverless function to serve proper meta tags to social media crawlers
 - **Newsletter & CTA visibility fix**: Hide signup prompts for logged-in paid members
 - **Login Button visibility**: Made Login button visible on mobile header
 
@@ -11,8 +12,10 @@ Premium sports content platform with Ghost CMS integration, member verification,
 - **Frontend**: React app hosted on Vercel (stateofplay.club)
 - **Backend**: FastAPI on Render (handles Ghost Admin API calls)
 - **CMS**: Ghost (headless, Content API + Admin API)
+- **Serverless**: Vercel Edge Functions for OG tag rendering
 
 ## Key Files
+- `frontend/api/og/[slug].js` - Serverless function for social sharing meta tags
 - `frontend/src/components/Header.js` - Navigation, auth state display
 - `frontend/src/components/NewsletterSignup.js` - Newsletter CTA (hidden for logged-in users)
 - `frontend/src/pages/Home.js` - Homepage with conditional CTAs
@@ -24,12 +27,13 @@ Premium sports content platform with Ghost CMS integration, member verification,
 - [x] Member verification via Ghost Admin API
 - [x] Secure paywall for paid content
 - [x] SEO-friendly URLs (/:slug)
-- [x] Social sharing meta tags
+- [x] Social sharing meta tags (OG + Twitter cards)
 - [x] Welcome back toast notification
 - [x] Mobile Login button visibility
 - [x] Hide CTAs for paid members
 
 ## Backlog
+- [ ] Upload dedicated default OG image for homepage (P0)
 - [ ] Table of Contents for long articles (P1)
 - [ ] Bookmarks/reading list (P1)
 - [ ] Print-friendly view (P1)
