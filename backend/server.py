@@ -719,6 +719,142 @@ async def get_ghost_member(request: Request):
         logger.error(f"Ghost member fetch error: {e}")
         return None
 
+# Dynamic OG Image Generator for social sharing
+@api_router.get("/og-image/{slug}")
+async def generate_og_image(slug: str):
+    """Generate a branded OG image for social media sharing"""
+    import httpx
+    from fastapi.responses import Response
+    from PIL import Image, ImageDraw, ImageFont
+    from io import BytesIO
+    import textwrap
+    
+    try:
+        # Fetch article from Ghost
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GHOST_URL}/ghost/api/content/posts/slug/{slug}/",
+                params={'key': GHOST_CONTENT_API_KEY, 'include': 'tags,authors'}
+            )
+            
+            if response.status_code != 200:
+                raise Exception("Article not found")
+            
+            data = response.json()
+            article = data.get('posts', [{}])[0] if data.get('posts') else None
+            
+            if not article:
+                raise Exception("Article not found")
+        
+        # Extract metadata
+        title = article.get('title', 'The State of Play')
+        
+        # Get category/tag
+        tags = article.get('tags', [])
+        category = 'ANALYSIS'  # Default
+        if tags:
+            tag_name = tags[0].get('name', '').upper()
+            if tag_name:
+                category = tag_name
+        
+        # Determine if premium
+        is_premium = article.get('visibility') in ['paid', 'members']
+        
+        # Create image (1200x630 - standard OG size)
+        width, height = 1200, 630
+        
+        # Background color - deep blue like your brand
+        bg_color = (35, 75, 160)  # #234ba0
+        
+        img = Image.new('RGB', (width, height), bg_color)
+        draw = ImageDraw.Draw(img)
+        
+        # Try to load fonts, fall back to default if not available
+        try:
+            # Try system fonts
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+        except:
+            # Fallback to default
+            title_font = ImageFont.load_default()
+            badge_font = ImageFont.load_default()
+            brand_font = ImageFont.load_default()
+        
+        # Draw badge area (top left)
+        badge_y = 60
+        badge_x = 60
+        
+        # Premium badge
+        if is_premium:
+            premium_text = "PREMIUM"
+            premium_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
+            premium_width = premium_bbox[2] - premium_bbox[0]
+            
+            # Draw premium badge background
+            draw.rounded_rectangle(
+                [badge_x, badge_y, badge_x + premium_width + 24, badge_y + 36],
+                radius=4,
+                fill=(255, 255, 255)
+            )
+            draw.text((badge_x + 12, badge_y + 6), premium_text, fill=bg_color, font=badge_font)
+            badge_x += premium_width + 40
+        
+        # Category badge
+        cat_bbox = draw.textbbox((0, 0), category, font=badge_font)
+        cat_width = cat_bbox[2] - cat_bbox[0]
+        
+        # Draw category badge (outline style)
+        draw.rounded_rectangle(
+            [badge_x, badge_y, badge_x + cat_width + 24, badge_y + 36],
+            radius=4,
+            outline=(255, 255, 255),
+            width=2
+        )
+        draw.text((badge_x + 12, badge_y + 6), category, fill=(255, 255, 255), font=badge_font)
+        
+        # Draw title (wrapped)
+        title_y = 160
+        max_width = width - 120  # padding on both sides
+        
+        # Wrap title text
+        wrapped_title = textwrap.fill(title, width=35)
+        lines = wrapped_title.split('\n')[:3]  # Max 3 lines
+        
+        for i, line in enumerate(lines):
+            draw.text((60, title_y + i * 70), line, fill=(255, 255, 255), font=title_font)
+        
+        # Draw bottom brand bar
+        bar_y = height - 80
+        draw.text((60, bar_y), "The State of Play", fill=(255, 255, 255, 200), font=brand_font)
+        
+        # Add subtle accent line
+        draw.line([(60, bar_y - 20), (300, bar_y - 20)], fill=(255, 255, 255, 100), width=2)
+        
+        # Convert to bytes
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='PNG', optimize=True)
+        img_byte_arr.seek(0)
+        
+        return Response(
+            content=img_byte_arr.getvalue(),
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                "Content-Disposition": f"inline; filename={slug}-og.png"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"OG image generation error for {slug}: {e}")
+        # Return a 1x1 transparent pixel as fallback
+        from fastapi.responses import RedirectResponse
+        # Redirect to original feature image if generation fails
+        return RedirectResponse(
+            url=f"https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png",
+            status_code=302
+        )
+
 # OG Meta endpoint for social sharing
 @api_router.get("/og/{slug}")
 async def get_og_meta(slug: str, request: Request):
