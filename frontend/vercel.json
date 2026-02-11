@@ -7,6 +7,17 @@
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
     },
     {
+      "source": "/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(?:WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest).*"
+        }
+      ],
+      "destination": "https://state-of-play-backend.onrender.com/api/og/:slug"
+    },
+    {
       "source": "/((?!content|api|static|_next|favicon|manifest|robots).*)",
       "destination": "/index.html"
     }
