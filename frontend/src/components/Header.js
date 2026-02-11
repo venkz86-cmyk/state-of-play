@@ -122,7 +122,7 @@ export const Header = () => {
             
             {user ? (
               <>
-                <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-primary/10 rounded-full">
+                <Link to="/account" className="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
                   <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
                     <span className="text-white text-xs font-bold">
                       {(user.name || user.email || 'U').charAt(0).toUpperCase()}
@@ -136,7 +136,7 @@ export const Header = () => {
                       PRO
                     </span>
                   )}
-                </div>
+                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 
