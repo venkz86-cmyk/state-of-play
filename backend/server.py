@@ -650,6 +650,90 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# OG Meta endpoint for social sharing
+@api_router.get("/og/{slug}")
+async def get_og_meta(slug: str, request: Request):
+    """Serve Open Graph meta tags for social media crawlers"""
+    import httpx
+    from fastapi.responses import HTMLResponse
+    
+    user_agent = request.headers.get('user-agent', '').lower()
+    bot_patterns = ['whatsapp', 'facebookexternalhit', 'facebot', 'twitterbot', 
+                    'linkedinbot', 'slackbot', 'telegrambot', 'discordbot', 'pinterest']
+    
+    is_bot = any(bot in user_agent for bot in bot_patterns)
+    
+    # For non-bots, redirect to the actual page
+    if not is_bot:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
+    
+    try:
+        # Fetch article from Ghost
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GHOST_URL}/ghost/api/content/posts/slug/{slug}/",
+                params={'key': GHOST_CONTENT_API_KEY, 'include': 'authors'}
+            )
+            
+            if response.status_code != 200:
+                return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
+            
+            data = response.json()
+            article = data.get('posts', [{}])[0] if data.get('posts') else None
+            
+            if not article:
+                return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
+        
+        # Extract metadata
+        title = article.get('title', 'The State of Play')
+        description = article.get('excerpt') or article.get('custom_excerpt') or "India's premium sports business publication"
+        image = article.get('feature_image') or 'https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png'
+        article_url = f"https://www.stateofplay.club/{slug}"
+        author = article.get('primary_author', {}).get('name', 'The State of Play') if article.get('primary_author') else 'The State of Play'
+        published_time = article.get('published_at', '')
+        
+        # Escape HTML
+        def escape_html(text):
+            if not text:
+                return ''
+            return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#039;')
+        
+        html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{escape_html(title)} | The State of Play</title>
+  <meta name="description" content="{escape_html(description)}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{article_url}">
+  <meta property="og:title" content="{escape_html(title)}">
+  <meta property="og:description" content="{escape_html(description)}">
+  <meta property="og:image" content="{image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="The State of Play">
+  <meta property="article:published_time" content="{published_time}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{escape_html(title)}">
+  <meta name="twitter:description" content="{escape_html(description)}">
+  <meta name="twitter:image" content="{image}">
+</head>
+<body>
+  <h1>{escape_html(title)}</h1>
+  <p>{escape_html(description)}</p>
+  <p><a href="{article_url}">Read the full article</a></p>
+</body>
+</html>'''
+        
+        return HTMLResponse(content=html, status_code=200)
+        
+    except Exception as e:
+        logger.error(f"OG meta error for {slug}: {e}")
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
