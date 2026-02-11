@@ -722,12 +722,14 @@ async def get_ghost_member(request: Request):
 # Dynamic OG Image Generator for social sharing
 @api_router.get("/og-image/{slug}")
 async def generate_og_image(slug: str):
-    """Generate a branded OG image for social media sharing - mobile optimized"""
+    """Generate a branded OG image for social media sharing - mobile optimized with logo"""
     import httpx
     from fastapi.responses import Response, RedirectResponse
     from PIL import Image, ImageDraw, ImageFont, ImageEnhance
     from io import BytesIO
     import textwrap
+    
+    LOGO_URL = "https://the-state-of-play.ghost.io/content/images/2025/09/TSOP-Logo-Final-Colour-4.png"
     
     try:
         # Fetch article from Ghost
@@ -762,7 +764,7 @@ async def generate_og_image(slug: str):
         # Image dimensions (1200x630 - standard OG size)
         width, height = 1200, 630
         
-        # Try to fetch the feature image
+        # Fetch feature image
         bg_img = None
         if feature_image_url:
             try:
@@ -790,98 +792,98 @@ async def generate_og_image(slug: str):
                         top = (new_height - height) // 2
                         bg_img = bg_img.crop((left, top, left + width, top + height))
                         
-                        # Darken significantly for text readability
+                        # Darken for readability
                         enhancer = ImageEnhance.Brightness(bg_img)
-                        bg_img = enhancer.enhance(0.5)
+                        bg_img = enhancer.enhance(0.45)
             except Exception as e:
                 logger.error(f"Failed to fetch feature image: {e}")
-                bg_img = None
         
         # Fallback to solid color
         if bg_img is None:
             bg_img = Image.new('RGB', (width, height), (20, 50, 100))
         
         img = bg_img.copy()
-        draw = ImageDraw.Draw(img)
         
-        # Add dark overlay for better contrast
-        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 140))
+        # Add dark overlay
+        overlay = Image.new('RGBA', (width, height), (0, 0, 0, 120))
         img = img.convert('RGBA')
         img = Image.alpha_composite(img, overlay)
         draw = ImageDraw.Draw(img)
         
-        # Load fonts - LARGER sizes for mobile
+        # Load fonts
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
-            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-            brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
+            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
         except:
             title_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
-            brand_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
         coral = (255, 100, 100)
         blue = (35, 75, 160)
         
-        # --- TOP SECTION: Badges ---
+        # --- LOGO at top left ---
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as logo_client:
+                logo_response = await logo_client.get(LOGO_URL)
+                if logo_response.status_code == 200:
+                    logo = Image.open(BytesIO(logo_response.content))
+                    logo = logo.convert('RGBA')
+                    
+                    # Scale logo to reasonable size (height ~60px)
+                    logo_height = 55
+                    logo_ratio = logo.width / logo.height
+                    logo_width = int(logo_height * logo_ratio)
+                    logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
+                    
+                    # Paste logo at top left
+                    img.paste(logo, (50, 45), logo)
+        except Exception as e:
+            logger.error(f"Failed to fetch logo: {e}")
+        
+        # --- BADGES at top right ---
         badge_y = 50
-        badge_x = 60
+        badge_x = width - 60  # Start from right
+        
+        if category:
+            c_bbox = draw.textbbox((0, 0), category, font=badge_font)
+            c_w, c_h = c_bbox[2] - c_bbox[0], c_bbox[3] - c_bbox[1]
+            pad = 12
+            badge_x = badge_x - c_w - pad*2
+            
+            draw.rounded_rectangle(
+                [badge_x, badge_y, badge_x + c_w + pad*2, badge_y + c_h + pad*2],
+                radius=6,
+                fill=white
+            )
+            draw.text((badge_x + pad, badge_y + pad), category, fill=blue, font=badge_font)
+            badge_x -= 15
         
         if is_premium:
             premium_text = "PREMIUM"
             p_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
             p_w, p_h = p_bbox[2] - p_bbox[0], p_bbox[3] - p_bbox[1]
-            pad = 14
+            pad = 12
+            badge_x = badge_x - p_w - pad*2
             
             draw.rounded_rectangle(
                 [badge_x, badge_y, badge_x + p_w + pad*2, badge_y + p_h + pad*2],
-                radius=8,
+                radius=6,
                 fill=coral
             )
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
-            badge_x += p_w + pad*2 + 20
         
-        if category:
-            c_bbox = draw.textbbox((0, 0), category, font=badge_font)
-            c_w, c_h = c_bbox[2] - c_bbox[0], c_bbox[3] - c_bbox[1]
-            pad = 14
-            
-            draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + c_w + pad*2, badge_y + c_h + pad*2],
-                radius=8,
-                fill=white
-            )
-            draw.text((badge_x + pad, badge_y + pad), category, fill=blue, font=badge_font)
-        
-        # --- MIDDLE SECTION: Title (large, bold, centered-ish) ---
-        # Wrap title for mobile readability - shorter lines
-        wrapped = textwrap.fill(title, width=28)
+        # --- TITLE (centered vertically, left aligned) ---
+        wrapped = textwrap.fill(title, width=30)
         lines = wrapped.split('\n')[:3]
         
-        # Calculate total title height
-        line_height = 72
-        total_title_height = len(lines) * line_height
-        title_start_y = (height - total_title_height) // 2 - 20
+        line_height = 68
+        total_height = len(lines) * line_height
+        title_start_y = (height - total_height) // 2
         
         for i, line in enumerate(lines):
-            draw.text((60, title_start_y + i * line_height), line, fill=white, font=title_font)
-        
-        # --- BOTTOM SECTION: Brand ---
-        # Draw "The State of Play" with a subtle background
-        brand_text = "THE STATE OF PLAY"
-        b_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
-        b_w = b_bbox[2] - b_bbox[0]
-        
-        brand_x = 60
-        brand_y = height - 80
-        
-        # White text on dark background (the image itself is darkened)
-        draw.text((brand_x, brand_y), brand_text, fill=white, font=brand_font)
-        
-        # Add a subtle line above the brand
-        draw.line([(brand_x, brand_y - 15), (brand_x + 200, brand_y - 15)], fill=(255, 255, 255, 150), width=3)
+            draw.text((50, title_start_y + i * line_height), line, fill=white, font=title_font)
         
         # Convert to RGB
         img = img.convert('RGB')
@@ -902,7 +904,6 @@ async def generate_og_image(slug: str):
         
     except Exception as e:
         logger.error(f"OG image generation error for {slug}: {e}")
-        # Fallback to original feature image
         return RedirectResponse(
             url=f"https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png",
             status_code=302
