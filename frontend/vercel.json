@@ -7,7 +7,7 @@
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
     },
     {
-      "source": "/((?!content|api|static|_next|favicon|manifest|robots).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
