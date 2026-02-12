@@ -5,12 +5,10 @@ import { Button } from '../components/ui/button';
 import { CheckCircle, Loader2, AlertCircle, Mail, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const API = process.env.REACT_APP_BACKEND_URL;
-
 export const Welcome = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { verifyMember } = useAuth();
   
   const [status, setStatus] = useState('verifying'); // verifying, success, pending, error
   const [attempts, setAttempts] = useState(0);
@@ -21,7 +19,7 @@ export const Welcome = () => {
   const maxAttempts = 10; // Try for ~30 seconds
   const retryDelay = 3000; // 3 seconds between retries
 
-  const verifyMember = useCallback(async () => {
+  const doVerification = useCallback(async () => {
     if (!email) {
       setStatus('error');
       setErrorMessage('No email provided');
@@ -29,30 +27,12 @@ export const Welcome = () => {
     }
 
     try {
-      const response = await fetch(`${API}/api/ghost/verify-member`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      const result = await verifyMember(email);
 
-      if (!response.ok) {
-        throw new Error('Verification failed');
-      }
-
-      const data = await response.json();
-
-      if (data.is_member && data.is_paid) {
+      if (result.success && result.member.is_paid) {
         // Success! Member found and is paid
-        setMemberData(data);
+        setMemberData(result.member);
         setStatus('success');
-        
-        // Auto-login
-        login({
-          email: data.email,
-          name: data.name,
-          is_paid: data.is_paid,
-          status: data.status
-        });
 
         // Celebrate!
         confetti({
@@ -66,7 +46,7 @@ export const Welcome = () => {
           navigate('/');
         }, 3000);
 
-      } else if (data.is_member && !data.is_paid) {
+      } else if (result.success && !result.member.is_paid) {
         // Member exists but not paid yet - might be processing
         if (attempts < maxAttempts) {
           setStatus('pending');
@@ -82,7 +62,7 @@ export const Welcome = () => {
           setAttempts(prev => prev + 1);
         } else {
           setStatus('error');
-          setErrorMessage('We couldn\'t find your subscription. Please check your email or contact support.');
+          setErrorMessage(result.error || 'We couldn\'t find your subscription. Please check your email or contact support.');
         }
       }
     } catch (error) {
@@ -95,7 +75,7 @@ export const Welcome = () => {
         setErrorMessage('Something went wrong. Please try logging in manually.');
       }
     }
-  }, [email, attempts, login, navigate]);
+  }, [email, attempts, verifyMember, navigate]);
 
   // Initial verification and retries
   useEffect(() => {
