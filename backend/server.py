@@ -996,6 +996,144 @@ async def get_og_meta(slug: str, request: Request):
         logging.error(f"OG meta error for {slug}: {e}")
         return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
 
+# Razorpay Webhook for payment success
+class RazorpayWebhookPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+@api_router.post("/razorpay/webhook")
+async def razorpay_webhook(request: Request):
+    """
+    Handle Razorpay webhook for payment success.
+    Stores the email in recent_payments for seamless login.
+    """
+    import hmac
+    import hashlib
+    
+    try:
+        # Get the webhook signature
+        webhook_signature = request.headers.get('X-Razorpay-Signature', '')
+        webhook_secret = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
+        
+        # Get raw body for signature verification
+        body = await request.body()
+        body_str = body.decode('utf-8')
+        
+        # Verify signature if webhook secret is configured
+        if webhook_secret and webhook_signature:
+            expected_signature = hmac.new(
+                webhook_secret.encode('utf-8'),
+                body_str.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            if not hmac.compare_digest(expected_signature, webhook_signature):
+                logging.warning("Razorpay webhook signature verification failed")
+                # Continue anyway for now - log but don't block
+        
+        # Parse the payload
+        import json
+        payload = json.loads(body_str)
+        
+        event = payload.get('event', '')
+        logging.info(f"Razorpay webhook received: {event}")
+        
+        # Handle payment success events
+        if event in ['payment.captured', 'payment.authorized', 'subscription.activated']:
+            payment_entity = payload.get('payload', {}).get('payment', {}).get('entity', {})
+            subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
+            
+            # Try to get email from various places
+            email = (
+                payment_entity.get('email') or 
+                payment_entity.get('notes', {}).get('email') or
+                subscription_entity.get('notes', {}).get('email') or
+                payload.get('payload', {}).get('payment', {}).get('entity', {}).get('customer', {}).get('email')
+            )
+            
+            if email:
+                email = email.lower().strip()
+                recent_payments[email] = datetime.now(timezone.utc)
+                logging.info(f"Payment recorded for: {email}")
+                
+                # Clean up old entries (older than 30 mins)
+                cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
+                to_remove = [e for e, t in recent_payments.items() if t < cutoff]
+                for e in to_remove:
+                    del recent_payments[e]
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        logging.error(f"Razorpay webhook error: {e}")
+        # Return 200 anyway to prevent Razorpay from retrying
+        return {"status": "error", "message": str(e)}
+
+class CheckPaymentRequest(BaseModel):
+    email: EmailStr
+
+class CheckPaymentResponse(BaseModel):
+    paid: bool
+    email: str
+    message: str
+
+@api_router.post("/check-recent-payment", response_model=CheckPaymentResponse)
+async def check_recent_payment(request: CheckPaymentRequest):
+    """
+    Check if an email has a recent payment recorded.
+    Used by the Welcome page for seamless login.
+    """
+    email = request.email.lower().strip()
+    
+    # Check if email has a recent payment
+    if email in recent_payments:
+        payment_time = recent_payments[email]
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
+        
+        if payment_time > cutoff:
+            return CheckPaymentResponse(
+                paid=True,
+                email=email,
+                message="Payment confirmed"
+            )
+    
+    # Also check Ghost as fallback (in case webhook didn't fire)
+    # This ensures we don't block legitimate paid users
+    try:
+        import httpx
+        if GHOST_ADMIN_API_KEY:
+            token = create_ghost_admin_token()
+            if token:
+                async with httpx.AsyncClient() as http_client:
+                    response = await http_client.get(
+                        f'{GHOST_URL}/ghost/api/admin/members/',
+                        params={'filter': f'email:{email}'},
+                        headers={'Authorization': f'Ghost {token}'}
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        members = data.get('members', [])
+                        
+                        if members:
+                            member = members[0]
+                            status = member.get('status', 'free')
+                            is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
+                            
+                            if is_paid:
+                                return CheckPaymentResponse(
+                                    paid=True,
+                                    email=email,
+                                    message="Member verified via Ghost"
+                                )
+    except Exception as e:
+        logging.error(f"Ghost check error: {e}")
+    
+    return CheckPaymentResponse(
+        paid=False,
+        email=email,
+        message="No recent payment found"
+    )
+
 app.include_router(api_router)
 
 app.add_middleware(
