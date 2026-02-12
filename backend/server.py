@@ -30,6 +30,11 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key')
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24 * 7
 
+# In-memory store for recent payments (email -> timestamp)
+# In production, you'd use Redis or MongoDB
+recent_payments = {}
+PAYMENT_VALID_MINUTES = 30  # Payment verification valid for 30 minutes
+
 # Razorpay is optional
 razorpay_client = None
 try:
