@@ -14,6 +14,7 @@ import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
 import { MemberDashboard } from "./pages/MemberDashboard";
+import { Welcome } from "./pages/Welcome";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 import { Membership } from "./pages/Membership";
