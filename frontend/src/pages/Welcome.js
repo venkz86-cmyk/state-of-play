@@ -81,12 +81,12 @@ export const Welcome = () => {
   useEffect(() => {
     if (status === 'verifying' || status === 'pending') {
       const timer = setTimeout(() => {
-        verifyMember();
+        doVerification();
       }, status === 'verifying' ? 0 : retryDelay);
 
       return () => clearTimeout(timer);
     }
-  }, [status, verifyMember]);
+  }, [status, doVerification]);
 
   // No email provided
   if (!email) {
