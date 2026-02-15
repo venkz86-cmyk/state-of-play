@@ -27,8 +27,8 @@ export const Header = () => {
   const navItems = [
     { path: '/', label: 'Home', color: 'text-foreground' },
     { path: '/state-of-play', label: 'The State of Play', color: 'text-primary', isPremium: true },
-    { path: '/left-field', label: 'The Left Field', color: 'text-secondary' },
-    { path: '/outfield', label: 'The Outfield', color: 'text-muted-foreground', comingSoon: true },
+    { path: '/left-field', label: 'The Left Field', color: 'text-secondary', isNewsletter: true },
+    { path: '/outfield', label: 'The Outfield', color: 'text-muted-foreground', comingSoon: true, isEvents: true },
   ];
 
   return (
