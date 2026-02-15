@@ -128,31 +128,27 @@ export const About = () => {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">Premier League ownership groups evaluating Indian sports investments</span>
+                <span className="text-primary">Premier League ownership groups evaluating Indian sports investments</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">Private equity and venture capital investors in India and abroad</span>
+                <span className="text-primary">Private equity and venture capital investors in India and abroad</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">North American sports funds analysing cricket economics</span>
+                <span className="text-primary">North American sports funds analysing cricket economics</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">IPL franchise ownership and management teams</span>
+                <span className="text-primary">IPL franchise ownership and management teams</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">Global sports agencies with India operations</span>
+                <span className="text-primary">Global sports agencies with India operations</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">Private equity executives and investment bankers</span>
-              </li>
-              <li className="flex items-start space-x-3">
-                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-foreground/80">International consultancies advising on sports sector deals</span>
+                <span className="text-primary">International consultancies advising on sports sector deals</span>
               </li>
             </ul>
             
