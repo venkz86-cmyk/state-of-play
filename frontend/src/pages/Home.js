@@ -93,7 +93,10 @@ export const Home = () => {
                   </svg>
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-12 max-w-3xl">
+              <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-4 max-w-3xl">
+                Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business.
+              </p>
+              <p className="text-lg md:text-xl leading-relaxed text-foreground/50 font-body mb-12 max-w-3xl">
                 Essential intelligence for investors, leagues, and agencies navigating the world's fastest growing sports market.
               </p>
               <div className="flex flex-wrap gap-4">
