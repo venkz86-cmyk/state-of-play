@@ -1,100 +1,70 @@
 # The State of Play - Product Requirements Document
 
-## Overview
-Premium sports business publication website with React frontend (Vercel), FastAPI backend (Render), and Ghost CMS.
+## Original Problem Statement
+Build a premium content website for sports business intelligence with a focus on Indian sports market. The platform should serve investors, leagues, and agencies with deep-dive analysis, exclusive insights, and untold stories.
 
-## Core Features Implemented
+## Architecture
+- **Frontend**: React (Create React App) hosted on Vercel
+- **Backend**: Python FastAPI hosted on Render
+- **CMS**: Ghost (Headless)
+- **DNS/CDN**: Cloudflare (with Workers for dynamic OG tags)
+- **Payments**: Razorpay
 
-### Authentication & Access
-- Custom auth flow verifying paid status against Ghost
-- Member login with JWT tokens
-- Member Dashboard (`/account`) showing subscription details
-- Streamlined new subscriber onboarding via Razorpay webhook (pending user config)
+## What's Been Implemented
 
-### Content Delivery
-- Ghost CMS integration for articles
-- Paywall for premium content
-- Reading history tracking
-- Article search functionality
+### Core Features (Complete)
+- [x] Ghost CMS integration for content
+- [x] Premium/Free article distinction
+- [x] Reading history tracking
+- [x] Newsletter signup
+- [x] Razorpay payment integration
+- [x] User authentication (JWT)
+- [x] Dynamic OG link previews via Cloudflare Worker
 
-### UI/UX
-- Responsive header with navigation icons:
-  - The State of Play → ★ (premium)
-  - The Left Field → ✉️ (newsletter)
-  - The Outfield → 📅 (events) + "Soon" badge
-- Personalized homepage for logged-in subscribers
-- Dark/light mode toggle
-- Mobile-responsive design
+### UI/UX (Complete)
+- [x] Responsive design
+- [x] Dark mode toggle
+- [x] Font size toggle
+- [x] Premium texture overlay
+- [x] Header icons (Mail, Calendar)
+- [x] Twitter → X logo update
+- [x] Warmer off-white background
+- [x] Increased article card spacing
+- [x] Card lift-on-hover effect
 
-### SEO & Social Sharing
-- **Dynamic OG tags via Cloudflare Worker** (NEW - Feb 2026)
-  - Article shares show correct title, description, and image
-  - Works on LinkedIn, Twitter, WhatsApp, Facebook
-  - Requires domain DNS through Cloudflare (configured)
-- Updated meta descriptions for homepage
-- Dual hero taglines on homepage
+### Content Updates (Complete)
+- [x] Homepage hero tagline
+- [x] About page investor value proposition
+- [x] Meta tags for SEO
 
-### About Page
-- "Why Global Sports Investors Read The State of Play" section
-- Problem/solution framing for investor audience
-- Reader list (Premier League groups, PE/VC, sports funds, etc.)
-- "Cited by" credibility markers (ESPNCricinfo, The Athletic, SportsPro)
+## Pending Items
 
-## Technical Architecture
+### P1 - User Verification
+- [ ] Razorpay post-payment redirect to `/welcome`
+- [ ] End-to-end subscription test transaction
 
-```
-/app
-├── backend/
-│   ├── server.py         # FastAPI with Ghost integration, OG endpoints, webhooks
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # Header.js with nav icons
-│   │   ├── pages/        # Home, About, ArticlePage, MemberDashboard, WelcomePage
-│   │   └── contexts/     # AuthContext, ThemeContext
-│   ├── public/index.html # Static OG tags for homepage
-│   └── vercel.json
-└── cloudflare-worker.js  # Dynamic OG tag worker script
-```
-
-## External Services
-- **Ghost**: Headless CMS (Content API & Admin API)
-- **Razorpay**: Payment processing with webhooks
-- **Vercel**: Frontend hosting
-- **Render**: Backend hosting ($7/mo plan)
-- **Cloudflare**: DNS proxy + Workers for OG tags (Free tier)
-- **Google Analytics**: Site analytics
-
-## Pending User Actions
-1. Add `RAZORPAY_WEBHOOK_SECRET` to Render backend
-2. Set Razorpay post-payment redirect URL to `https://stateofplay.club/welcome`
-3. Deploy changes via "Save to GitHub"
-
-## Backlog / Future Tasks
-
-### P1 - High Priority
-- [ ] "Insider Drops" / Private Notes feature for subscribers
-- [ ] Custom branded OG image for homepage (designer needed)
+### P2 - Upcoming Features
+- [ ] "Insider Drops" - Subscriber-only private intel feed
 - [ ] Contact for Enterprise page
 
-### P2 - Medium Priority
-- Reading experience enhancements:
-  - Reading progress bar
-  - Estimated read time
-  - Table of contents for long articles
-  - Bookmarks/reading list
-- "Copy Quote" sharing feature
-- Members-only comments section
+### P3 - Future/Backlog
+- [ ] Bookmarks/Reading list
+- [ ] Reading progress bar
+- [ ] Estimated read time
+- [ ] Copy Quote button
+- [ ] Members-only comments
 
-### P3 - Low Priority
-- Corporate subscriptions (full implementation)
-- Reading history improvements
+## Key Endpoints
+- `GET /api/og/{slug}` - Dynamic OG meta tags for Cloudflare Worker
+- Ghost Content API for articles
 
-## Credentials (for testing)
+## Test Credentials
 - Paid Member: `venkz86@gmail.com`
 - Admin Member: `venkat@stateofplay.club`
 
-## Changelog
-- **Feb 15, 2026**: Cloudflare Worker setup for dynamic OG tags, header icons added, About page investor section, hero taglines updated
-- **Feb 14, 2026**: Member dashboard, welcome page, Razorpay webhook integration
-- **Earlier**: Core site build, Ghost integration, paywall, auth system
+## Files of Reference
+- `/app/cloudflare-worker.js` - OG preview solution
+- `/app/frontend/src/index.css` - Global styles & CSS variables
+- `/app/frontend/src/components/ArticleCard.js` - Article card component
+- `/app/frontend/src/pages/Home.js` - Homepage layout
+- `/app/frontend/src/pages/About.js` - About page content
