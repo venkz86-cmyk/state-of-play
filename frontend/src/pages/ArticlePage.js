@@ -201,7 +201,7 @@ export const ArticlePage = () => {
               <Clock className="h-4 w-4 text-primary" />
               <span className="font-semibold text-primary">{article.read_time} min read</span>
             </div>
-            {canAccessContent && <ReadingTimeLeft totalMinutes={article.read_time} />}
+            {canAccessContent && null}
             <div className="flex-1" />
             <FontSizeToggle />
             <ShareButtons title={article.title} />
