@@ -94,7 +94,7 @@ export const Home = () => {
                 </span>
               </h1>
               <p className="text-xl md:text-2xl leading-relaxed text-foreground/70 font-body mb-12 max-w-3xl">
-                Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business.
+                Essential intelligence for investors, leagues, and agencies navigating the world's fastest growing sports market.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link to="/signup">
