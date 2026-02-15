@@ -19,10 +19,10 @@ export const About = () => {
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           <div className="bg-card border-2 border-primary/20 p-12 mb-16">
             <p className="text-xl leading-relaxed text-foreground/90 font-body mb-6">
-              <strong className="text-primary">The State of Play</strong> is a weekly, subscription-only newsletter that provides in-depth, original insight into the business of sport — with sharp reporting, analysis, and a distinct editorial voice grounded in India.
+              <strong className="text-primary">The State of Play</strong> is a weekly, subscription-only publication that provides in-depth, original insight into the business of sport — with sharp reporting, analysis, and a distinct editorial voice grounded in India.
             </p>
             <p className="text-lg leading-relaxed text-foreground/80 font-body mb-6">
-              This newsletter arrives at a time when sport is no longer just what happens on the field. It is a high-stakes, capital-intensive, and profoundly global business with fast-evolving dynamics. In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained, intelligent reporting on how sport actually works.
+              This publication arrives at a time when sport is no longer just what happens on the field. It is a high-stakes, capital-intensive, and profoundly global business with fast-evolving dynamics. In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained, intelligent reporting on how sport actually works.
             </p>
             <p className="text-lg leading-relaxed text-foreground/80 font-body mb-6">
               <strong className="text-primary">The State of Play</strong> aims to fill that gap.
