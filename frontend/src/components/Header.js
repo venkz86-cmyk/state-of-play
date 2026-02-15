@@ -64,6 +64,12 @@ export const Header = () => {
                   {item.isPremium && (
                     <span className="ml-1.5 text-premium text-xs">★</span>
                   )}
+                  {item.isNewsletter && (
+                    <Mail className="ml-1.5 h-3.5 w-3.5 text-secondary" />
+                  )}
+                  {item.isEvents && (
+                    <Calendar className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                  )}
                   {isActive(item.path) && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full" />
                   )}
