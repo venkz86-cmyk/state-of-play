@@ -104,6 +104,63 @@ export const About = () => {
             </div>
           </div>
 
+          {/* Global Investors Section */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-heading font-bold italic mb-8">Why Global Sports Investors Read The State of Play</h2>
+            
+            <p className="text-lg leading-relaxed text-foreground/80 font-body mb-6">
+              Indian sports business is no longer a local story. IPL franchises are valued at $1B+. International sports funds are acquiring stakes in Indian teams and leagues. The Glazers, RedBird Capital, and other global sports investors are actively evaluating opportunities in what is becoming the world's fastest-growing sports economy.
+            </p>
+            
+            <p className="text-lg leading-relaxed text-foreground/80 font-body mb-4">
+              <strong>The problem:</strong> Global sports finance coverage misses Indian context. International sports business publications lack on-the-ground intelligence from India. One-off consulting reports are expensive and quickly outdated.
+            </p>
+            
+            <p className="text-lg leading-relaxed text-foreground/80 font-body mb-6">
+              <strong>The solution:</strong> The State of Play provides the granular, sourced reporting that global investors, leagues, agencies, and front offices need to understand Indian sports business.
+            </p>
+            
+            <p className="text-lg leading-relaxed text-foreground/80 font-body mb-8">
+              We break news that shapes billion-dollar decisions. We provide context that can't be found anywhere else. We deliver intelligence, not just information.
+            </p>
+            
+            <h3 className="text-xl font-heading font-bold mb-4">Our readers include:</h3>
+            <ul className="space-y-3 mb-8">
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">Premier League ownership groups evaluating Indian sports investments</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">Private equity and venture capital investors in India and abroad</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">North American sports funds analysing cricket economics</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">IPL franchise ownership and management teams</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">Global sports agencies with India operations</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">Private equity executives and investment bankers</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <span className="text-foreground/80">International consultancies advising on sports sector deals</span>
+              </li>
+            </ul>
+            
+            <p className="text-lg leading-relaxed text-foreground/80 font-body">
+              <strong>Cited by:</strong> <em>ESPNCricinfo</em>, <em>The Athletic</em>, <em>SportsPro</em>, and leading sports and business media globally.
+            </p>
+          </div>
+
           {/* Author Section */}
           <div className="bg-muted border-2 border-primary/20 p-12">
             <h2 className="text-3xl font-heading font-bold mb-6">Who's Behind It?</h2>
