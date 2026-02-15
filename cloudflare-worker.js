@@ -12,7 +12,7 @@
  */
 
 // Your Render backend URL
-const BACKEND_URL = 'https://paid-access-backend.onrender.com';
+const BACKEND_URL = 'https://stateofplay-backend.onrender.com';
 
 // Bot patterns to detect social media crawlers
 const BOT_PATTERNS = [
