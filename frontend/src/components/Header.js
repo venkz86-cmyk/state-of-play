@@ -199,6 +199,15 @@ export const Header = () => {
                     className={`w-full justify-start ${item.color}`}
                   >
                     {item.label}
+                    {item.isPremium && (
+                      <span className="ml-1.5 text-premium text-xs">★</span>
+                    )}
+                    {item.isNewsletter && (
+                      <Mail className="ml-1.5 h-3.5 w-3.5 text-secondary" />
+                    )}
+                    {item.isEvents && (
+                      <Calendar className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                    )}
                     {item.comingSoon && (
                       <span className="ml-2 bg-accent text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm uppercase">
                         Soon
