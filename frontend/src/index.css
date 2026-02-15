@@ -29,7 +29,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 40 20% 98%;
     --foreground: 0 0% 4%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 4%;
