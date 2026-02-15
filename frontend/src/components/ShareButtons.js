@@ -34,9 +34,9 @@ export const ShareButtons = ({ title, url }) => {
         target="_blank"
         rel="noopener noreferrer"
         className="p-2 bg-foreground/5 hover:bg-foreground/10 transition-colors rounded-sm"
-        title="Share on X/Twitter"
+        title="Share on X"
       >
-        <Twitter className="h-4 w-4 text-foreground/70" />
+        <XIcon />
       </a>
       
       <a
