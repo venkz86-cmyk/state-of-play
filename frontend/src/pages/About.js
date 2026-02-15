@@ -106,7 +106,7 @@ export const About = () => {
 
           {/* Global Investors Section */}
           <div className="mb-16">
-            <h2 className="text-3xl font-heading font-bold mb-8">Why Global Sports Investors Read <em className="text-primary" style={{ fontFamily: 'Georgia, serif' }}>The State of Play</em></h2>
+            <h2 className="text-3xl font-heading font-bold mb-8">Why Global Sports Investors Read <span className="text-primary italic">The State of Play</span></h2>
             
             <p className="text-lg leading-relaxed text-foreground/80 font-body mb-6">
               Indian sports business is no longer a local story. IPL franchises are valued at $1B+. International sports funds are acquiring stakes in Indian teams and leagues. The Glazers, RedBird Capital, and other global sports investors are actively evaluating opportunities in what is becoming the world's fastest-growing sports economy.
