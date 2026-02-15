@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { SearchModal } from './SearchModal';
 import { DarkModeToggle } from './DarkModeToggle';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { User, LogOut, Menu, Search } from 'lucide-react';
+import { User, LogOut, Menu, Search, Mail, Calendar } from 'lucide-react';
 import { useState } from 'react';
 
 // Logo URLs
