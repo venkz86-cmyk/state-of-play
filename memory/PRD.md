@@ -1,49 +1,100 @@
-# The State of Play - Premium Content Platform
+# The State of Play - Product Requirements Document
 
-## Latest Updates (Feb 11, 2026)
-- **Dynamic OG Share Cards**: Auto-generated branded cards for social sharing with PREMIUM badge + category
-- **Member Dashboard**: New `/account` page showing subscription dates, status, benefits
-- **Newsletter & CTA visibility fix**: Hidden for logged-in paid members
-- **Login Button visibility**: Made visible on mobile header
+## Overview
+Premium sports business publication website with React frontend (Vercel), FastAPI backend (Render), and Ghost CMS.
 
-## Original Problem Statement
-Premium sports content platform with Ghost CMS integration, member verification, and secure paywall.
+## Core Features Implemented
 
-## Architecture
-- **Frontend**: React app hosted on Vercel (stateofplay.club)
-- **Backend**: FastAPI on Render (handles Ghost Admin API calls)
-- **CMS**: Ghost (headless, Content API + Admin API)
+### Authentication & Access
+- Custom auth flow verifying paid status against Ghost
+- Member login with JWT tokens
+- Member Dashboard (`/account`) showing subscription details
+- Streamlined new subscriber onboarding via Razorpay webhook (pending user config)
 
-## Key Files
-- `frontend/src/pages/MemberDashboard.js` - Member account/subscription dashboard
-- `frontend/src/components/Header.js` - Navigation, auth state display
-- `frontend/src/components/NewsletterSignup.js` - Newsletter CTA (hidden for logged-in users)
-- `frontend/src/contexts/AuthContext.js` - Auth state management
-- `backend/server.py` - Member verification, content fetching, OG image generation
+### Content Delivery
+- Ghost CMS integration for articles
+- Paywall for premium content
+- Reading history tracking
+- Article search functionality
 
-## API Endpoints
-- `POST /api/ghost/verify-member` - Verify member status
-- `POST /api/ghost/member-details` - Get full member details including subscription dates
-- `POST /api/ghost/article-content` - Get full paid article content
-- `GET /api/og-image/{slug}` - Generate dynamic branded OG image for social sharing
-- `GET /api/og/{slug}` - OG meta tags HTML for social crawlers
+### UI/UX
+- Responsive header with navigation icons:
+  - The State of Play → ★ (premium)
+  - The Left Field → ✉️ (newsletter)
+  - The Outfield → 📅 (events) + "Soon" badge
+- Personalized homepage for logged-in subscribers
+- Dark/light mode toggle
+- Mobile-responsive design
 
-## Completed Features
-- [x] Dark mode across all pages
-- [x] Member verification via Ghost Admin API
-- [x] Secure paywall for paid content
-- [x] SEO-friendly URLs (/:slug)
-- [x] Dynamic branded OG cards for social sharing
-- [x] Welcome back toast notification
-- [x] Mobile Login button visibility
-- [x] Hide CTAs for paid members
-- [x] Member Dashboard with subscription info
+### SEO & Social Sharing
+- **Dynamic OG tags via Cloudflare Worker** (NEW - Feb 2026)
+  - Article shares show correct title, description, and image
+  - Works on LinkedIn, Twitter, WhatsApp, Facebook
+  - Requires domain DNS through Cloudflare (configured)
+- Updated meta descriptions for homepage
+- Dual hero taglines on homepage
 
-## Backlog
-- [ ] Hero section personalization for logged-in users
-- [ ] Reading tracking system
-- [ ] Table of Contents for long articles (P1)
-- [ ] Bookmarks/reading list (P1)
-- [ ] Print-friendly view (P1)
-- [ ] Audio version - TTS (P2)
-- [ ] Highlight & share quotes (P2)
+### About Page
+- "Why Global Sports Investors Read The State of Play" section
+- Problem/solution framing for investor audience
+- Reader list (Premier League groups, PE/VC, sports funds, etc.)
+- "Cited by" credibility markers (ESPNCricinfo, The Athletic, SportsPro)
+
+## Technical Architecture
+
+```
+/app
+├── backend/
+│   ├── server.py         # FastAPI with Ghost integration, OG endpoints, webhooks
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Header.js with nav icons
+│   │   ├── pages/        # Home, About, ArticlePage, MemberDashboard, WelcomePage
+│   │   └── contexts/     # AuthContext, ThemeContext
+│   ├── public/index.html # Static OG tags for homepage
+│   └── vercel.json
+└── cloudflare-worker.js  # Dynamic OG tag worker script
+```
+
+## External Services
+- **Ghost**: Headless CMS (Content API & Admin API)
+- **Razorpay**: Payment processing with webhooks
+- **Vercel**: Frontend hosting
+- **Render**: Backend hosting ($7/mo plan)
+- **Cloudflare**: DNS proxy + Workers for OG tags (Free tier)
+- **Google Analytics**: Site analytics
+
+## Pending User Actions
+1. Add `RAZORPAY_WEBHOOK_SECRET` to Render backend
+2. Set Razorpay post-payment redirect URL to `https://stateofplay.club/welcome`
+3. Deploy changes via "Save to GitHub"
+
+## Backlog / Future Tasks
+
+### P1 - High Priority
+- [ ] "Insider Drops" / Private Notes feature for subscribers
+- [ ] Custom branded OG image for homepage (designer needed)
+- [ ] Contact for Enterprise page
+
+### P2 - Medium Priority
+- Reading experience enhancements:
+  - Reading progress bar
+  - Estimated read time
+  - Table of contents for long articles
+  - Bookmarks/reading list
+- "Copy Quote" sharing feature
+- Members-only comments section
+
+### P3 - Low Priority
+- Corporate subscriptions (full implementation)
+- Reading history improvements
+
+## Credentials (for testing)
+- Paid Member: `venkz86@gmail.com`
+- Admin Member: `venkat@stateofplay.club`
+
+## Changelog
+- **Feb 15, 2026**: Cloudflare Worker setup for dynamic OG tags, header icons added, About page investor section, hero taglines updated
+- **Feb 14, 2026**: Member dashboard, welcome page, Razorpay webhook integration
+- **Earlier**: Core site build, Ghost integration, paywall, auth system
