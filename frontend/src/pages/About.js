@@ -9,7 +9,7 @@ export const About = () => {
       <section className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-b-2 border-primary/10">
         <div className="container mx-auto px-4 md:px-8 max-w-5xl py-20 md:py-28">
           <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-tight mb-6 text-center">
-            About
+            About <span className="text-primary">The State of Play</span>
           </h1>
         </div>
       </section>
