@@ -153,7 +153,7 @@ export const About = () => {
             </ul>
             
             <p className="text-lg leading-relaxed text-foreground/80 font-body">
-              <strong>Cited by:</strong> <em>ESPNCricinfo</em>, <em>The Athletic</em>, <em>SportsPro</em>, and leading sports and business media globally.
+              <strong>Cited by:</strong> <span className="text-primary font-semibold">Bloomberg</span>, <span className="text-primary font-semibold">SportsBusiness</span>, <span className="text-primary font-semibold">ESPNCricinfo</span>, <span className="text-primary font-semibold">The Athletic</span>, <span className="text-primary font-semibold">SportsPro</span>, and leading sports and business media globally.
             </p>
           </div>
 
