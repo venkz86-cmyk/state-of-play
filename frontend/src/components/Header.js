@@ -83,11 +83,11 @@ export const Header = () => {
               <Button 
                 variant="ghost" 
                 className={`font-body font-medium relative ${
-                  isActive('/about') ? 'text-foreground' : 'text-foreground/60 hover:text-foreground'
+                  isActive('/about') ? 'text-primary' : 'text-primary/70 hover:text-primary'
                 }`}
                 data-testid="nav-about"
               >
-                About
+                About The State of Play
                 {isActive('/about') && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-current rounded-full" />
                 )}
@@ -217,7 +217,7 @@ export const Header = () => {
                 </Link>
               ))}
               <Link to="/about" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">About</Button>
+                <Button variant="ghost" className="w-full justify-start text-primary">About The State of Play</Button>
               </Link>
               <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">Contact</Button>
