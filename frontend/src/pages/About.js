@@ -128,7 +128,7 @@ export const About = () => {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <span className="text-primary">Premier League ownership groups evaluating Indian sports investments</span>
+                <span className="text-primary">Premier League ownership groups</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
