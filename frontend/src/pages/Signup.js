@@ -53,8 +53,8 @@ export const Signup = () => {
   const benefits = [
     {
       icon: Newspaper,
-      title: 'Weekly TSOP Newsletter',
-      description: 'Long-form analysis on Indian sports business—IPL, ISL, kabaddi, private equity, media rights, and more'
+      title: 'Weekly TSOP Story',
+      description: 'Deep reportage and long-form analysis on the Indian sports business ecosystem spanning leagues, franchises, media rights, sponsorship, and more'
     },
     {
       icon: Mail,
