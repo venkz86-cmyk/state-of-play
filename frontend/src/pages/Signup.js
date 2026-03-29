@@ -212,7 +212,7 @@ export const Signup = () => {
           <p className="text-base md:text-lg text-foreground/70 italic font-body">
             Cited by{' '}
             <span className="text-primary font-semibold not-italic">Bloomberg</span>,{' '}
-            <span className="text-primary font-semibold not-italic">SportsBusiness</span>,{' '}
+            <span className="text-primary font-semibold not-italic">SportBusiness</span>,{' '}
             <span className="text-primary font-semibold not-italic">ESPNCricinfo</span>,{' '}
             <span className="text-primary font-semibold not-italic">The Athletic</span>,{' '}
             <span className="text-primary font-semibold not-italic">SportsPro</span>,{' '}
