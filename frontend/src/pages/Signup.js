@@ -64,7 +64,7 @@ export const Signup = () => {
     {
       icon: Archive,
       title: 'Full Archive Access',
-      description: '2+ years of in-depth reporting and investigations'
+      description: 'Every premium story since launch—searchable and always available'
     },
     {
       icon: Bell,
@@ -401,19 +401,10 @@ export const Signup = () => {
             Join hundreds of industry insiders who rely on TSOP every week.
           </p>
           
-          {/* CTA Button - scrolls to pricing */}
-          <button
-            onClick={() => {
-              document.querySelector('[data-testid="pricing-box"]')?.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-              });
-            }}
-            className="inline-flex items-center bg-accent hover:bg-accent/90 text-white font-bold px-10 py-4 text-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-            data-testid="final-cta-button"
-          >
-            Subscribe Now — {pricing.symbol}{pricing.amount}/year
-          </button>
+          {/* Razorpay Button */}
+          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg inline-block">
+            <RazorpayButton />
+          </div>
           
           <p className="text-white/60 text-sm mt-6">
             Questions?{' '}
