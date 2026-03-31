@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { SearchModal } from './SearchModal';
 import { DarkModeToggle } from './DarkModeToggle';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { User, LogOut, Menu, Search, Mail, Calendar, Users, ChevronDown } from 'lucide-react';
+import { User, LogOut, Menu, Mail, Calendar, Users, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 // Logo URLs
@@ -165,18 +165,6 @@ export const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-2">
-            {/* Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="text-foreground/60 hover:text-foreground hidden sm:flex items-center space-x-1"
-              data-testid="btn-search"
-            >
-              <Search className="h-4 w-4" />
-              <span className="text-xs text-muted-foreground">⌘K</span>
-            </Button>
-            
             {/* Dark Mode Toggle */}
             <DarkModeToggle />
             
