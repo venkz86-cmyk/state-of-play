@@ -50,11 +50,11 @@ export const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="h-14 w-14 overflow-hidden rounded-sm">
+            <div className="bg-white rounded shadow-sm p-1">
               <img 
                 src={isDark ? LOGO_DARK : LOGO_LIGHT}
                 alt="The State of Play" 
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                className="h-12 w-auto transition-transform group-hover:scale-105"
               />
             </div>
           </Link>
