@@ -14,8 +14,8 @@ import {
    Token-authenticated dashboard for corporate admins to manage team members
    ============================================================================= */
 
-// API Configuration - Replace with actual deployed Apps Script URL
-const API_BASE_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL';
+// API Configuration - Google Apps Script Web App URL
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec';
 
 export const TeamsManage = () => {
   const [searchParams] = useSearchParams();
