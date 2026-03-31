@@ -9,6 +9,7 @@ Build a premium content website for sports business intelligence with a focus on
 - **CMS**: Ghost (Headless)
 - **DNS/CDN**: Cloudflare (with Workers for dynamic OG tags)
 - **Payments**: Razorpay
+- **Corporate Subscriptions Backend**: Google Apps Script + Google Sheets
 
 ## What's Been Implemented
 
@@ -21,6 +22,24 @@ Build a premium content website for sports business intelligence with a focus on
 - [x] User authentication (JWT)
 - [x] Dynamic OG link previews via Cloudflare Worker
 
+### Subscribe Page (Complete - Mar 2026)
+- [x] Hero + value proposition section
+- [x] Improved pricing box with email notice
+- [x] Social proof (Bloomberg, SportBusiness, ESPNCricinfo, The Athletic, SportsPro)
+- [x] 8 benefit cards with icons
+- [x] Recent Premium Analysis (real articles from Ghost)
+- [x] Who Reads TSOP (3 reader personas)
+- [x] Accordion FAQ
+- [x] Final CTA with scroll-to-pricing
+
+### Corporate Subscriptions (Complete - Mar 2026)
+- [x] Google Apps Script backend with all endpoints
+- [x] /teams sales page (Team-5, Team-10 pricing)
+- [x] /teams/manage dashboard with token authentication
+- [x] Header "For Teams" dropdown
+- [ ] Razorpay payment links (user task)
+- [ ] Zapier automation (user task)
+
 ### UI/UX (Complete)
 - [x] Responsive design
 - [x] Dark mode toggle
@@ -31,47 +50,45 @@ Build a premium content website for sports business intelligence with a focus on
 - [x] Warmer off-white background
 - [x] Increased article card spacing
 - [x] Card lift-on-hover effect
-- [x] "About The State of Play" page title in blue
-
-### Subscribe Page (Complete - Feb 2026)
-- [x] Hero + value proposition section
-- [x] Improved pricing box with email notice
-- [x] Social proof (Bloomberg, SportBusiness, ESPNCricinfo, The Athletic, SportsPro)
-- [x] 8 benefit cards with icons
-- [x] Recent Premium Analysis (real articles from Ghost)
-- [x] Who Reads TSOP (3 reader personas)
-- [x] Accordion FAQ
-- [x] Final CTA with scroll-to-pricing
+- [x] Logo with white card treatment
+- [x] Removed search button (⌘K still works)
 
 ### Content Updates (Complete)
 - [x] Homepage hero tagline
+- [x] About page: "About The State of Play" title in blue
 - [x] About page investor value proposition
-- [x] Meta tags for SEO
 - [x] Removed RedBird Capital reference
 - [x] Fixed SportBusiness spelling
+- [x] Meta tags for SEO
 
 ## Pending Items
 
-### P1 - User Verification
-- [ ] Razorpay post-payment redirect to `/welcome`
-- [ ] End-to-end subscription test transaction
+### P1 - User Tasks (Before Deploy)
+- [ ] Create Razorpay payment links for Team-5 (₹10K) and Team-10 (₹20K)
+- [ ] Set up Zapier: Razorpay → Apps Script create_account
+- [ ] Test end-to-end corporate subscription flow
 
-### P2 - Upcoming Features (March 2026)
-- [ ] Corporate Subscriptions (spec saved: TSOP-Corporate-Subscriptions-Spec.docx)
-  - Dashboard HTML at `/teams/manage`
-  - Sales page at `/teams`
-  - Google Sheets + Apps Script backend
-  - Razorpay payment links for Team-5, Team-10
+### P2 - Upcoming Features
+- [ ] Bookmarks/Reading list for subscribers
+- [ ] "Insider Drops" - Subscriber-only private intel feed
 
 ### P3 - Future/Backlog
-- [ ] "Insider Drops" - Subscriber-only private intel feed
-- [ ] Bookmarks/Reading list
 - [ ] Reading progress bar
+- [ ] Estimated read time
 - [ ] Contact for Enterprise page
 
 ## Key Endpoints
+
+### FastAPI Backend (Render)
 - `GET /api/og/{slug}` - Dynamic OG meta tags for Cloudflare Worker
-- Ghost Content API for articles
+- `POST /api/razorpay/webhook` - Payment webhook handler
+- `GET /api/health` - Health check
+
+### Google Apps Script (Corporate Subscriptions)
+- `GET /exec?token={token}` - Load dashboard data
+- `POST /exec` action: "create_account" - Create corporate account (Zapier)
+- `POST /exec` action: "add_member" - Add team member
+- `POST /exec` action: "remove_member" - Remove team member
 
 ## Test Credentials
 - Paid Member: `venkz86@gmail.com`
@@ -79,14 +96,16 @@ Build a premium content website for sports business intelligence with a focus on
 
 ## Files of Reference
 - `/app/cloudflare-worker.js` - OG preview solution
-- `/app/frontend/src/index.css` - Global styles & CSS variables
+- `/app/corporate-subscriptions/apps-script-backend.js` - Full Apps Script code
 - `/app/frontend/src/pages/Signup.js` - New comprehensive subscribe page
-- `/app/frontend/src/components/ArticleCard.js` - Article card component
-- `/app/frontend/src/pages/Home.js` - Homepage layout
-- `/app/frontend/src/pages/About.js` - About page content
+- `/app/frontend/src/pages/Teams.js` - Corporate sales page
+- `/app/frontend/src/pages/TeamsManage.js` - Corporate dashboard
+- `/app/frontend/src/components/Header.js` - Updated with For Teams dropdown
+- `/app/frontend/src/index.css` - Global styles & CSS variables
 
-## Corporate Subscriptions Spec (Saved for March)
-- Location: TSOP-Corporate-Subscriptions-Spec.docx
-- Tech: Google Sheets + Apps Script + Razorpay
-- Tiers: Team-5 (₹10K), Team-10 (₹20K), Business, Enterprise
-- Timeline: Soft launch March, hard launch April 2026
+## Corporate Subscriptions Tech Stack
+- **Database**: Google Sheets (accounts + members tabs)
+- **Backend**: Google Apps Script (deployed as web app)
+- **Auth**: Token-based (dashboard_token in URL)
+- **Ghost Integration**: JWT auth, create/delete members with labels
+- **Payment**: Razorpay payment links → Zapier → Apps Script
