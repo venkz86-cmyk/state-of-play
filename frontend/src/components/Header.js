@@ -5,8 +5,8 @@ import { Button } from './ui/button';
 import { SearchModal } from './SearchModal';
 import { DarkModeToggle } from './DarkModeToggle';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { User, LogOut, Menu, Search, Mail, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { User, LogOut, Menu, Search, Mail, Calendar, Users, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 // Logo URLs
 const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg";
@@ -18,6 +18,19 @@ export const Header = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [teamsDropdownOpen, setTeamsDropdownOpen] = useState(false);
+  const teamsDropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (teamsDropdownRef.current && !teamsDropdownRef.current.contains(event.target)) {
+        setTeamsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({ onSearchOpen: () => setSearchOpen(true) });
@@ -107,6 +120,45 @@ export const Header = () => {
                 )}
               </Button>
             </Link>
+
+            {/* For Teams Dropdown */}
+            <div className="relative" ref={teamsDropdownRef}>
+              <Button 
+                variant="ghost" 
+                className={`font-body font-medium relative flex items-center ${
+                  location.pathname.startsWith('/teams') ? 'text-primary' : 'text-foreground/60 hover:text-foreground'
+                }`}
+                onClick={() => setTeamsDropdownOpen(!teamsDropdownOpen)}
+                data-testid="nav-for-teams"
+              >
+                <Users className="h-4 w-4 mr-1.5" />
+                For Teams
+                <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${teamsDropdownOpen ? 'rotate-180' : ''}`} />
+              </Button>
+              
+              {teamsDropdownOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border shadow-lg z-50">
+                  <Link 
+                    to="/teams" 
+                    onClick={() => setTeamsDropdownOpen(false)}
+                    className="block px-4 py-3 text-sm hover:bg-muted transition-colors"
+                    data-testid="nav-team-plans"
+                  >
+                    <span className="font-medium">Team Plans</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">Volume pricing for organizations</p>
+                  </Link>
+                  <Link 
+                    to="/teams/manage" 
+                    onClick={() => setTeamsDropdownOpen(false)}
+                    className="block px-4 py-3 text-sm hover:bg-muted transition-colors border-t border-border"
+                    data-testid="nav-manage-team"
+                  >
+                    <span className="font-medium">Manage Team</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">Add or remove team members</p>
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* User Actions */}
@@ -222,6 +274,22 @@ export const Header = () => {
               <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start">Contact</Button>
               </Link>
+              
+              {/* For Teams - Mobile */}
+              <div className="border-t border-border mt-2 pt-2">
+                <p className="px-3 py-1 text-xs text-muted-foreground uppercase tracking-wider">For Teams</p>
+                <Link to="/teams" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Users className="h-4 w-4 mr-2" />
+                    Team Plans
+                  </Button>
+                </Link>
+                <Link to="/teams/manage" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    Manage Team
+                  </Button>
+                </Link>
+              </div>
               
               {/* Mobile Auth Buttons */}
               <div className="border-t border-border mt-2 pt-2">

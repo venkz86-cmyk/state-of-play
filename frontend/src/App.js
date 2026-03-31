@@ -22,6 +22,8 @@ import { Outfield } from "./pages/Outfield";
 import { Terms } from "./pages/Terms";
 import { Privacy } from "./pages/Privacy";
 import { Archive } from "./pages/Archive";
+import { Teams } from "./pages/Teams";
+import { TeamsManage } from "./pages/TeamsManage";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -49,6 +51,8 @@ function App() {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/archive" element={<Archive />} />
+                  <Route path="/teams" element={<Teams />} />
+                  <Route path="/teams/manage" element={<TeamsManage />} />
                   {/* Article route MUST be last - catches /:slug */}
                   <Route path="/:id" element={<ArticlePage />} />
                 </Routes>
