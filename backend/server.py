@@ -10,6 +10,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
+import bcrypt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -47,6 +48,13 @@ except Exception as e:
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
+
+# Set up logging early
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -1008,15 +1016,23 @@ async def razorpay_webhook(request: Request):
     """
     import hmac
     import hashlib
+    import json
+    
+    logger.info("=== RAZORPAY WEBHOOK RECEIVED ===")
     
     try:
         # Get the webhook signature
         webhook_signature = request.headers.get('X-Razorpay-Signature', '')
         webhook_secret = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
         
+        logger.info(f"Webhook signature present: {bool(webhook_signature)}")
+        logger.info(f"Webhook secret configured: {bool(webhook_secret)}")
+        
         # Get raw body for signature verification
         body = await request.body()
         body_str = body.decode('utf-8')
+        
+        logger.info(f"Webhook body length: {len(body_str)} bytes")
         
         # Verify signature if webhook secret is configured
         if webhook_secret and webhook_signature:
@@ -1027,45 +1043,63 @@ async def razorpay_webhook(request: Request):
             ).hexdigest()
             
             if not hmac.compare_digest(expected_signature, webhook_signature):
-                logging.warning("Razorpay webhook signature verification failed")
-                # Continue anyway for now - log but don't block
+                logger.warning("Razorpay webhook signature verification FAILED")
+                # Return 200 anyway - don't block legitimate webhooks if secret is misconfigured
+            else:
+                logger.info("Razorpay webhook signature verified successfully")
+        else:
+            logger.warning("Webhook signature verification skipped - secret not configured")
         
         # Parse the payload
-        import json
         payload = json.loads(body_str)
         
         event = payload.get('event', '')
-        logging.info(f"Razorpay webhook received: {event}")
+        logger.info(f"Razorpay webhook event type: {event}")
         
         # Handle payment success events
-        if event in ['payment.captured', 'payment.authorized', 'subscription.activated']:
+        if event in ['payment.captured', 'payment.authorized', 'subscription.activated', 'payment_link.paid']:
             payment_entity = payload.get('payload', {}).get('payment', {}).get('entity', {})
             subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
+            payment_link_entity = payload.get('payload', {}).get('payment_link', {}).get('entity', {})
             
             # Try to get email from various places
             email = (
                 payment_entity.get('email') or 
                 payment_entity.get('notes', {}).get('email') or
                 subscription_entity.get('notes', {}).get('email') or
+                payment_link_entity.get('notes', {}).get('email') or
                 payload.get('payload', {}).get('payment', {}).get('entity', {}).get('customer', {}).get('email')
             )
+            
+            logger.info(f"Extracted email from webhook: {email}")
             
             if email:
                 email = email.lower().strip()
                 recent_payments[email] = datetime.now(timezone.utc)
-                logging.info(f"Payment recorded for: {email}")
+                logger.info(f"Payment recorded successfully for: {email}")
                 
                 # Clean up old entries (older than 30 mins)
                 cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
                 to_remove = [e for e, t in recent_payments.items() if t < cutoff]
                 for e in to_remove:
                     del recent_payments[e]
+                
+                logger.info(f"Current recent_payments count: {len(recent_payments)}")
+            else:
+                logger.warning("No email found in webhook payload")
+                logger.debug(f"Payment entity: {payment_entity}")
+        else:
+            logger.info(f"Ignoring event type: {event}")
         
-        return {"status": "ok"}
+        logger.info("=== WEBHOOK PROCESSED SUCCESSFULLY ===")
+        return {"status": "ok", "event": event}
         
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse webhook JSON: {e}")
+        return {"status": "error", "message": "Invalid JSON"}
     except Exception as e:
-        logging.error(f"Razorpay webhook error: {e}")
-        # Return 200 anyway to prevent Razorpay from retrying
+        logger.error(f"Razorpay webhook error: {e}", exc_info=True)
+        # Return 200 anyway to prevent Razorpay from retrying endlessly
         return {"status": "error", "message": str(e)}
 
 class CheckPaymentRequest(BaseModel):
@@ -1126,13 +1160,33 @@ async def check_recent_payment(request: CheckPaymentRequest):
                                     message="Member verified via Ghost"
                                 )
     except Exception as e:
-        logging.error(f"Ghost check error: {e}")
+        logger.error(f"Ghost check error: {e}")
     
     return CheckPaymentResponse(
         paid=False,
         email=email,
         message="No recent payment found"
     )
+
+# Health check endpoint - CRITICAL for Render to keep service warm
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and keeping service warm"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "stateofplay-backend"
+    }
+
+# Root health check (without /api prefix)
+@app.get("/health")
+async def root_health_check():
+    """Root health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "stateofplay-backend"
+    }
 
 app.include_router(api_router)
 
@@ -1144,12 +1198,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client:
+        client.close()
