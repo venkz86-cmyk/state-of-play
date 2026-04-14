@@ -188,7 +188,9 @@ export const Teams = () => {
                 </ul>
 
                 <a
-                  href="#"
+                  href="https://rzp.io/rzp/tsopteam5"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full bg-primary hover:bg-primary/90 text-white text-center font-bold py-4 transition-all duration-300"
                   data-testid="team-5-cta"
                 >
@@ -250,7 +252,9 @@ export const Teams = () => {
                 </ul>
 
                 <a
-                  href="#"
+                  href="https://rzp.io/rzp/tsopteam10"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full bg-primary hover:bg-primary/90 text-white text-center font-bold py-4 transition-all duration-300"
                   data-testid="team-10-cta"
                 >
