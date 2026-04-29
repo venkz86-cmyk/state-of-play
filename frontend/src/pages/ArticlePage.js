@@ -264,17 +264,18 @@ export const ArticlePage = () => {
             </>
           ) : (
             <>
-              {/* Preview Content */}
+              {/* Preview Content with Blur Effect */}
               <div className="relative">
                 <div 
-                  className="prose prose-lg max-w-none font-body article-content"
+                  className="prose prose-lg max-w-none font-body article-content no-select"
                   dangerouslySetInnerHTML={{ __html: article.preview_content }}
                 />
-                {/* Fade Effect */}
-                <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
+                {/* Blur overlay on last part of preview */}
+                <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/98 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-32 backdrop-blur-sm pointer-events-none" />
               </div>
               
-              {/* Hard Paywall - Different messaging for free members vs visitors */}
+              {/* Engaging Paywall - "You've come this far" */}
               <div className="relative py-16" data-testid="paywall-overlay">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-primary/10" />
                 
@@ -291,27 +292,21 @@ export const ArticlePage = () => {
                     {isFreeMember ? (
                       <>
                         {/* Personalized message for free members */}
-                        <div className="mb-3">
-                          <span className="inline-block bg-secondary text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4">
-                            Free Member
-                          </span>
-                        </div>
-                        
-                        <h3 className="text-3xl font-heading font-bold mb-4 text-foreground">
-                          Upgrade to unlock this story
+                        <h3 className="text-2xl font-heading font-bold mb-4 text-foreground">
+                          You've come this far, {user?.name?.split(' ')[0] || 'friend'}...
                         </h3>
                         
-                        <p className="text-base text-foreground/70 mb-4 font-body leading-relaxed">
-                          Hey {user?.name || 'there'}! You're enjoying our free content. 
-                          Upgrade to premium for unlimited access to stories like this.
+                        <p className="text-base text-foreground/70 mb-6 font-body leading-relaxed">
+                          Clearly, this story matters to you. Upgrade to premium and never hit a wall again. 
+                          Full access to every deep-dive, every exclusive, every insight.
                         </p>
                         
                         <div className="bg-primary/5 border border-primary/20 p-4 mb-6 text-left">
-                          <p className="text-sm font-bold text-foreground mb-2">As a premium member, you'll get:</p>
+                          <p className="text-sm font-bold text-foreground mb-2">What you're missing:</p>
                           <ul className="space-y-2 text-sm text-foreground/80">
                             <li className="flex items-center space-x-2">
                               <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span>All premium stories & deep-dive analysis</span>
+                              <span>The rest of this story (and 50+ like it)</span>
                             </li>
                             <li className="flex items-center space-x-2">
                               <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
@@ -319,49 +314,39 @@ export const ArticlePage = () => {
                             </li>
                             <li className="flex items-center space-x-2">
                               <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span>Ad-free reading experience</span>
+                              <span>The Outfield events (free for subscribers)</span>
                             </li>
                           </ul>
                         </div>
                       </>
                     ) : (
                       <>
-                        {/* Standard message for visitors */}
-                        <div className="mb-3">
-                          <span className="inline-block bg-premium text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4">
-                            Premium Content
-                          </span>
-                        </div>
-                        
-                        <h3 className="text-3xl font-heading font-bold mb-4 text-foreground">
-                          Subscribe to unlock this story
+                        {/* Engaging message for visitors */}
+                        <h3 className="text-2xl font-heading font-bold mb-4 text-foreground">
+                          You've read this far...
                         </h3>
                         
-                        <p className="text-base text-foreground/70 mb-8 font-body leading-relaxed">
-                          Get unlimited access to premium analysis, exclusive interviews, and deep dives into Indian sports business.
+                        <p className="text-base text-foreground/70 mb-2 font-body leading-relaxed">
+                          This story clearly matters to you.
                         </p>
                         
-                        <div className="space-y-3 mb-8">
-                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <span>Premium stories & analysis</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <span>Exclusive interviews</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <span>Full archive access</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-2 text-sm text-foreground/80">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <span>Ad-free reading</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <span>Priority event access <span className="text-xs">(Coming soon)</span></span>
-                          </div>
+                        <p className="text-lg text-foreground mb-6 font-body leading-relaxed">
+                          Subscribe to <span className="text-primary font-semibold">The State of Play</span> and get the full picture—this story and 50+ deep-dives into Indian sports business.
+                        </p>
+                        
+                        <div className="flex flex-wrap justify-center gap-4 text-sm text-foreground/70 mb-6">
+                          <span className="flex items-center">
+                            <TrendingUp className="h-4 w-4 text-primary mr-1" />
+                            Weekly analysis
+                          </span>
+                          <span className="flex items-center">
+                            <TrendingUp className="h-4 w-4 text-primary mr-1" />
+                            Full archive
+                          </span>
+                          <span className="flex items-center">
+                            <TrendingUp className="h-4 w-4 text-primary mr-1" />
+                            Event access
+                          </span>
                         </div>
                       </>
                     )}
