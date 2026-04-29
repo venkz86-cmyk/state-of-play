@@ -117,6 +117,9 @@ export const Outfield = () => {
                   <Shield className="w-4 h-4 mr-2" />
                   <span>Free for paid subscribers</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Coffee shop or boardroom. Limited seats for sale—redeemable against an annual subscription.
+                </p>
               </div>
 
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
