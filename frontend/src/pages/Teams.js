@@ -49,7 +49,7 @@ export const Teams = () => {
     'Bi-weekly news briefs (Left Field)',
     'Full archive access',
     'Breaking news alerts',
-    'Centralized billing',
+    'Centralised billing',
     'GST-compliant invoicing',
     'Self-serve team management',
     'Priority email support'
@@ -86,7 +86,7 @@ export const Teams = () => {
             The State of Play <span className="text-primary">for Teams</span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/70 font-body leading-relaxed max-w-2xl mx-auto mb-10">
-            One subscription, your whole team stays informed. Volume pricing with centralized management.
+            One subscription, your whole team stays informed. Volume pricing with centralised management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -134,7 +134,7 @@ export const Teams = () => {
             Team Plans
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
-            Volume pricing for organizations. All plans include full access to TSOP and The Left Field.
+            Volume pricing for organisations. All plans include full access to TSOP and The Left Field.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -171,7 +171,7 @@ export const Teams = () => {
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Weekly TSOP newsletter</span>
+                    <span className="text-sm">Weekly TSOP deep dive</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
@@ -183,7 +183,7 @@ export const Teams = () => {
                   </li>
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Centralized billing & management</span>
+                    <span className="text-sm">Centralised billing & management</span>
                   </li>
                 </ul>
 
@@ -235,7 +235,7 @@ export const Teams = () => {
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Weekly TSOP newsletter</span>
+                    <span className="text-sm">Weekly TSOP deep dive</span>
                   </li>
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
@@ -247,7 +247,7 @@ export const Teams = () => {
                   </li>
                   <li className="flex items-start">
                     <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Centralized billing & management</span>
+                    <span className="text-sm">Centralised billing & management</span>
                   </li>
                 </ul>
 
@@ -384,7 +384,7 @@ export const Teams = () => {
             Ready to upgrade your team?
           </h2>
           <p className="text-lg md:text-xl text-white/80 font-body mb-10">
-            Join leading sports organizations who trust TSOP for their business intelligence.
+            Join leading sports organisations who trust TSOP for their business intelligence.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
