@@ -115,11 +115,8 @@ export const Outfield = () => {
                 </div>
                 <div className="flex items-center text-sm text-secondary font-medium">
                   <Shield className="w-4 h-4 mr-2" />
-                  <span>Free for paid subscribers</span>
+                  <span>Coffee shop or boardroom. Free for subscribers. Limited tickets—redeemable against a subscription.</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Coffee shop or boardroom. Limited seats for sale—redeemable against an annual subscription.
-                </p>
               </div>
 
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
