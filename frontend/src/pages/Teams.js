@@ -158,13 +158,13 @@ export const Teams = () => {
                 <div className="mb-6">
                   <div className="text-4xl font-heading font-black text-primary">
                     ₹10,000
-                    <span className="text-lg font-body text-muted-foreground font-normal">/year</span>
+                    <span className="text-lg font-body text-muted-foreground font-normal"> + GST/year</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    ₹2,000 per seat <span className="text-accent font-semibold">(32% off individual)</span>
+                    ₹2,000 per seat <span className="text-accent font-semibold">(20% off individual)</span>
                   </p>
                   <p className="text-sm text-green-600 font-medium mt-2">
-                    Save ₹4,745 vs individual subscriptions
+                    Save ₹2,495 vs individual subscriptions
                   </p>
                 </div>
 
@@ -198,7 +198,7 @@ export const Teams = () => {
                 </a>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Standard rate from July 1: ₹12,500
+                  Standard rate from July 1: ₹12,500 + GST
                 </p>
               </div>
             </div>
@@ -222,13 +222,13 @@ export const Teams = () => {
                 <div className="mb-6">
                   <div className="text-4xl font-heading font-black text-primary">
                     ₹20,000
-                    <span className="text-lg font-body text-muted-foreground font-normal">/year</span>
+                    <span className="text-lg font-body text-muted-foreground font-normal"> + GST/year</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    ₹2,000 per seat <span className="text-accent font-semibold">(32% off individual)</span>
+                    ₹2,000 per seat <span className="text-accent font-semibold">(20% off individual)</span>
                   </p>
                   <p className="text-sm text-green-600 font-medium mt-2">
-                    Save ₹9,490 vs individual subscriptions
+                    Save ₹4,990 vs individual subscriptions
                   </p>
                 </div>
 
@@ -262,7 +262,7 @@ export const Teams = () => {
                 </a>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Standard rate from July 1: ₹22,500
+                  Standard rate from July 1: ₹22,500 + GST
                 </p>
               </div>
             </div>
