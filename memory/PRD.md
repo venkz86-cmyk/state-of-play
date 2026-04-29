@@ -32,57 +32,51 @@ Build a premium content website for sports business intelligence with a focus on
 - [x] Accordion FAQ
 - [x] Final CTA with scroll-to-pricing
 
-### Corporate Subscriptions (Complete - Mar 2026)
+### Corporate Subscriptions (Complete - Apr 2026)
 - [x] Google Apps Script backend with all endpoints
-- [x] /teams sales page (Team-5, Team-10 pricing)
+- [x] /teams sales page (Team-5 ₹10K, Team-10 ₹20K)
 - [x] /teams/manage dashboard with token authentication
 - [x] Header "For Teams" dropdown
-- [ ] Razorpay payment links (user task)
-- [ ] Zapier automation (user task)
+- [x] Razorpay payment links integrated
+- [x] Zapier automation configured
+
+### The Outfield - Events (Complete - Apr 2026)
+- [x] /outfield page with intro, event cards, schedules
+- [x] Roundtables: May Mumbai confirmed + Register link (Luma)
+- [x] Speakeasy: June Bengaluru, November New Delhi (tentative)
+- [x] /partnerships page for sponsors (footer link only)
+- [x] Contact form to venkat@ and prerna@
 
 ### UI/UX (Complete)
 - [x] Responsive design
 - [x] Dark mode toggle
 - [x] Font size toggle
-- [x] Premium texture overlay
-- [x] Header icons (Mail, Calendar)
-- [x] Twitter → X logo update
 - [x] Warmer off-white background
-- [x] Increased article card spacing
-- [x] Card lift-on-hover effect
+- [x] Card hover effects
 - [x] Logo with white card treatment
-- [x] Removed search button (⌘K still works)
-
-### Content Updates (Complete)
-- [x] Homepage hero tagline
-- [x] About page: "About The State of Play" title in blue
-- [x] About page investor value proposition
-- [x] Removed RedBird Capital reference
-- [x] Fixed SportBusiness spelling
-- [x] Meta tags for SEO
+- [x] Footer with Outfield + Partnerships links
 
 ## Pending Items
 
-### P1 - User Tasks (Before Deploy)
-- [ ] Create Razorpay payment links for Team-5 (₹10K) and Team-10 (₹20K)
-- [ ] Set up Zapier: Razorpay → Apps Script create_account
-- [ ] Test end-to-end corporate subscription flow
+### Reminder: Later This Week
+- [ ] Create dedicated event page `/outfield/mumbai-may-2026`
+  - Sportz Interactive partner branding
+  - Luma embed
+  - Full event details
 
-### P2 - Upcoming Features
+### Future/Backlog
 - [ ] Bookmarks/Reading list for subscribers
 - [ ] "Insider Drops" - Subscriber-only private intel feed
+- [ ] Premium design overhaul (when ready)
 
-### P3 - Future/Backlog
-- [ ] Reading progress bar
-- [ ] Estimated read time
-- [ ] Contact for Enterprise page
+## Key URLs
+- Teams Sales: `/teams`
+- Team Dashboard: `/teams/manage?token={token}`
+- Outfield Events: `/outfield`
+- Partnerships: `/partnerships`
+- Luma Event: `https://lu.ma/8xh1try1`
 
 ## Key Endpoints
-
-### FastAPI Backend (Render)
-- `GET /api/og/{slug}` - Dynamic OG meta tags for Cloudflare Worker
-- `POST /api/razorpay/webhook` - Payment webhook handler
-- `GET /api/health` - Health check
 
 ### Google Apps Script (Corporate Subscriptions)
 - `GET /exec?token={token}` - Load dashboard data
@@ -95,17 +89,11 @@ Build a premium content website for sports business intelligence with a focus on
 - Admin Member: `venkat@stateofplay.club`
 
 ## Files of Reference
-- `/app/cloudflare-worker.js` - OG preview solution
 - `/app/corporate-subscriptions/apps-script-backend.js` - Full Apps Script code
-- `/app/frontend/src/pages/Signup.js` - New comprehensive subscribe page
 - `/app/frontend/src/pages/Teams.js` - Corporate sales page
 - `/app/frontend/src/pages/TeamsManage.js` - Corporate dashboard
-- `/app/frontend/src/components/Header.js` - Updated with For Teams dropdown
-- `/app/frontend/src/index.css` - Global styles & CSS variables
-
-## Corporate Subscriptions Tech Stack
-- **Database**: Google Sheets (accounts + members tabs)
-- **Backend**: Google Apps Script (deployed as web app)
-- **Auth**: Token-based (dashboard_token in URL)
-- **Ghost Integration**: JWT auth, create/delete members with labels
-- **Payment**: Razorpay payment links → Zapier → Apps Script
+- `/app/frontend/src/pages/Outfield.js` - Events page
+- `/app/frontend/src/pages/Partnerships.js` - Sponsor page
+- `/app/frontend/src/pages/Signup.js` - Subscribe page
+- `/app/frontend/src/components/Header.js` - With For Teams dropdown
+- `/app/frontend/src/components/Footer.js` - With Partnerships link
