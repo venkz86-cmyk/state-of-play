@@ -208,9 +208,6 @@ export const Welcome = () => {
             <div className="bg-muted/50 rounded-lg p-4 mb-6">
               <p className="text-sm text-muted-foreground mb-1">Subscribed as</p>
               <p className="font-medium">{memberData.email}</p>
-              <span className="inline-block mt-2 text-xs bg-primary text-white px-2 py-1 rounded font-bold">
-                PRO MEMBER
-              </span>
             </div>
 
             <p className="text-muted-foreground mb-6">

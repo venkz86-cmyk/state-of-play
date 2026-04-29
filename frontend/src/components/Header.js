@@ -149,15 +149,6 @@ export const Header = () => {
                     <span className="font-medium">Team Plans</span>
                     <p className="text-xs text-muted-foreground mt-0.5">Volume pricing for organizations</p>
                   </Link>
-                  <Link 
-                    to="/teams/manage" 
-                    onClick={() => setTeamsDropdownOpen(false)}
-                    className="block px-4 py-3 text-sm hover:bg-muted transition-colors border-t border-border"
-                    data-testid="nav-manage-team"
-                  >
-                    <span className="font-medium">Manage Team</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">Add or remove team members</p>
-                  </Link>
                 </div>
               )}
             </div>
@@ -179,11 +170,6 @@ export const Header = () => {
                   <span className="text-sm font-medium text-foreground">
                     {user.name || user.email?.split('@')[0]}
                   </span>
-                  {user.is_paid && (
-                    <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold">
-                      PRO
-                    </span>
-                  )}
                 </Link>
                 <Button 
                   variant="ghost" 
@@ -274,11 +260,6 @@ export const Header = () => {
                     Team Plans
                   </Button>
                 </Link>
-                <Link to="/teams/manage" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">
-                    Manage Team
-                  </Button>
-                </Link>
               </div>
               
               {/* Mobile Auth Buttons */}
@@ -294,9 +275,6 @@ export const Header = () => {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium">{user.name || user.email?.split('@')[0]}</p>
-                          {user.is_paid && (
-                            <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold">PRO</span>
-                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">My Account</span>
                       </div>
