@@ -13,6 +13,7 @@ import { CopyQuote } from '../components/CopyQuote';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { Clock, Calendar, Shield, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export const ArticlePage = () => {
   const { id } = useParams();
@@ -37,6 +38,34 @@ export const ArticlePage = () => {
       document.title = 'The State of Play | Sports Business Intelligence';
     };
   }, [article?.title]);
+
+  // Block print/PDF for premium content
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Block Ctrl+P / Cmd+P (Print)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        toast.error('Printing is disabled for subscriber content');
+      }
+      // Block Ctrl+S / Cmd+S (Save)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        toast.error('Saving is disabled for subscriber content');
+      }
+    };
+
+    const handleBeforePrint = () => {
+      toast.error('Printing is disabled. Subscribe for full access.');
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('beforeprint', handleBeforePrint);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('beforeprint', handleBeforePrint);
+    };
+  }, []);
 
   // Reading progress tracker
   useEffect(() => {
@@ -269,14 +298,16 @@ export const ArticlePage = () => {
                 <div 
                   className="prose prose-lg max-w-none font-body article-content no-select"
                   dangerouslySetInnerHTML={{ __html: article.preview_content }}
+                  onContextMenu={(e) => e.preventDefault()}
                 />
-                {/* Blur overlay on last part of preview */}
-                <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/98 to-transparent pointer-events-none" />
-                <div className="absolute bottom-0 left-0 right-0 h-32 backdrop-blur-sm pointer-events-none" />
+                {/* Gradual blur - starts subtle, gets heavier */}
+                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-24 backdrop-blur-[2px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-12 backdrop-blur-sm pointer-events-none" />
               </div>
               
-              {/* Engaging Paywall - "You've come this far" */}
-              <div className="relative py-16" data-testid="paywall-overlay">
+              {/* Engaging Paywall - overlaps with blurred content */}
+              <div className="relative -mt-16 py-16" data-testid="paywall-overlay">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-primary/10" />
                 
                 <div className="relative z-10 max-w-xl mx-auto">
