@@ -13,7 +13,6 @@ import { CopyQuote } from '../components/CopyQuote';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { Clock, Calendar, Shield, TrendingUp, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
 
 export const ArticlePage = () => {
   const { id } = useParams();
@@ -38,34 +37,6 @@ export const ArticlePage = () => {
       document.title = 'The State of Play | Sports Business Intelligence';
     };
   }, [article?.title]);
-
-  // Block print/PDF for premium content
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Block Ctrl+P / Cmd+P (Print)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault();
-        toast.error('Printing is disabled for subscriber content');
-      }
-      // Block Ctrl+S / Cmd+S (Save)
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        toast.error('Saving is disabled for subscriber content');
-      }
-    };
-
-    const handleBeforePrint = () => {
-      toast.error('Printing is disabled. Subscribe for full access.');
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('beforeprint', handleBeforePrint);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('beforeprint', handleBeforePrint);
-    };
-  }, []);
 
   // Reading progress tracker
   useEffect(() => {
@@ -296,9 +267,8 @@ export const ArticlePage = () => {
               {/* Preview Content with Blur Effect */}
               <div className="relative">
                 <div 
-                  className="prose prose-lg max-w-none font-body article-content no-select"
+                  className="prose prose-lg max-w-none font-body article-content"
                   dangerouslySetInnerHTML={{ __html: article.preview_content }}
-                  onContextMenu={(e) => e.preventDefault()}
                 />
                 {/* Gradual blur - starts subtle, gets heavier */}
                 <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
