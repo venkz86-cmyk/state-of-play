@@ -26,6 +26,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-white/80">
               <li><Link to="/state-of-play" className="hover:text-white transition-colors">The State of Play</Link></li>
               <li><Link to="/left-field" className="hover:text-white transition-colors">The Left Field</Link></li>
+              <li><Link to="/outfield" className="hover:text-white transition-colors">The Outfield</Link></li>
               <li><Link to="/archive" className="hover:text-white transition-colors">Archive</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
@@ -34,11 +35,12 @@ export const Footer = () => {
 
           {/* Legal */}
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider mb-4">Legal</h4>
+            <h4 className="text-sm font-bold uppercase tracking-wider mb-4">Legal & More</h4>
             <ul className="space-y-2 text-sm text-white/80">
               <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
               <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link to="/membership" className="hover:text-white transition-colors">Membership</Link></li>
+              <li><Link to="/partnerships" className="hover:text-white transition-colors">Partnerships</Link></li>
             </ul>
           </div>
         </div>
