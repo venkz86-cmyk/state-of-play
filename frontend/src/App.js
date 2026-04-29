@@ -24,6 +24,7 @@ import { Privacy } from "./pages/Privacy";
 import { Archive } from "./pages/Archive";
 import { Teams } from "./pages/Teams";
 import { TeamsManage } from "./pages/TeamsManage";
+import { Partnerships } from "./pages/Partnerships";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
                   <Route path="/archive" element={<Archive />} />
                   <Route path="/teams" element={<Teams />} />
                   <Route path="/teams/manage" element={<TeamsManage />} />
+                  <Route path="/partnerships" element={<Partnerships />} />
                   {/* Article route MUST be last - catches /:slug */}
                   <Route path="/:id" element={<ArticlePage />} />
                 </Routes>

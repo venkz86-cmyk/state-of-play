@@ -5,13 +5,8 @@ import {
   Calendar,
   MessageSquare,
   Wine,
-  Building2,
-  Briefcase,
-  TrendingUp,
   Shield,
-  Mail,
-  ChevronDown,
-  ChevronUp
+  Mail
 } from 'lucide-react';
 
 /* =============================================================================
@@ -20,21 +15,18 @@ import {
    ============================================================================= */
 
 export const Outfield = () => {
-  const [expandedFaq, setExpandedFaq] = useState(null);
-
   // Timeline for Roundtables
   const roundtableTimeline = [
-    { period: 'February/March', city: 'Mumbai' },
-    { period: 'June/July', city: 'Bengaluru' },
-    { period: 'September/October', city: 'New Delhi' },
-    { period: 'December', city: 'Mumbai/Bengaluru' }
+    { period: 'May', city: 'Mumbai', confirmed: true },
+    { period: 'June/July', city: 'Bengaluru', tentative: true },
+    { period: 'September/October', city: 'New Delhi', tentative: true },
+    { period: 'December', city: 'Mumbai/Bengaluru', tentative: true }
   ];
 
-  // Timeline for Speakeasy
+  // Timeline for Speakeasy (removed March/April Mumbai)
   const speakeasyTimeline = [
-    { period: 'March/April', city: 'Mumbai' },
-    { period: 'June', city: 'Bengaluru' },
-    { period: 'November', city: 'New Delhi' }
+    { period: 'June', city: 'Bengaluru', tentative: true },
+    { period: 'November', city: 'New Delhi', tentative: true }
   ];
 
   // Who attends
@@ -47,22 +39,6 @@ export const Outfield = () => {
     'Investment bankers',
     'Broadcast executives and media buyers',
     'Sports lawyers and law firms'
-  ];
-
-  // Partnership tiers
-  const partnershipTiers = [
-    {
-      title: 'Full Annual Partner',
-      description: 'All seven events across three cities. Year-round brand association.'
-    },
-    {
-      title: 'Roundtable Partner',
-      description: 'Four subscriber discussions. Presenting sponsor.'
-    },
-    {
-      title: 'Speakeasy Partner',
-      description: 'Three premium gatherings. Title sponsor.'
-    }
   ];
 
   return (
@@ -95,54 +71,13 @@ export const Outfield = () => {
       </section>
 
       {/* =========================================================================
-          THE ECOSYSTEM
+          INTRO SECTION
           ========================================================================= */}
       <section className="py-16 md:py-20 border-b border-border">
-        <div className="container mx-auto px-4 md:px-8 max-w-6xl">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-4">
-            The Ecosystem
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Three products. One mission: Covering the business of Indian sport with the depth it deserves.
+        <div className="container mx-auto px-4 md:px-8 max-w-3xl text-center">
+          <p className="text-xl md:text-2xl text-foreground leading-relaxed font-body">
+            The State of Play covers the business of Indian sport. <span className="text-primary font-semibold">The Outfield</span> is where that community meets in person. Quarterly Roundtables for subscribers. Premium Speakeasies for decision-makers. Small formats that force depth and encourage candour.
           </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* The Left Field */}
-            <div className="bg-card border border-border p-6 hover:shadow-lg transition-all">
-              <div className="text-secondary font-mono text-xs uppercase tracking-wider mb-3">Free</div>
-              <h3 className="text-xl font-heading font-bold mb-3">The Left Field</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Published every Monday & Wednesday</li>
-                <li>India + Global focus</li>
-                <li>Insights in one sitting</li>
-                <li>Ad-supported</li>
-              </ul>
-            </div>
-
-            {/* The State of Play */}
-            <div className="bg-card border-2 border-primary p-6 hover:shadow-lg transition-all">
-              <div className="text-primary font-mono text-xs uppercase tracking-wider mb-3">Premium</div>
-              <h3 className="text-xl font-heading font-bold mb-3">The State of Play</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Friday deep-dive (~6 min read)</li>
-                <li>₹2,499/year or $120</li>
-                <li>50 deep dives annually</li>
-                <li>150+ paid subscribers</li>
-              </ul>
-            </div>
-
-            {/* The Outfield */}
-            <div className="bg-primary text-white p-6 hover:shadow-lg transition-all">
-              <div className="text-white/70 font-mono text-xs uppercase tracking-wider mb-3">Live</div>
-              <h3 className="text-xl font-heading font-bold mb-3">The Outfield</h3>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li>Live events</li>
-                <li>Seven gatherings in 2026</li>
-                <li>Mumbai, Bengaluru, New Delhi</li>
-                <li>Intimate, off-record</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -190,12 +125,16 @@ export const Outfield = () => {
 
               <div className="border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">2026 Schedule</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="space-y-2 text-sm">
                   {roundtableTimeline.map((item, i) => (
                     <div key={i} className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1 text-secondary" />
-                      <span className="text-muted-foreground">{item.period}:</span>
-                      <span className="ml-1 font-medium">{item.city}</span>
+                      <MapPin className="w-3 h-3 mr-2 text-secondary" />
+                      <span className={item.confirmed ? 'font-semibold' : 'text-muted-foreground'}>
+                        {item.period}: {item.city}
+                      </span>
+                      {item.tentative && (
+                        <span className="ml-2 text-xs text-muted-foreground italic">(tentative)</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -221,7 +160,7 @@ export const Outfield = () => {
                 </div>
                 <div className="flex items-center text-sm">
                   <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <span>3 events in 2026</span>
+                  <span>2 events in 2026</span>
                 </div>
                 <div className="flex items-center text-sm text-accent font-medium">
                   <Wine className="w-4 h-4 mr-2" />
@@ -235,12 +174,16 @@ export const Outfield = () => {
 
               <div className="border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">2026 Schedule</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="space-y-2 text-sm">
                   {speakeasyTimeline.map((item, i) => (
                     <div key={i} className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1 text-accent" />
-                      <span className="text-muted-foreground">{item.period}:</span>
-                      <span className="ml-1 font-medium">{item.city}</span>
+                      <MapPin className="w-3 h-3 mr-2 text-accent" />
+                      <span className="text-muted-foreground">
+                        {item.period}: {item.city}
+                      </span>
+                      {item.tentative && (
+                        <span className="ml-2 text-xs text-muted-foreground italic">(tentative)</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -294,95 +237,6 @@ export const Outfield = () => {
       </section>
 
       {/* =========================================================================
-          PARTNERSHIP TIERS
-          ========================================================================= */}
-      <section className="py-16 md:py-20 border-b border-border">
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-4">
-            Partnership Tiers
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Pricing based on scope and involvement. Let's discuss what makes sense for your brand.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {partnershipTiers.map((tier, index) => (
-              <div 
-                key={index}
-                className="bg-card border border-border p-6 text-center hover:border-primary/50 hover:shadow-lg transition-all"
-              >
-                <h3 className="text-xl font-heading font-bold mb-3">{tier.title}</h3>
-                <p className="text-sm text-muted-foreground">{tier.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          BRAND INTEGRATION
-          ========================================================================= */}
-      <section className="py-16 md:py-20 bg-muted/30">
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12">
-            Brand Integration
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-primary/10 w-14 h-14 flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-7 h-7 text-primary" />
-              </div>
-              <h3 className="font-heading font-bold mb-2">At Events</h3>
-              <p className="text-sm text-muted-foreground">
-                Acknowledged in pre-event emails, opening remarks, and post-event recaps. Optional welcome opportunity at Speakeasies.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-primary/10 w-14 h-14 flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-7 h-7 text-primary" />
-              </div>
-              <h3 className="font-heading font-bold mb-2">In Content</h3>
-              <p className="text-sm text-muted-foreground">
-                Contextual placement in The Left Field. Recommended content sections. Partner perspectives. Clearly disclosed, editorially independent.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-primary/10 w-14 h-14 flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-7 h-7 text-primary" />
-              </div>
-              <h3 className="font-heading font-bold mb-2">Throughout the Year</h3>
-              <p className="text-sm text-muted-foreground">
-                Consistent, transparent presence. Not logos plastered everywhere. Thoughtful integration that respects editorial integrity.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          WHY PARTNER
-          ========================================================================= */}
-      <section className="py-16 md:py-20 border-b border-border">
-        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
-            Quality Over Scale
-          </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-            We are not optimising for headcount, but for conversations that matter.
-          </p>
-          <p className="text-lg text-foreground leading-relaxed mb-8">
-            The people at these events are VCs writing checks, founders building companies, senior executives running operations. When someone asks a question at a Roundtable or responds to a CXO at a Speakeasy, there's a good chance they're working exactly on that problem.
-          </p>
-          <p className="text-xl font-heading font-semibold text-primary">
-            Three cities. Seven events. Year 1 founding rates.
-          </p>
-        </div>
-      </section>
-
-      {/* =========================================================================
           MULTI-CITY PRESENCE
           ========================================================================= */}
       <section className="py-16 md:py-20 bg-primary text-white">
@@ -401,7 +255,7 @@ export const Outfield = () => {
               <span className="text-2xl font-heading font-bold">New Delhi</span>
             </div>
           </div>
-          <p className="text-xl text-white/80">Three markets. One partnership.</p>
+          <p className="text-xl text-white/80">Three cities. Seven events. Year one.</p>
         </div>
       </section>
 
@@ -411,22 +265,21 @@ export const Outfield = () => {
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4 md:px-8 max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
-            Let's Talk
+            Stay in the Loop
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            We're looking for partners who understand what we're building. Sports business in India is moving. The people at our events are building it.
+            Event announcements, RSVPs, and ticket releases go out via The State of Play newsletter. Subscribe to stay informed.
           </p>
           
           <a
-            href="mailto:venkat@stateofplay.club?subject=The Outfield Partnership Inquiry"
+            href="/signup"
             className="inline-flex items-center bg-primary hover:bg-primary/90 text-white font-bold px-10 py-4 text-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
           >
-            <Mail className="w-5 h-5 mr-2" />
-            Get in Touch
+            Subscribe to TSOP
           </a>
           
           <p className="text-sm text-muted-foreground mt-6">
-            venkat@stateofplay.club
+            Questions? <a href="mailto:venkat@stateofplay.club" className="text-primary hover:underline">venkat@stateofplay.club</a>
           </p>
         </div>
       </section>
