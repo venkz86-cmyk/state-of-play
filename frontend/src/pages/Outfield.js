@@ -75,8 +75,15 @@ export const Outfield = () => {
           ========================================================================= */}
       <section className="py-16 md:py-20 border-b border-border">
         <div className="container mx-auto px-4 md:px-8 max-w-3xl text-center">
-          <p className="text-xl md:text-2xl text-foreground leading-relaxed font-body">
-            The State of Play covers the business of Indian sport. <span className="text-primary font-semibold">The Outfield</span> is where that community meets in person. Quarterly Roundtables for subscribers. Premium Speakeasies for decision-makers. Small formats that force depth and encourage candour.
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+            The State of Play covers the business of Indian sport.
+          </p>
+          <p className="text-xl md:text-2xl text-foreground leading-relaxed font-heading mb-6">
+            <span className="text-primary">The Outfield</span> is where that community meets in person.
+          </p>
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+            Quarterly Roundtables for subscribers. Premium Speakeasies for decision-makers.<br className="hidden md:block" />
+            Small formats that force depth and encourage candour.
           </p>
         </div>
       </section>
