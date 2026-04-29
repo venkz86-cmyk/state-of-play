@@ -115,12 +115,16 @@ export const Outfield = () => {
                 </div>
                 <div className="flex items-center text-sm text-secondary font-medium">
                   <Shield className="w-4 h-4 mr-2" />
-                  <span>Coffee shop or boardroom. Free for subscribers. Limited tickets—redeemable against a subscription.</span>
+                  <span>Boardroom or café. Free for subscribers. Limited guest tickets.*</span>
                 </div>
               </div>
 
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                 Closed-door. Ninety minutes. We take a Friday story from The State of Play and go deeper with the protagonist. What couldn't fit in 1,500 words. What has developed since.
+              </p>
+              
+              <p className="text-xs text-muted-foreground italic mb-6">
+                *Tickets redeemable against an annual State of Play subscription.
               </p>
 
               <div className="border-t border-border pt-4">
