@@ -1,158 +1,109 @@
 {
-  "identity": {
-    "name": "The State of Play",
-    "mission": "To be the 'Insider's Desk' for Indian sports business—blending financial rigour with editorial elegance.",
-    "emotional_tone": "Authoritative, Sophisticated, Exclusive, Insightful, Kinetic",
-    "personas": {
-      "primary": "The Industry Insider (Values depth, data, and exclusivity)",
-      "secondary": "The Aspiring Professional (Values access and learning)"
-    }
+  "theme": {
+    "strategy": "Dual-mode (Light and Dark) with 'Editorial Future' aesthetic. Light mode should feel like a premium printed newspaper (e.g., Financial Times, off-white newsprint). Dark mode should feel like an exclusive executive club or Bloomberg Terminal (midnight ink).",
+    "border_radius": "Sharp and structured. Use `rounded-none` or max `rounded-sm` for a serious, authoritative feel. Avoid bubbly or highly rounded corners.",
+    "shadows": "Minimal. Rely on 1px borders for structure rather than floating drop-shadows."
   },
   "typography": {
     "fonts": {
-      "heading": {
-        "family": "Playfair Display, serif",
-        "usage": "Main headlines, article titles, section headers. Use for impact.",
-        "weights": ["400", "700", "900"],
-        "letter_spacing": "tracking-tight"
-      },
-      "body": {
-        "family": "Manrope, sans-serif",
-        "usage": "Article text, UI elements, navigation, buttons.",
-        "weights": ["400", "500", "600"],
-        "line_height": "leading-relaxed"
-      },
-      "accent": {
-        "family": "JetBrains Mono, monospace",
-        "usage": "Data points, timestamps, 'Insider' tags, chart labels.",
-        "weights": ["400", "500"]
-      }
+      "headings": "Playfair Display",
+      "body": "Source Serif Pro",
+      "ui": "IBM Plex Sans"
     },
-    "scale": {
-      "display": "text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9]",
-      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
-      "h2": "text-3xl font-semibold tracking-tight",
-      "h3": "text-2xl font-medium",
-      "body_lg": "text-lg md:text-xl leading-8 text-foreground/90",
-      "body_base": "text-base leading-7 text-foreground/80",
-      "caption": "text-xs md:text-sm font-medium tracking-wider uppercase text-muted-foreground"
+    "rules": {
+      "headlines": "Use `font-serif` (Playfair Display) with `tracking-tight` and `leading-none`. Weights: Use `font-black` for massive heroes, `font-medium` for standard articles.",
+      "body": "Use `font-serif` (Source Serif Pro) with `leading-relaxed` and `text-lg` or `text-xl` for long-form reading comfort.",
+      "ui_elements": "Use `font-sans` (IBM Plex Sans) for datelines, author names, category tags, and data tables. Must be `uppercase`, `tracking-widest` (`tracking-[0.2em]`), and `text-xs`."
     }
   },
   "colors": {
-    "primary": {
-      "DEFAULT": "#2E5AAC",
-      "foreground": "#FFFFFF",
-      "50": "#E6EEFF",
-      "100": "#CCE0FF",
-      "900": "#1A3366"
+    "light": {
+      "background": "#F9F8F6",
+      "surface": "#FFFFFF",
+      "text_primary": "#111827",
+      "text_secondary": "#4B5563",
+      "border": "#E5E7EB",
+      "primary_brand": "#1A365D",
+      "accent": "#D35400"
     },
-    "secondary": {
-      "DEFAULT": "#047857",
-      "foreground": "#FFFFFF",
-      "description": "Used for 'The Left Field' free tier branding (Emerald Green)"
+    "dark": {
+      "background": "#0A0F1C",
+      "surface": "#111827",
+      "text_primary": "#F9FAFB",
+      "text_secondary": "#9CA3AF",
+      "border": "#1F2937",
+      "primary_brand": "#3B82F6",
+      "accent": "#E65100"
     },
-    "background": {
-      "light": "#F9F9F7",
-      "dark": "#0A0A0A",
-      "paper": "#FFFFFF"
-    },
-    "surface": {
-      "light": "#FFFFFF",
-      "dark": "#121212",
-      "glass_light": "rgba(255, 255, 255, 0.7)",
-      "glass_dark": "rgba(10, 10, 10, 0.6)"
-    },
-    "text": {
-      "primary": "#1A1A1A",
-      "secondary": "#4A4A4A",
-      "muted": "#71717A"
-    },
-    "semantic": {
-      "paywall_overlay": "bg-gradient-to-b from-transparent to-background/95",
-      "premium_badge": "#C6A663"
+    "rules": {
+      "primary": "Elevated from the original bright blue (#2B5DAC) to a deeper, more institutional 'Oxford Navy' (#1A365D) for light mode. It projects financial stability and trust.",
+      "accent": "Elevated from generic orange (#FF5722) to 'Burnt Copper' (#D35400). Use sparingly—only for subscribe buttons, active states, or critical highlights.",
+      "background": "Light mode MUST use an 'off-white / newsprint' hex (#F9F8F6) to reduce eye strain and emulate high-end paper."
     }
   },
-  "layout_strategy": {
-    "container": {
-      "default": "container mx-auto px-4 md:px-8 max-w-7xl",
-      "narrow": "max-w-3xl mx-auto px-6"
-    },
-    "spacing": {
-      "section_gap": "py-24 md:py-32",
-      "element_gap": "space-y-8"
-    },
-    "grids": {
-      "bento_hero": "grid grid-cols-1 md:grid-cols-12 gap-6",
-      "editorial_list": "grid grid-cols-1 md:grid-cols-3 gap-12",
-      "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6"
-    }
+  "layouts": {
+    "homepage": "The 'Swiss Grid' editorial layout. Use asymmetric grids (e.g., `grid-cols-12`). The hero article spans 8 columns, while a 'Trending' list spans 4 columns. Separate sections with hard 1px horizontal lines (`border-t border-border/40`).",
+    "article_page": "Single-column reading view. Max-width `max-w-3xl` (`prose prose-lg`) centered, with generous padding. Floating, sticky side-actions (share, save, progress bar).",
+    "spacing": "Generous. Use `gap-8` to `gap-16` between major grid items. Use `py-24` for section separators."
   },
   "components": {
-    "buttons": {
-      "primary": "bg-primary text-white rounded-none px-8 py-3 font-medium uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
-      "secondary": "bg-transparent border border-primary text-primary rounded-none px-8 py-3 font-medium uppercase tracking-widest hover:bg-primary/5 transition-all"
-    },
-    "cards": {
-      "editorial": "group relative overflow-hidden bg-transparent border-b border-border/40 pb-8 hover:opacity-80 transition-opacity cursor-pointer",
-      "premium": "bg-card border border-border/50 p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
-    },
-    "badges": {
-      "premium": "bg-[#C6A663] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm",
-      "free": "bg-secondary text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm"
-    },
-    "paywall": {
-      "overlay": "absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background flex flex-col items-center justify-end pb-20 backdrop-blur-[2px]",
-      "message_box": "bg-background/80 border border-primary/20 p-8 text-center max-w-md mx-auto backdrop-blur-md shadow-2xl"
-    },
-    "inputs": {
-      "style": "bg-transparent border-b border-border focus:border-primary px-0 py-2 rounded-none focus:ring-0 outline-none transition-colors w-full placeholder:text-muted-foreground/50"
-    }
+    "article_cards": "Cardless approach. Do not use standard Shadcn bordered cards with shadows. Render the image, category label, headline, and excerpt cleanly on the background, separated by a bottom border.",
+    "buttons": "Sharp edges (`rounded-none`). Solid fill for primary (Subscribe), minimal wireframe outline (`border border-primary bg-transparent hover:bg-primary/5`) for secondary.",
+    "navigation": "Sticky, Glassmorphism Header. High-end glass: `bg-background/80 backdrop-blur-xl border-b border-border`. DO NOT use completely transparent backgrounds.",
+    "newsletter": "Minimalist form. 'Burnt Copper' submit button beside a clean `border-b` only input field (no full box)."
   },
   "visual_enhancers": {
-    "texture": "Use a subtle 'noise' texture overlay at 2-3% opacity on the main background to simulate paper grain.",
-    "shadows": "Use 'hard' shadows for buttons (retro-tech feel) and 'soft, diffuse' shadows for modals (luxury feel).",
-    "borders": "Use 1px borders with 10-15% opacity. Don't use heavy borders.",
-    "gradients": "NO GRADIENTS on buttons. Use subtle gradients only for the 'Paywall Blur' or 'Hero Image Overlays'."
+    "image_treatment": "Apply a subtle duotone or high-contrast filter to editorial images to unify the aesthetic. E.g., `grayscale hover:grayscale-0 transition-all duration-500`.",
+    "textures": "Subtle grain or noise overlay fixed in the background (`opacity-5`) to make the digital screen feel like a physical publication.",
+    "micro_interactions": "Images scale up slightly on hover within a hidden overflow container (`overflow-hidden`). Links feature a 1px expanding underline."
   },
-  "assets": {
-    "images": {
-      "hero_cricket": {
-        "url": "https://images.unsplash.com/photo-1750716413444-c8a957fcf35c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwxfHxjcmlja2V0JTIwc3RhZGl1bSUyMG5pZ2h0JTIwcGFub3JhbWljfGVufDB8fHx8MTc3MDcxODM0OHww&ixlib=rb-4.1.0&q=85",
-        "alt": "Panoramic view of a lit cricket stadium at night",
-        "category": "hero"
+  "media": {
+    "images": [
+      {
+        "category": "Hero/Featured",
+        "url": "https://images.pexels.com/photos/31739439/pexels-photo-31739439.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Wide-angle view of an iconic cricket stadium empty before a match"
       },
-      "hero_athlete": {
-        "url": "https://images.unsplash.com/photo-1764093369645-0b04338873f8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxhdGhsZXRlJTIwc2lsaG91ZXR0ZSUyMHRyYWluaW5nJTIwZm9jdXN8ZW58MHx8fHwxNzcwNzE4MzQ4fDA&ixlib=rb-4.1.0&q=85",
-        "alt": "Athletes training on track in silhouette",
-        "category": "section_bg"
+      {
+        "category": "Article Thumbnail",
+        "url": "https://images.pexels.com/photos/7109164/pexels-photo-7109164.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Businessman examines finance report on tablet"
+      },
+      {
+        "category": "Events/The Outfield",
+        "url": "https://images.unsplash.com/photo-1750716413341-fd5d93296a76?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwzfHxjcmlja2V0JTIwc3RhZGl1bSUyMGNvcnBvcmF0ZSUyMGJveHxlbnwwfHx8fDE3Nzc0NDI5OTJ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Cricket match is being played in a full stadium"
       }
-    },
-    "icons": {
-      "library": "lucide-react",
-      "style": "Stroke width 1.5px (Fine/Elegant)"
-    }
+    ]
   },
-  "motion": {
-    "page_transition": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}",
-    "hover": "hover:translate-y-[-2px] transition-transform duration-300",
-    "stagger": "staggerChildren: 0.1"
+  "accessibility": {
+    "contrast": "Ensure all text on image overlays uses a text-shadow or a dark gradient scrim (`bg-gradient-to-t from-black/80 to-transparent`) to meet APCA contrast standards.",
+    "focus": "All interactive elements must have a clear `focus-visible:ring-2 focus-visible:ring-accent` state.",
+    "testing": "All interactive and key informational elements MUST include a `data-testid` attribute (e.g., `data-testid='subscribe-hero-button'`)."
   },
   "instructions_to_main_agent": [
-    "1. FILE EXTENSION: Use .js and .jsx for all React files. Do NOT use .ts or .tsx.",
-    "2. THEME: Implement a 'Paper White' Light Mode as default. Use Royal Blue (#2E5AAC) strictly for Primary Actions and Brand Marks.",
-    "3. PAYWALL: The paywall must be 'soft' visually but 'hard' functionally. Show the first 2 paragraphs, then fade out into a 'Join the Club' CTA.",
-    "4. AUTH: Ensure Login/Signup flows are clean, centered, and distraction-free. Use the Razorpay email requirement as a validation step.",
-    "5. NAVIGATION: Create a distinct visual separation between 'The State of Play' (Premium/Blue) and 'The Left Field' (Free/Green) in the navigation.",
-    "6. CONTENT CARD: Do not use standard 'Card' components with shadows. Use 'Editorial' style: Image Top, Typography below, minimal borders, lots of whitespace.",
-    "7. IMAGES: Use the provided Unsplash URLs for hero sections. Use CSS filters (grayscale + slight blue tint) to unify disparate images.",
-    "8. SHADCN: Customize all Shadcn components to remove rounded-xl. We want sharp corners (rounded-sm or rounded-none) for a 'Business/News' feel.",
-    "9. DATA-TESTID: Add data-testid to all interactive elements (buttons, inputs, links) as 'role-context-name' (e.g., 'btn-login-submit')."
+    "Install required fonts from Google Fonts: Playfair Display, Source Serif Pro, IBM Plex Sans.",
+    "Install phosphor-icons (`yarn add @phosphor-icons/react`) for sharp, editorial-style duotone icons.",
+    "Avoid Shadcn 'Card' wrappers for news articles. Use raw HTML/Tailwind to build grid-aligned, border-separated content blocks.",
+    "Set global `selection:bg-accent selection:text-white` for a premium highlight effect.",
+    "Ensure dark/light mode toggle works flawlessly across all custom border and background utility classes."
   ],
-  "universal_guidelines": [
-    "Avoid generic AI designs.",
-    "Use 2-3x more spacing than typical.",
-    "Interactive elements must have micro-animations.",
-    "No transparent backgrounds on overlays.",
-    "Use sonner for toasts."
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms.",
+    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports (`export const ComponentName = ...`)",
+    "Pages MUST use default exports (`export default function PageName() {...}`)",
+    "Use `sonner` for toasts"
   ]
 }
