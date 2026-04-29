@@ -17,7 +17,7 @@ import {
 export const Outfield = () => {
   // Timeline for Roundtables
   const roundtableTimeline = [
-    { period: 'May', city: 'Mumbai', confirmed: true },
+    { period: 'May', city: 'Mumbai', confirmed: true, registerUrl: 'https://lu.ma/8xh1try1' },
     { period: 'June/July', city: 'Bengaluru', tentative: true },
     { period: 'September/October', city: 'New Delhi', tentative: true },
     { period: 'December', city: 'Mumbai/Bengaluru', tentative: true }
@@ -127,13 +127,25 @@ export const Outfield = () => {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">2026 Schedule</p>
                 <div className="space-y-2 text-sm">
                   {roundtableTimeline.map((item, i) => (
-                    <div key={i} className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-2 text-secondary" />
-                      <span className={item.confirmed ? 'font-semibold' : 'text-muted-foreground'}>
-                        {item.period}: {item.city}
-                      </span>
-                      {item.tentative && (
-                        <span className="ml-2 text-xs text-muted-foreground italic">(tentative)</span>
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-2 text-secondary" />
+                        <span className={item.confirmed ? 'font-semibold' : 'text-muted-foreground'}>
+                          {item.period}: {item.city}
+                        </span>
+                        {item.tentative && (
+                          <span className="ml-2 text-xs text-muted-foreground italic">(tentative)</span>
+                        )}
+                      </div>
+                      {item.registerUrl && (
+                        <a 
+                          href={item.registerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs bg-secondary text-white px-3 py-1 hover:bg-secondary/90 transition-colors"
+                        >
+                          Register →
+                        </a>
                       )}
                     </div>
                   ))}
