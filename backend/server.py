@@ -434,12 +434,14 @@ async def verify_ghost_member(request: MemberVerifyRequest):
         token = create_ghost_admin_token()
         if token:
             try:
-                # URL-encode the email to handle special characters like +
-                encoded_email = quote(request.email, safe='@')
+                # Ghost filter with email - wrap in quotes and properly encode
+                # Ghost NQL filter syntax: email:'value'
+                encoded_email = quote(request.email, safe='')
+                url = f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{encoded_email}'"
+                
                 async with httpx.AsyncClient() as http_client:
                     response = await http_client.get(
-                        f'{GHOST_URL}/ghost/api/admin/members/',
-                        params={'filter': f'email:{encoded_email}'},
+                        url,
                         headers={'Authorization': f'Ghost {token}'}
                     )
                     
@@ -451,14 +453,28 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             member = members[0]
                             # Check subscription status - comped members are also paid
                             status = member.get('status', 'free')
-                            is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
+                            
+                            # Check for paid labels (for Razorpay payments that add labels)
+                            labels = member.get('labels', [])
+                            label_names = [l.get('name', '').lower() for l in labels]
+                            has_paid_label = any(
+                                label in label_names 
+                                for label in ['paid-via-razorpay', 'premium-subscriber', 'paid', 'premium']
+                            )
+                            
+                            # User is paid if: status is paid/comped, OR has subscriptions, OR has paid labels
+                            is_paid = (
+                                status in ['paid', 'comped'] or 
+                                len(member.get('subscriptions', [])) > 0 or
+                                has_paid_label
+                            )
                             
                             return MemberVerifyResponse(
                                 is_member=True,
                                 is_paid=is_paid,
                                 email=member.get('email', request.email),
                                 name=member.get('name'),
-                                status=status
+                                status=status if not has_paid_label else 'paid'
                             )
                         else:
                             return MemberVerifyResponse(
