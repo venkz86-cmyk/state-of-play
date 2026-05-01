@@ -427,16 +427,19 @@ class MemberVerifyResponse(BaseModel):
 async def verify_ghost_member(request: MemberVerifyRequest):
     """Verify if an email is a Ghost member and their subscription status"""
     import httpx
+    from urllib.parse import quote
     
     # Try Admin API first (most reliable)
     if GHOST_ADMIN_API_KEY:
         token = create_ghost_admin_token()
         if token:
             try:
+                # URL-encode the email to handle special characters like +
+                encoded_email = quote(request.email, safe='@')
                 async with httpx.AsyncClient() as http_client:
                     response = await http_client.get(
                         f'{GHOST_URL}/ghost/api/admin/members/',
-                        params={'filter': f'email:{request.email}'},
+                        params={'filter': f'email:{encoded_email}'},
                         headers={'Authorization': f'Ghost {token}'}
                     )
                     
