@@ -25,6 +25,7 @@ import { Archive } from "./pages/Archive";
 import { Teams } from "./pages/Teams";
 import { TeamsManage } from "./pages/TeamsManage";
 import { Partnerships } from "./pages/Partnerships";
+import { HomeMockup } from "./pages/HomeMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
                   <Route path="/teams" element={<Teams />} />
                   <Route path="/teams/manage" element={<TeamsManage />} />
                   <Route path="/partnerships" element={<Partnerships />} />
+                  <Route path="/mockup/home" element={<HomeMockup />} />
                   {/* Article route MUST be last - catches /:slug */}
                   <Route path="/:id" element={<ArticlePage />} />
                 </Routes>

@@ -63,6 +63,9 @@ module.exports = {
         heading: ['Merriweather', 'Georgia', 'serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        editorial: ['"Playfair Display"', 'Georgia', 'serif'],
+        plex: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        'plex-mono': ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         'display': ['4.5rem', { lineHeight: '1', letterSpacing: '-0.02em', fontWeight: '900' }],

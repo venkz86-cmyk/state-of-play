@@ -1,0 +1,424 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ghostAPI } from '../services/ghostAPI';
+import { ArrowUpRight } from 'lucide-react';
+
+// Format a Ghost date as e.g. "12 MAR 2026"
+const fmtDate = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d
+    .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toUpperCase();
+};
+
+const Overline = ({ children, className = '' }) => (
+  <span
+    className={`font-plex-mono text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#475569] ${className}`}
+  >
+    {children}
+  </span>
+);
+
+const Meta = ({ article, withTheme = true }) => (
+  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    {withTheme && article.theme && (
+      <Overline className="text-[#234ba0]">{article.theme}</Overline>
+    )}
+    {withTheme && article.theme && <span className="text-[#CBD5E1]">·</span>}
+    <Overline>{fmtDate(article.created_at)}</Overline>
+    <span className="text-[#CBD5E1]">·</span>
+    <Overline>{article.read_time} MIN READ</Overline>
+  </div>
+);
+
+// Hero: spans 8 of 12 cols. Image dominant, title in serif, mono overline.
+const HeroArticle = ({ article }) => (
+  <Link
+    to={`/${article.id}`}
+    data-testid="mockup-hero-article"
+    className="group block lg:col-span-8 border-r-0 lg:border-r border-[#E2E8F0]"
+  >
+    <div className="lg:pr-12 xl:pr-16">
+      {article.image_url && (
+        <div className="relative w-full aspect-[16/10] overflow-hidden bg-[#F1F1EE] mb-8">
+          <img
+            src={article.image_url}
+            alt={article.title}
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover saturate-[0.85] group-hover:saturate-100 group-hover:scale-[1.02] transition-all duration-700 ease-out"
+          />
+          {article.is_premium && (
+            <div className="absolute top-5 left-5 bg-[#0F172A] text-white px-3 py-1.5">
+              <span className="font-plex-mono text-[10px] font-medium tracking-[0.22em] uppercase">
+                Subscribers Only
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-5">
+        {article.theme && (
+          <Overline className="text-[#234ba0]">{article.theme}</Overline>
+        )}
+        <span className="h-px w-8 bg-[#234ba0]/40" />
+        <Overline>The Big Story</Overline>
+      </div>
+
+      <h2 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[3.75rem] leading-[1.04] text-[#0F172A] dark:text-[#F8FAFC] mb-6 transition-colors duration-200 group-hover:text-[#234ba0]">
+        {article.title}
+      </h2>
+
+      {article.subtitle && (
+        <p className="font-plex text-lg lg:text-xl leading-relaxed text-[#334155] dark:text-[#94A3B8] max-w-[60ch] mb-8">
+          {article.subtitle}
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-6 border-t border-[#E2E8F0]">
+        <span className="font-plex text-sm font-medium text-[#0F172A] dark:text-[#F8FAFC]">
+          By {article.author || 'TSOP Editorial'}
+        </span>
+        <span className="text-[#CBD5E1]">·</span>
+        <Overline>{fmtDate(article.created_at)}</Overline>
+        <span className="text-[#CBD5E1]">·</span>
+        <Overline>{article.read_time} MIN READ</Overline>
+      </div>
+    </div>
+  </Link>
+);
+
+// Side rail: 2 stacked secondary articles, sharing 4 cols.
+const SideArticle = ({ article, isLast = false }) => (
+  <Link
+    to={`/${article.id}`}
+    data-testid={`mockup-side-${article.id}`}
+    className={`group block ${isLast ? '' : 'pb-10 mb-10 border-b border-[#E2E8F0]'}`}
+  >
+    <div className="grid grid-cols-3 gap-5">
+      <div className="col-span-3 sm:col-span-1 lg:col-span-3 xl:col-span-1">
+        {article.image_url && (
+          <div className="aspect-[4/3] overflow-hidden bg-[#F1F1EE]">
+            <img
+              src={article.image_url}
+              alt={article.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover saturate-[0.85] group-hover:saturate-100 group-hover:scale-[1.03] transition-all duration-700 ease-out"
+            />
+          </div>
+        )}
+      </div>
+      <div className="col-span-3 sm:col-span-2 lg:col-span-3 xl:col-span-2">
+        <div className="mb-3">
+          {article.theme ? (
+            <Overline className="text-[#234ba0]">{article.theme}</Overline>
+          ) : (
+            <Overline>Analysis</Overline>
+          )}
+        </div>
+        <h3 className="font-editorial font-semibold tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] mb-3 group-hover:text-[#234ba0] transition-colors duration-200">
+          {article.title}
+        </h3>
+        <div className="flex items-center gap-2 text-[11px]">
+          <Overline>{fmtDate(article.created_at)}</Overline>
+          <span className="text-[#CBD5E1]">·</span>
+          <Overline>{article.read_time} MIN</Overline>
+        </div>
+      </div>
+    </div>
+  </Link>
+);
+
+// Lower grid card: print-column style, no card chrome, 1px borders only.
+const ColumnCard = ({ article, idx }) => (
+  <Link
+    to={`/${article.id}`}
+    data-testid={`mockup-column-${article.id}`}
+    className="group block py-10 px-0 lg:px-8 border-t border-[#E2E8F0] lg:border-t-0 lg:border-l first:lg:border-l-0"
+  >
+    <div className="flex items-center gap-3 mb-4">
+      <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+        {String(idx + 1).padStart(2, '0')}
+      </span>
+      {article.theme && (
+        <>
+          <span className="h-px w-4 bg-[#CBD5E1]" />
+          <Overline className="text-[#234ba0]">{article.theme}</Overline>
+        </>
+      )}
+    </div>
+
+    {article.image_url && (
+      <div className="aspect-[3/2] overflow-hidden bg-[#F1F1EE] mb-5">
+        <img
+          src={article.image_url}
+          alt={article.title}
+          referrerPolicy="no-referrer"
+          className="w-full h-full object-cover saturate-[0.85] group-hover:saturate-100 group-hover:scale-[1.04] transition-all duration-700 ease-out"
+        />
+      </div>
+    )}
+
+    <h3 className="font-editorial font-semibold tracking-tight text-2xl leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] mb-3 group-hover:text-[#234ba0] transition-colors duration-200">
+      {article.title}
+    </h3>
+
+    {article.subtitle && (
+      <p className="font-plex text-[15px] leading-relaxed text-[#475569] dark:text-[#94A3B8] mb-5 line-clamp-3">
+        {article.subtitle}
+      </p>
+    )}
+
+    <div className="flex items-center justify-between pt-4 border-t border-[#E2E8F0]">
+      <span className="font-plex text-xs font-medium text-[#0F172A] dark:text-[#F8FAFC]">
+        {article.author || 'TSOP'}
+      </span>
+      <Overline>{article.read_time} MIN</Overline>
+    </div>
+  </Link>
+);
+
+export const HomeMockup = () => {
+  const [articles, setArticles] = useState([]);
+  const [hero, setHero] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const posts = await ghostAPI.getPosts({ limit: 12 });
+        if (posts.length > 0) {
+          setHero(posts[0]);
+          setArticles(posts.slice(1));
+        }
+      } catch (e) {
+        console.error('Failed to fetch articles', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
+        <Overline>Loading edition…</Overline>
+      </div>
+    );
+  }
+
+  const sideArticles = articles.slice(0, 3);
+  const columnArticles = articles.slice(3, 7);
+  const restArticles = articles.slice(7);
+
+  // Today's date in masthead format e.g. "WEDNESDAY · 12 MARCH 2026"
+  const today = new Date();
+  const masthead = today
+    .toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    })
+    .toUpperCase();
+
+  return (
+    <div
+      className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
+      data-testid="mockup-home"
+    >
+      {/* MASTHEAD STRIP */}
+      <div className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F7F7F5] dark:bg-[#090E17]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
+          <Overline>The State of Play · Edition</Overline>
+          <Overline className="hidden sm:block">{masthead}</Overline>
+          <Overline className="text-[#234ba0]">Issue Nº 014</Overline>
+        </div>
+      </div>
+
+      {/* HERO MAGAZINE BLOCK */}
+      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
+          {/* Section eyebrow */}
+          <div className="flex items-end justify-between mb-12 lg:mb-16">
+            <div>
+              <Overline className="text-[#234ba0] mb-3 block">Today’s Edition</Overline>
+              <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-5xl lg:text-[3.5rem] leading-[1.02] max-w-3xl">
+                The business of sport,{' '}
+                <em className="italic font-normal text-[#234ba0]">from an India lens.</em>
+              </h1>
+              <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-5 max-w-2xl leading-relaxed">
+                Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business — for investors, leagues, and agencies.
+              </p>
+            </div>
+
+            <Link
+              to="/state-of-play"
+              data-testid="mockup-hero-archive-link"
+              className="hidden lg:inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+            >
+              All Stories
+              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </Link>
+          </div>
+
+          {/* Bento: hero (8) + side rail (4) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0">
+            {hero && <HeroArticle article={hero} />}
+            <aside className="lg:col-span-4 lg:pl-12 xl:pl-16">
+              <div className="mb-8">
+                <Overline className="text-[#234ba0]">Also Reading</Overline>
+              </div>
+              {sideArticles.map((a, i) => (
+                <SideArticle
+                  key={a.id}
+                  article={a}
+                  isLast={i === sideArticles.length - 1}
+                />
+              ))}
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* PULL QUOTE / EDITORIAL FLAIR */}
+      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-2">
+              <Overline className="text-[#FF6B35]">Editor’s Note</Overline>
+            </div>
+            <blockquote className="lg:col-span-9 border-l-4 border-[#FF6B35] pl-8 lg:pl-12">
+              <p className="font-editorial italic text-2xl sm:text-3xl lg:text-[2.5rem] leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
+                “Indian sport is no longer the side bet. It’s where the real money is being placed — and we’re publishing the receipts.”
+              </p>
+              <footer className="mt-8 flex items-center gap-3">
+                <span className="h-px w-12 bg-[#0F172A] dark:bg-[#F8FAFC]" />
+                <Overline>Venkatesh Sridhar · Founding Editor</Overline>
+              </footer>
+            </blockquote>
+          </div>
+        </div>
+      </section>
+
+      {/* PRINT-COLUMN GRID — newspaper feel */}
+      {columnArticles.length > 0 && (
+        <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <Overline className="text-[#234ba0] mb-3 block">The Desk</Overline>
+                <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
+                  This week, in columns.
+                </h2>
+              </div>
+              <Overline className="hidden md:block">
+                {columnArticles.length.toString().padStart(2, '0')} Stories
+              </Overline>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 lg:divide-x lg:divide-[#E2E8F0] dark:lg:divide-[#1E293B]">
+              {columnArticles.map((a, i) => (
+                <ColumnCard key={a.id} article={a} idx={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* MORE FROM THE DESK — list view */}
+      {restArticles.length > 0 && (
+        <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <Overline className="text-[#234ba0] mb-3 block">More Reading</Overline>
+                <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
+                  From the archive.
+                </h2>
+              </div>
+            </div>
+
+            <ul className="border-t border-[#0F172A] dark:border-[#F8FAFC]">
+              {restArticles.map((a, i) => (
+                <li key={a.id}>
+                  <Link
+                    to={`/${a.id}`}
+                    data-testid={`mockup-list-${a.id}`}
+                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-6 lg:py-8 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                  >
+                    <span className="hidden md:block col-span-1 font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div className="col-span-12 md:col-span-2">
+                      <Overline className="text-[#234ba0]">
+                        {a.theme || 'Analysis'}
+                      </Overline>
+                    </div>
+                    <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[#234ba0] transition-colors duration-200">
+                      {a.title}
+                    </h3>
+                    <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
+                      <Overline>{fmtDate(a.created_at)}</Overline>
+                      <ArrowUpRight
+                        className="h-4 w-4 text-[#94A3B8] group-hover:text-[#234ba0] transition-colors duration-200"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* SUBSCRIBE BLOCK — sharp, no gradient, accent orange */}
+      <section className="bg-[#0F172A] text-white">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+            <div className="lg:col-span-7">
+              <Overline className="text-[#FF6B35] mb-5 block">Subscribe</Overline>
+              <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white mb-6">
+                Read the room before everyone else does.
+              </h2>
+              <p className="font-plex text-lg leading-relaxed text-white/70 max-w-2xl">
+                Premium analysis of the businesses, deals and people moving Indian sport — delivered weekly. Trusted by analysts at the funds, leagues and agencies actually doing the work.
+              </p>
+            </div>
+            <div className="lg:col-span-5 flex flex-col gap-5 lg:items-end">
+              <Link
+                to="/signup"
+                data-testid="mockup-subscribe-cta"
+                className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              >
+                Subscribe
+                <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
+              </Link>
+              <Link
+                to="/teams"
+                data-testid="mockup-teams-cta"
+                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+              >
+                For Teams & Funds
+                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* COLOPHON */}
+      <div className="bg-[#F7F7F5] dark:bg-[#090E17] border-t border-[#E2E8F0] dark:border-[#1E293B]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <Overline>Set in Playfair Display & IBM Plex Sans</Overline>
+          <Overline>Mumbai · Bengaluru · Worldwide</Overline>
+          <Overline className="text-[#234ba0]">stateofplay.club</Overline>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HomeMockup;
