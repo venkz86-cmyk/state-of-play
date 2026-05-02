@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { ArrowUpRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { getReadingHistory } from '../components/ReadingHistory';
 
 // Format a Ghost date as e.g. "12 MAR 2026"
 const fmtDate = (iso) => {
@@ -183,6 +185,21 @@ export const HomeMockup = () => {
   const [articles, setArticles] = useState([]);
   const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const { user, canAccessPremium } = useAuth();
+
+  // ?preview=member forces the logged-in paid view for design review
+  const previewMember = searchParams.get('preview') === 'member';
+  const isMember = canAccessPremium || previewMember;
+  const memberName =
+    (user && (user.name || user.email)) ||
+    (previewMember ? 'Venkatesh' : null);
+
+  // Reading history (for logged-in continue-reading rail)
+  const [history, setHistory] = useState([]);
+  useEffect(() => {
+    setHistory(getReadingHistory().slice(0, 1));
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -231,9 +248,28 @@ export const HomeMockup = () => {
       {/* MASTHEAD STRIP */}
       <div className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F7F7F5] dark:bg-[#090E17]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
-          <Overline>The State of Play · Edition</Overline>
-          <Overline className="hidden sm:block">{masthead}</Overline>
-          <Overline className="text-[#234ba0]">Issue Nº 014</Overline>
+          {isMember ? (
+            <>
+              <Overline className="text-[#234ba0]">
+                Welcome Back{memberName ? ` · ${memberName}` : ''}
+              </Overline>
+              <Overline className="hidden sm:block">{masthead}</Overline>
+              <Link
+                to="/account"
+                data-testid="mockup-account-link"
+                className="inline-flex items-center gap-2 font-plex-mono text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+              >
+                Member Lounge
+                <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Overline>The State of Play · Edition</Overline>
+              <Overline className="hidden sm:block">{masthead}</Overline>
+              <Overline className="text-[#234ba0]">Issue Nº 014</Overline>
+            </>
+          )}
         </div>
       </div>
 
@@ -243,14 +279,32 @@ export const HomeMockup = () => {
           {/* Section eyebrow */}
           <div className="flex items-end justify-between mb-12 lg:mb-16">
             <div>
-              <Overline className="text-[#234ba0] mb-3 block">Today’s Edition</Overline>
-              <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-5xl lg:text-[3.5rem] leading-[1.02] max-w-3xl">
-                The business of sport,{' '}
-                <em className="italic font-normal text-[#234ba0]">from an India lens.</em>
-              </h1>
-              <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-5 max-w-2xl leading-relaxed">
-                Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business — for investors, leagues, and agencies.
-              </p>
+              <Overline className="text-[#234ba0] mb-3 block">
+                {isMember ? 'Today’s Edition · For Members' : 'Today’s Edition'}
+              </Overline>
+              {isMember ? (
+                <>
+                  <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-5xl lg:text-[3.5rem] leading-[1.02] max-w-3xl">
+                    Good to see you,{' '}
+                    <em className="italic font-normal text-[#234ba0]">
+                      {memberName ? memberName.split('@')[0] : 'reader'}.
+                    </em>
+                  </h1>
+                  <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-5 max-w-2xl leading-relaxed">
+                    Three new pieces in the desk since you last visited. Pick up where you left off, or start fresh below.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-5xl lg:text-[3.5rem] leading-[1.02] max-w-3xl">
+                    The business of sport,{' '}
+                    <em className="italic font-normal text-[#234ba0]">from an India lens.</em>
+                  </h1>
+                  <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-5 max-w-2xl leading-relaxed">
+                    Deep-dive analysis, exclusive insights, and the untold stories behind Indian sports business — for investors, leagues, and agencies.
+                  </p>
+                </>
+              )}
             </div>
 
             <Link
@@ -262,6 +316,31 @@ export const HomeMockup = () => {
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             </Link>
           </div>
+
+          {/* Continue Reading rail — members only, only if there's history */}
+          {isMember && history.length > 0 && (
+            <div className="mb-12 lg:mb-16 border-y border-[#0F172A] dark:border-[#F8FAFC] py-5 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+              <Overline className="text-[#FF6B35] shrink-0">
+                Continue Reading
+              </Overline>
+              <Link
+                to={`/${history[0].id}`}
+                data-testid="mockup-continue-reading"
+                className="group flex-1 flex items-center justify-between gap-6"
+              >
+                <h3 className="font-editorial font-semibold text-lg lg:text-xl leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[#234ba0] transition-colors duration-200">
+                  {history[0].title}
+                </h3>
+                <div className="flex items-center gap-3 shrink-0">
+                  <Overline>{history[0].read_time} MIN LEFT</Overline>
+                  <ArrowUpRight
+                    className="h-4 w-4 text-[#94A3B8] group-hover:text-[#234ba0] transition-colors duration-200"
+                    strokeWidth={1.5}
+                  />
+                </div>
+              </Link>
+            </div>
+          )}
 
           {/* Bento: hero (8) + side rail (4) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0">
@@ -374,40 +453,126 @@ export const HomeMockup = () => {
         </section>
       )}
 
-      {/* SUBSCRIBE BLOCK — sharp, no gradient, accent orange */}
-      <section className="bg-[#0F172A] text-white">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
-            <div className="lg:col-span-7">
-              <Overline className="text-[#FF6B35] mb-5 block">Subscribe</Overline>
-              <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white mb-6">
-                Read the room before everyone else does.
-              </h2>
-              <p className="font-plex text-lg leading-relaxed text-white/70 max-w-2xl">
-                Premium analysis of the businesses, deals and people moving Indian sport — delivered weekly. Trusted by analysts at the funds, leagues and agencies actually doing the work.
-              </p>
+      {/* SUBSCRIBE (logged-out) / MEMBER LOUNGE (logged-in) */}
+      {isMember ? (
+        <section className="bg-[#0F172A] text-white">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12 lg:mb-16">
+              <div>
+                <Overline className="text-[#FF6B35] mb-5 block">Member Lounge</Overline>
+                <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white">
+                  Yours, exclusively.
+                </h2>
+                <p className="font-plex text-lg leading-relaxed text-white/70 mt-5 max-w-2xl">
+                  Tools and rooms reserved for paying members of The State of Play.
+                </p>
+              </div>
             </div>
-            <div className="lg:col-span-5 flex flex-col gap-5 lg:items-end">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/15 border-y border-white/15">
               <Link
-                to="/signup"
-                data-testid="mockup-subscribe-cta"
-                className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+                to="/account"
+                data-testid="lounge-account"
+                className="group block py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0"
               >
-                Subscribe
-                <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
+                  <span className="h-px w-6 bg-white/30" />
+                  <Overline className="text-white/70">Your Account</Overline>
+                </div>
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                  Plan, billing & preferences.
+                </h3>
+                <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
+                  Manage your subscription, swap plans, or update reading preferences in one place.
+                </p>
+                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
+                  Open
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </span>
               </Link>
+
               <Link
-                to="/teams"
-                data-testid="mockup-teams-cta"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                to="/account"
+                data-testid="lounge-reading-list"
+                className="group block py-10 md:py-12 md:px-10"
               >
-                For Teams & Funds
-                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
+                  <span className="h-px w-6 bg-white/30" />
+                  <Overline className="text-white/70">Reading List</Overline>
+                </div>
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                  Saved for later.
+                </h3>
+                <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
+                  Bookmark deep-dives and revisit them on your schedule. Synced across devices.
+                </p>
+                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
+                  View
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </span>
+              </Link>
+
+              <Link
+                to="/account"
+                data-testid="lounge-insider-drops"
+                className="group block py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
+                  <span className="h-px w-6 bg-white/30" />
+                  <Overline className="text-[#FF6B35]">Insider Drops · Soon</Overline>
+                </div>
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                  Private intel, off the record.
+                </h3>
+                <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
+                  Subscriber-only feed of deal whispers, tip-offs and short notes — published as they break.
+                </p>
+                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/40 border-b border-white/20 pb-1">
+                  Notify Me
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </span>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="bg-[#0F172A] text-white">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+              <div className="lg:col-span-7">
+                <Overline className="text-[#FF6B35] mb-5 block">Subscribe</Overline>
+                <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white mb-6">
+                  Read the room before everyone else does.
+                </h2>
+                <p className="font-plex text-lg leading-relaxed text-white/70 max-w-2xl">
+                  Premium analysis of the businesses, deals and people moving Indian sport — delivered weekly. Trusted by analysts at the funds, leagues and agencies actually doing the work.
+                </p>
+              </div>
+              <div className="lg:col-span-5 flex flex-col gap-5 lg:items-end">
+                <Link
+                  to="/signup"
+                  data-testid="mockup-subscribe-cta"
+                  className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+                >
+                  Subscribe
+                  <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
+                </Link>
+                <Link
+                  to="/teams"
+                  data-testid="mockup-teams-cta"
+                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                >
+                  For Teams & Funds
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* COLOPHON */}
       <div className="bg-[#F7F7F5] dark:bg-[#090E17] border-t border-[#E2E8F0] dark:border-[#1E293B]">
