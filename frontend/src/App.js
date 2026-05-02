@@ -35,6 +35,7 @@ import { TeamsMockup } from "./pages/TeamsMockup";
 import { OutfieldMockup } from "./pages/OutfieldMockup";
 import { LoginMockup } from "./pages/LoginMockup";
 import { AccountMockup } from "./pages/AccountMockup";
+import { LeftFieldMockup } from "./pages/LeftFieldMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
@@ -70,6 +71,7 @@ function Shell() {
           <Route path="/mockup/about" element={<AboutMockup />} />
           <Route path="/mockup/teams" element={<TeamsMockup />} />
           <Route path="/mockup/outfield" element={<OutfieldMockup />} />
+          <Route path="/mockup/left-field" element={<LeftFieldMockup />} />
           <Route path="/mockup/login" element={<LoginMockup />} />
           <Route path="/mockup/account" element={<AccountMockup />} />
           <Route path="/mockup/article/:id" element={<ArticleMockup />} />

@@ -27,27 +27,34 @@ const PAGES = [
         blurb: 'Front-page index of the week’s reportage, in print-column form.',
         meta: 'Listing layout',
       },
+      {
+        no: '04',
+        slug: '/mockup/left-field',
+        title: 'The Left Field',
+        blurb: 'Free Substack briefs — bi-weekly news on Indian sports business.',
+        meta: 'Free funnel page',
+      },
     ],
   },
   {
     section: 'Conversion & Sales',
     items: [
       {
-        no: '04',
+        no: '05',
         slug: '/mockup/subscribe',
         title: 'Subscribe',
         blurb: 'Hero, sharp pricing card, what’s included, premium analysis sample, FAQ.',
         meta: 'Highest-stakes surface',
       },
       {
-        no: '05',
+        no: '06',
         slug: '/mockup/teams',
         title: 'For Teams',
         blurb: 'Corporate pricing, audiences, included features, FAQ, founders pitch.',
         meta: 'B2B sales page',
       },
       {
-        no: '06',
+        no: '07',
         slug: '/mockup/outfield',
         title: 'The Outfield',
         blurb: 'Roundtables and Speakeasies — events, schedules, audience.',
@@ -59,21 +66,21 @@ const PAGES = [
     section: 'Editorial & Account',
     items: [
       {
-        no: '07',
+        no: '08',
         slug: '/mockup/about',
         title: 'About',
         blurb: 'Mission, what we cover, who reads it, and the bylined editor.',
         meta: 'Editorial credibility',
       },
       {
-        no: '08',
+        no: '09',
         slug: '/mockup/login',
         title: 'Sign in',
         blurb: 'Minimalist split-screen auth with editorial copy.',
         meta: 'Member access',
       },
       {
-        no: '09',
+        no: '10',
         slug: '/mockup/account',
         title: 'Member dashboard',
         blurb: 'Plan, reading list, billing, preferences and Insider Drops teaser.',
@@ -99,7 +106,7 @@ export const MockupIndex = () => {
           </p>
           <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3">
             <Overline>Cream &nbsp;·&nbsp; <span className="text-[#234ba0]">Brand Blue</span> &nbsp;·&nbsp; <span className="text-[#FF6B35]">Accent Orange</span></Overline>
-            <Overline>09 surfaces</Overline>
+            <Overline>10 surfaces</Overline>
             <Overline>British English</Overline>
           </div>
         </div>
