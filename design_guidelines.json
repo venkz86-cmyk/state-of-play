@@ -1,109 +1,151 @@
 {
-  "theme": {
-    "strategy": "Dual-mode (Light and Dark) with 'Editorial Future' aesthetic. Light mode should feel like a premium printed newspaper (e.g., Financial Times, off-white newsprint). Dark mode should feel like an exclusive executive club or Bloomberg Terminal (midnight ink).",
-    "border_radius": "Sharp and structured. Use `rounded-none` or max `rounded-sm` for a serious, authoritative feel. Avoid bubbly or highly rounded corners.",
-    "shadows": "Minimal. Rely on 1px borders for structure rather than floating drop-shadows."
+  "project_context": {
+    "name": "The State of Play",
+    "type": "Premium Sports Business Intelligence Publication",
+    "target_audience": "VCs, PE investors, franchise executives, investment bankers, media executives.",
+    "emotional_tone": "Authoritative, Exclusive, Serious, Insightful, Kickass & Premium",
+    "design_archetype": "Swiss & High-Contrast mixed with Old Money Tech"
   },
   "typography": {
+    "strategy": "The 'Old Money Tech' approach. Radical contrast between classic editorial authority and sterile modern data.",
     "fonts": {
-      "headings": "Playfair Display",
-      "body": "Source Serif Pro",
-      "ui": "IBM Plex Sans"
+      "headings": {
+        "family": "Playfair Display",
+        "description": "Used exclusively for article headlines, major section titles, and the hero section to evoke the prestige of legacy media.",
+        "weights": ["400", "600", "700"],
+        "css_class": "font-serif"
+      },
+      "body": {
+        "family": "IBM Plex Sans",
+        "description": "Used for all article text, UI elements, and paragraphs. Highly legible, objective, and neutral.",
+        "weights": ["400", "500", "600"],
+        "css_class": "font-sans"
+      },
+      "labels": {
+        "family": "IBM Plex Mono",
+        "description": "Used for overlines (e.g., 'FOOTBALL', 'FINANCE'), dates, author names, and UI metadata.",
+        "weights": ["500"],
+        "css_class": "font-mono tracking-widest uppercase text-xs"
+      }
     },
     "rules": {
-      "headlines": "Use `font-serif` (Playfair Display) with `tracking-tight` and `leading-none`. Weights: Use `font-black` for massive heroes, `font-medium` for standard articles.",
-      "body": "Use `font-serif` (Source Serif Pro) with `leading-relaxed` and `text-lg` or `text-xl` for long-form reading comfort.",
-      "ui_elements": "Use `font-sans` (IBM Plex Sans) for datelines, author names, category tags, and data tables. Must be `uppercase`, `tracking-widest` (`tracking-[0.2em]`), and `text-xs`."
+      "headlines": "Tight tracking (`tracking-tight`), especially on large sizes.",
+      "article_body": "Optimal line length of 65 characters (`max-w-[65ch]`), `text-lg` or `text-xl` on desktop, `leading-relaxed` for reading endurance.",
+      "anti_pattern": "Do NOT use Inter or standard sans-serif for main headlines. Do NOT center-align article text."
     }
   },
   "colors": {
-    "light": {
-      "background": "#F9F8F6",
-      "surface": "#FFFFFF",
-      "text_primary": "#111827",
-      "text_secondary": "#4B5563",
-      "border": "#E5E7EB",
-      "primary_brand": "#1A365D",
-      "accent": "#D35400"
+    "brand_strict": {
+      "primary_blue": "#234ba0",
+      "accent_orange": "#FF6B35"
     },
-    "dark": {
-      "background": "#0A0F1C",
-      "surface": "#111827",
-      "text_primary": "#F9FAFB",
-      "text_secondary": "#9CA3AF",
-      "border": "#1F2937",
-      "primary_brand": "#3B82F6",
-      "accent": "#E65100"
+    "light_mode": {
+      "background": "#F7F7F5",
+      "surface": "#FFFFFF",
+      "text_primary": "#0F172A",
+      "text_secondary": "#475569",
+      "border": "#E2E8F0"
+    },
+    "dark_mode": {
+      "background": "#090E17",
+      "surface": "#131C2D",
+      "text_primary": "#F8FAFC",
+      "text_secondary": "#94A3B8",
+      "border": "#1E293B"
     },
     "rules": {
-      "primary": "Elevated from the original bright blue (#2B5DAC) to a deeper, more institutional 'Oxford Navy' (#1A365D) for light mode. It projects financial stability and trust.",
-      "accent": "Elevated from generic orange (#FF5722) to 'Burnt Copper' (#D35400). Use sparingly—only for subscribe buttons, active states, or critical highlights.",
-      "background": "Light mode MUST use an 'off-white / newsprint' hex (#F9F8F6) to reduce eye strain and emulate high-end paper."
+      "gradients": "BANNED. Use solid, flat colors only to maintain the serious publication feel.",
+      "contrast": "Ensure APCA/WCAG AA compliance. Use deep slate instead of pure black. Never use pure #000000 or #FFFFFF for large areas without slight tinting.",
+      "cta": "Use Accent Orange exclusively for high-intent conversion points (Subscribe, Buy). Primary Blue for standard interactions."
     }
   },
-  "layouts": {
-    "homepage": "The 'Swiss Grid' editorial layout. Use asymmetric grids (e.g., `grid-cols-12`). The hero article spans 8 columns, while a 'Trending' list spans 4 columns. Separate sections with hard 1px horizontal lines (`border-t border-border/40`).",
-    "article_page": "Single-column reading view. Max-width `max-w-3xl` (`prose prose-lg`) centered, with generous padding. Floating, sticky side-actions (share, save, progress bar).",
-    "spacing": "Generous. Use `gap-8` to `gap-16` between major grid items. Use `py-24` for section separators."
+  "spacing_and_rhythm": {
+    "philosophy": "Surgical and generous. Premium publications breathe through negative space.",
+    "scale": {
+      "section_gap": "py-24 md:py-32",
+      "article_gap": "gap-8 md:gap-12",
+      "component_padding": "p-6 md:p-8"
+    },
+    "grids": {
+      "homepage_bento": "Asymmetrical magazine layouts. 12-column grid. Hero article spans 8 cols, secondary articles span 4 cols. Heavy use of 1px borders to separate content (The 'Newspaper' look).",
+      "article_page": "Single column, narrow wrapper (`max-w-3xl`) perfectly centered, with wide margins."
+    }
   },
-  "components": {
-    "article_cards": "Cardless approach. Do not use standard Shadcn bordered cards with shadows. Render the image, category label, headline, and excerpt cleanly on the background, separated by a bottom border.",
-    "buttons": "Sharp edges (`rounded-none`). Solid fill for primary (Subscribe), minimal wireframe outline (`border border-primary bg-transparent hover:bg-primary/5`) for secondary.",
-    "navigation": "Sticky, Glassmorphism Header. High-end glass: `bg-background/80 backdrop-blur-xl border-b border-border`. DO NOT use completely transparent backgrounds.",
-    "newsletter": "Minimalist form. 'Burnt Copper' submit button beside a clean `border-b` only input field (no full box)."
+  "component_treatments": {
+    "cards": {
+      "style": "Cardless. Do not use floating white boxes with shadows. Instead, separate articles using solid 1px borders (`border-b`, `border-r`) to mimic print columns.",
+      "shadows": "NONE for content. Flat and structural.",
+      "radius": "Zero or minimal (`rounded-none` or `rounded-sm`). Sharp edges convey seriousness."
+    },
+    "buttons": {
+      "style": "Sharp or slightly rounded (`rounded-sm`). High contrast.",
+      "primary": "bg-[#FF6B35] text-white hover:bg-[#e55e2d] transition-colors",
+      "secondary": "bg-[#234ba0] text-white hover:bg-[#1d3d82] transition-colors",
+      "ghost": "hover:bg-black/5 dark:hover:bg-white/5 text-[#0F172A] dark:text-[#F8FAFC]"
+    },
+    "inputs": {
+      "style": "Minimalist. Bottom border only (`border-b-2`) or very crisp rectangular inputs. No soft rounded bubbles."
+    }
   },
-  "visual_enhancers": {
-    "image_treatment": "Apply a subtle duotone or high-contrast filter to editorial images to unify the aesthetic. E.g., `grayscale hover:grayscale-0 transition-all duration-500`.",
-    "textures": "Subtle grain or noise overlay fixed in the background (`opacity-5`) to make the digital screen feel like a physical publication.",
-    "micro_interactions": "Images scale up slightly on hover within a hidden overflow container (`overflow-hidden`). Links feature a 1px expanding underline."
+  "reading_experience": {
+    "layout": "Distraction-free. Narrow width (`max-w-[65ch]`) to prevent eye fatigue.",
+    "typography_scale": "Title: `text-4xl md:text-6xl`. Subtitle: `text-xl md:text-2xl text-slate-500`. Body: `text-lg md:text-xl leading-loose`.",
+    "editorial_flair": "Use 'Drop Caps' for the first letter of an article. Pull quotes should be massive, bold, and use the brand orange as a left border.",
+    "images": "Full width of the container, crisp captions underneath in Mono font."
+  },
+  "micro_interactions": {
+    "philosophy": "Premium means restraint. No bouncy animations.",
+    "hover_states": "Images: Very slow, subtle scale (`scale-105 duration-700`). Text: Color fade (`duration-200`).",
+    "navigation": "Sticky, glassmorphism header (`backdrop-blur-xl bg-white/80 dark:bg-[#090E17]/80`) with a strict 1px bottom border.",
+    "loading": "Subtle skeleton loaders or a simple linear progress bar at the top (like Bloomberg)."
   },
   "media": {
-    "images": [
-      {
-        "category": "Hero/Featured",
-        "url": "https://images.pexels.com/photos/31739439/pexels-photo-31739439.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "Wide-angle view of an iconic cricket stadium empty before a match"
+    "treatment": "Images should feel photojournalistic, not stocky. Apply a very subtle desaturation filter (`saturate-50 hover:saturate-100 transition-all`) to thumbnails for a sophisticated, unified look.",
+    "image_urls": {
+      "f1_hero": {
+        "url": "https://images.unsplash.com/photo-1774487671620-b9174d206849?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHw0fHxmb3JtdWxhJTIwMSUyMHJhY2UlMjBjYXIlMjByYWNpbmd8ZW58MHx8fHwxNzc3Njk3OTA5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Formula 1 race car speeding on track",
+        "category": "Hero Article Image"
       },
-      {
-        "category": "Article Thumbnail",
-        "url": "https://images.pexels.com/photos/7109164/pexels-photo-7109164.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "Businessman examines finance report on tablet"
+      "cricket_floodlights": {
+        "url": "https://images.unsplash.com/photo-1774600551775-747997267949?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxjcmlja2V0JTIwc3RhZGl1bSUyMGZsb29kbGlnaHRzfGVufDB8fHx8MTc3NzY5NzkwOXww&ixlib=rb-4.1.0&q=85",
+        "description": "Cricket stadium with stands under bright sky",
+        "category": "Article Thumbnail - Subcontinent"
       },
-      {
-        "category": "Events/The Outfield",
-        "url": "https://images.unsplash.com/photo-1750716413341-fd5d93296a76?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwzfHxjcmlja2V0JTIwc3RhZGl1bSUyMGNvcnBvcmF0ZSUyMGJveHxlbnwwfHx8fDE3Nzc0NDI5OTJ8MA&ixlib=rb-4.1.0&q=85",
-        "description": "Cricket match is being played in a full stadium"
+      "tennis_match": {
+        "url": "https://images.unsplash.com/photo-1758314810669-346173121689?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwyfHx0ZW5uaXMlMjBtYXRjaCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3Nzc2OTc5MDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Tennis player on a clay court with long shadow",
+        "category": "Article Thumbnail - Global Sports"
+      },
+      "business_executive": {
+        "url": "https://images.unsplash.com/photo-1584940121258-c2553b66a739?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NzY5NzkxM3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Man in black suit standing on wooden bridge",
+        "category": "Corporate Sales / Exec Profile"
       }
-    ]
-  },
-  "accessibility": {
-    "contrast": "Ensure all text on image overlays uses a text-shadow or a dark gradient scrim (`bg-gradient-to-t from-black/80 to-transparent`) to meet APCA contrast standards.",
-    "focus": "All interactive elements must have a clear `focus-visible:ring-2 focus-visible:ring-accent` state.",
-    "testing": "All interactive and key informational elements MUST include a `data-testid` attribute (e.g., `data-testid='subscribe-hero-button'`)."
+    }
   },
   "instructions_to_main_agent": [
-    "Install required fonts from Google Fonts: Playfair Display, Source Serif Pro, IBM Plex Sans.",
-    "Install phosphor-icons (`yarn add @phosphor-icons/react`) for sharp, editorial-style duotone icons.",
-    "Avoid Shadcn 'Card' wrappers for news articles. Use raw HTML/Tailwind to build grid-aligned, border-separated content blocks.",
-    "Set global `selection:bg-accent selection:text-white` for a premium highlight effect.",
-    "Ensure dark/light mode toggle works flawlessly across all custom border and background utility classes."
+    "Tech Stack: React (Create React App), pure Javascript (.js/.jsx), Tailwind CSS.",
+    "Do NOT use TypeScript (.tsx/.ts) as this is a CRA environment.",
+    "Use Shadcn UI logic where applicable, but heavily override the styles to match the 'Cardless/Print' aesthetic.",
+    "Install required fonts from Google Fonts: Playfair Display, IBM Plex Sans, IBM Plex Mono.",
+    "Every interactive element, form, article link, and button MUST have a descriptive `data-testid` attribute (e.g., `data-testid='subscribe-hero-button'`).",
+    "Never use generic default Tailwind shadows. Rely on 1px borders (`border-border`) to establish hierarchy and grid structures.",
+    "Strict British English spelling ('optimised', 'colours', 'programme').",
+    "Layouts MUST be mobile responsive. Images must not exceed 80vh on mobile."
   ],
   "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
-    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
     "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
     "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur).",
-    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms.",
-    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text.",
-    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
-    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
-    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations.",
+    "You MUST NOT apply universal transition. Eg: `transition: all`.",
+    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file.",
+    "Always use modern button styles, but context-aware. Here, use sharp or slightly rounded authoritative buttons.",
+    "NEVER use AI assistant Emoji characters for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, and entrance animations. Static = dead.",
     "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
-    "Prioritize using pre-existing components from src/components/ui when applicable.",
-    "Components MUST use named exports (`export const ComponentName = ...`)",
-    "Pages MUST use default exports (`export default function PageName() {...}`)",
-    "Use `sonner` for toasts"
+    "Subtle grain textures, custom selection states, and loading animations separate good from extraordinary.",
+    "Missing image categories = main agent will use placeholder text which is FORBIDDEN.",
+    "Components MUST use named exports, Pages MUST use default exports."
   ]
 }
