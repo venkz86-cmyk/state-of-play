@@ -4,6 +4,8 @@ import { ghostAPI } from '../services/ghostAPI';
 import { ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getReadingHistory } from '../components/ReadingHistory';
+import { MockupHeader } from '../components/MockupHeader';
+import { MockupFooter } from '../components/MockupFooter';
 
 // Format a Ghost date as e.g. "12 MAR 2026"
 const fmtDate = (iso) => {
@@ -245,6 +247,8 @@ export const HomeMockup = () => {
       className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
       data-testid="mockup-home"
     >
+      <MockupHeader />
+
       {/* MASTHEAD STRIP */}
       <div className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F7F7F5] dark:bg-[#090E17]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
@@ -575,13 +579,7 @@ export const HomeMockup = () => {
       )}
 
       {/* COLOPHON */}
-      <div className="bg-[#F7F7F5] dark:bg-[#090E17] border-t border-[#E2E8F0] dark:border-[#1E293B]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <Overline>Set in Playfair Display & IBM Plex Sans</Overline>
-          <Overline>Mumbai · Bengaluru · Worldwide</Overline>
-          <Overline className="text-[#234ba0]">stateofplay.club</Overline>
-        </div>
-      </div>
+      <MockupFooter />
     </div>
   );
 };

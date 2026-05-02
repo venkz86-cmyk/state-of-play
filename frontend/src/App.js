@@ -1,5 +1,5 @@
 import "@/index.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -26,7 +26,48 @@ import { Teams } from "./pages/Teams";
 import { TeamsManage } from "./pages/TeamsManage";
 import { Partnerships } from "./pages/Partnerships";
 import { HomeMockup } from "./pages/HomeMockup";
+import { ArticleMockup } from "./pages/ArticleMockup";
 import { Toaster } from "./components/ui/sonner";
+
+function Shell() {
+  const location = useLocation();
+  const isMockup = location.pathname.startsWith('/mockup');
+  return (
+    <div className="App min-h-screen flex flex-col bg-background text-foreground">
+      {!isMockup && <Header />}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/state-of-play" element={<StateOfPlay />} />
+          <Route path="/left-field" element={<LeftField />} />
+          <Route path="/outfield" element={<Outfield />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/account" element={<MemberDashboard />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/membership" element={<Membership />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/archive" element={<Archive />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/manage" element={<TeamsManage />} />
+          <Route path="/partnerships" element={<Partnerships />} />
+          <Route path="/mockup/home" element={<HomeMockup />} />
+          <Route path="/mockup/article/:id" element={<ArticleMockup />} />
+          <Route path="/mockup/article" element={<ArticleMockup />} />
+          {/* Article route MUST be last - catches /:slug */}
+          <Route path="/:id" element={<ArticlePage />} />
+        </Routes>
+      </main>
+      {!isMockup && <Footer />}
+      <BackToTop />
+      <Toaster position="top-right" />
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -34,37 +75,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <BrowserRouter>
-            <div className="App min-h-screen flex flex-col bg-background text-foreground">
-              <Header />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/state-of-play" element={<StateOfPlay />} />
-                  <Route path="/left-field" element={<LeftField />} />
-                  <Route path="/outfield" element={<Outfield />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/account" element={<MemberDashboard />} />
-                  <Route path="/welcome" element={<Welcome />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/membership" element={<Membership />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/archive" element={<Archive />} />
-                  <Route path="/teams" element={<Teams />} />
-                  <Route path="/teams/manage" element={<TeamsManage />} />
-                  <Route path="/partnerships" element={<Partnerships />} />
-                  <Route path="/mockup/home" element={<HomeMockup />} />
-                  {/* Article route MUST be last - catches /:slug */}
-                  <Route path="/:id" element={<ArticlePage />} />
-                </Routes>
-              </main>
-              <Footer />
-              <BackToTop />
-              <Toaster position="top-right" />
-            </div>
+            <Shell />
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>

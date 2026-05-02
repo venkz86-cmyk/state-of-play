@@ -220,3 +220,155 @@ body::before {
   }
 }
 
+/* ==========================================================
+   Editorial prose — used by the Mockup article reading page
+   Targets Ghost-generated HTML inside `.editorial-prose`.
+   Scoped only to that class so live pages are unaffected.
+   ========================================================== */
+.editorial-prose {
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  font-size: 1.125rem;       /* 18px */
+  line-height: 1.7;
+  color: #0F172A;
+}
+.dark .editorial-prose {
+  color: #F8FAFC;
+}
+
+/* Drop cap on the very first paragraph */
+.editorial-prose > p:first-of-type::first-letter {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  font-size: 4.75rem;
+  line-height: 0.85;
+  float: left;
+  margin: 0.25rem 0.6rem 0 0;
+  color: #234ba0;
+}
+
+.editorial-prose p {
+  margin: 0 0 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+@media (min-width: 768px) {
+  .editorial-prose p {
+    font-size: 1.1875rem;
+    line-height: 1.75;
+  }
+}
+
+.editorial-prose h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 3rem 0 1.25rem;
+  color: #0F172A;
+}
+.dark .editorial-prose h2 { color: #F8FAFC; }
+
+.editorial-prose h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  margin: 2.25rem 0 0.75rem;
+  color: #0F172A;
+}
+.dark .editorial-prose h3 { color: #F8FAFC; }
+
+.editorial-prose h4 {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 2rem 0 0.75rem;
+  color: #475569;
+}
+.dark .editorial-prose h4 { color: #94A3B8; }
+
+.editorial-prose a {
+  color: #234ba0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+.editorial-prose a:hover {
+  color: #FF6B35;
+}
+
+.editorial-prose strong { font-weight: 600; }
+.editorial-prose em { font-style: italic; }
+
+.editorial-prose blockquote {
+  margin: 2.5rem 0;
+  padding: 0.5rem 0 0.5rem 1.75rem;
+  border-left: 4px solid #FF6B35;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: #0F172A;
+}
+.dark .editorial-prose blockquote { color: #F8FAFC; }
+
+.editorial-prose ul,
+.editorial-prose ol {
+  margin: 0 0 1.5rem;
+  padding-left: 1.25rem;
+}
+.editorial-prose li {
+  margin-bottom: 0.5rem;
+}
+.editorial-prose ul li::marker { color: #234ba0; }
+.editorial-prose ol li::marker {
+  color: #475569;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.875rem;
+}
+
+.editorial-prose hr {
+  border: 0;
+  border-top: 1px solid #E2E8F0;
+  margin: 3rem auto;
+  width: 4rem;
+}
+.dark .editorial-prose hr { border-color: #1E293B; }
+
+.editorial-prose img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 2.25rem 0 1rem;
+}
+.editorial-prose figure {
+  margin: 2.5rem 0;
+}
+.editorial-prose figcaption {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #475569;
+  text-align: right;
+  margin-top: 0.5rem;
+}
+.dark .editorial-prose figcaption { color: #94A3B8; }
+
+.editorial-prose code {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.95em;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+}
+.dark .editorial-prose code {
+  background: rgba(248, 250, 252, 0.08);
+}
+
