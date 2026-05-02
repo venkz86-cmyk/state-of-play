@@ -27,6 +27,14 @@ import { TeamsManage } from "./pages/TeamsManage";
 import { Partnerships } from "./pages/Partnerships";
 import { HomeMockup } from "./pages/HomeMockup";
 import { ArticleMockup } from "./pages/ArticleMockup";
+import { MockupIndex } from "./pages/MockupIndex";
+import { FeedMockup } from "./pages/FeedMockup";
+import { SubscribeMockup } from "./pages/SubscribeMockup";
+import { AboutMockup } from "./pages/AboutMockup";
+import { TeamsMockup } from "./pages/TeamsMockup";
+import { OutfieldMockup } from "./pages/OutfieldMockup";
+import { LoginMockup } from "./pages/LoginMockup";
+import { AccountMockup } from "./pages/AccountMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
@@ -55,7 +63,15 @@ function Shell() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/partnerships" element={<Partnerships />} />
+          <Route path="/mockup" element={<MockupIndex />} />
           <Route path="/mockup/home" element={<HomeMockup />} />
+          <Route path="/mockup/feed" element={<FeedMockup />} />
+          <Route path="/mockup/subscribe" element={<SubscribeMockup />} />
+          <Route path="/mockup/about" element={<AboutMockup />} />
+          <Route path="/mockup/teams" element={<TeamsMockup />} />
+          <Route path="/mockup/outfield" element={<OutfieldMockup />} />
+          <Route path="/mockup/login" element={<LoginMockup />} />
+          <Route path="/mockup/account" element={<AccountMockup />} />
           <Route path="/mockup/article/:id" element={<ArticleMockup />} />
           <Route path="/mockup/article" element={<ArticleMockup />} />
           {/* Article route MUST be last - catches /:slug */}
