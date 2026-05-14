@@ -120,7 +120,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/signup"
                   data-testid="mockup-header-subscribe"
-                  className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold text-sm px-5 py-2.5 transition-colors duration-200"
+                  className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold text-sm px-5 py-2.5 transition-colors duration-200"
                 >
                   Subscribe
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
@@ -187,7 +187,7 @@ export const MockupHeader = () => {
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="inline-flex w-fit items-center gap-2 bg-[#FF6B35] text-white font-plex font-semibold text-sm px-5 py-2.5"
+                    className="inline-flex w-fit items-center gap-2 bg-[var(--accent)] text-white font-plex font-semibold text-sm px-5 py-2.5"
                   >
                     Subscribe
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />

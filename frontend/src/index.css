@@ -220,6 +220,12 @@ body::before {
   }
 }
 
+/* Mockup accent — default to orange, overridden per page via inline style */
+:root {
+  --accent: #FF6B35;
+  --accent-hover: #e55e2d;
+}
+
 /* ==========================================================
    Editorial prose — used by the Mockup article reading page
    Targets Ghost-generated HTML inside `.editorial-prose`.
@@ -370,5 +376,24 @@ body::before {
 }
 .dark .editorial-prose code {
   background: rgba(248, 250, 252, 0.08);
+}
+
+/* ========== Serif body variant (?body=serif) ========== */
+.editorial-prose--serif,
+.editorial-prose--serif p {
+  font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+  font-size: 1.1875rem;
+  line-height: 1.65;
+}
+@media (min-width: 768px) {
+  .editorial-prose--serif p {
+    font-size: 1.25rem;
+    line-height: 1.7;
+  }
+}
+.editorial-prose--serif > p:first-of-type::first-letter {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 5rem;
+  margin-right: 0.7rem;
 }
 

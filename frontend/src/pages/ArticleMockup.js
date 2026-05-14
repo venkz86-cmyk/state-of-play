@@ -22,13 +22,37 @@ const Overline = ({ children, className = '' }) => (
   </span>
 );
 
+const ACCENTS = {
+  orange: { hex: '#FF6B35', hover: '#e55e2d', label: 'Orange' },
+  gold:   { hex: '#B8923F', hover: '#9B7A2F', label: 'Gold' },
+  burgundy: { hex: '#8B1E2D', hover: '#6f1824', label: 'Burgundy' },
+  slate:  { hex: '#475569', hover: '#334155', label: 'Slate' },
+};
+
 export const ArticleMockup = () => {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canAccessPremium } = useAuth();
 
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
+  const bodyVariant = searchParams.get('body') === 'serif' ? 'serif' : 'sans';
+  const accentKey = ACCENTS[searchParams.get('accent')] ? searchParams.get('accent') : 'orange';
+  const accent = ACCENTS[accentKey];
+
+  const setBodyVariant = (v) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === 'serif') next.set('body', 'serif');
+    else next.delete('body');
+    setSearchParams(next, { replace: true });
+  };
+
+  const setAccent = (k) => {
+    const next = new URLSearchParams(searchParams);
+    if (k && k !== 'orange') next.set('accent', k);
+    else next.delete('accent');
+    setSearchParams(next, { replace: true });
+  };
 
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
@@ -109,9 +133,65 @@ export const ArticleMockup = () => {
   return (
     <div
       className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
+      style={{ '--accent': accent.hex, '--accent-hover': accent.hover }}
       data-testid="mockup-article"
     >
       <MockupHeader />
+
+      {/* Body-font + accent A/B switcher — design review only */}
+      <div
+        data-testid="font-toggle"
+        className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white border border-white/10 shadow-lg"
+      >
+        <div className="flex items-stretch divide-x divide-white/10 border-b border-white/10">
+          <span className="font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
+            Body
+          </span>
+          <button
+            type="button"
+            onClick={() => setBodyVariant('sans')}
+            data-testid="font-toggle-sans"
+            className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
+              bodyVariant === 'sans' ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
+            }`}
+          >
+            Sans · Plex
+          </button>
+          <button
+            type="button"
+            onClick={() => setBodyVariant('serif')}
+            data-testid="font-toggle-serif"
+            className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
+              bodyVariant === 'serif' ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
+            }`}
+          >
+            Serif · Source
+          </button>
+        </div>
+        <div className="flex items-stretch divide-x divide-white/10">
+          <span className="font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
+            Accent
+          </span>
+          {Object.entries(ACCENTS).map(([key, a]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setAccent(key)}
+              data-testid={`accent-toggle-${key}`}
+              className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-3 py-3 transition-colors duration-200 flex items-center gap-2 ${
+                accentKey === key ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
+              }`}
+            >
+              <span
+                className="inline-block h-2.5 w-2.5"
+                style={{ backgroundColor: a.hex }}
+                aria-hidden="true"
+              />
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Reading progress — Bloomberg-style hairline bar */}
       <div
@@ -119,7 +199,7 @@ export const ArticleMockup = () => {
         className="fixed top-16 lg:top-20 left-0 right-0 z-40 h-[2px] bg-transparent"
       >
         <div
-          className="h-full bg-[#FF6B35] transition-[width] duration-150 ease-out"
+          className="h-full bg-[var(--accent)] transition-[width] duration-150 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -153,7 +233,7 @@ export const ArticleMockup = () => {
               {article.is_premium && (
                 <>
                   <span className="h-px w-6 bg-[#234ba0]/40" />
-                  <Overline className="text-[#FF6B35]">Subscribers Only</Overline>
+                  <Overline className="text-[var(--accent)]">Subscribers Only</Overline>
                 </>
               )}
             </div>
@@ -230,7 +310,7 @@ export const ArticleMockup = () => {
       <article className="bg-[#F7F7F5] dark:bg-[#090E17]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
           <div
-            className="editorial-prose font-plex max-w-[65ch] mx-auto text-[#0F172A] dark:text-[#F8FAFC]"
+            className={`editorial-prose ${bodyVariant === 'serif' ? 'editorial-prose--serif' : ''} font-plex max-w-[65ch] mx-auto text-[#0F172A] dark:text-[#F8FAFC]`}
             data-testid="article-body"
             dangerouslySetInnerHTML={{ __html: bodyHtml || '' }}
           />
@@ -238,7 +318,7 @@ export const ArticleMockup = () => {
           {/* Inline pull-quote — sample editorial flair */}
           {!isPaywalled && bodyHtml && bodyHtml.length > 800 && (
             <aside className="max-w-[65ch] mx-auto my-16 lg:my-20">
-              <blockquote className="border-l-4 border-[#FF6B35] pl-6 lg:pl-10 py-2">
+              <blockquote className="border-l-4 border-[var(--accent)] pl-6 lg:pl-10 py-2">
                 <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
                   “{(article.subtitle || article.title || '').replace(/[“”"]/g, '')}”
                 </p>
@@ -256,7 +336,7 @@ export const ArticleMockup = () => {
               data-testid="article-paywall"
               className="max-w-[65ch] mx-auto mt-12 border-t border-[#0F172A] dark:border-[#F8FAFC] pt-12"
             >
-              <Overline className="text-[#FF6B35] mb-4 block">Continue Reading</Overline>
+              <Overline className="text-[var(--accent)] mb-4 block">Continue Reading</Overline>
               <h2 className="font-editorial font-semibold text-3xl lg:text-[2.5rem] leading-[1.08] text-[#0F172A] dark:text-[#F8FAFC] mb-5">
                 The rest of this piece is for subscribers.
               </h2>
@@ -267,7 +347,7 @@ export const ArticleMockup = () => {
                 <Link
                   to="/signup"
                   data-testid="paywall-subscribe"
-                  className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-8 py-4 text-base tracking-wide transition-colors duration-200"
+                  className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-8 py-4 text-base tracking-wide transition-colors duration-200"
                 >
                   Subscribe to Continue
                   <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

@@ -29,7 +29,7 @@ export const MockupFooter = () => {
       <div className="border-b border-white/10">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
-            <span className="font-plex-mono text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-[#FF6B35]">
+            <span className="font-plex-mono text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-[var(--accent)]">
               Set in Playfair Display & IBM Plex
             </span>
             <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] mt-4 max-w-3xl">
@@ -48,7 +48,7 @@ export const MockupFooter = () => {
             <Link
               to="/signup"
               data-testid="mockup-footer-subscribe"
-              className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-8 py-4 text-sm tracking-wide transition-colors duration-200"
+              className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-8 py-4 text-sm tracking-wide transition-colors duration-200"
             >
               Subscribe
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
