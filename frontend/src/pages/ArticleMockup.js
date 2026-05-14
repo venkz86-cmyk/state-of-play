@@ -37,7 +37,7 @@ export const ArticleMockup = () => {
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
   const bodyVariant = searchParams.get('body') === 'serif' ? 'serif' : 'sans';
-  const accentKey = ACCENTS[searchParams.get('accent')] ? searchParams.get('accent') : 'orange';
+  const accentKey = ACCENTS[searchParams.get('accent')] ? searchParams.get('accent') : 'burgundy';
   const accent = ACCENTS[accentKey];
 
   const setBodyVariant = (v) => {
@@ -49,7 +49,7 @@ export const ArticleMockup = () => {
 
   const setAccent = (k) => {
     const next = new URLSearchParams(searchParams);
-    if (k && k !== 'orange') next.set('accent', k);
+    if (k && k !== 'burgundy') next.set('accent', k);
     else next.delete('accent');
     setSearchParams(next, { replace: true });
   };

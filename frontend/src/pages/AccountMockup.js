@@ -81,7 +81,7 @@ export const AccountMockup = () => {
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-7">
-            <Overline className="text-[#FF6B35] mb-3 block">— Continue Reading —</Overline>
+            <Overline className="text-[var(--accent)] mb-3 block">— Continue Reading —</Overline>
             <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[2.5rem] leading-tight mb-8">
               Pick up where you left off.
             </h2>
@@ -133,7 +133,7 @@ export const AccountMockup = () => {
                   <button
                     type="button"
                     aria-label="Remove from reading list"
-                    className="text-[#94A3B8] hover:text-[#FF6B35] transition-colors duration-200"
+                    className="text-[#94A3B8] hover:text-[var(--accent)] transition-colors duration-200"
                   >
                     <Bookmark className="h-4 w-4 fill-current" strokeWidth={1.5} />
                   </button>
@@ -152,7 +152,7 @@ export const AccountMockup = () => {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <Overline className="!text-[#FF6B35] mb-3 block">— Membership Tools —</Overline>
+              <Overline className="!text-[var(--accent)] mb-3 block">— Membership Tools —</Overline>
               <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
                 Yours to run.
               </h2>
@@ -165,7 +165,7 @@ export const AccountMockup = () => {
               <div className="flex items-center gap-3 mb-5">
                 <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
                 <span className="h-px w-6 bg-white/30" />
-                <Overline className="!text-[#FF6B35]">Insider Drops · Soon</Overline>
+                <Overline className="!text-[var(--accent)]">Insider Drops · Soon</Overline>
               </div>
               <Bell className="h-5 w-5 text-white/60 mb-4" strokeWidth={1.5} />
               <h3 className="font-editorial font-semibold text-2xl leading-tight mb-3">
@@ -204,7 +204,7 @@ export const AccountMockup = () => {
                   <li key={label} className="flex items-center justify-between">
                     <span className="font-plex text-sm text-white/80">{label}</span>
                     <span
-                      className={`inline-flex items-center justify-center h-5 w-9 ${on ? 'bg-[#FF6B35]' : 'bg-white/15'} relative`}
+                      className={`inline-flex items-center justify-center h-5 w-9 ${on ? 'bg-[var(--accent)]' : 'bg-white/15'} relative`}
                     >
                       <span className={`absolute h-4 w-4 bg-white ${on ? 'right-0.5' : 'left-0.5'}`} />
                     </span>

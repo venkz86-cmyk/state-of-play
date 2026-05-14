@@ -92,7 +92,7 @@ export const FeedMockup = () => {
             </Link>
 
             <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] lg:dark:border-[#1E293B]">
-              <Overline className="text-[#FF6B35] mb-8 block">Also in this edition</Overline>
+              <Overline className="text-[var(--accent)] mb-8 block">Also in this edition</Overline>
               <ul>
                 {grid.map((p, i) => (
                   <li

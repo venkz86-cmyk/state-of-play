@@ -26,7 +26,7 @@ export const LoginMockup = () => {
           <aside className="lg:col-span-7 bg-[#0F172A] text-white relative overflow-hidden">
             <div className="h-full px-8 lg:px-16 py-16 lg:py-24 flex flex-col justify-between">
               <div className="flex items-center gap-3">
-                <Overline className="!text-[#FF6B35]">— Member Access —</Overline>
+                <Overline className="!text-[var(--accent)]">— Member Access —</Overline>
               </div>
 
               <blockquote className="max-w-2xl">
@@ -82,7 +82,7 @@ export const LoginMockup = () => {
                   <button
                     type="submit"
                     data-testid="login-submit"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-8 py-4 text-base tracking-wide transition-colors duration-200"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-8 py-4 text-base tracking-wide transition-colors duration-200"
                   >
                     Sign in
                     <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
@@ -92,7 +92,7 @@ export const LoginMockup = () => {
                     Not a member yet?{' '}
                     <Link
                       to="/mockup/subscribe"
-                      className="text-[#234ba0] underline underline-offset-4 hover:text-[#FF6B35] transition-colors duration-200"
+                      className="text-[#234ba0] underline underline-offset-4 hover:text-[var(--accent)] transition-colors duration-200"
                     >
                       Subscribe
                     </Link>
@@ -101,7 +101,7 @@ export const LoginMockup = () => {
                 </form>
               ) : (
                 <div className="border-y-2 border-[#0F172A] dark:border-[#F8FAFC] py-10">
-                  <Overline className="text-[#FF6B35] mb-4 block">— Verifying —</Overline>
+                  <Overline className="text-[var(--accent)] mb-4 block">— Verifying —</Overline>
                   <h2 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-snug mb-4">
                     Checking your subscription…
                   </h2>

@@ -324,7 +324,7 @@ export const HomeMockup = () => {
           {/* Continue Reading rail — members only, only if there's history */}
           {isMember && history.length > 0 && (
             <div className="mb-12 lg:mb-16 border-y border-[#0F172A] dark:border-[#F8FAFC] py-5 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-              <Overline className="text-[#FF6B35] shrink-0">
+              <Overline className="text-[var(--accent)] shrink-0">
                 Continue Reading
               </Overline>
               <Link
@@ -370,9 +370,9 @@ export const HomeMockup = () => {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-2">
-              <Overline className="text-[#FF6B35]">Editor’s Note</Overline>
+              <Overline className="text-[var(--accent)]">Editor’s Note</Overline>
             </div>
-            <blockquote className="lg:col-span-9 border-l-4 border-[#FF6B35] pl-8 lg:pl-12">
+            <blockquote className="lg:col-span-9 border-l-4 border-[var(--accent)] pl-8 lg:pl-12">
               <p className="font-editorial italic text-2xl sm:text-3xl lg:text-[2.5rem] leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
                 “Indian sport is no longer the side bet. It’s where the real money is being placed — and we’re publishing the receipts.”
               </p>
@@ -463,7 +463,7 @@ export const HomeMockup = () => {
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12 lg:mb-16">
               <div>
-                <Overline className="text-[#FF6B35] mb-5 block">Member Lounge</Overline>
+                <Overline className="text-[var(--accent)] mb-5 block">Member Lounge</Overline>
                 <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white">
                   Yours, exclusively.
                 </h2>
@@ -484,7 +484,7 @@ export const HomeMockup = () => {
                   <span className="h-px w-6 bg-white/30" />
                   <Overline className="text-white/70">Your Account</Overline>
                 </div>
-                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[var(--accent)] transition-colors duration-200">
                   Plan, billing & preferences.
                 </h3>
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
@@ -506,7 +506,7 @@ export const HomeMockup = () => {
                   <span className="h-px w-6 bg-white/30" />
                   <Overline className="text-white/70">Reading List</Overline>
                 </div>
-                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[var(--accent)] transition-colors duration-200">
                   Saved for later.
                 </h3>
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
@@ -526,9 +526,9 @@ export const HomeMockup = () => {
                 <div className="flex items-center gap-3 mb-5">
                   <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
                   <span className="h-px w-6 bg-white/30" />
-                  <Overline className="text-[#FF6B35]">Insider Drops · Soon</Overline>
+                  <Overline className="text-[var(--accent)]">Insider Drops · Soon</Overline>
                 </div>
-                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[#FF6B35] transition-colors duration-200">
+                <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-white mb-3 group-hover:text-[var(--accent)] transition-colors duration-200">
                   Private intel, off the record.
                 </h3>
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
@@ -547,7 +547,7 @@ export const HomeMockup = () => {
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
               <div className="lg:col-span-7">
-                <Overline className="text-[#FF6B35] mb-5 block">Subscribe</Overline>
+                <Overline className="text-[var(--accent)] mb-5 block">Subscribe</Overline>
                 <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] text-white mb-6">
                   Read the room before everyone else does.
                 </h2>
@@ -559,7 +559,7 @@ export const HomeMockup = () => {
                 <Link
                   to="/signup"
                   data-testid="mockup-subscribe-cta"
-                  className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+                  className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
                 >
                   Subscribe
                   <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

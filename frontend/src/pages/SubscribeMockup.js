@@ -86,7 +86,7 @@ export const SubscribeMockup = () => {
               type="button"
               onClick={scrollToPricing}
               data-testid="hero-pricing-cta"
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               See pricing
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
@@ -126,7 +126,7 @@ export const SubscribeMockup = () => {
                 data-testid="mockup-pricing-card"
                 className="border-y-2 border-[#0F172A] dark:border-[#F8FAFC] py-12 lg:py-16"
               >
-                <Overline className="text-[#FF6B35] mb-6 block">Annual Membership</Overline>
+                <Overline className="text-[var(--accent)] mb-6 block">Annual Membership</Overline>
                 <div className="flex items-end gap-3 mb-3">
                   <span className="font-editorial font-semibold tracking-tight text-[5rem] lg:text-[7rem] leading-[0.9] text-[#0F172A] dark:text-[#F8FAFC]">
                     {pricing.symbol}{pricing.amount}
@@ -141,7 +141,7 @@ export const SubscribeMockup = () => {
                   <button
                     type="button"
                     data-testid="pricing-subscribe"
-                    className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+                    className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
                   >
                     Subscribe via Razorpay
                     <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
@@ -237,7 +237,7 @@ export const SubscribeMockup = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 lg:divide-x lg:divide-[#E2E8F0] dark:lg:divide-[#1E293B] border-y border-[#E2E8F0] dark:border-[#1E293B]">
             {PERSONAS.map(([title, desc], i) => (
               <div key={title} className="py-10 lg:py-12 lg:px-10 first:lg:pl-0 last:lg:pr-0">
-                <Overline className="text-[#FF6B35] mb-4 block">
+                <Overline className="text-[var(--accent)] mb-4 block">
                   {String(i + 1).padStart(2, '0')} —
                 </Overline>
                 <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-[#0F172A] dark:text-[#F8FAFC] mb-3">
@@ -297,7 +297,7 @@ export const SubscribeMockup = () => {
       {/* Final CTA */}
       <section className="bg-[#0F172A] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 text-left">
-          <Overline className="text-[#FF6B35] mb-5 block">Subscribe</Overline>
+          <Overline className="text-[var(--accent)] mb-5 block">Subscribe</Overline>
           <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[4rem] leading-[1.02] max-w-3xl mb-8">
             Ready to upgrade your sports business intelligence?
           </h2>
@@ -309,7 +309,7 @@ export const SubscribeMockup = () => {
               type="button"
               onClick={scrollToPricing}
               data-testid="final-cta"
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               Subscribe — {pricing.symbol}{pricing.amount}/year
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

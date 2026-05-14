@@ -104,7 +104,7 @@ export const LeftFieldMockup = () => {
             <div className="flex items-center gap-3 mb-5">
               <Overline className="text-[#234ba0]">— The Left Field —</Overline>
               <span className="h-px w-8 bg-[#234ba0]/40" />
-              <Overline className="text-[#FF6B35]">Free · Bi-weekly</Overline>
+              <Overline className="text-[var(--accent)]">Free · Bi-weekly</Overline>
             </div>
             <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[5rem] leading-[1] mb-6">
               The brief on{' '}
@@ -120,7 +120,7 @@ export const LeftFieldMockup = () => {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="leftfield-subscribe"
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               <Mail className="h-4 w-4" strokeWidth={2} />
               Subscribe on Substack
@@ -137,7 +137,7 @@ export const LeftFieldMockup = () => {
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
-            <Overline className="text-[#FF6B35]">— What it is —</Overline>
+            <Overline className="text-[var(--accent)]">— What it is —</Overline>
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
             <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[#0F172A] dark:text-[#F8FAFC]">
@@ -188,7 +188,7 @@ export const LeftFieldMockup = () => {
                 </a>
 
                 <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] dark:lg:border-[#1E293B]">
-                  <Overline className="text-[#FF6B35] mb-8 block">— Recent briefs —</Overline>
+                  <Overline className="text-[var(--accent)] mb-8 block">— Recent briefs —</Overline>
                   <ul>
                     {grid.map((p, i) => (
                       <li
@@ -270,7 +270,7 @@ export const LeftFieldMockup = () => {
       <section className="bg-[#0F172A] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-7">
-            <Overline className="text-[#FF6B35] mb-5 block">— Want the full desk? —</Overline>
+            <Overline className="text-[var(--accent)] mb-5 block">— Want the full desk? —</Overline>
             <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] mb-5">
               The Left Field is free. <em className="italic font-normal text-white/60">The State of Play is the rest.</em>
             </h2>
@@ -282,7 +282,7 @@ export const LeftFieldMockup = () => {
             <a
               href="/mockup/subscribe"
               data-testid="leftfield-upgrade"
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               Upgrade to TSOP
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

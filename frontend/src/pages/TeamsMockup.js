@@ -75,7 +75,7 @@ export const TeamsMockup = () => {
               type="button"
               onClick={scrollToPricing}
               data-testid="teams-hero-pricing"
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               View plans
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
@@ -109,7 +109,7 @@ export const TeamsMockup = () => {
                 className={`bg-[#F7F7F5] dark:bg-[#090E17] p-8 lg:p-12 ${p.highlight ? 'lg:bg-[#0F172A] lg:text-white' : ''}`}
               >
                 <div className="flex items-center gap-3 mb-8">
-                  <Overline className={p.highlight ? 'text-[#FF6B35]' : 'text-[#FF6B35]'}>
+                  <Overline className={p.highlight ? 'text-[var(--accent)]' : 'text-[var(--accent)]'}>
                     {p.badge}
                   </Overline>
                 </div>
@@ -130,9 +130,9 @@ export const TeamsMockup = () => {
                   </span>
                 </div>
                 <p className={`font-plex text-sm mb-2 ${p.highlight ? 'text-white/60' : 'text-[#475569]'}`}>
-                  {p.perSeat} per seat <span className="text-[#FF6B35]">(20% off individual)</span>
+                  {p.perSeat} per seat <span className="text-[var(--accent)]">(20% off individual)</span>
                 </p>
-                <Overline className={`block mb-10 ${p.highlight ? '!text-[#FF6B35]' : '!text-[#234ba0]'}`}>
+                <Overline className={`block mb-10 ${p.highlight ? '!text-[var(--accent)]' : '!text-[#234ba0]'}`}>
                   {p.save}
                 </Overline>
 
@@ -140,7 +140,7 @@ export const TeamsMockup = () => {
                   type="button"
                   className={`w-full inline-flex items-center justify-center gap-2 font-plex font-semibold px-8 py-4 text-base transition-colors duration-200 ${
                     p.highlight
-                      ? 'bg-[#FF6B35] hover:bg-[#e55e2d] text-white'
+                      ? 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white'
                       : 'bg-[#0F172A] dark:bg-[#F8FAFC] text-white dark:text-[#090E17] hover:bg-[#234ba0] dark:hover:bg-[#234ba0] dark:hover:text-white'
                   }`}
                 >
@@ -173,7 +173,7 @@ export const TeamsMockup = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 lg:divide-x lg:divide-[#E2E8F0] dark:lg:divide-[#1E293B] border-y border-[#E2E8F0] dark:border-[#1E293B]">
             {AUDIENCES.map(([title, desc], i) => (
               <div key={title} className="py-10 lg:py-12 lg:px-10 first:lg:pl-0 last:lg:pr-0">
-                <Overline className="text-[#FF6B35] mb-4 block">
+                <Overline className="text-[var(--accent)] mb-4 block">
                   {String(i + 1).padStart(2, '0')} —
                 </Overline>
                 <h3 className="font-editorial font-semibold text-2xl lg:text-[1.75rem] leading-tight text-[#0F172A] dark:text-[#F8FAFC] mb-3">
@@ -252,7 +252,7 @@ export const TeamsMockup = () => {
       <section className="bg-[#0F172A] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-8">
-            <Overline className="text-[#FF6B35] mb-5 block">For Teams</Overline>
+            <Overline className="text-[var(--accent)] mb-5 block">For Teams</Overline>
             <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05]">
               Ready to upgrade your team?
             </h2>
@@ -261,7 +261,7 @@ export const TeamsMockup = () => {
             <button
               type="button"
               onClick={scrollToPricing}
-              className="inline-flex items-center justify-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               View plans
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

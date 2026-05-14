@@ -220,10 +220,10 @@ body::before {
   }
 }
 
-/* Mockup accent — default to orange, overridden per page via inline style */
+/* Mockup accent — default to Burgundy, overridden per page via inline style */
 :root {
-  --accent: #FF6B35;
-  --accent-hover: #e55e2d;
+  --accent: #8B1E2D;
+  --accent-hover: #6f1824;
 }
 
 /* ==========================================================

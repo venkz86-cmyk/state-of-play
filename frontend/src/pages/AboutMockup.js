@@ -41,7 +41,7 @@ export const AboutMockup = () => {
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
-            <Overline className="text-[#FF6B35]">Editor’s Note</Overline>
+            <Overline className="text-[var(--accent)]">Editor’s Note</Overline>
           </div>
           <div className="lg:col-span-9 space-y-7 font-plex text-lg lg:text-xl leading-relaxed text-[#0F172A] dark:text-[#F8FAFC] max-w-[65ch]">
             <p className="font-editorial font-semibold text-2xl lg:text-[1.875rem] leading-snug tracking-tight">
@@ -128,7 +128,7 @@ export const AboutMockup = () => {
             <Overline className="block mt-4">Founding Editor</Overline>
           </div>
           <div className="lg:col-span-8 lg:col-start-5">
-            <Overline className="text-[#FF6B35] mb-5 block">Who’s Behind It</Overline>
+            <Overline className="text-[var(--accent)] mb-5 block">Who’s Behind It</Overline>
             <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-6">
               Venkat Ananth.
             </h2>
@@ -163,14 +163,14 @@ export const AboutMockup = () => {
       {/* CTA */}
       <section className="bg-[#0F172A] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
-          <Overline className="text-[#FF6B35] mb-5 block">Support the desk</Overline>
+          <Overline className="text-[var(--accent)] mb-5 block">Support the desk</Overline>
           <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] max-w-3xl mb-8">
             Independent journalism, paid for by readers.
           </h2>
           <Link
             to="/mockup/subscribe"
             data-testid="about-cta"
-            className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+            className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
           >
             View membership
             <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

@@ -47,7 +47,7 @@ const Sched = ({ rows, accent }) => (
               href={r.registerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#FF6B35] border-b border-[#FF6B35]/40 pb-px hover:border-[#FF6B35] transition-colors duration-200"
+              className="inline-flex items-center gap-1 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[var(--accent)] border-b border-[var(--accent)]/40 pb-px hover:border-[var(--accent)] transition-colors duration-200"
             >
               Register
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -76,7 +76,7 @@ export const OutfieldMockup = () => {
             <Overline>Mumbai</Overline>
             <Overline>Bengaluru</Overline>
             <Overline>New Delhi</Overline>
-            <Overline className="text-[#FF6B35]">Three cities · Six events · 2026</Overline>
+            <Overline className="text-[var(--accent)]">Three cities · Six events · 2026</Overline>
           </div>
         </div>
       </section>
@@ -85,7 +85,7 @@ export const OutfieldMockup = () => {
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
-            <Overline className="text-[#FF6B35]">— Premise —</Overline>
+            <Overline className="text-[var(--accent)]">— Premise —</Overline>
           </div>
           <div className="lg:col-span-9 space-y-6 font-editorial text-2xl lg:text-[2rem] leading-snug tracking-tight text-[#0F172A] dark:text-[#F8FAFC] max-w-[55ch]">
             <p>
@@ -109,7 +109,7 @@ export const OutfieldMockup = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
             {/* Roundtables */}
             <div data-testid="outfield-roundtables">
-              <Overline className="text-[#FF6B35] mb-4 block">— 01 — Quarterly Subscriber Discussions</Overline>
+              <Overline className="text-[var(--accent)] mb-4 block">— 01 — Quarterly Subscriber Discussions</Overline>
               <h3 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[2.5rem] leading-tight mb-5">
                 The Roundtables.
               </h3>
@@ -134,7 +134,7 @@ export const OutfieldMockup = () => {
 
             {/* Speakeasies */}
             <div data-testid="outfield-speakeasies">
-              <Overline className="text-[#FF6B35] mb-4 block">— 02 — Premium Off-Record Gatherings</Overline>
+              <Overline className="text-[var(--accent)] mb-4 block">— 02 — Premium Off-Record Gatherings</Overline>
               <h3 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[2.5rem] leading-tight mb-5">
                 The Speakeasy.
               </h3>
@@ -150,7 +150,7 @@ export const OutfieldMockup = () => {
               </ul>
 
               <Overline className="block mb-4">2026 Schedule</Overline>
-              <Sched rows={SPEAKEASIES} accent="!text-[#FF6B35]" />
+              <Sched rows={SPEAKEASIES} accent="!text-[var(--accent)]" />
             </div>
           </div>
         </div>
@@ -160,9 +160,9 @@ export const OutfieldMockup = () => {
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-3">
-            <Overline className="text-[#FF6B35]">— Why It Works —</Overline>
+            <Overline className="text-[var(--accent)]">— Why It Works —</Overline>
           </div>
-          <blockquote className="lg:col-span-9 border-l-4 border-[#FF6B35] pl-8 lg:pl-12 max-w-[60ch]">
+          <blockquote className="lg:col-span-9 border-l-4 border-[var(--accent)] pl-8 lg:pl-12 max-w-[60ch]">
             <p className="font-editorial italic text-2xl sm:text-3xl lg:text-[2.25rem] leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
               “No stages. No panels. No 500-person halls. Small rooms force depth. The Chatham House rule encourages honesty. This is where the real conversations happen.”
             </p>
@@ -197,7 +197,7 @@ export const OutfieldMockup = () => {
       <section className="bg-[#0F172A] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-8">
-            <Overline className="text-[#FF6B35] mb-5 block">— Stay in the loop —</Overline>
+            <Overline className="text-[var(--accent)] mb-5 block">— Stay in the loop —</Overline>
             <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] max-w-3xl">
               Event announcements go out via the newsletter.
             </h2>
@@ -206,7 +206,7 @@ export const OutfieldMockup = () => {
             <a
               href="/mockup/subscribe"
               data-testid="outfield-cta"
-              className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#e55e2d] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
               Subscribe to TSOP
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

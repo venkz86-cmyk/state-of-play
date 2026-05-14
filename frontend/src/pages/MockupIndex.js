@@ -105,7 +105,7 @@ export const MockupIndex = () => {
             A tour of every key surface, redrawn in Playfair Display + IBM Plex with cardless, high-contrast layouts. Each piece is sandboxed under <code className="font-plex-mono text-sm text-[#234ba0]">/mockup</code> — your live site is untouched.
           </p>
           <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3">
-            <Overline>Cream &nbsp;·&nbsp; <span className="text-[#234ba0]">Brand Blue</span> &nbsp;·&nbsp; <span className="text-[#FF6B35]">Accent Orange</span></Overline>
+            <Overline>Cream &nbsp;·&nbsp; <span className="text-[#234ba0]">Brand Blue</span> &nbsp;·&nbsp; <span className="text-[var(--accent)]">Accent Burgundy</span></Overline>
             <Overline>10 surfaces</Overline>
             <Overline>British English</Overline>
           </div>
@@ -160,7 +160,7 @@ export const MockupIndex = () => {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-3">
-              <Overline className="text-[#FF6B35]">Notes for review</Overline>
+              <Overline className="text-[var(--accent)]">Notes for review</Overline>
             </div>
             <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[#0F172A] dark:text-[#F8FAFC] max-w-[65ch]">
               <p>
