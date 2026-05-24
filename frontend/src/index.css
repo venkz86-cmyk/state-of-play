@@ -220,19 +220,27 @@ body::before {
   }
 }
 
-/* Mockup accent — default to Burgundy, overridden per page via inline style */
+/* Mockup accent + typography — defaults to Newsreader system, overridable per page */
 :root {
   --accent: #8B1E2D;
   --accent-hover: #6f1824;
-  --display-font: 'Fraunces';
+  --display-font: 'Newsreader';
+  --body-font: 'Newsreader';
+  --label-font: 'Newsreader';
+  --label-tracking: 0.18em;
 }
 
-/* Override Tailwind's font-editorial class to use the runtime variable */
+/* All-family override: headline + body + overline are driven by CSS vars */
 .font-editorial {
-  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif !important;
   font-optical-sizing: auto;
-  font-variation-settings: 'opsz' 60, 'SOFT' 50;
 }
+.font-plex {
+  font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif !important;
+  font-optical-sizing: auto;
+}
+/* Overline language — small caps, tracked, tabular figures */
+.tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* ==========================================================
    Editorial prose — used by the Mockup article reading page
@@ -240,10 +248,11 @@ body::before {
    Scoped only to that class so live pages are unaffected.
    ========================================================== */
 .editorial-prose {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  font-family: var(--body-font), 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   font-size: 1.125rem;       /* 18px */
   line-height: 1.7;
   color: #0F172A;
+  font-optical-sizing: auto;
 }
 .dark .editorial-prose {
   color: #F8FAFC;
@@ -251,7 +260,7 @@ body::before {
 
 /* Drop cap on the very first paragraph */
 .editorial-prose > p:first-of-type::first-letter {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
   font-weight: 600;
   font-size: 4.75rem;
   line-height: 0.85;
@@ -273,7 +282,7 @@ body::before {
 }
 
 .editorial-prose h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
   font-weight: 600;
   font-size: 2rem;
   line-height: 1.18;
@@ -284,7 +293,7 @@ body::before {
 .dark .editorial-prose h2 { color: #F8FAFC; }
 
 .editorial-prose h3 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
   font-weight: 600;
   font-size: 1.5rem;
   line-height: 1.2;
@@ -295,10 +304,10 @@ body::before {
 .dark .editorial-prose h3 { color: #F8FAFC; }
 
 .editorial-prose h4 {
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--label-font), 'IBM Plex Sans', system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.75rem;
-  letter-spacing: 0.22em;
+  letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   margin: 2rem 0 0.75rem;
@@ -323,8 +332,8 @@ body::before {
 .editorial-prose blockquote {
   margin: 2.5rem 0;
   padding: 0.5rem 0 0.5rem 1.75rem;
-  border-left: 4px solid #FF6B35;
-  font-family: 'Playfair Display', Georgia, serif;
+  border-left: 4px solid var(--accent);
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
   font-style: italic;
   font-size: 1.5rem;
   line-height: 1.35;
@@ -366,9 +375,9 @@ body::before {
   margin: 2.5rem 0;
 }
 .editorial-prose figcaption {
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--label-font), 'IBM Plex Sans', system-ui, sans-serif;
   font-size: 0.75rem;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: #475569;

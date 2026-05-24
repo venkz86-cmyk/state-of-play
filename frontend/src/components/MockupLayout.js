@@ -4,7 +4,8 @@ import { MockupFooter } from './MockupFooter';
 // Shared overline style — used across every mockup page
 export const Overline = ({ children, className = '' }) => (
   <span
-    className={`font-plex text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase tabular-nums text-[#475569] ${className}`}
+    className={`text-[10px] md:text-[11px] font-medium uppercase tabular-nums text-[#475569] ${className}`}
+    style={{ fontFamily: 'var(--label-font), "IBM Plex Sans", sans-serif', letterSpacing: 'var(--label-tracking, 0.22em)' }}
   >
     {children}
   </span>

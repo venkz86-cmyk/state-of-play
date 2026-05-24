@@ -203,18 +203,43 @@ export const HomeMockup = () => {
     setHistory(getReadingHistory().slice(0, 1));
   }, []);
 
-  // Display font A/B switcher
-  const DISPLAY_FONTS = {
-    fraunces: { family: 'Fraunces', label: 'Fraunces' },
-    spectral: { family: 'Spectral', label: 'Spectral' },
-    newsreader: { family: 'Newsreader', label: 'Newsreader' },
-    playfair: { family: 'Playfair Display', label: 'Playfair' },
+  // Full typography system A/B switcher — display + body + label, all together
+  const SYSTEMS = {
+    newsreader: {
+      label: 'Newsreader',
+      blurb: 'Single family · newspaper of record',
+      display: 'Newsreader',
+      body: 'Newsreader',
+      tracking: '0.16em',
+    },
+    'fraunces-geist': {
+      label: 'Fraunces × Geist',
+      blurb: 'Modern editorial · two families',
+      display: 'Fraunces',
+      body: 'Geist',
+      tracking: '0.14em',
+    },
+    spectral: {
+      label: 'Spectral',
+      blurb: 'Long-form magazine · single family',
+      display: 'Spectral',
+      body: 'Spectral',
+      tracking: '0.16em',
+    },
+    'playfair-plex': {
+      label: 'Playfair × Plex',
+      blurb: 'Original baseline',
+      display: 'Playfair Display',
+      body: 'IBM Plex Sans',
+      tracking: '0.22em',
+    },
   };
-  const fontKey = DISPLAY_FONTS[searchParams.get('display')] ? searchParams.get('display') : 'fraunces';
-  const setFont = (k) => {
+  const systemKey = SYSTEMS[searchParams.get('system')] ? searchParams.get('system') : 'newsreader';
+  const system = SYSTEMS[systemKey];
+  const setSystem = (k) => {
     const next = new URLSearchParams(searchParams);
-    if (k && k !== 'fraunces') next.set('display', k);
-    else next.delete('display');
+    if (k && k !== 'newsreader') next.set('system', k);
+    else next.delete('system');
     setSearchParams(next, { replace: true });
   };
 
@@ -260,32 +285,51 @@ export const HomeMockup = () => {
   return (
     <div
       className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
-      style={{ '--display-font': `'${DISPLAY_FONTS[fontKey].family}'` }}
+      style={{
+        '--display-font': `'${system.display}'`,
+        '--body-font': `'${system.body}'`,
+        '--label-font': `'${system.body}'`,
+        '--label-tracking': system.tracking,
+      }}
       data-testid="mockup-home"
     >
       <MockupHeader />
 
-      {/* Display-font A/B picker — design review only */}
+      {/* Typography SYSTEM picker — design review only */}
       <div
-        data-testid="display-font-toggle"
+        data-testid="system-toggle"
         className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white border border-white/10 shadow-2xl"
       >
-        <div className="flex items-stretch divide-x divide-white/10">
-          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
-            Headline
+        <div className="px-5 py-3 border-b border-white/10">
+          <span className="text-[10px] tracking-[0.22em] uppercase text-white/40">
+            Typography system
           </span>
-          {Object.entries(DISPLAY_FONTS).map(([key, f]) => (
+        </div>
+        <div className="flex flex-col">
+          {Object.entries(SYSTEMS).map(([key, s]) => (
             <button
               key={key}
               type="button"
-              onClick={() => setFont(key)}
-              data-testid={`display-font-${key}`}
-              className={`text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
-                fontKey === key ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
+              onClick={() => setSystem(key)}
+              data-testid={`system-${key}`}
+              className={`text-left px-5 py-3 transition-colors duration-200 border-b border-white/5 last:border-b-0 ${
+                systemKey === key ? 'bg-white text-[#0F172A]' : 'hover:bg-white/5 text-white'
               }`}
-              style={{ fontFamily: `'${f.family}', serif` }}
             >
-              {f.label}
+              <div
+                className="text-base font-medium"
+                style={{ fontFamily: `'${s.display}', serif` }}
+              >
+                {s.label}
+              </div>
+              <div
+                className={`text-[10px] tracking-[0.18em] uppercase mt-0.5 ${
+                  systemKey === key ? 'text-[#0F172A]/60' : 'text-white/40'
+                }`}
+                style={{ fontFamily: `'${s.body}', sans-serif` }}
+              >
+                {s.blurb}
+              </div>
             </button>
           ))}
         </div>
