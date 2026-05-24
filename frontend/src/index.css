@@ -224,6 +224,14 @@ body::before {
 :root {
   --accent: #8B1E2D;
   --accent-hover: #6f1824;
+  --display-font: 'Fraunces';
+}
+
+/* Override Tailwind's font-editorial class to use the runtime variable */
+.font-editorial {
+  font-family: var(--display-font), 'Playfair Display', Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 60, 'SOFT' 50;
 }
 
 /* ==========================================================

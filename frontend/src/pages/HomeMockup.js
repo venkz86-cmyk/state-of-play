@@ -187,7 +187,7 @@ export const HomeMockup = () => {
   const [articles, setArticles] = useState([]);
   const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, canAccessPremium } = useAuth();
 
   // ?preview=member forces the logged-in paid view for design review
@@ -202,6 +202,21 @@ export const HomeMockup = () => {
   useEffect(() => {
     setHistory(getReadingHistory().slice(0, 1));
   }, []);
+
+  // Display font A/B switcher
+  const DISPLAY_FONTS = {
+    fraunces: { family: 'Fraunces', label: 'Fraunces' },
+    spectral: { family: 'Spectral', label: 'Spectral' },
+    newsreader: { family: 'Newsreader', label: 'Newsreader' },
+    playfair: { family: 'Playfair Display', label: 'Playfair' },
+  };
+  const fontKey = DISPLAY_FONTS[searchParams.get('display')] ? searchParams.get('display') : 'fraunces';
+  const setFont = (k) => {
+    const next = new URLSearchParams(searchParams);
+    if (k && k !== 'fraunces') next.set('display', k);
+    else next.delete('display');
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     (async () => {
@@ -245,9 +260,36 @@ export const HomeMockup = () => {
   return (
     <div
       className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
+      style={{ '--display-font': `'${DISPLAY_FONTS[fontKey].family}'` }}
       data-testid="mockup-home"
     >
       <MockupHeader />
+
+      {/* Display-font A/B picker — design review only */}
+      <div
+        data-testid="display-font-toggle"
+        className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white border border-white/10 shadow-2xl"
+      >
+        <div className="flex items-stretch divide-x divide-white/10">
+          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
+            Headline
+          </span>
+          {Object.entries(DISPLAY_FONTS).map(([key, f]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFont(key)}
+              data-testid={`display-font-${key}`}
+              className={`text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
+                fontKey === key ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
+              }`}
+              style={{ fontFamily: `'${f.family}', serif` }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* MASTHEAD STRIP */}
       <div className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F7F7F5] dark:bg-[#090E17]">
