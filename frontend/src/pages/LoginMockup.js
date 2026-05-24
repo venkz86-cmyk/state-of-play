@@ -31,11 +31,11 @@ export const LoginMockup = () => {
 
               <blockquote className="max-w-2xl">
                 <p className="font-editorial italic text-3xl sm:text-4xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-white">
-                  “Indian sport is no longer the side bet. It’s where the real money is being placed — and we’re publishing the receipts.”
+                  “Billions are moving into Indian sport. The State of Play is where you find out where, why, and at what price.”
                 </p>
                 <footer className="mt-10 flex items-center gap-3">
                   <span className="h-px w-12 bg-white/40" />
-                  <Overline className="!text-white/70">Venkatesh Sridhar · Founding Editor</Overline>
+                  <Overline className="!text-white/70">Venkat Ananth · Founding Editor</Overline>
                 </footer>
               </blockquote>
 

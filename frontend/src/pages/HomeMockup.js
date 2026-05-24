@@ -374,11 +374,11 @@ export const HomeMockup = () => {
             </div>
             <blockquote className="lg:col-span-9 border-l-4 border-[var(--accent)] pl-8 lg:pl-12">
               <p className="font-editorial italic text-2xl sm:text-3xl lg:text-[2.5rem] leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
-                “Indian sport is no longer the side bet. It’s where the real money is being placed — and we’re publishing the receipts.”
+                “Billions are moving into Indian sport. The State of Play is where you find out where, why, and at what price.”
               </p>
               <footer className="mt-8 flex items-center gap-3">
                 <span className="h-px w-12 bg-[#0F172A] dark:bg-[#F8FAFC]" />
-                <Overline>Venkatesh Sridhar · Founding Editor</Overline>
+                <Overline>Venkat Ananth · Founding Editor</Overline>
               </footer>
             </blockquote>
           </div>
@@ -393,7 +393,7 @@ export const HomeMockup = () => {
               <div>
                 <Overline className="text-[#234ba0] mb-3 block">The Desk</Overline>
                 <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
-                  This week, in columns.
+                  Recent editions.
                 </h2>
               </div>
               <Overline className="hidden md:block">
@@ -453,6 +453,60 @@ export const HomeMockup = () => {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+      )}
+
+      {/* TESTIMONIALS — placeholder section, logged-out only */}
+      {!isMember && (
+        <section
+          data-testid="testimonials-placeholder"
+          className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]"
+        >
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28">
+            <div className="flex items-end justify-between mb-12 lg:mb-16">
+              <div>
+                <Overline className="text-[var(--accent)] mb-3 block">— On record —</Overline>
+                <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
+                  What the room is saying.
+                </h2>
+                <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mt-3 max-w-[55ch]">
+                  Quotes from subscribers — pending commission. Three slots reserved below for senior voices across funds, leagues and agencies.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#E2E8F0] dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#1E293B]">
+              {[
+                'Investor · Mumbai',
+                'League Executive · Bengaluru',
+                'Agency Partner · New Delhi',
+              ].map((role, i) => (
+                <div
+                  key={role}
+                  className="bg-[#F7F7F5] dark:bg-[#090E17] p-8 lg:p-10 flex flex-col"
+                >
+                  <Overline className="text-[#94A3B8] mb-6">
+                    {String(i + 1).padStart(2, '0')} · Quote pending
+                  </Overline>
+                  <blockquote className="flex-1 mb-6">
+                    <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[#94A3B8] dark:text-[#475569]">
+                      “[ Subscriber quote to be commissioned. A short paragraph that names a specific reason TSOP is read — a deal, a brief, a number — in their own voice. ]”
+                    </p>
+                  </blockquote>
+                  <footer className="pt-5 border-t border-[#E2E8F0] dark:border-[#1E293B]">
+                    <Overline className="text-[#0F172A] dark:text-[#F8FAFC]">
+                      [ Name · Title ]
+                    </Overline>
+                    <Overline className="block mt-1">{role}</Overline>
+                  </footer>
+                </div>
+              ))}
+            </div>
+
+            <p className="font-plex-mono text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-8 text-center">
+              Section reserved · content pending editorial sign-off
+            </p>
           </div>
         </section>
       )}
