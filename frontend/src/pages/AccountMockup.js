@@ -49,7 +49,7 @@ export const AccountMockup = () => {
             <button
               type="button"
               data-testid="account-signout"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#475569] hover:text-[#234ba0] transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569] hover:text-[#234ba0] transition-colors duration-200"
             >
               <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
               Sign out
@@ -93,7 +93,7 @@ export const AccountMockup = () => {
                     to={`/mockup/article/${p.id}`}
                     className="group grid grid-cols-12 gap-4 lg:gap-6 items-baseline py-6 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                   >
-                    <span className="hidden md:block col-span-1 font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
@@ -140,7 +140,7 @@ export const AccountMockup = () => {
                 </li>
               ))}
             </ul>
-            <p className="font-plex-mono text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-6">
+            <p className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-6">
               Bookmarks sync across devices · Coming soon
             </p>
           </aside>
@@ -163,7 +163,7 @@ export const AccountMockup = () => {
             {/* Insider Drops */}
             <div className="py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0">
               <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
+                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
                 <span className="h-px w-6 bg-white/30" />
                 <Overline className="!text-[var(--accent)]">Insider Drops · Soon</Overline>
               </div>
@@ -177,7 +177,7 @@ export const AccountMockup = () => {
               <button
                 type="button"
                 data-testid="account-notify-drops"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
               >
                 Notify me
                 <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -187,7 +187,7 @@ export const AccountMockup = () => {
             {/* Preferences */}
             <div className="py-10 md:py-12 md:px-10">
               <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
+                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
                 <span className="h-px w-6 bg-white/30" />
                 <Overline className="!text-white/70">Notifications</Overline>
               </div>
@@ -213,7 +213,7 @@ export const AccountMockup = () => {
               </ul>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
               >
                 Save
                 <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -223,7 +223,7 @@ export const AccountMockup = () => {
             {/* Billing */}
             <div className="py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0">
               <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
+                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
                 <span className="h-px w-6 bg-white/30" />
                 <Overline className="!text-white/70">Billing</Overline>
               </div>
@@ -236,7 +236,7 @@ export const AccountMockup = () => {
               </p>
               <a
                 href="#billing"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
               >
                 Download GST invoice
                 <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

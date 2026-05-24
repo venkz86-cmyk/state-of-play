@@ -5,9 +5,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Search, ArrowUpRight } from 'lucide-react';
 
 const LOGO_LIGHT =
-  'https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg';
+  'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
 const LOGO_DARK =
-  'https://customer-assets.emergentagent.com/job_dcd955ba-7b95-4793-aa4a-cd2ca65f8014/artifacts/gykve31s_Publication%20Icon.jpg';
+  'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
 
 const NAV = [
   { path: '/mockup/home', label: 'Home' },
@@ -48,7 +48,7 @@ export const MockupHeader = () => {
             <img
               src={isDark ? LOGO_DARK : LOGO_LIGHT}
               alt="The State of Play"
-              className="h-9 lg:h-10 w-auto transition-opacity duration-200 group-hover:opacity-80"
+              className="h-10 lg:h-12 w-auto transition-opacity duration-200 group-hover:opacity-80"
             />
           </Link>
 
@@ -59,7 +59,7 @@ export const MockupHeader = () => {
                 key={item.path}
                 to={item.path}
                 data-testid={`mockup-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`relative font-plex-mono text-[11px] font-medium tracking-[0.22em] uppercase transition-colors duration-200 ${
+                className={`relative font-plex tabular-nums text-[11px] font-medium tracking-[0.22em] uppercase transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'text-[#234ba0]'
                     : 'text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0]'
@@ -94,7 +94,7 @@ export const MockupHeader = () => {
                   <span className="h-8 w-8 bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F7F7F5] dark:text-[#090E17] flex items-center justify-center font-editorial text-sm">
                     {memberName ? memberName.charAt(0).toUpperCase() : 'M'}
                   </span>
-                  <span className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[#234ba0] transition-colors duration-200">
+                  <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[#234ba0] transition-colors duration-200">
                     {memberName || 'Member'}
                   </span>
                 </Link>
@@ -103,7 +103,7 @@ export const MockupHeader = () => {
                   type="button"
                   onClick={logout}
                   data-testid="mockup-header-logout"
-                  className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#475569] dark:text-[#94A3B8] hover:text-[#234ba0] transition-colors duration-200"
+                  className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569] dark:text-[#94A3B8] hover:text-[#234ba0] transition-colors duration-200"
                 >
                   Sign out
                 </button>
@@ -113,7 +113,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/login"
                   data-testid="mockup-header-login"
-                  className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+                  className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
                 >
                   Sign in
                 </Link>
@@ -149,7 +149,7 @@ export const MockupHeader = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`font-plex-mono text-[11px] tracking-[0.22em] uppercase ${
+                  className={`font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase ${
                     isActive(item.path)
                       ? 'text-[#234ba0]'
                       : 'text-[#0F172A] dark:text-[#F8FAFC]'
@@ -164,13 +164,13 @@ export const MockupHeader = () => {
                   <Link
                     to="/account"
                     onClick={() => setMobileOpen(false)}
-                    className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
+                    className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
                   >
                     Member Lounge
                   </Link>
                   <button
                     onClick={() => { logout(); setMobileOpen(false); }}
-                    className="text-left font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#475569]"
+                    className="text-left font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569]"
                   >
                     Sign out
                   </button>
@@ -180,7 +180,7 @@ export const MockupHeader = () => {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
+                    className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
                   >
                     Sign in
                   </Link>

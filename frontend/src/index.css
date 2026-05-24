@@ -287,11 +287,12 @@ body::before {
 .dark .editorial-prose h3 { color: #F8FAFC; }
 
 .editorial-prose h4 {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   margin: 2rem 0 0.75rem;
   color: #475569;
 }
@@ -357,10 +358,11 @@ body::before {
   margin: 2.5rem 0;
 }
 .editorial-prose figcaption {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
   font-size: 0.75rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: #475569;
   text-align: right;
   margin-top: 0.5rem;

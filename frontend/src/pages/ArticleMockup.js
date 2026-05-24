@@ -16,7 +16,7 @@ const fmtDate = (iso) => {
 
 const Overline = ({ children, className = '' }) => (
   <span
-    className={`font-plex-mono text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#475569] ${className}`}
+    className={`font-plex tabular-nums text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#475569] ${className}`}
   >
     {children}
   </span>
@@ -117,7 +117,7 @@ export const ArticleMockup = () => {
           </h1>
           <Link
             to="/mockup/home"
-            className="inline-flex items-center gap-2 mt-6 font-plex-mono text-[11px] tracking-[0.22em] uppercase border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1"
+            className="inline-flex items-center gap-2 mt-6 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1"
           >
             Back to homepage
             <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -144,14 +144,14 @@ export const ArticleMockup = () => {
         className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white border border-white/10 shadow-lg"
       >
         <div className="flex items-stretch divide-x divide-white/10 border-b border-white/10">
-          <span className="font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
+          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
             Body
           </span>
           <button
             type="button"
             onClick={() => setBodyVariant('sans')}
             data-testid="font-toggle-sans"
-            className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
+            className={`font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
               bodyVariant === 'sans' ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
             }`}
           >
@@ -161,7 +161,7 @@ export const ArticleMockup = () => {
             type="button"
             onClick={() => setBodyVariant('serif')}
             data-testid="font-toggle-serif"
-            className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
+            className={`font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 transition-colors duration-200 ${
               bodyVariant === 'serif' ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
             }`}
           >
@@ -169,7 +169,7 @@ export const ArticleMockup = () => {
           </button>
         </div>
         <div className="flex items-stretch divide-x divide-white/10">
-          <span className="font-plex-mono text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
+          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-4 py-3 text-white/40">
             Accent
           </span>
           {Object.entries(ACCENTS).map(([key, a]) => (
@@ -178,7 +178,7 @@ export const ArticleMockup = () => {
               type="button"
               onClick={() => setAccent(key)}
               data-testid={`accent-toggle-${key}`}
-              className={`font-plex-mono text-[10px] tracking-[0.22em] uppercase px-3 py-3 transition-colors duration-200 flex items-center gap-2 ${
+              className={`font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase px-3 py-3 transition-colors duration-200 flex items-center gap-2 ${
                 accentKey === key ? 'bg-white text-[#0F172A]' : 'hover:text-white text-white/70'
               }`}
             >
@@ -210,7 +210,7 @@ export const ArticleMockup = () => {
           <Link
             to="/mockup/home"
             data-testid="article-back-home"
-            className="inline-flex items-center gap-2 font-plex-mono text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+            className="inline-flex items-center gap-2 font-plex tabular-nums text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
           >
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
             All Stories
@@ -266,7 +266,7 @@ export const ArticleMockup = () => {
                 <button
                   type="button"
                   data-testid="article-share"
-                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+                  className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
                 >
                   <Share2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Share
@@ -274,7 +274,7 @@ export const ArticleMockup = () => {
                 <button
                   type="button"
                   data-testid="article-bookmark"
-                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+                  className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
                 >
                   <Bookmark className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Save
@@ -355,7 +355,7 @@ export const ArticleMockup = () => {
                 <Link
                   to="/login"
                   data-testid="paywall-login"
-                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200 self-start sm:self-center"
+                  className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200 self-start sm:self-center"
                 >
                   Already a subscriber? Sign in
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -402,7 +402,7 @@ export const ArticleMockup = () => {
                   className="group block py-10 lg:py-0 lg:px-8 first:lg:pl-0 last:lg:pr-0 border-t border-[#E2E8F0] dark:border-[#1E293B] lg:border-t-0"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     {a.theme && (

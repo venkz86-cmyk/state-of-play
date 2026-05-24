@@ -71,7 +71,7 @@ export const AboutMockup = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#E2E8F0] dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#1E293B]">
             {COVERAGE.map(([title, desc], i) => (
               <div key={title} className="bg-[#F7F7F5] dark:bg-[#090E17] p-7 lg:p-8">
-                <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums block mb-4">
+                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums block mb-4">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <h3 className="font-editorial font-semibold text-xl leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-3">
@@ -103,7 +103,7 @@ export const AboutMockup = () => {
             <ul className="border-y border-[#0F172A]/15 dark:border-[#F8FAFC]/15 divide-y divide-[#0F172A]/10 dark:divide-[#F8FAFC]/10">
               {READERS.map((r) => (
                 <li key={r} className="py-4 flex items-baseline gap-4">
-                  <span className="font-plex-mono text-[11px] tracking-[0.22em] text-[#234ba0]">·</span>
+                  <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#234ba0]">·</span>
                   <span className="font-plex text-base lg:text-lg leading-snug">
                     {r}
                   </span>
@@ -143,14 +143,14 @@ export const AboutMockup = () => {
                 href="https://www.linkedin.com/in/venkat-ananth/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
               >
                 <Linkedin className="h-3.5 w-3.5" strokeWidth={1.5} />
                 LinkedIn
               </a>
               <a
                 href="mailto:venkat@stateofplay.club"
-                className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
               >
                 <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
                 venkat@stateofplay.club

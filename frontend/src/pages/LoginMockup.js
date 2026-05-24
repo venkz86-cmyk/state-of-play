@@ -63,7 +63,7 @@ export const LoginMockup = () => {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block font-plex-mono text-[10px] tracking-[0.22em] uppercase text-[#475569] mb-3"
+                      className="block font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-[#475569] mb-3"
                     >
                       Email
                     </label>
@@ -115,7 +115,7 @@ export const LoginMockup = () => {
                 <Overline className="block mb-3">Trouble signing in?</Overline>
                 <a
                   href="mailto:venkat@stateofplay.club"
-                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+                  className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
                 >
                   Email the desk
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

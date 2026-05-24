@@ -47,7 +47,7 @@ const Sched = ({ rows, accent }) => (
               href={r.registerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[var(--accent)] border-b border-[var(--accent)]/40 pb-px hover:border-[var(--accent)] transition-colors duration-200"
+              className="inline-flex items-center gap-1 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[var(--accent)] border-b border-[var(--accent)]/40 pb-px hover:border-[var(--accent)] transition-colors duration-200"
             >
               Register
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -127,7 +127,7 @@ export const OutfieldMockup = () => {
               <Overline className="block mb-4">2026 Schedule</Overline>
               <Sched rows={ROUNDTABLES} accent="!text-[#234ba0]" />
 
-              <p className="font-plex-mono text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-6 max-w-[40ch]">
+              <p className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-6 max-w-[40ch]">
                 Tickets redeemable against an annual State of Play subscription.
               </p>
             </div>
@@ -183,7 +183,7 @@ export const OutfieldMockup = () => {
                 key={a}
                 className="flex items-baseline gap-4 py-4 border-b border-[#0F172A]/10 dark:border-[#F8FAFC]/10 last:border-b-0"
               >
-                <span className="font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="font-plex text-base lg:text-lg leading-snug">{a}</span>
@@ -213,7 +213,7 @@ export const OutfieldMockup = () => {
             </a>
             <a
               href="mailto:venkat@stateofplay.club"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
             >
               Questions? venkat@stateofplay.club
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

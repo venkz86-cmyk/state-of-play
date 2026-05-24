@@ -91,7 +91,7 @@ export const SubscribeMockup = () => {
               See pricing
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </button>
-            <span className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#475569]">
+            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569]">
               Annual · cancel anytime
             </span>
           </div>
@@ -149,7 +149,7 @@ export const SubscribeMockup = () => {
                   <Link
                     to="/mockup/login"
                     data-testid="pricing-signin"
-                    className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200 self-start sm:self-center"
+                    className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200 self-start sm:self-center"
                   >
                     Already a subscriber? Sign in
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -178,7 +178,7 @@ export const SubscribeMockup = () => {
             {BENEFITS.map(([no, title, desc]) => (
               <div key={no} className="bg-[#F7F7F5] dark:bg-[#090E17] p-7 lg:p-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                  <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                     {no}
                   </span>
                   <span className="h-px w-6 bg-[#CBD5E1]" />
@@ -316,7 +316,7 @@ export const SubscribeMockup = () => {
             </button>
             <a
               href="mailto:venkat@stateofplay.club"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
             >
               Questions? venkat@stateofplay.club
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

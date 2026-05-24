@@ -126,7 +126,7 @@ export const LeftFieldMockup = () => {
               Subscribe on Substack
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <span className="font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#475569]">
+            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569]">
               No paywall · Unsubscribe any time
             </span>
           </div>
@@ -181,7 +181,7 @@ export const LeftFieldMockup = () => {
                       {lead.subtitle}
                     </p>
                   )}
-                  <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 group-hover:text-[#234ba0] group-hover:border-[#234ba0] transition-colors duration-200">
+                  <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 group-hover:text-[#234ba0] group-hover:border-[#234ba0] transition-colors duration-200">
                     Read on Substack
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                   </span>
@@ -243,7 +243,7 @@ export const LeftFieldMockup = () => {
                         data-testid={`leftfield-list-${p.id}`}
                         className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                       >
-                        <span className="hidden md:block col-span-1 font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                        <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                           {String(i + 1).padStart(2, '0')}
                         </span>
                         <div className="col-span-12 md:col-span-2">
@@ -291,7 +291,7 @@ export const LeftFieldMockup = () => {
               href="https://theleftfield.substack.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
             >
               Stay free on Substack
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

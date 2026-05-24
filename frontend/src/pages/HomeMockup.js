@@ -18,7 +18,7 @@ const fmtDate = (iso) => {
 
 const Overline = ({ children, className = '' }) => (
   <span
-    className={`font-plex-mono text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#475569] ${className}`}
+    className={`font-plex tabular-nums text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#475569] ${className}`}
   >
     {children}
   </span>
@@ -54,7 +54,7 @@ const HeroArticle = ({ article }) => (
           />
           {article.is_premium && (
             <div className="absolute top-5 left-5 bg-[#0F172A] text-white px-3 py-1.5">
-              <span className="font-plex-mono text-[10px] font-medium tracking-[0.22em] uppercase">
+              <span className="font-plex tabular-nums text-[10px] font-medium tracking-[0.22em] uppercase">
                 Subscribers Only
               </span>
             </div>
@@ -142,7 +142,7 @@ const ColumnCard = ({ article, idx }) => (
     className="group block py-10 px-0 lg:px-8 border-t border-[#E2E8F0] lg:border-t-0 lg:border-l first:lg:border-l-0"
   >
     <div className="flex items-center gap-3 mb-4">
-      <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+      <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
         {String(idx + 1).padStart(2, '0')}
       </span>
       {article.theme && (
@@ -261,7 +261,7 @@ export const HomeMockup = () => {
               <Link
                 to="/account"
                 data-testid="mockup-account-link"
-                className="inline-flex items-center gap-2 font-plex-mono text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+                className="inline-flex items-center gap-2 font-plex tabular-nums text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
               >
                 Member Lounge
                 <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
@@ -314,7 +314,7 @@ export const HomeMockup = () => {
             <Link
               to="/state-of-play"
               data-testid="mockup-hero-archive-link"
-              className="hidden lg:inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+              className="hidden lg:inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
             >
               All Stories
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -431,7 +431,7 @@ export const HomeMockup = () => {
                     data-testid={`mockup-list-${a.id}`}
                     className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-6 lg:py-8 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                   >
-                    <span className="hidden md:block col-span-1 font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
@@ -504,7 +504,7 @@ export const HomeMockup = () => {
               ))}
             </div>
 
-            <p className="font-plex-mono text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-8 text-center">
+            <p className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-8 text-center">
               Section reserved · content pending editorial sign-off
             </p>
           </div>
@@ -534,7 +534,7 @@ export const HomeMockup = () => {
                 className="group block py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
+                  <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
                   <span className="h-px w-6 bg-white/30" />
                   <Overline className="text-white/70">Your Account</Overline>
                 </div>
@@ -544,7 +544,7 @@ export const HomeMockup = () => {
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
                   Manage your subscription, swap plans, or update reading preferences in one place.
                 </p>
-                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
+                <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
                   Open
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </span>
@@ -556,7 +556,7 @@ export const HomeMockup = () => {
                 className="group block py-10 md:py-12 md:px-10"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
+                  <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
                   <span className="h-px w-6 bg-white/30" />
                   <Overline className="text-white/70">Reading List</Overline>
                 </div>
@@ -566,7 +566,7 @@ export const HomeMockup = () => {
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
                   Bookmark deep-dives and revisit them on your schedule. Synced across devices.
                 </p>
-                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
+                <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 group-hover:text-white group-hover:border-white transition-colors duration-200">
                   View
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </span>
@@ -578,7 +578,7 @@ export const HomeMockup = () => {
                 className="group block py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <span className="font-plex-mono text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
+                  <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
                   <span className="h-px w-6 bg-white/30" />
                   <Overline className="text-[var(--accent)]">Insider Drops · Soon</Overline>
                 </div>
@@ -588,7 +588,7 @@ export const HomeMockup = () => {
                 <p className="font-plex text-sm text-white/60 leading-relaxed mb-5">
                   Subscriber-only feed of deal whispers, tip-offs and short notes — published as they break.
                 </p>
-                <span className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/40 border-b border-white/20 pb-1">
+                <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/40 border-b border-white/20 pb-1">
                   Notify Me
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </span>
@@ -621,7 +621,7 @@ export const HomeMockup = () => {
                 <Link
                   to="/teams"
                   data-testid="mockup-teams-cta"
-                  className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+                  className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
                 >
                   For Teams & Funds
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />

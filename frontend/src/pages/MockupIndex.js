@@ -102,7 +102,7 @@ export const MockupIndex = () => {
             <em className="italic font-normal text-[#234ba0]">page by page.</em>
           </h1>
           <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-6 max-w-2xl leading-relaxed">
-            A tour of every key surface, redrawn in Playfair Display + IBM Plex with cardless, high-contrast layouts. Each piece is sandboxed under <code className="font-plex-mono text-sm text-[#234ba0]">/mockup</code> — your live site is untouched.
+            A tour of every key surface, redrawn in Playfair Display + IBM Plex with cardless, high-contrast layouts. Each piece is sandboxed under <code className="font-plex tabular-nums text-sm text-[#234ba0]">/mockup</code> — your live site is untouched.
           </p>
           <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3">
             <Overline>Cream &nbsp;·&nbsp; <span className="text-[#234ba0]">Brand Blue</span> &nbsp;·&nbsp; <span className="text-[var(--accent)]">Accent Burgundy</span></Overline>
@@ -129,7 +129,7 @@ export const MockupIndex = () => {
                     data-testid={`index-link-${p.no}`}
                     className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-8 lg:py-10 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                   >
-                    <span className="col-span-2 md:col-span-1 font-plex-mono text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="col-span-2 md:col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                       {p.no}
                     </span>
                     <div className="col-span-10 md:col-span-7">
@@ -164,7 +164,7 @@ export const MockupIndex = () => {
             </div>
             <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[#0F172A] dark:text-[#F8FAFC] max-w-[65ch]">
               <p>
-                Append <code className="font-plex-mono text-sm text-[#234ba0]">?preview=member</code> to most pages to see the logged-in state without signing in.
+                Append <code className="font-plex tabular-nums text-sm text-[#234ba0]">?preview=member</code> to most pages to see the logged-in state without signing in.
               </p>
               <p>
                 Real Ghost articles are pulled where possible, so headlines and subtitles reflect the actual publication.

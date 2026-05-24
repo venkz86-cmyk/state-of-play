@@ -82,7 +82,7 @@ export const TeamsMockup = () => {
             </button>
             <a
               href="mailto:venkat@stateofplay.club?subject=Corporate Subscription Inquiry"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 hover:text-[#234ba0] hover:border-[#234ba0] transition-colors duration-200"
             >
               Contact sales
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -147,7 +147,7 @@ export const TeamsMockup = () => {
                   Get started
                   <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
                 </button>
-                <p className={`font-plex-mono text-[11px] tracking-[0.22em] uppercase mt-5 ${p.highlight ? 'text-white/50' : 'text-[#94A3B8]'}`}>
+                <p className={`font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase mt-5 ${p.highlight ? 'text-white/50' : 'text-[#94A3B8]'}`}>
                   Standard rate from July 1: {p.id === 'team-5' ? '₹12,500' : '₹22,500'} + GST
                 </p>
               </div>
@@ -198,7 +198,7 @@ export const TeamsMockup = () => {
           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-5 border-y border-[#0F172A]/10 dark:border-[#F8FAFC]/10 py-8">
             {FEATURES.map((f, i) => (
               <li key={f} className="flex items-baseline gap-3">
-                <span className="font-plex-mono text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="font-editorial text-base lg:text-lg text-[#0F172A] dark:text-[#F8FAFC]">
@@ -268,7 +268,7 @@ export const TeamsMockup = () => {
             </button>
             <a
               href="mailto:venkat@stateofplay.club?subject=Corporate Subscription Inquiry"
-              className="inline-flex items-center gap-2 font-plex-mono text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
             >
               Talk to us
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
