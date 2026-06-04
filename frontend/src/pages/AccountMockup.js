@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -10,12 +13,33 @@ const longDate = (iso) =>
 export const AccountMockup = () => {
   const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
   const [recent, setRecent] = useState([]);
+  const [details, setDetails] = useState(null);
+
   useEffect(() => {
     (async () => {
       try { setRecent(await ghostAPI.getPosts({ limit: 5 })); }
       catch (e) { console.error(e); }
     })();
   }, []);
+
+  // Fetch real subscription dates from Ghost Admin API
+  useEffect(() => {
+    let active = true;
+    if (!user?.email || !API) return;
+    (async () => {
+      try {
+        const r = await axios.post(
+          `${API}/api/ghost/member-details`,
+          { email: user.email },
+          { timeout: 8000 }
+        );
+        if (active && r.data) setDetails(r.data);
+      } catch (e) {
+        console.error('Member details failed:', e);
+      }
+    })();
+    return () => { active = false; };
+  }, [user?.email]);
 
   // Gate: visitors who aren't signed in are bounced to /login
   if (!loading && !isLoggedIn) {
@@ -24,7 +48,13 @@ export const AccountMockup = () => {
 
   const memberName = (user?.name?.split(' ')[0]) || 'Reader';
   const memberEmail = user?.email || '';
-  const planLabel = canAccessPremium ? 'Annual' : 'Free';
+  const planLabel = canAccessPremium
+    ? (details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
+    : 'Free';
+
+  const renewsOn = longDate(details?.subscription_end);
+  const memberSince = longDate(details?.subscription_start || details?.created_at);
+  const nextCharge = canAccessPremium && details?.subscription_end ? '₹2,949' : '—';
 
   return (
     <MockupLayout testId="page-account">
@@ -61,9 +91,9 @@ export const AccountMockup = () => {
         <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4">
           {[
             ['Plan', planLabel],
-            ['Renews', '—'],
-            ['Next charge', canAccessPremium ? '₹2,949' : '—'],
-            ['Member since', '—'],
+            ['Renews', renewsOn || '—'],
+            ['Next charge', nextCharge],
+            ['Member since', memberSince || '—'],
           ].map(([k, v], i) => (
             <div
               key={k}

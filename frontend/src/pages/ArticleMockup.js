@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
@@ -9,6 +10,8 @@ import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSi
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { NotFoundMockup } from './NotFoundMockup';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -35,7 +38,7 @@ const previewParagraphs = (html, count = 3) => {
 export const ArticleMockup = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { canAccessPremium } = useAuth();
+  const { canAccessPremium, user } = useAuth();
 
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
@@ -68,6 +71,31 @@ export const ArticleMockup = () => {
     })();
     return () => { active = false; };
   }, [id]);
+
+  // For paid members reading a premium article, fetch the full HTML
+  // from the Admin API. The Content API truncates body at the paywall.
+  useEffect(() => {
+    let active = true;
+    if (!article?.is_premium) return;
+    if (!user?.is_paid || !user?.email || !API) return;
+
+    (async () => {
+      try {
+        const r = await axios.post(
+          `${API}/api/ghost/article-content`,
+          { slug: article.id, email: user.email },
+          { timeout: 10000 }
+        );
+        if (!active) return;
+        if (r.data?.html) {
+          setArticle((prev) => ({ ...prev, content: r.data.html }));
+        }
+      } catch (e) {
+        console.error('Failed to load full article content:', e);
+      }
+    })();
+    return () => { active = false; };
+  }, [article?.is_premium, article?.id, user?.is_paid, user?.email]);
 
   if (loading) {
     return (
