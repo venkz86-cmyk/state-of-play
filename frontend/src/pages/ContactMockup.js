@@ -1,10 +1,17 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
-const ROWS = [
+const DESKS = [
+  ['Memberships', 'Account, billing, GST invoices', 'venkat@stateofplay.club'],
   ['Editorial', 'Tips, leads, corrections', 'venkat@stateofplay.club'],
-  ['Memberships', 'Billing, access, refunds', 'support@stateofplay.club'],
-  ['Partnerships', 'Sponsorships and partner desk', 'venkat@stateofplay.club'],
-  ['Press', 'Citation requests, interviews', 'venkat@stateofplay.club'],
+  ['Group / Corporate', 'Team subscriptions, multi-seat plans', 'venkat@stateofplay.club'],
+  ['Partnerships & Press', 'Sponsorships, interviews, speaking', 'venkat@stateofplay.club'],
+];
+
+const ADDRESS_LINES = [
+  'Left Field Ventures',
+  'Ground Floor, 36, Infantry Road',
+  'Tasker Town, Shivaji Nagar',
+  'Bengaluru, Karnataka 560001',
 ];
 
 export const ContactMockup = () => (
@@ -21,7 +28,10 @@ export const ContactMockup = () => (
         Write to us. <em className="italic font-normal">We answer.</em>
       </h1>
       <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] max-w-[60ch]">
-        A small newsroom by design. Tips and leads from inside the industry are how a lot of our reporting starts.
+        For questions about your membership, collaborations, or editorial queries, write to{' '}
+        <a href="mailto:venkat@stateofplay.club" className="not-italic text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
+          venkat@stateofplay.club
+        </a>.
       </p>
     </section>
 
@@ -29,7 +39,7 @@ export const ContactMockup = () => (
       <div className="border-t border-[var(--rule)] pt-8">
         <Overline className="block mb-6">— Desks —</Overline>
         <ul className="border-t border-[var(--rule)]">
-          {ROWS.map(([desk, role, email]) => (
+          {DESKS.map(([desk, role, email]) => (
             <li key={desk} className="grid grid-cols-12 gap-4 py-5 border-b border-[var(--rule)] items-baseline">
               <div className="col-span-12 md:col-span-3">
                 <h3 className="font-editorial font-semibold text-[20px] leading-snug">{desk}</h3>
@@ -51,18 +61,46 @@ export const ContactMockup = () => (
       </div>
     </section>
 
-    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— Tips & leaks —</Overline>
+          <Overline className="block mb-3">— Group & corporate —</Overline>
+        </div>
+        <div className="lg:col-span-8 max-w-[60ch]">
+          <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)]">
+            For group or corporate subscriptions, please mention your organisation and the number of seats required.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+      <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="lg:col-span-4">
+          <Overline className="block mb-3">— Partnerships, press, speaking —</Overline>
         </div>
         <div className="lg:col-span-8 max-w-[60ch]">
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)] mb-3">
-            If you have a story for us — a deal, a memo, a meeting that shouldn’t have happened — write from a personal address, not a corporate one.
+            You can also reach out for press, partnerships, or speaking requests. We typically respond within two working days.
           </p>
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)]">
-            We treat sources with care. We don’t identify people who ask not to be identified.
+            Please note that The State of Play does not accept sponsored editorial content or unsolicited story pitches.
           </p>
+        </div>
+      </div>
+    </section>
+
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
+      <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="lg:col-span-4">
+          <Overline className="block mb-3">— Registered office —</Overline>
+        </div>
+        <div className="lg:col-span-8 max-w-[60ch]">
+          <address className="font-plex text-[15px] leading-[1.8] text-[var(--text)] not-italic">
+            {ADDRESS_LINES.map((l, i) => (
+              <span key={i} className="block">{l}</span>
+            ))}
+          </address>
         </div>
       </div>
     </section>
