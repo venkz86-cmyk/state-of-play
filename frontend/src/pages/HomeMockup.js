@@ -5,10 +5,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 
-const fmtDate = (iso) => {
+// Long-form date — "Sunday, 04 June 2026"
+const datelineDate = (d = new Date()) =>
+  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+// Short date — "04 June 2026"
+const shortDate = (iso) => {
   if (!iso) return '';
-  return new Date(iso)
-    .toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 
 export const HomeMockup = () => {
@@ -60,6 +64,9 @@ export const HomeMockup = () => {
     );
   }
 
+  // Issue number — simple incrementing reference, content-of-record signal
+  const issueNo = 47;
+
   return (
     <div
       className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
@@ -96,45 +103,51 @@ export const HomeMockup = () => {
         </div>
       </div>
 
-      {/* LEAD STORY — the headline IS the hero. No section eyebrow, no marketing pitch. */}
-      {lead && (
-        <section className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-20 lg:pt-28 pb-24">
-          {/* Quiet dateline */}
-          <div className="mb-12 lg:mb-16">
-            <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
-              {fmtDate(new Date().toISOString())}
-            </span>
-          </div>
+      {/* DATELINE STRIP — quiet anchor like a masthead */}
+      <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16">
+        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] tracking-tight">
+            Bengaluru · {datelineDate()}
+          </span>
+          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
+            No.&nbsp;{issueNo}
+          </span>
+        </div>
+      </div>
 
+      {/* LEAD STORY */}
+      {lead && (
+        <section className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-12 lg:pt-14 pb-20 lg:pb-24">
           <Link to={`/${lead.id}`} data-testid="lead-link" className="group block">
-            <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4.5rem] leading-[1.02] mb-6 group-hover:text-[var(--accent)] transition-colors duration-300">
+            <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-5 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
               {lead.title}
             </h1>
             {lead.subtitle && (
-              <p className="font-plex text-xl lg:text-2xl leading-[1.4] text-[#334155] dark:text-[#CBD5E1] max-w-[60ch] mb-8">
+              <p className="font-plex text-lg lg:text-xl leading-[1.45] text-[#334155] dark:text-[#CBD5E1] max-w-[58ch] mb-7">
                 {lead.subtitle}
               </p>
             )}
             <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
               By {lead.author || 'The State of Play'}
-              {lead.read_time ? ` · ${lead.read_time} min read` : ''}
+              {lead.theme ? <span className="text-[#94A3B8]"> · {lead.theme}</span> : null}
+              {lead.read_time ? <span className="text-[#94A3B8]"> · {lead.read_time} min read</span> : null}
             </p>
           </Link>
 
           {lead.image_url && (
-            <div className="mt-14 lg:mt-16">
+            <div className="mt-12 lg:mt-14 overflow-hidden">
               <img
                 src={lead.image_url}
                 alt={lead.title}
                 referrerPolicy="no-referrer"
-                className="w-full aspect-[16/9] object-cover"
+                className="w-full aspect-[16/9] object-cover saturate-0 hover:saturate-100 transition-all duration-700 ease-out"
               />
             </div>
           )}
         </section>
       )}
 
-      {/* RECENT — single column list, no card chrome, no overlines */}
+      {/* RECENT — quiet list, smaller titles, two-column hint on desktop */}
       {articles.length > 0 && (
         <section className="max-w-[1100px] mx-auto px-6 lg:px-12 pb-24 lg:pb-32">
           <div className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
@@ -143,19 +156,18 @@ export const HomeMockup = () => {
                 key={a.id}
                 to={`/${a.id}`}
                 data-testid={`row-${a.id}`}
-                className="group block py-10 lg:py-12 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                className="group grid grid-cols-1 md:grid-cols-12 gap-x-10 gap-y-2 py-8 lg:py-9 border-b border-[#E2E8F0] dark:border-[#1E293B]"
               >
-                <h2 className="font-editorial font-medium tracking-tight text-2xl lg:text-[2rem] leading-[1.18] text-[#0F172A] dark:text-[#F8FAFC] mb-3 max-w-[42ch] group-hover:text-[var(--accent)] transition-colors duration-300">
+                <h2 className="md:col-span-7 font-editorial font-medium tracking-tight text-xl lg:text-[1.625rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] max-w-[34ch] group-hover:text-[var(--accent)] transition-colors duration-300">
                   {a.title}
                 </h2>
                 {a.subtitle && (
-                  <p className="font-plex text-base lg:text-lg leading-relaxed text-[#475569] dark:text-[#94A3B8] max-w-[60ch] mb-4">
+                  <p className="md:col-span-4 font-plex text-base leading-relaxed text-[#475569] dark:text-[#94A3B8] max-w-[40ch] line-clamp-2">
                     {a.subtitle}
                   </p>
                 )}
-                <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
-                  {a.author || 'The State of Play'} · {fmtDate(a.created_at)}
-                  {a.read_time ? ` · ${a.read_time} min` : ''}
+                <p className="md:col-span-1 font-plex text-sm text-[#475569] dark:text-[#94A3B8] md:text-right tabular-nums">
+                  {shortDate(a.created_at)}
                 </p>
               </Link>
             ))}
@@ -163,14 +175,14 @@ export const HomeMockup = () => {
         </section>
       )}
 
-      {/* QUIET SUBSCRIBE — one line, one link. Only for non-members. */}
+      {/* QUIET SUBSCRIBE */}
       {!isMember && (
         <section className="max-w-[1100px] mx-auto px-6 lg:px-12 pb-32 lg:pb-40">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-10 max-w-[60ch]">
-            <p className="font-editorial italic text-2xl lg:text-[1.75rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-6">
+          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 max-w-[55ch]">
+            <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-5">
               The State of Play is a reader-supported publication.
             </p>
-            <p className="font-plex text-base lg:text-lg leading-relaxed text-[#475569] dark:text-[#94A3B8] mb-8">
+            <p className="font-plex text-base leading-relaxed text-[#475569] dark:text-[#94A3B8] mb-6">
               Independent reporting on the business of Indian sport. ₹2,495 a year.
             </p>
             <Link

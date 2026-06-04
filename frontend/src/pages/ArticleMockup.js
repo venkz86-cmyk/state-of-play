@@ -7,9 +7,11 @@ import { MockupFooter } from '../components/MockupFooter';
 
 const fmtDate = (iso) => {
   if (!iso) return '';
-  return new Date(iso)
-    .toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 };
+
+const datelineDate = (d = new Date()) =>
+  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
 export const ArticleMockup = () => {
   const { id } = useParams();
@@ -70,6 +72,8 @@ export const ArticleMockup = () => {
 
   const isPaywalled = article.is_premium && !isMember;
   const bodyHtml = isPaywalled ? article.preview_content : article.content;
+  const issueNo = 47;
+  const beat = article.theme || 'Long Read';
 
   return (
     <div
@@ -78,47 +82,64 @@ export const ArticleMockup = () => {
     >
       <MockupHeader />
 
-      {/* TITLE BLOCK — single column, no overlines, no avatar, no chrome */}
-      <article className="max-w-[720px] mx-auto px-6 lg:px-0 pt-20 lg:pt-28 pb-24 lg:pb-32">
-        <header className="mb-14 lg:mb-16">
-          <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-5xl lg:text-[3.5rem] leading-[1.05] text-[#0F172A] dark:text-[#F8FAFC] mb-7">
+      {/* DATELINE STRIP — same anchor as homepage */}
+      <div className="max-w-[1100px] mx-auto px-6 lg:px-12 pt-10 lg:pt-14">
+        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] tracking-tight">
+            <Link to="/mockup/home" className="hover:text-[var(--accent)] transition-colors duration-200">
+              ← The State of Play
+            </Link>
+            <span className="mx-2 text-[#CBD5E1]">·</span>
+            {datelineDate(new Date(article.created_at))}
+          </span>
+          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
+            No.&nbsp;{issueNo}
+          </span>
+        </div>
+      </div>
+
+      {/* TITLE BLOCK */}
+      <article className="max-w-[720px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-24 lg:pb-32">
+        <header className="mb-12 lg:mb-14">
+          <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mb-6 tracking-tight">
+            {beat}
+          </p>
+          <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[2.75rem] leading-[1.08] text-[#0F172A] dark:text-[#F8FAFC] mb-6 max-w-[24ch]">
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="font-plex text-xl lg:text-2xl leading-[1.4] text-[#334155] dark:text-[#CBD5E1] mb-10">
+            <p className="font-plex text-lg lg:text-xl leading-[1.45] text-[#334155] dark:text-[#CBD5E1] mb-10 max-w-[55ch]">
               {article.subtitle}
             </p>
           )}
           <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
-            By {article.author || 'The State of Play'} · {fmtDate(article.created_at)}
-            {article.read_time ? ` · ${article.read_time} min read` : ''}
+            By {article.author || 'The State of Play'}
+            {article.read_time ? <span className="text-[#94A3B8]"> · {article.read_time} min read</span> : null}
           </p>
         </header>
 
         {article.image_url && (
-          <figure className="mb-14 lg:mb-16 -mx-6 lg:mx-0">
+          <figure className="mb-12 lg:mb-14 -mx-6 lg:mx-0 overflow-hidden">
             <img
               src={article.image_url}
               alt={article.title}
               referrerPolicy="no-referrer"
-              className="w-full aspect-[16/9] object-cover"
+              className="w-full aspect-[16/9] object-cover saturate-0 hover:saturate-100 transition-all duration-700 ease-out"
             />
             {article.image_caption && (
-              <figcaption className="font-plex text-xs text-[#94A3B8] mt-3 px-6 lg:px-0">
+              <figcaption className="font-plex text-xs italic text-[#94A3B8] mt-3 px-6 lg:px-0">
                 {article.image_caption.replace(/<[^>]+>/g, '')}
               </figcaption>
             )}
           </figure>
         )}
 
-        {/* BODY — typography only, no drop cap, no pull quote injection */}
         <div
           className="editorial-prose-quiet"
           data-testid="article-body"
           dangerouslySetInnerHTML={{ __html: bodyHtml || '' }}
         />
 
-        {/* PAYWALL — quiet, no big heading, no orange */}
         {isPaywalled && (
           <div
             data-testid="article-paywall"
@@ -148,14 +169,26 @@ export const ArticleMockup = () => {
             </div>
           </div>
         )}
+
+        {/* Article footer — filed under */}
+        {!isPaywalled && (
+          <div className="mt-16 pt-8 border-t border-[#E2E8F0] dark:border-[#1E293B] flex items-baseline justify-between">
+            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
+              Filed under {beat}
+            </p>
+            <p className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
+              No.&nbsp;{issueNo}
+            </p>
+          </div>
+        )}
       </article>
 
-      {/* RELATED — one quiet list, no eyebrow */}
+      {/* RELATED — single quiet list, smaller */}
       {related.length > 0 && (
         <section className="max-w-[720px] mx-auto px-6 lg:px-0 pb-24 lg:pb-32">
-          <div className="border-t border-[#E2E8F0] dark:border-[#1E293B] pt-10">
-            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mb-6">
-              More from The State of Play
+          <div className="border-t border-[#E2E8F0] dark:border-[#1E293B] pt-8">
+            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mb-5">
+              More from the desk
             </p>
             <ul>
               {related.map((a) => (
@@ -163,12 +196,12 @@ export const ArticleMockup = () => {
                   <Link
                     to={`/mockup/article/${a.id}`}
                     data-testid={`related-${a.id}`}
-                    className="group block py-5"
+                    className="group flex items-baseline justify-between gap-6 py-4"
                   >
-                    <h3 className="font-editorial text-lg lg:text-xl leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                    <h3 className="font-editorial text-base lg:text-lg leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200 max-w-[40ch]">
                       {a.title}
                     </h3>
-                    <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mt-1">
+                    <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums">
                       {fmtDate(a.created_at)}
                     </p>
                   </Link>

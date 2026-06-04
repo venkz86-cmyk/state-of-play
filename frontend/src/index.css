@@ -429,12 +429,13 @@ body::before {
   color: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-  text-decoration-color: rgba(15, 23, 42, 0.35);
-  transition: text-decoration-color 0.2s ease;
+  text-underline-offset: 5px;
+  text-decoration-color: var(--accent);
+  text-decoration-skip-ink: none;
+  transition: text-decoration-color 0.2s ease, text-underline-offset 0.2s ease;
 }
-.dark .editorial-prose-quiet a { text-decoration-color: rgba(248, 250, 252, 0.35); }
-.editorial-prose-quiet a:hover { text-decoration-color: var(--accent); }
+.dark .editorial-prose-quiet a { text-decoration-color: var(--accent); }
+.editorial-prose-quiet a:hover { text-underline-offset: 3px; text-decoration-thickness: 2px; }
 .editorial-prose-quiet strong { font-weight: 600; }
 .editorial-prose-quiet em { font-style: italic; }
 .editorial-prose-quiet blockquote {
