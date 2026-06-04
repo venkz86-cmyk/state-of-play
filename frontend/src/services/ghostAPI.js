@@ -35,6 +35,22 @@ class GhostAPI {
     }
   }
 
+  // Total post count — used for the dateline edition number ("No. X")
+  async getPostCount() {
+    try {
+      const params = new URLSearchParams({
+        key: GHOST_CONTENT_KEY,
+        limit: 1,
+        fields: 'id',
+      });
+      const response = await axios.get(`${this.contentURL}/posts/?${params}`);
+      return response.data?.meta?.pagination?.total ?? 0;
+    } catch (error) {
+      console.error('Ghost post count error:', error);
+      return 0;
+    }
+  }
+
   // Get single post by slug
   async getPost(slug) {
     try {

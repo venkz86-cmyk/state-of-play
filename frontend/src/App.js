@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { BackToTop } from "./components/BackToTop";
+import { MockupBackToTop } from "./components/MockupBackToTop";
 import { Home } from "./pages/Home";
 import { StateOfPlay } from "./pages/StateOfPlay";
 import { LeftField } from "./pages/LeftField";
@@ -81,7 +82,7 @@ function Shell() {
         </Routes>
       </main>
       {!isMockup && <Footer />}
-      <BackToTop />
+      {isMockup ? <MockupBackToTop /> : <BackToTop />}
       <Toaster position="top-right" />
     </div>
   );

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
@@ -18,23 +21,137 @@ const longDate = (iso) => {
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 
-// Mock Left Field briefs (free newsletter teaser)
-const BRIEFS = [
-  { title: 'BCCI commercial committee meets Thursday', date: '03 Jun', tag: 'Note' },
-  { title: 'Sponsorship volumes Q1 ’26: ₹4,300 Cr, down 7%', date: '02 Jun', tag: 'Number' },
-  { title: 'Why three franchises are quietly re-pricing their kit deals', date: '01 Jun', tag: 'Brief' },
-  { title: 'The PE bid for an ISL club has stalled. Sources tell us why.', date: '30 May', tag: 'Tip' },
+// Section label — Geist uppercase 11px, tracked
+const SectionLabel = ({ children, className = '' }) => (
+  <p className={`section-label ${className}`}>{children}</p>
+);
+
+/* ============ Testimonial block (Fix 12) ============ */
+const TESTIMONIALS = [
+  {
+    quote: 'The only publication that treats Indian sports business as a serious beat.',
+    name: '—',
+    title: 'Awaiting reader attribution',
+  },
+  {
+    quote: 'I read every edition. The RCB coverage alone was worth the subscription.',
+    name: '—',
+    title: 'Awaiting reader attribution',
+  },
 ];
 
-// Section label — small caps, restrained
-const SectionLabel = ({ children, className = '' }) => (
-  <p className={`font-plex text-[11px] tracking-[0.18em] uppercase text-[#475569] dark:text-[#94A3B8] tabular-nums ${className}`}>
-    {children}
-  </p>
+const TestimonialBlock = () => {
+  const [i, setI] = useState(0);
+  const t = TESTIMONIALS[i];
+  return (
+    <section
+      data-testid="home-testimonial"
+      className="theme-transition w-full"
+      style={{ backgroundColor: 'var(--surface)' }}
+    >
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12 lg:py-16">
+        <SectionLabel className="mb-6 block">What readers say</SectionLabel>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+          <div
+            aria-hidden="true"
+            className="hidden lg:block lg:col-span-1 font-editorial font-semibold leading-none text-[var(--rule)]"
+            style={{ fontSize: '120px' }}
+          >
+            “
+          </div>
+          <div className="lg:col-span-9 max-w-[60ch]">
+            <blockquote className="font-editorial italic text-[22px] leading-snug text-[var(--text)]">
+              “{t.quote}”
+            </blockquote>
+            <p className="mt-5 font-plex text-[13px] font-bold text-[var(--text)]">
+              {t.name}
+            </p>
+            <p className="font-plex text-[13px] text-[var(--text-label)]">
+              {t.title}
+            </p>
+          </div>
+          <div className="lg:col-span-2 flex lg:justify-end items-center gap-4 mt-2 lg:mt-0">
+            <button
+              type="button"
+              onClick={() => setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)}
+              data-testid="testimonial-prev"
+              className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+            >
+              ← Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => setI((i + 1) % TESTIMONIALS.length)}
+              data-testid="testimonial-next"
+              className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ============ Partners block (Fix 13) ============ */
+const PARTNERS = [
+  {
+    name: 'Sportz Interactive',
+    role: 'Associate Partner',
+    url: 'https://www.sportzinteractive.net/',
+    // logo slot — text-only fallback until real asset is wired
+    logoText: 'Sportz Interactive',
+  },
+];
+
+const PartnersBlock = () => (
+  <section
+    data-testid="home-partners"
+    className="theme-transition w-full"
+    style={{ backgroundColor: 'var(--bg)' }}
+  >
+    <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-10 lg:py-12">
+      <SectionLabel className="text-center mb-8 block">Partners</SectionLabel>
+      <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
+        {PARTNERS.map((p) => (
+          <a
+            key={p.name}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`partner-${p.name.toLowerCase().replace(/\s+/g, '-')}`}
+            className="group flex flex-col items-center"
+          >
+            <span
+              className="font-editorial font-semibold text-[18px] text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors duration-200"
+              style={{ maxHeight: '32px' }}
+            >
+              {p.logoText}
+            </span>
+            <span className="mt-2 font-plex text-[10px] uppercase tracking-[0.08em] text-[#999999]">
+              {p.role}
+            </span>
+          </a>
+        ))}
+      </div>
+      <p className="mt-8 text-center font-plex text-[13px] text-[var(--text-label)]">
+        Interested in partnering with The State of Play?{' '}
+        <a
+          href="mailto:venkat@stateofplay.club"
+          className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+        >
+          Get in touch →
+        </a>
+      </p>
+    </div>
+  </section>
 );
 
 export const HomeMockup = () => {
   const [articles, setArticles] = useState([]);
+  const [briefs, setBriefs] = useState([]);
+  const [editionNo, setEditionNo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const { canAccessPremium } = useAuth();
@@ -42,26 +159,39 @@ export const HomeMockup = () => {
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
 
-  // Locked typography system
-  const system = { display: 'Fraunces', body: 'Geist', tracking: '0.14em' };
-
   useEffect(() => {
+    let active = true;
     (async () => {
       try {
-        const posts = await ghostAPI.getPosts({ limit: 20 });
+        const [posts, count] = await Promise.all([
+          ghostAPI.getPosts({ limit: 20 }),
+          ghostAPI.getPostCount(),
+        ]);
+        if (!active) return;
         setArticles(posts);
+        if (count && count > 0) setEditionNo(count);
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     })();
+
+    (async () => {
+      try {
+        if (!API) return;
+        const r = await axios.get(`${API}/api/substack/feed`, { timeout: 5000 });
+        if (active && Array.isArray(r.data)) setBriefs(r.data.slice(0, 4));
+      } catch (e) { /* sidebar is non-blocking */ }
+    })();
+
+    return () => { active = false; };
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
-        <span className="text-sm text-[#475569]">Loading…</span>
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <span className="font-plex text-sm text-[var(--text-muted)]">Loading…</span>
       </div>
     );
   }
@@ -73,25 +203,19 @@ export const HomeMockup = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
-      style={{
-        '--display-font': `'${system.display}'`,
-        '--body-font': `'${system.body}'`,
-        '--label-font': `'${system.body}'`,
-        '--label-tracking': system.tracking,
-      }}
+      className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
       data-testid="mockup-home"
     >
       <MockupHeader />
 
-      {/* DATELINE */}
+      {/* DATELINE — Geist, #444, weight 400, "No. X · Year Two" */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
-          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
+        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
+          <span className="font-plex text-[14px] font-normal text-[#444444] dark:text-[#888888]">
             Bengaluru · {datelineDate()}
           </span>
-          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
-            No.&nbsp;47 · Vol.&nbsp;I
+          <span className="font-plex text-[14px] font-normal text-[#444444] dark:text-[#888888] tabular-nums">
+            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A047'} · Year Two
           </span>
         </div>
       </div>
@@ -129,44 +253,46 @@ export const HomeMockup = () => {
               </p>
             </Link>
 
-            {/* BRIEFING RAIL */}
-            <aside className="lg:col-span-4 lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
-              <div className="flex items-baseline justify-between mb-6">
-                <p className="font-editorial italic text-lg text-[#0F172A] dark:text-[#F8FAFC]">
-                  The Briefing
-                </p>
-                <SectionLabel>The Left Field · Free</SectionLabel>
+            {/* BRIEFING RAIL — Fix 11: "THE LEFT FIELD" left, "FREE" right, no italic.
+                 Data pulled live from /api/substack/feed. */}
+            <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)] lg:pl-12">
+              <div className="flex items-center justify-between mb-6 pb-3 border-b border-[var(--rule)]">
+                <SectionLabel>The Left Field</SectionLabel>
+                <SectionLabel className="!text-[var(--accent-burgundy)]">Free</SectionLabel>
               </div>
               <ul>
-                {BRIEFS.map((b, i) => (
+                {(briefs.length > 0 ? briefs : []).map((b, i, arr) => (
                   <li
-                    key={i}
-                    className={`pb-5 mb-5 ${i === BRIEFS.length - 1 ? '' : 'border-b border-[#E2E8F0] dark:border-[#1E293B]'}`}
+                    key={b.id || i}
+                    className={`pb-5 mb-5 ${i === arr.length - 1 ? '' : 'border-b border-[var(--rule)]'}`}
                   >
                     <a
-                      href="https://theleftfield.substack.com"
+                      href={b.external_url || 'https://theleftfield.substack.com'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group block"
+                      data-testid={`home-brief-${i}`}
                     >
-                      <div className="flex items-baseline justify-between gap-3 mb-1.5">
-                        <SectionLabel className="!text-[10px] !tracking-[0.16em] !text-[var(--accent)]">
-                          {b.tag}
-                        </SectionLabel>
-                        <SectionLabel className="!text-[10px] shrink-0">{b.date}</SectionLabel>
-                      </div>
-                      <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                      <SectionLabel className="!text-[10px] mb-1.5 block">
+                        {shortDate(b.created_at) || 'Brief'}
+                      </SectionLabel>
+                      <h3 className="headline-lock font-editorial font-semibold text-[17px] leading-snug">
                         {b.title}
                       </h3>
                     </a>
                   </li>
                 ))}
+                {briefs.length === 0 && (
+                  <li className="font-plex text-sm text-[var(--text-muted)]">
+                    Loading briefs…
+                  </li>
+                )}
               </ul>
               <a
                 href="https://theleftfield.substack.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
               >
                 Subscribe to The Left Field →
               </a>
@@ -197,8 +323,9 @@ export const HomeMockup = () => {
                     {a.subtitle}
                   </p>
                 )}
-                <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] tabular-nums">
+                <p className="font-plex text-[12px] text-[var(--text-label)] tabular-nums">
                   {a.author || 'Venkat Ananth'} · {longDate(a.created_at)}
+                  {a.read_time ? ` · ${a.read_time} min read` : ''}
                 </p>
               </Link>
             ))}
@@ -209,11 +336,9 @@ export const HomeMockup = () => {
       {/* THE DESK — 3 column grid, 2 stories each, with section labels */}
       {desk.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-14 lg:pb-20">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+          <div className="border-t border-[var(--rule)] pt-8">
             <div className="flex items-baseline justify-between mb-8">
-              <p className="font-editorial italic text-lg text-[#0F172A] dark:text-[#F8FAFC]">
-                The Desk
-              </p>
+              <SectionLabel>The Desk</SectionLabel>
               <SectionLabel>This issue · {desk.length.toString().padStart(2, '0')} stories</SectionLabel>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 lg:gap-x-12 gap-y-8">
@@ -222,14 +347,15 @@ export const HomeMockup = () => {
                   key={a.id}
                   to={`/${a.id}`}
                   data-testid={`desk-${a.id}`}
-                  className="group block py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                  className="group block py-5 border-b border-[var(--rule)]"
                 >
-                  <SectionLabel className="mb-2">{a.theme || 'Analysis'}</SectionLabel>
-                  <h3 className="font-editorial font-medium text-base lg:text-[1.125rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-2 group-hover:text-[var(--accent)] transition-colors duration-200">
+                  <SectionLabel className="mb-2 block">{a.theme || 'Analysis'}</SectionLabel>
+                  <h3 className="headline-lock font-editorial font-medium text-[20px] leading-snug mb-2">
                     {a.title}
                   </h3>
-                  <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] tabular-nums">
+                  <p className="font-plex text-[12px] text-[var(--text-label)] tabular-nums">
                     {a.author || 'Venkat Ananth'} · {longDate(a.created_at)}
+                    {a.read_time ? ` · ${a.read_time} min read` : ''}
                   </p>
                 </Link>
               ))}
@@ -238,31 +364,36 @@ export const HomeMockup = () => {
         </section>
       )}
 
+      {/* WHAT READERS SAY — testimonial block (Fix 12) */}
+      <TestimonialBlock />
+
+      {/* PARTNERS — Fix 13 */}
+      <PartnersBlock />
+
       {/* ARCHIVE — quiet dense list */}
       {archive.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20 lg:pb-28">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
-            <p className="font-editorial italic text-lg text-[#0F172A] dark:text-[#F8FAFC] mb-6">
-              From the Archive
-            </p>
-            <div className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+          <div className="border-t border-[var(--rule)] pt-8">
+            <SectionLabel className="mb-6 block">From the Archive</SectionLabel>
+            <div className="border-t border-[var(--rule)]">
               {archive.map((a) => (
                 <Link
                   key={a.id}
                   to={`/${a.id}`}
                   data-testid={`archive-${a.id}`}
-                  className="group flex items-baseline justify-between gap-6 py-4 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                  className="group flex items-baseline justify-between gap-6 py-4 border-b border-[var(--rule)]"
                 >
                   <div className="flex-1 min-w-0">
-                    <h2 className="headline-lock font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug">
+                    <h2 className="headline-lock font-editorial font-medium text-[17px] leading-snug">
                       {a.title}
                     </h2>
-                    <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] mt-1">
+                    <p className="font-plex text-[12px] text-[var(--text-label)] mt-1">
                       {a.author || 'Venkat Ananth'}
-                      {a.theme ? <span className="text-[#94A3B8]"> · {a.theme}</span> : null}
+                      {a.theme ? <span> · {a.theme}</span> : null}
+                      {a.read_time ? <span> · {a.read_time} min read</span> : null}
                     </p>
                   </div>
-                  <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums whitespace-nowrap">
+                  <p className="font-plex text-[12px] text-[var(--text-label)] shrink-0 tabular-nums whitespace-nowrap">
                     {longDate(a.created_at)}
                   </p>
                 </Link>

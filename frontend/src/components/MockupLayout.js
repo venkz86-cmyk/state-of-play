@@ -4,8 +4,7 @@ import { MockupFooter } from './MockupFooter';
 // Shared overline style — used across every mockup page
 export const Overline = ({ children, className = '' }) => (
   <span
-    className={`text-[10px] md:text-[11px] font-medium uppercase tabular-nums text-[#475569] ${className}`}
-    style={{ fontFamily: 'var(--label-font), "IBM Plex Sans", sans-serif', letterSpacing: 'var(--label-tracking, 0.22em)' }}
+    className={`section-label ${className}`}
   >
     {children}
   </span>
@@ -15,7 +14,7 @@ export const Overline = ({ children, className = '' }) => (
 export const MockupLayout = ({ children, testId = 'mockup-page', hideFooterHeroCta = false }) => (
   <div
     data-testid={testId}
-    className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
+    className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
   >
     <MockupHeader />
     <main>{children}</main>

@@ -4,6 +4,10 @@ import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
+import { ShareRow } from '../components/ShareRow';
+import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
+import { Paywall } from '../components/Paywall';
+import { ReadingProgress } from '../components/ReadingProgress';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -12,10 +16,20 @@ const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
 const SectionLabel = ({ children, className = '' }) => (
-  <p className={`font-plex text-[11px] tracking-[0.18em] uppercase text-[#475569] dark:text-[#94A3B8] tabular-nums ${className}`}>
-    {children}
-  </p>
+  <p className={`section-label ${className}`}>{children}</p>
 );
+
+/* Truncate Ghost HTML to first N <p> tags for the paywall preview. */
+const previewParagraphs = (html, count = 3) => {
+  if (!html) return '';
+  const out = [];
+  const re = /<p[\s\S]*?<\/p>/gi;
+  let m;
+  while ((m = re.exec(html)) && out.length < count) {
+    out.push(m[0]);
+  }
+  return out.join('\n');
+};
 
 export const ArticleMockup = () => {
   const { id } = useParams();
@@ -28,6 +42,7 @@ export const ArticleMockup = () => {
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [size, setSize] = useArticleSize();
 
   useEffect(() => {
     let active = true;
@@ -43,7 +58,7 @@ export const ArticleMockup = () => {
         setArticle(post);
         const recent = await ghostAPI.getPosts({ limit: 6 });
         if (!active) return;
-        setRelated(recent.filter((p) => p.id !== post?.id).slice(0, 4));
+        setRelated(recent.filter((p) => p.id !== post?.id).slice(0, 3));
       } catch (e) {
         console.error(e);
       } finally {
@@ -55,71 +70,80 @@ export const ArticleMockup = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
-        <span className="text-sm text-[#475569]">Loading…</span>
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <span className="font-plex text-sm text-[var(--text-muted)]">Loading…</span>
       </div>
     );
   }
   if (!article) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-6">
         <div className="text-center">
-          <p className="font-editorial text-2xl mb-3">Not found.</p>
-          <Link to="/mockup/home" className="text-[var(--accent)] underline underline-offset-4">Back home</Link>
+          <p className="font-editorial text-2xl mb-3 text-[var(--text)]">Not found.</p>
+          <Link to="/mockup/home" className="text-[var(--accent-burgundy)] underline underline-offset-4">Back home</Link>
         </div>
       </div>
     );
   }
 
   const isPaywalled = article.is_premium && !isMember;
-  const bodyHtml = isPaywalled ? article.preview_content : article.content;
+  const bodyHtml = isPaywalled
+    ? previewParagraphs(article.content, 3)
+    : (article.content || article.preview_content || '');
   const beat = article.theme || 'Long Read';
 
   return (
     <div
-      className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
+      className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
       data-testid="mockup-article"
     >
+      <ReadingProgress />
       <MockupHeader />
 
       {/* DATELINE STRIP */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
-          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
-            <Link to="/mockup/home" className="hover:text-[var(--accent)] transition-colors duration-200">
+        <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
+          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
+            <Link to="/mockup/home" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
               ← The State of Play
             </Link>
-            <span className="mx-2 text-[#CBD5E1]">·</span>
+            <span className="mx-2 text-[var(--text-label)]">·</span>
             {datelineDate(new Date(article.created_at))}
           </span>
-          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
-            No.&nbsp;47 · Vol.&nbsp;I
+          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">
+            Year Two
           </span>
         </div>
       </div>
 
-      {/* ARTICLE BODY */}
-      <article className="max-w-[720px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
-        <header className="mb-10 lg:mb-12">
+      {/* ARTICLE BODY — max 680px per spec */}
+      <article className="max-w-[680px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
+        <header className="mb-8 lg:mb-10">
           <SectionLabel className="mb-5">
-            {beat}{article.is_premium ? ' · For Subscribers' : ''}
+            {beat}{article.is_premium ? ' · For Subscribers' : ' · Free'}
           </SectionLabel>
-          <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[2.75rem] leading-[1.08] text-[#0F172A] dark:text-[#F8FAFC] mb-6 max-w-[24ch]">
+          <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[40px] leading-[1.08] text-[var(--text)] mb-5 max-w-[24ch]">
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="font-reading text-xl lg:text-[1.375rem] italic leading-[1.45] text-[#334155] dark:text-[#CBD5E1] mb-8 max-w-[55ch]">
+            <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] mb-6 max-w-[55ch]">
               {article.subtitle}
             </p>
           )}
-          <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
+          <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
             By {article.author || 'Venkat Ananth'}
-            {article.read_time ? <span className="text-[#94A3B8]"> · {article.read_time} min read</span> : null}
+            {article.read_time ? <span> · {article.read_time} min read</span> : null}
           </p>
+
+          {/* Share row + Font-size toggle: left + right within the column */}
+          <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
+            <ShareRow title={article.title} />
+            <MockupFontSizeToggle value={size} onChange={setSize} />
+          </div>
         </header>
 
         {article.image_url && (
-          <figure className="mb-12 lg:mb-14 -mx-6 lg:mx-0 overflow-hidden">
+          <figure className="mb-10 lg:mb-12 -mx-6 lg:mx-0 overflow-hidden">
             <img
               src={article.image_url}
               alt={article.title}
@@ -127,7 +151,7 @@ export const ArticleMockup = () => {
               className="w-full aspect-[16/9] object-cover saturate-0 hover:saturate-100 transition-all duration-700 ease-out"
             />
             {article.image_caption && (
-              <figcaption className="font-plex text-xs italic text-[#94A3B8] mt-3 px-6 lg:px-0">
+              <figcaption className="font-plex text-[12px] italic text-[var(--text-label)] mt-3 px-6 lg:px-0">
                 {article.image_caption.replace(/<[^>]+>/g, '')}
               </figcaption>
             )}
@@ -137,67 +161,68 @@ export const ArticleMockup = () => {
         <div
           className="editorial-prose-quiet"
           data-testid="article-body"
-          dangerouslySetInnerHTML={{ __html: bodyHtml || '' }}
+          data-size={size}
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
 
-        {isPaywalled && (
-          <div data-testid="article-paywall" className="mt-14 pt-9 border-t border-[#0F172A] dark:border-[#F8FAFC]">
-            <p className="font-editorial italic text-xl lg:text-2xl leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-4 max-w-[50ch]">
-              The rest of this piece is for subscribers.
-            </p>
-            <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] mb-6 max-w-[55ch]">
-              ₹2,495 a year. Independent reporting on the business of Indian sport.
-            </p>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <Link to="/signup" data-testid="paywall-subscribe" className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
-                Subscribe →
-              </Link>
-              <Link to="/login" data-testid="paywall-login" className="font-plex text-base text-[#475569] dark:text-[#94A3B8] underline underline-offset-[6px] decoration-1 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] transition-colors">
-                Already a subscriber? Sign in
-              </Link>
-            </div>
-          </div>
-        )}
+        {isPaywalled && <Paywall />}
 
         {!isPaywalled && (
-          <div className="mt-14 pt-6 border-t border-[#E2E8F0] dark:border-[#1E293B] flex items-baseline justify-between">
-            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
+          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex items-baseline justify-between">
+            <p className="font-plex text-[13px] text-[var(--text-label)]">
               Filed under {beat}
             </p>
-            <p className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
-              No.&nbsp;47
+            <p className="font-plex text-[13px] text-[var(--text-label)] tabular-nums">
+              {longDate(article.created_at)}
             </p>
           </div>
         )}
       </article>
 
-      {/* RELATED — 2-column dense */}
+      {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks */}
       {related.length > 0 && (
-        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20 lg:pb-28">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
-            <p className="font-editorial italic text-lg text-[#0F172A] dark:text-[#F8FAFC] mb-6">
-              More from the desk
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0">
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20 lg:pb-24">
+          <div className="border-t border-[var(--rule)] pt-8">
+            <SectionLabel className="mb-6 block">More on this topic</SectionLabel>
+            <ul className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-0">
               {related.map((a) => (
-                <Link
-                  key={a.id}
-                  to={`/mockup/article/${a.id}`}
-                  data-testid={`related-${a.id}`}
-                  className="group flex items-baseline justify-between gap-6 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
-                >
-                  <div className="flex-1 min-w-0">
-                    <SectionLabel className="mb-1.5">{a.theme || 'Analysis'}</SectionLabel>
-                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                <li key={a.id} className="border-t border-[var(--rule)] md:border-t-0">
+                  <Link
+                    to={`/mockup/article/${a.id}`}
+                    data-testid={`related-${a.id}`}
+                    className="group block py-5"
+                  >
+                    <SectionLabel className="mb-2 block">{a.theme || 'Analysis'}</SectionLabel>
+                    <h3 className="headline-lock font-editorial font-medium text-[17px] leading-snug mb-2">
                       {a.title}
                     </h3>
-                  </div>
-                  <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums whitespace-nowrap">
-                    {longDate(a.created_at)}
-                  </p>
-                </Link>
+                    <p className="font-plex text-[12px] text-[var(--text-label)] tabular-nums">
+                      {longDate(a.created_at)}
+                      {a.read_time ? ` · ${a.read_time} min read` : ''}
+                    </p>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* Comments stub (Ghost integration deferred per user) */}
+      {!isMember && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
+          <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
+            <SectionLabel className="mb-3 block">Comments</SectionLabel>
+            <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
+              Comments are for members. Subscribe to join the conversation.
+            </p>
+            <Link
+              to="/signup"
+              data-testid="comments-subscribe"
+              className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+            >
+              Subscribe →
+            </Link>
           </div>
         </section>
       )}

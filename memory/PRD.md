@@ -72,10 +72,24 @@ Build a premium content website for sports business intelligence with a focus on
 ### Mockup Redesign (`/mockup/*`) — Editorial Aesthetic
 - [x] All 10 mockup surfaces rebuilt in dense WSJ/FT/Information style (Feb 2026)
 - [x] Font system locked: **Fraunces** (headlines) × **Newsreader** (article body + deks) × **Geist** (UI)
-- [x] Headline colour-lock CSS rule (`.headline-lock`) prevents visited/hover link colour leaking into list/archive/sidebar headlines
+- [x] Headline colour-lock CSS rule (`.headline-lock`) prevents visited/hover link colour leaking into list/archive/sidebar/grid headlines
 - [x] LeftField page: secondary brief added beneath lead to balance left column, envelope icon removed, redundant global footer CTA suppressed via `hideFooterHeroCta` prop
-- [x] MockupFooter: copy locked ("…Money, media, ownership, and power — reported from Bengaluru."), location simplified to "Bengaluru", italic tagline at `#AAAAAA` contrast
+- [x] MockupFooter: copy locked ("…Money, media, ownership, and power, from Bengaluru.") in Geist, location simplified to "Bengaluru", italic tagline at `#AAAAAA` contrast
+- [x] **Round 3 — full design-system pass (Feb 2026)**
+  - [x] Light + dark colour tokens (CSS vars): `--bg`, `--surface`, `--rule`, `--text`, `--text-muted`, `--text-label`, `--accent-blue`, `--accent-burgundy`, `--nav-bg`, `--footer-bg`
+  - [x] Dark mode toggle in `MockupHeader` (Sun/Moon), system preference default, 200ms transitions
+  - [x] Subscribe button: burgundy `#A0291C`, white text, sharp 0 radius, 48px height
+  - [x] Homepage dateline: Geist 14px `#444444`, "No. X · Year Two" with X wired to live Ghost post count
+  - [x] Briefing rail: "THE LEFT FIELD" / "FREE" header (no italic), data pulled from `/api/substack/feed`
+  - [x] Article page: max-width 680px, Newsreader 17/1.75 light · 1.8 dark, S/M/L font-size toggle with `localStorage`, share row (X · LinkedIn · WhatsApp · Copy link), reading progress bar (burgundy, 3px), "MORE ON THIS TOPIC" related strip
+  - [x] Paywall block: gradient fade + Fraunces "This edition is for members." + 1,850-readers ₹2,499 line + burgundy Subscribe + blue Sign-in link
+  - [x] BackToTop restyled to "↑ TOP" text on mockup routes only (live unchanged)
+  - [x] Homepage: "WHAT READERS SAY" testimonial block (2 placeholder quotes, prev/next), "PARTNERS" block with Sportz Interactive as Associate Partner
+  - [x] Teams pricing fixed: Team-5 ₹11,800 / Team-10 ₹23,600, "GST inclusive", "Best value" badge, Razorpay links, "Members-only events" replaces "Breaking news alerts", FAQ updated
+  - [x] Member dashboard: solid `#E5E2DC` stats dividers, Notifications row → "New editions"
+  - [x] About editor's note copy updated, Outfield description copy updated
 - [ ] Final user sign-off → rollout to live routes
+- [ ] **Deferred**: Ghost native comments integration (user choice — future ship). Current state: non-members see "Comments are for members. Subscribe to join the conversation." CTA on article page.
 
 ## Key URLs
 - Teams Sales: `/teams`

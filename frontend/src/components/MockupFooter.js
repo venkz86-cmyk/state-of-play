@@ -23,58 +23,62 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
   return (
     <footer
       data-testid="mockup-footer"
-      className="bg-[#090E17] text-white border-t border-white/10"
+      className="theme-transition text-white"
+      style={{ backgroundColor: 'var(--footer-bg)' }}
     >
-      {/* Editorial masthead row — hidden on pages with their own conversion section */}
+      {/* Editorial CTA — hidden on pages with their own conversion section */}
       {!hideHeroCta && (
-      <div className="border-b border-white/10">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
-          <div className="lg:col-span-7">
-            <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] max-w-3xl">
-              The State of Play.
-              <br />
-              <em className="italic font-normal text-[#AAAAAA]">
-                The business of sport, from an India lens.
-              </em>
-            </h2>
-          </div>
+        <div
+          className="border-t border-b border-white/10"
+          style={{ backgroundColor: 'var(--footer-cta-bg)' }}
+        >
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-14 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+            <div className="lg:col-span-7">
+              <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] max-w-3xl">
+                The State of Play.
+                <br />
+                <em className="italic font-normal text-[#AAAAAA]">
+                  The business of sport, from an India lens.
+                </em>
+              </h2>
+            </div>
 
-          <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-5">
-            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/60">
-              Read with us
-            </span>
-            <Link
-              to="/signup"
-              data-testid="mockup-footer-subscribe"
-              className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-8 py-4 text-sm tracking-wide transition-colors duration-200"
-            >
-              Subscribe
-              <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-            </Link>
+            <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-5">
+              <span className="font-plex text-[11px] tracking-[0.08em] uppercase text-white/60">
+                Read with us
+              </span>
+              <Link
+                to="/signup"
+                data-testid="mockup-footer-subscribe"
+                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-6 transition-colors duration-200"
+                style={{ borderRadius: 0 }}
+              >
+                Subscribe
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
-      {/* Index columns — newspaper masthead style */}
+      {/* Index columns */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 lg:gap-12">
-          {/* Brand */}
+          {/* Brand — Fix 15: Geist body copy, not italic */}
           <div className="col-span-2">
-            <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50 block mb-4">
+            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-4">
               The Publication
             </span>
-            <p className="font-editorial italic text-xl lg:text-2xl leading-snug text-white/85 max-w-md mb-6">
-              The State of Play covers the business of Indian sport. Money, media, ownership, and power — reported from Bengaluru.
+            <p className="font-plex text-[14px] leading-[1.6] text-[#888888] max-w-md mb-6">
+              The State of Play reports on the business of Indian sport. Money, media, ownership, and power, from Bengaluru.
             </p>
-            <div className="flex flex-wrap items-center gap-3 font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50">
+            <div className="flex flex-wrap items-center gap-3 font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
               <span>Bengaluru</span>
             </div>
           </div>
 
           {/* Navigation */}
           <div>
-            <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
+            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
               Navigation
             </span>
             <ul className="space-y-3">
@@ -82,7 +86,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
                 <li key={item.to}>
                   <Link
                     to={item.to}
-                    className="font-plex text-sm text-white/80 hover:text-white transition-colors duration-200"
+                    className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
                   >
                     {item.label}
                   </Link>
@@ -93,7 +97,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
 
           {/* Membership & Legal */}
           <div>
-            <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
+            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
               Membership & Legal
             </span>
             <ul className="space-y-3">
@@ -101,7 +105,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
                 <li key={item.to}>
                   <Link
                     to={item.to}
-                    className="font-plex text-sm text-white/80 hover:text-white transition-colors duration-200"
+                    className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
                   >
                     {item.label}
                   </Link>
@@ -115,10 +119,10 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
       {/* Colophon */}
       <div className="border-t border-white/10">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50">
+          <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
             © {year} Left Field Ventures · Published as The State of Play
           </span>
-          <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50">
+          <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
             stateofplay.club
           </span>
         </div>

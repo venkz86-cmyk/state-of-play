@@ -3,8 +3,26 @@ import { Plus, Minus } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const PLANS = [
-  { id: 'team-5', name: 'Team-5', seats: 5, price: '₹10,000', perSeat: '₹2,000', save: 'Save ₹2,495 vs individual', badge: 'Founding rate' },
-  { id: 'team-10', name: 'Team-10', seats: 10, price: '₹20,000', perSeat: '₹2,000', save: 'Save ₹4,990 vs individual', badge: 'Most popular' },
+  {
+    id: 'team-5',
+    name: 'Team-5',
+    seats: 5,
+    price: '₹11,800',
+    perSeat: '₹2,360 per seat',
+    save: 'Save ₹2,035 vs individual rate',
+    badge: 'Founding rate',
+    href: 'https://rzp.io/rzp/tsopteam5',
+  },
+  {
+    id: 'team-10',
+    name: 'Team-10',
+    seats: 10,
+    price: '₹23,600',
+    perSeat: '₹2,360 per seat',
+    save: 'Save ₹4,990 vs individual rate',
+    badge: 'Best value',
+    href: 'https://rzp.io/rzp/tsopteam10',
+  },
 ];
 
 const AUDIENCES = [
@@ -15,12 +33,12 @@ const AUDIENCES = [
 
 const FEATURES = [
   'Weekly TSOP deep dive', 'Bi-weekly Left Field briefs', 'Full archive access',
-  'Breaking news alerts', 'Centralised billing', 'GST-compliant invoicing',
+  'Members-only events', 'Centralised billing', 'GST-compliant invoicing',
   'Self-serve team management', 'Priority email support',
 ];
 
 const FAQS = [
-  ['How does team access work?', 'You pay for a fixed number of seats, then use our dashboard to add team members by email. Each member gets a Ghost login link.'],
+  ['How does team access work?', 'You pay for a fixed number of seats, then use our dashboard to add team members by email. Each member gets a private login link by email.'],
   ['Can we add or remove members?', 'Yes — use the team dashboard at any time. Changes take effect immediately.'],
   ['What payment methods do you accept?', 'All major credit/debit cards and UPI via Razorpay. International customers can pay via card.'],
   ['How does renewal work?', 'Founding customers who sign up before June 30, 2026 get Year 1 at the founding rate, then a gentle increase in Year 2.'],
@@ -56,22 +74,29 @@ export const TeamsMockup = () => {
               <div key={p.id} data-testid={`teams-plan-${p.id}`}>
                 <Overline className="!normal-case !tracking-normal !text-sm block mb-3">{p.badge}</Overline>
                 <h3 className="font-editorial font-medium text-2xl leading-tight mb-1">{p.name}</h3>
-                <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mb-6">{p.seats} seats for your team</p>
+                <p className="font-plex text-sm text-[var(--text-muted)] mb-6">{p.seats} seats for your team</p>
                 <div className="flex items-end gap-2 mb-1">
                   <span className="font-editorial font-semibold text-[3rem] lg:text-[4rem] leading-[0.9]">{p.price}</span>
-                  <span className="font-plex text-sm text-[#475569] pb-2">+ GST / year</span>
+                  <span className="font-plex text-sm text-[var(--text-muted)] pb-2">/ year</span>
                 </div>
-                <p className="font-plex text-sm text-[#475569] mb-1">{p.perSeat} per seat — 20% off individual</p>
-                <p className="font-plex text-xs text-[var(--accent)] mb-5">{p.save}</p>
-                <button type="button" className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
+                <p className="font-plex text-[13px] text-[#666666] mb-3">GST inclusive</p>
+                <p className="font-plex text-sm text-[var(--text-muted)] mb-1">{p.perSeat}</p>
+                <p className="font-plex text-xs text-[var(--accent-burgundy)] mb-5">{p.save}</p>
+                <a
+                  href={p.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`teams-cta-${p.id}`}
+                  className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                >
                   Get started →
-                </button>
+                </a>
               </div>
             ))}
           </div>
-          <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mt-10">
-            Larger teams? Custom pricing for 15+ seats —{' '}
-            <a href="mailto:venkat@stateofplay.club" className="text-[var(--accent)] underline underline-offset-[6px] decoration-1">get in touch</a>.
+          <p className="font-plex text-sm text-[var(--text-muted)] mt-10">
+            Larger teams? Custom pricing for 15+ seats:{' '}
+            <a href="mailto:venkat@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1">get in touch</a>.
           </p>
         </div>
       </section>

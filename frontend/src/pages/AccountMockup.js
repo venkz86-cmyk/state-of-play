@@ -43,16 +43,20 @@ export const AccountMockup = () => {
         </div>
       </section>
 
-      {/* Stat strip */}
+      {/* Stat strip — Fix 22: solid 1px #E5E2DC dividers */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-y border-[#0F172A] dark:border-[#F8FAFC] grid grid-cols-2 md:grid-cols-4">
+        <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4">
           {[
             ['Plan', 'Annual'],
             ['Renews', '12 Feb 2027'],
             ['Next charge', '₹2,495'],
             ['Member since', '12 Feb 2026'],
           ].map(([k, v], i) => (
-            <div key={k} className={`py-6 px-6 ${i > 0 ? 'border-l border-[#E2E8F0] dark:border-[#1E293B]' : ''}`}>
+            <div
+              key={k}
+              className={`py-6 px-6 ${i > 0 ? 'border-l border-[var(--rule)]' : ''}`}
+              style={{ borderLeftWidth: i > 0 ? '1px' : 0 }}
+            >
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
               <p className="font-editorial font-medium text-lg lg:text-xl leading-tight">{v}</p>
             </div>
@@ -91,7 +95,7 @@ export const AccountMockup = () => {
           <ul className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
             {[
               ['Reading list', 'Saved articles, synced across devices.', 'View →'],
-              ['Notifications', 'Weekly TSOP · Left Field briefs · Breaking news.', 'Edit →'],
+              ['Notifications', 'Weekly TSOP · Left Field briefs · New editions.', 'Edit →'],
               ['Billing', 'Last invoice 12 Feb 2026 · ₹2,495 · Razorpay.', 'Download invoice →'],
               ['Insider Drops · Soon', 'Subscriber-only feed of deal whispers and short notes.', 'Notify me →'],
             ].map(([title, desc, cta]) => (

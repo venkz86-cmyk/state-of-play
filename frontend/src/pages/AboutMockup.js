@@ -48,7 +48,7 @@ export const AboutMockup = () => (
           In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained, intelligent reporting on how sport actually works.
         </p>
         <p>
-          The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition that cuts through noise to explain how money, power and strategy are reshaping Indian sport — and how those shifts connect to the wider sporting economy.
+          The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition on how money, power and strategy are reordering Indian sport, and what those shifts mean for the wider sporting economy.
         </p>
       </div>
     </section>

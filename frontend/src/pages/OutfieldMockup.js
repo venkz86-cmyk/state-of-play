@@ -51,8 +51,8 @@ export const OutfieldMockup = () => (
       <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[3rem] lg:text-[4rem] leading-[1] mb-7 max-w-[22ch]">
         Where sports business <em className="italic font-normal">meets, in person.</em>
       </h1>
-      <p className="font-plex text-lg lg:text-xl text-[#475569] dark:text-[#94A3B8] max-w-[58ch] leading-relaxed">
-        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Quarterly Roundtables for subscribers. Premium Speakeasies for decision-makers.
+      <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[58ch] leading-relaxed">
+        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Quarterly Roundtables for subscribers and premium Speakeasies for decision-makers, both off the record, both in person.
       </p>
     </section>
 
