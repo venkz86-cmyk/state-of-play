@@ -203,6 +203,12 @@ export const AccountMockup = () => {
           </ul>
         </div>
       </section>
+
+      <InvoiceRequestModal
+        open={invoiceOpen}
+        onClose={() => setInvoiceOpen(false)}
+        memberEmail={memberEmail}
+      />
     </MockupLayout>
   );
 };

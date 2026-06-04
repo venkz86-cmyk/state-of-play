@@ -1315,25 +1315,35 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
             )
 
     # ─── 2. confirm paid member ───────────────────────────────
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail="Member verification unavailable")
+
+    import httpx
     member = None
-    try:
-        if GHOST_ADMIN_API_KEY:
-            import httpx
-            token = create_ghost_admin_token()
-            async with httpx.AsyncClient() as http_client:
+    last_err = None
+    token = create_ghost_admin_token()
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
                 r = await http_client.get(
                     f"{GHOST_URL}/ghost/api/admin/members/",
                     params={"filter": f"email:{req.email}", "include": "subscriptions,labels"},
                     headers={"Authorization": f"Ghost {token}"},
                 )
-                if r.status_code == 200:
-                    members = r.json().get("members", [])
-                    if members:
-                        member = members[0]
-    except Exception as e:
-        logger.error(f"Ghost lookup for invoice failed: {e}")
+            if r.status_code == 200:
+                members = r.json().get("members", [])
+                if members:
+                    member = members[0]
+                break
+            last_err = f"HTTP {r.status_code}"
+        except Exception as e:
+            last_err = repr(e)
+            logger.warning(f"Ghost lookup for invoice attempt {attempt+1} failed: {last_err}")
 
     if not member:
+        if last_err:
+            logger.error(f"Ghost lookup for invoice failed after retries: {last_err}")
+            raise HTTPException(status_code=502, detail="Could not reach member directory, please try again")
         raise HTTPException(status_code=404, detail="No matching member found")
 
     labels = [(lbl.get("name") or "").lower() for lbl in (member.get("labels") or [])]
