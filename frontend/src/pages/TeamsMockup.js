@@ -98,7 +98,7 @@ export const TeamsMockup = () => {
           </div>
           <p className="font-plex text-sm text-[var(--text-muted)] mt-10">
             Larger teams? Custom pricing for 15+ seats:{' '}
-            <a href="mailto:venkat@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1">get in touch</a>.
+            <a href="mailto:prerna@stateofplay.club?subject=Custom%20team%20pricing%20%E2%80%94%2015%2B%20seats" className="text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1">get in touch</a>.
           </p>
         </div>
       </section>

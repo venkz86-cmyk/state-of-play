@@ -3,7 +3,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 const DESKS = [
   ['Memberships', 'Account, billing, GST invoices', 'venkat@stateofplay.club'],
   ['Editorial', 'Tips, leads, corrections', 'venkat@stateofplay.club'],
-  ['Group / Corporate', 'Team subscriptions, multi-seat plans', 'venkat@stateofplay.club'],
+  ['Group / Corporate', 'Team subscriptions, multi-seat plans', 'prerna@stateofplay.club'],
   ['Partnerships & Press', 'Sponsorships, interviews, speaking', 'venkat@stateofplay.club'],
 ];
 

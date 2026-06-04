@@ -96,7 +96,7 @@ export const PartnershipsMockup = () => (
             Tell us who you are, what you’re trying to reach, and the cycle you have in mind. We’ll come back within a week with a tier that fits — or with a candid no.
           </p>
           <a
-            href="mailto:venkat@stateofplay.club?subject=Partnerships"
+            href="mailto:prerna@stateofplay.club?subject=Partnerships"
             data-testid="partnerships-cta"
             className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200"
             style={{ borderRadius: 0 }}
