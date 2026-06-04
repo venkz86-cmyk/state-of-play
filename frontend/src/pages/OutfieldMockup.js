@@ -1,7 +1,7 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const ROUNDTABLES = [
-  { period: 'May', city: 'Mumbai', confirmed: true, registerUrl: 'https://lu.ma/8xh1try1' },
+  { period: 'May', city: 'Mumbai', done: true },
   { period: 'June / July', city: 'Bengaluru', tentative: true },
   { period: 'September / October', city: 'New Delhi', tentative: true },
   { period: 'December', city: 'Mumbai or Bengaluru', tentative: true },
@@ -23,7 +23,10 @@ const Sched = ({ rows }) => (
       <li key={`${r.period}-${r.city}`} className="grid grid-cols-12 gap-3 items-baseline py-3 border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <span className="col-span-4 font-plex text-sm tabular-nums text-[#475569] dark:text-[#94A3B8]">{r.period}</span>
         <div className="col-span-6 flex items-center gap-2">
-          <span className={`font-plex text-sm ${r.confirmed ? 'font-medium text-[#0F172A] dark:text-[#F8FAFC]' : 'text-[#475569] dark:text-[#94A3B8]'}`}>{r.city}</span>
+          <span className={`font-plex text-sm ${r.done ? 'text-[#475569] dark:text-[#94A3B8] line-through decoration-[#94A3B8]/40' : (r.confirmed ? 'font-medium text-[#0F172A] dark:text-[#F8FAFC]' : 'text-[#475569] dark:text-[#94A3B8]')}`}>
+            {r.city}
+          </span>
+          {r.done && <span className="font-plex text-xs text-[#94A3B8]">held · 07 May 2026</span>}
           {r.tentative && <span className="font-plex text-xs text-[#94A3B8]">tentative</span>}
         </div>
         <div className="col-span-2 flex justify-end">
@@ -31,7 +34,9 @@ const Sched = ({ rows }) => (
             <a href={r.registerUrl} target="_blank" rel="noopener noreferrer" className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
               Register →
             </a>
-          ) : <span className="font-plex text-xs text-[#94A3B8]">soon</span>}
+          ) : (
+            <span className="font-plex text-xs text-[#94A3B8]">{r.done ? '' : 'soon'}</span>
+          )}
         </div>
       </li>
     ))}
@@ -101,6 +106,34 @@ export const OutfieldMockup = () => (
         </blockquote>
       </div>
     </section>
+
+    {/* ============================================================
+        HIDDEN — WHAT ATTENDEES SAY
+        Block lives here ready for content. Flip `SHOW_ATTENDEE_QUOTES`
+        to true (and fill in the quotes/attribution below) when you've
+        collected the testimonials.
+        ============================================================ */}
+    {false && (
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12" data-testid="outfield-attendees-say">
+        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+          <Overline className="block mb-6">— What attendees say —</Overline>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
+            {[
+              { quote: '__attendee quote 1__', name: '—', title: '—' },
+              { quote: '__attendee quote 2__', name: '—', title: '—' },
+            ].map((q, i) => (
+              <blockquote key={i} className="max-w-[55ch]">
+                <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-4">
+                  “{q.quote}”
+                </p>
+                <p className="font-plex text-[13px] font-bold text-[#0F172A] dark:text-[#F8FAFC]">{q.name}</p>
+                <p className="font-plex text-[13px] text-[#666666]">{q.title}</p>
+              </blockquote>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
       <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">

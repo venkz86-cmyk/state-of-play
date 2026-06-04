@@ -369,11 +369,8 @@ export const HomeMockup = () => {
         </section>
       )}
 
-      {/* WHAT READERS SAY — testimonial block (Fix 12) */}
-      <TestimonialBlock />
-
-      {/* PARTNERS — Fix 13 */}
-      <PartnersBlock />
+      {/* WHAT READERS SAY + PARTNERS blocks intentionally hidden until
+          we have real testimonials and partner logos to publish. */}
 
       {/* ARCHIVE — quiet dense list */}
       {archive.length > 0 && (
@@ -416,7 +413,7 @@ export const HomeMockup = () => {
               The State of Play is a reader-supported publication.
             </p>
             <p className="font-plex text-base leading-relaxed text-[#475569] dark:text-[#94A3B8] mb-5">
-              Independent reporting on the business of Indian sport. ₹2,495 a year.
+              Independent reporting on the business of Indian sport. ₹2,499 + GST a year (₹2,949 total).
             </p>
             <Link
               to="/signup"
