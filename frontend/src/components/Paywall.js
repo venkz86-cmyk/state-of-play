@@ -69,10 +69,7 @@ export const Paywall = () => {
           Weekly deep-dives · Full archive · Member events
         </p>
 
-        <RazorpayButton
-          dataTestId="paywall-subscribe"
-          showSecuredBy={isIndia}
-        />
+        <RazorpayButton dataTestId="paywall-subscribe" />
 
         <div className="mt-4">
           <Link

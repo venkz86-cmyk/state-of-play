@@ -95,7 +95,10 @@ Build a premium content website for sports business intelligence with a focus on
   - [x] **Teams pricing display** (Fix 20): "₹10,000 + 18% GST / year" with "₹11,800 / year total" below; "Save ₹X vs individual (before GST)"
   - [x] **Account dashboard** (Fix 24): Last invoice ₹2,949 · Razorpay; Next charge ₹2,949
   - [x] **New surfaces** mocked: Partnerships, Contact, Terms, Privacy, custom 404 — all sharing the design system
-  - [ ] **Deferred**: OG image (server-side, Next.js migration territory); Ghost native comments
+  - [x] **Round 5 — Razorpay button live (Feb 2026)**
+  - [x] `RazorpayButton` simplified to native Razorpay rendering (no proxy/overlay) — clicks are reliable
+  - [x] Geo routing intact: India → `pl_ROAFZZjAvjHhfQ` (₹2,949), International → `pl_ROAIM0inFWbpC2` ($120)
+  - [x] Wired into Paywall + SubscribeMockup
 - [ ] Final user sign-off → rollout to live routes
 - [ ] **Deferred**: Ghost native comments integration (user choice — future ship). Current state: non-members see "Comments are for members. Subscribe to join the conversation." CTA on article page.
 

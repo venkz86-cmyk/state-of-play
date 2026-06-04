@@ -90,7 +90,7 @@ export const SubscribeMockup = () => {
             </p>
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
-            <RazorpayButton dataTestId="pricing-subscribe" showSecuredBy={pricing.country === 'IN'} />
+            <RazorpayButton dataTestId="pricing-subscribe" />
             <Link
               to="/mockup/login"
               className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors"
