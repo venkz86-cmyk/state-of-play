@@ -228,8 +228,8 @@ body::before {
   /* fonts */
   --display-font: 'Fraunces';
   --reading-font: 'Newsreader';
-  --body-font: 'Geist';
-  --label-font: 'Geist';
+  --body-font: 'DM Sans';
+  --label-font: 'DM Sans';
   --label-tracking: 0.08em;
 
   /* light palette */

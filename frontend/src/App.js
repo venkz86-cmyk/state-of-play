@@ -37,6 +37,11 @@ import { OutfieldMockup } from "./pages/OutfieldMockup";
 import { LoginMockup } from "./pages/LoginMockup";
 import { AccountMockup } from "./pages/AccountMockup";
 import { LeftFieldMockup } from "./pages/LeftFieldMockup";
+import { PartnershipsMockup } from "./pages/PartnershipsMockup";
+import { ContactMockup } from "./pages/ContactMockup";
+import { TermsMockup } from "./pages/TermsMockup";
+import { PrivacyMockup } from "./pages/PrivacyMockup";
+import { NotFoundMockup } from "./pages/NotFoundMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
@@ -77,6 +82,11 @@ function Shell() {
           <Route path="/mockup/account" element={<AccountMockup />} />
           <Route path="/mockup/article/:id" element={<ArticleMockup />} />
           <Route path="/mockup/article" element={<ArticleMockup />} />
+          <Route path="/mockup/partnerships" element={<PartnershipsMockup />} />
+          <Route path="/mockup/contact" element={<ContactMockup />} />
+          <Route path="/mockup/terms" element={<TermsMockup />} />
+          <Route path="/mockup/privacy" element={<PrivacyMockup />} />
+          <Route path="/mockup/404" element={<NotFoundMockup />} />
           {/* Article route MUST be last - catches /:slug */}
           <Route path="/:id" element={<ArticlePage />} />
         </Routes>

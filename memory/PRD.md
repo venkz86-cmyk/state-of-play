@@ -88,6 +88,14 @@ Build a premium content website for sports business intelligence with a focus on
   - [x] Teams pricing fixed: Team-5 ₹11,800 / Team-10 ₹23,600, "GST inclusive", "Best value" badge, Razorpay links, "Members-only events" replaces "Breaking news alerts", FAQ updated
   - [x] Member dashboard: solid `#E5E2DC` stats dividers, Notifications row → "New editions"
   - [x] About editor's note copy updated, Outfield description copy updated
+- [x] **Round 4 — DM Sans + new paywall + new surfaces (Feb 2026)**
+  - [x] **DM Sans** swapped in as the UI font (replacing Geist); Fraunces × Newsreader × DM Sans now locked
+  - [x] **Paywall rebuilt** as typographic continuation (no card/shadow, 2px top rule, 100px fade, geo-IP via `/api/geo/location` switching India ₹2,499+GST / International $120). "Already a member? Sign in →" secondary CTA. "Payments secured by Razorpay" on India only.
+  - [x] **Left Field sidebar (Fix 12) final**: "The Briefing" italic left + "THE LEFT FIELD · FREE" (FREE burgundy) right; date-only labels; Fraunces 18px headlines
+  - [x] **Teams pricing display** (Fix 20): "₹10,000 + 18% GST / year" with "₹11,800 / year total" below; "Save ₹X vs individual (before GST)"
+  - [x] **Account dashboard** (Fix 24): Last invoice ₹2,949 · Razorpay; Next charge ₹2,949
+  - [x] **New surfaces** mocked: Partnerships, Contact, Terms, Privacy, custom 404 — all sharing the design system
+  - [ ] **Deferred**: OG image (server-side, Next.js migration territory); Ghost native comments
 - [ ] Final user sign-off → rollout to live routes
 - [ ] **Deferred**: Ghost native comments integration (user choice — future ship). Current state: non-members see "Comments are for members. Subscribe to join the conversation." CTA on article page.
 

@@ -7,9 +7,10 @@ const PLANS = [
     id: 'team-5',
     name: 'Team-5',
     seats: 5,
-    price: '₹11,800',
-    perSeat: '₹2,360 per seat',
-    save: 'Save ₹2,035 vs individual rate',
+    base: '₹10,000',
+    total: '₹11,800',
+    perSeat: '₹2,000 + GST per seat (₹2,360 total)',
+    save: 'Save ₹2,035 vs individual (before GST)',
     badge: 'Founding rate',
     href: 'https://rzp.io/rzp/tsopteam5',
   },
@@ -17,9 +18,10 @@ const PLANS = [
     id: 'team-10',
     name: 'Team-10',
     seats: 10,
-    price: '₹23,600',
-    perSeat: '₹2,360 per seat',
-    save: 'Save ₹4,990 vs individual rate',
+    base: '₹20,000',
+    total: '₹23,600',
+    perSeat: '₹2,000 + GST per seat (₹2,360 total)',
+    save: 'Save ₹4,990 vs individual (before GST)',
     badge: 'Best value',
     href: 'https://rzp.io/rzp/tsopteam10',
   },
@@ -76,10 +78,10 @@ export const TeamsMockup = () => {
                 <h3 className="font-editorial font-medium text-2xl leading-tight mb-1">{p.name}</h3>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-6">{p.seats} seats for your team</p>
                 <div className="flex items-end gap-2 mb-1">
-                  <span className="font-editorial font-semibold text-[3rem] lg:text-[4rem] leading-[0.9]">{p.price}</span>
-                  <span className="font-plex text-sm text-[var(--text-muted)] pb-2">/ year</span>
+                  <span className="font-editorial font-semibold text-[2.75rem] lg:text-[3.5rem] leading-[0.9]">{p.base}</span>
+                  <span className="font-plex text-sm text-[var(--text-muted)] pb-2">+ 18% GST / year</span>
                 </div>
-                <p className="font-plex text-[13px] text-[#666666] mb-3">GST inclusive</p>
+                <p className="font-plex text-[13px] text-[#666666] mb-4">{p.total} / year total</p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-1">{p.perSeat}</p>
                 <p className="font-plex text-xs text-[var(--accent-burgundy)] mb-5">{p.save}</p>
                 <a

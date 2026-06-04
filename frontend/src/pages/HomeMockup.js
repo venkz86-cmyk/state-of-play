@@ -253,18 +253,23 @@ export const HomeMockup = () => {
               </p>
             </Link>
 
-            {/* BRIEFING RAIL — Fix 11: "THE LEFT FIELD" left, "FREE" right, no italic.
-                 Data pulled live from /api/substack/feed. */}
+            {/* BRIEFING RAIL — Fix 12 final: "The Briefing" italic left,
+                 "THE LEFT FIELD · FREE" (FREE in burgundy) right.
+                 Each brief = date label + Fraunces 18px headline only. */}
             <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)] lg:pl-12">
-              <div className="flex items-center justify-between mb-6 pb-3 border-b border-[var(--rule)]">
-                <SectionLabel>The Left Field</SectionLabel>
-                <SectionLabel className="!text-[var(--accent-burgundy)]">Free</SectionLabel>
+              <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-[var(--rule)]">
+                <p className="font-editorial italic text-[18px] text-[var(--text)]">
+                  The Briefing
+                </p>
+                <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
+                  The Left Field <span className="text-[var(--accent-burgundy)]">· Free</span>
+                </span>
               </div>
               <ul>
                 {(briefs.length > 0 ? briefs : []).map((b, i, arr) => (
                   <li
                     key={b.id || i}
-                    className={`pb-5 mb-5 ${i === arr.length - 1 ? '' : 'border-b border-[var(--rule)]'}`}
+                    className={`py-4 ${i === arr.length - 1 ? '' : 'border-b border-[var(--rule)]'}`}
                   >
                     <a
                       href={b.external_url || 'https://theleftfield.substack.com'}
@@ -273,10 +278,10 @@ export const HomeMockup = () => {
                       className="group block"
                       data-testid={`home-brief-${i}`}
                     >
-                      <SectionLabel className="!text-[10px] mb-1.5 block">
+                      <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[#999999] mb-1.5">
                         {shortDate(b.created_at) || 'Brief'}
-                      </SectionLabel>
-                      <h3 className="headline-lock font-editorial font-semibold text-[17px] leading-snug">
+                      </p>
+                      <h3 className="headline-lock font-editorial font-semibold text-[18px] leading-snug">
                         {b.title}
                       </h3>
                     </a>
@@ -292,7 +297,7 @@ export const HomeMockup = () => {
                 href="https://theleftfield.substack.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
               >
                 Subscribe to The Left Field →
               </a>

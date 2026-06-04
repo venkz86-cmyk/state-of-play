@@ -49,7 +49,7 @@ export const AccountMockup = () => {
           {[
             ['Plan', 'Annual'],
             ['Renews', '12 Feb 2027'],
-            ['Next charge', '₹2,495'],
+            ['Next charge', '₹2,949'],
             ['Member since', '12 Feb 2026'],
           ].map(([k, v], i) => (
             <div
@@ -96,7 +96,7 @@ export const AccountMockup = () => {
             {[
               ['Reading list', 'Saved articles, synced across devices.', 'View →'],
               ['Notifications', 'Weekly TSOP · Left Field briefs · New editions.', 'Edit →'],
-              ['Billing', 'Last invoice 12 Feb 2026 · ₹2,495 · Razorpay.', 'Download invoice →'],
+              ['Billing', 'Last invoice 12 Feb 2026 · ₹2,949 · Razorpay.', 'Download invoice →'],
               ['Insider Drops · Soon', 'Subscriber-only feed of deal whispers and short notes.', 'Notify me →'],
             ].map(([title, desc, cta]) => (
               <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]">
