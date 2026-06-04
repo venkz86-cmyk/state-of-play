@@ -456,7 +456,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             
                             # Check for paid labels (for Razorpay payments that add labels)
                             labels = member.get('labels', [])
-                            label_names = [l.get('name', '').lower() for l in labels]
+                            label_names = [lbl.get('name', '').lower() for lbl in labels]
                             has_paid_label = any(
                                 label in label_names 
                                 for label in ['paid-via-razorpay', 'premium-subscriber', 'paid', 'premium']
@@ -509,57 +509,94 @@ class MemberDetailsResponse(BaseModel):
 
 @api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
 async def get_member_details(request: MemberVerifyRequest):
-    """Get detailed member info including subscription dates"""
+    """Get detailed member info including subscription dates.
+
+    Paid status hierarchy (canonical):
+      1. Ghost `paid-via-razorpay` label  → real Razorpay subscriber
+      2. Other paid/premium labels       → comped or grandfathered
+      3. Ghost native subscription       → Stripe-billed (rare)
+      4. Ghost status == 'paid'|'comped' → manual admin grant
+    """
     import httpx
-    
+
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail="Admin API not configured")
-    
+
     token = create_ghost_admin_token()
     if not token:
         raise HTTPException(status_code=503, detail="Failed to create admin token")
-    
+
     try:
         async with httpx.AsyncClient() as http_client:
             response = await http_client.get(
                 f'{GHOST_URL}/ghost/api/admin/members/',
-                params={'filter': f'email:{request.email}', 'include': 'subscriptions'},
+                params={
+                    'filter': f'email:{request.email}',
+                    'include': 'subscriptions,labels',
+                },
                 headers={'Authorization': f'Ghost {token}'}
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 members = data.get('members', [])
-                
+
                 if members:
                     member = members[0]
                     status = member.get('status', 'free')
-                    is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
-                    
-                    # Get subscription details
-                    subscriptions = member.get('subscriptions', [])
+
+                    # 1. Label check — the canonical "real Razorpay subscriber" signal
+                    labels = member.get('labels', []) or []
+                    label_names = [(lbl.get('name') or '').lower() for lbl in labels]
+                    has_razorpay_label = 'paid-via-razorpay' in label_names
+                    has_paid_label = has_razorpay_label or any(
+                        name in label_names for name in
+                        ['premium-subscriber', 'paid', 'premium']
+                    )
+
+                    # 2. Ghost-native subscriptions
+                    subscriptions = member.get('subscriptions', []) or []
+
+                    is_paid = (
+                        has_paid_label
+                        or status in ['paid', 'comped']
+                        or len(subscriptions) > 0
+                    )
+
+                    # Resolve dates with the right source:
                     subscription_start = None
                     subscription_end = None
                     subscription_status = None
-                    
+
                     if subscriptions:
-                        # Get the most recent/active subscription
                         sub = subscriptions[0]
                         subscription_start = sub.get('start_date') or sub.get('created_at')
                         subscription_end = sub.get('current_period_end')
                         subscription_status = sub.get('status', 'active')
+                    elif has_razorpay_label:
+                        # Razorpay subscriber: derive 12-month cycle from member created_at
+                        created_at = member.get('created_at')
+                        subscription_start = created_at
+                        subscription_status = 'active'
+                        if created_at:
+                            try:
+                                start_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                                subscription_end = (start_dt + timedelta(days=365)).isoformat().replace('+00:00', 'Z')
+                            except Exception:
+                                subscription_end = None
                     elif status == 'comped':
-                        # For comped members, use created_at as start and set end to 1 year from now
                         subscription_start = member.get('created_at')
-                        # Comped memberships typically don't have an end date
                         subscription_status = 'comped'
-                    
+
+                    # Surface the canonical paid status to the client
+                    canonical_status = 'paid' if has_razorpay_label else status
+
                     return MemberDetailsResponse(
                         is_member=True,
                         is_paid=is_paid,
                         email=member.get('email', request.email),
                         name=member.get('name'),
-                        status=status,
+                        status=canonical_status,
                         created_at=member.get('created_at'),
                         subscription_start=subscription_start,
                         subscription_end=subscription_end,

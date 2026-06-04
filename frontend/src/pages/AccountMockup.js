@@ -52,9 +52,13 @@ export const AccountMockup = () => {
     ? (details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
     : 'Free';
 
-  const renewsOn = longDate(details?.subscription_end);
+  // Razorpay annual subscriptions are one-shot — they expire, not auto-renew.
+  // Stripe-billed Ghost subscriptions show as 'active' and do auto-renew.
+  const autoRenews = details?.subscription_status === 'active';
+  const dateLabel = autoRenews ? 'Renews' : 'Expires';
+  const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
-  const nextCharge = canAccessPremium && details?.subscription_end ? '₹2,949' : '—';
+  const nextCharge = autoRenews && canAccessPremium ? '₹2,949' : '—';
 
   return (
     <MockupLayout testId="page-account">
@@ -91,7 +95,7 @@ export const AccountMockup = () => {
         <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4">
           {[
             ['Plan', planLabel],
-            ['Renews', renewsOn || '—'],
+            [dateLabel, endDate || '—'],
             ['Next charge', nextCharge],
             ['Member since', memberSince || '—'],
           ].map(([k, v], i) => (
