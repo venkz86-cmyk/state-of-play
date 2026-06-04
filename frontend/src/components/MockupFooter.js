@@ -29,13 +29,10 @@ export const MockupFooter = () => {
       <div className="border-b border-white/10">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
-            <span className="font-plex tabular-nums text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-[var(--accent)]">
-              Set in Playfair Display & IBM Plex
-            </span>
-            <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] mt-4 max-w-3xl">
+            <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] max-w-3xl">
               The State of Play.
               <br />
-              <em className="italic font-normal text-white/60">
+              <em className="italic font-normal text-[#AAAAAA]">
                 The business of sport, from an India lens.
               </em>
             </h2>
@@ -66,14 +63,10 @@ export const MockupFooter = () => {
               The Publication
             </span>
             <p className="font-editorial italic text-xl lg:text-2xl leading-snug text-white/85 max-w-md mb-6">
-              India’s premium publication covering the business of sport with depth, insight and unmatched reporting.
+              The State of Play covers the business of Indian sport. Money, media, ownership, and power — reported from Bengaluru.
             </p>
             <div className="flex flex-wrap items-center gap-3 font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-white/50">
               <span>Bengaluru</span>
-              <span className="h-px w-3 bg-white/30" />
-              <span>Mumbai</span>
-              <span className="h-px w-3 bg-white/30" />
-              <span>Worldwide</span>
             </div>
           </div>
 

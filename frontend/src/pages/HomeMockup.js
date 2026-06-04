@@ -36,26 +36,14 @@ const SectionLabel = ({ children, className = '' }) => (
 export const HomeMockup = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { canAccessPremium } = useAuth();
 
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
 
-  // Typography switcher (review only)
-  const SYSTEMS = {
-    newsreader: { display: 'Newsreader', body: 'Newsreader', tracking: '0.16em', label: 'Newsreader' },
-    'fraunces-geist': { display: 'Fraunces', body: 'Geist', tracking: '0.14em', label: 'Fraunces × Geist' },
-    spectral: { display: 'Spectral', body: 'Spectral', tracking: '0.16em', label: 'Spectral' },
-  };
-  const systemKey = SYSTEMS[searchParams.get('system')] ? searchParams.get('system') : 'newsreader';
-  const system = SYSTEMS[systemKey];
-  const setSystem = (k) => {
-    const next = new URLSearchParams(searchParams);
-    if (k && k !== 'newsreader') next.set('system', k);
-    else next.delete('system');
-    setSearchParams(next, { replace: true });
-  };
+  // Locked typography system
+  const system = { display: 'Fraunces', body: 'Geist', tracking: '0.14em' };
 
   useEffect(() => {
     (async () => {
@@ -95,29 +83,6 @@ export const HomeMockup = () => {
       data-testid="mockup-home"
     >
       <MockupHeader />
-
-      {/* System picker — review only */}
-      <div
-        data-testid="system-toggle"
-        className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white border border-white/10 shadow-2xl"
-      >
-        <div className="flex flex-col">
-          {Object.entries(SYSTEMS).map(([key, s]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setSystem(key)}
-              data-testid={`system-${key}`}
-              className={`text-left px-5 py-3 border-b border-white/5 last:border-b-0 ${
-                systemKey === key ? 'bg-white text-[#0F172A]' : 'hover:bg-white/5 text-white'
-              }`}
-              style={{ fontFamily: `'${s.display}', serif` }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* DATELINE */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">

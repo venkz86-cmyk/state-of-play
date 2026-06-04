@@ -220,14 +220,14 @@ body::before {
   }
 }
 
-/* Mockup accent + typography — defaults to Newsreader system, overridable per page */
+/* Mockup accent + typography — locked Fraunces × Geist */
 :root {
   --accent: #8B1E2D;
   --accent-hover: #6f1824;
-  --display-font: 'Newsreader';
-  --body-font: 'Newsreader';
-  --label-font: 'Newsreader';
-  --label-tracking: 0.18em;
+  --display-font: 'Fraunces';
+  --body-font: 'Geist';
+  --label-font: 'Geist';
+  --label-tracking: 0.14em;
 }
 
 /* All-family override: headline + body + overline are driven by CSS vars */
@@ -238,6 +238,12 @@ body::before {
 .font-plex {
   font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif !important;
   font-optical-sizing: auto;
+}
+
+/* Prevent visited link colour leaking into headlines (Safari + iOS in particular) */
+a:visited,
+a:visited * {
+  color: inherit;
 }
 /* Overline language — small caps, tracked, tabular figures */
 .tabular-nums { font-variant-numeric: tabular-nums; }

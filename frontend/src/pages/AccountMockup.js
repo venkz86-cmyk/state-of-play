@@ -1,248 +1,113 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Bell, Bookmark, Receipt, LogOut } from 'lucide-react';
-import { MockupLayout, Overline } from '../components/MockupLayout';
 import { ghostAPI } from '../services/ghostAPI';
+import { MockupLayout, Overline } from '../components/MockupLayout';
 
-const fmtDate = (iso) =>
-  iso
-    ? new Date(iso)
-        .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-        .toUpperCase()
-    : '';
+const longDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
 export const AccountMockup = () => {
   const [recent, setRecent] = useState([]);
-
   useEffect(() => {
     (async () => {
-      try {
-        const list = await ghostAPI.getPosts({ limit: 4 });
-        setRecent(list);
-      } catch (e) {
-        console.error(e);
-      }
+      try { setRecent(await ghostAPI.getPosts({ limit: 5 })); }
+      catch (e) { console.error(e); }
     })();
   }, []);
 
   const memberName = 'Venkatesh';
   const memberEmail = 'venkz86@gmail.com';
-  const planRenews = '12 February 2027';
-  const billingNext = '₹2,495';
 
   return (
     <MockupLayout testId="mockup-account">
-      {/* Greeting strip */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
-          <div className="lg:col-span-8">
-            <Overline className="text-[#234ba0] mb-5 block">— Member Lounge —</Overline>
-            <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4rem] leading-[1.02]">
-              Hello, <em className="italic font-normal text-[#234ba0]">{memberName}.</em>
-            </h1>
-            <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-5 max-w-[55ch]">
-              Your reading list, billing and preferences live here. Plan renews <span className="text-[#0F172A] dark:text-[#F8FAFC]">{planRenews}</span>.
-            </p>
-          </div>
-          <div className="lg:col-span-4 flex flex-col lg:items-end gap-3">
-            <Overline>{memberEmail}</Overline>
-            <button
-              type="button"
-              data-testid="account-signout"
-              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569] hover:text-[#234ba0] transition-colors duration-200"
-            >
-              <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
-              Sign out
-            </button>
-          </div>
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">{memberEmail}</span>
+          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">Member Lounge</span>
+        </div>
+      </div>
+
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+        <div className="lg:col-span-8">
+          <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] mb-5">
+            Hello, <em className="italic font-normal">{memberName}.</em>
+          </h1>
+          <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] max-w-[55ch] leading-relaxed">
+            Your reading list, billing and preferences live here. Plan renews <span className="text-[#0F172A] dark:text-[#F8FAFC]">12 February 2027</span>.
+          </p>
+        </div>
+        <div className="lg:col-span-4 lg:text-right">
+          <button type="button" data-testid="account-signout" className="font-plex text-sm text-[#475569] hover:text-[var(--accent)] underline underline-offset-[6px] decoration-1 transition-all">
+            Sign out →
+          </button>
         </div>
       </section>
 
       {/* Stat strip */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 grid grid-cols-2 lg:grid-cols-4 divide-x divide-[#E2E8F0] dark:divide-[#1E293B] border-x border-[#E2E8F0] dark:border-[#1E293B]">
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+        <div className="border-y border-[#0F172A] dark:border-[#F8FAFC] grid grid-cols-2 md:grid-cols-4">
           {[
             ['Plan', 'Annual'],
-            ['Renews', planRenews],
-            ['Next charge', billingNext],
+            ['Renews', '12 Feb 2027'],
+            ['Next charge', '₹2,495'],
             ['Member since', '12 Feb 2026'],
-          ].map(([label, value]) => (
-            <div key={label} className="py-8 px-6 lg:py-10 lg:px-8">
-              <Overline className="block mb-3">{label}</Overline>
-              <div className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-tight text-[#0F172A] dark:text-[#F8FAFC]">
-                {value}
-              </div>
+          ].map(([k, v], i) => (
+            <div key={k} className={`py-6 px-6 ${i > 0 ? 'border-l border-[#E2E8F0] dark:border-[#1E293B]' : ''}`}>
+              <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
+              <p className="font-editorial font-medium text-lg lg:text-xl leading-tight">{v}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Continue Reading + Reading List */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-7">
-            <Overline className="text-[var(--accent)] mb-3 block">— Continue Reading —</Overline>
-            <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[2.5rem] leading-tight mb-8">
-              Pick up where you left off.
-            </h2>
-
-            <ul className="border-t border-[#0F172A] dark:border-[#F8FAFC]">
-              {recent.slice(0, 3).map((p, i) => (
-                <li key={p.id}>
-                  <Link
-                    to={`/mockup/article/${p.id}`}
-                    className="group grid grid-cols-12 gap-4 lg:gap-6 items-baseline py-6 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
-                  >
-                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <div className="col-span-12 md:col-span-2">
-                      <Overline className="text-[#234ba0]">{p.theme || 'Reportage'}</Overline>
-                    </div>
-                    <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl leading-snug group-hover:text-[#234ba0] transition-colors duration-200">
-                      {p.title}
-                    </h3>
-                    <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
-                      <Overline>{p.read_time} MIN</Overline>
-                      <ArrowUpRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[#234ba0] transition-colors duration-200" strokeWidth={1.5} />
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+      {/* Continue reading */}
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+          <p className="font-editorial italic text-lg mb-6">Continue reading</p>
+          <div className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+            {recent.map((p) => (
+              <Link
+                key={p.id}
+                to={`/mockup/article/${p.id}`}
+                className="group flex items-baseline justify-between gap-6 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+              >
+                <div className="flex-1 min-w-0">
+                  <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Analysis'}</Overline>
+                  <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                    {p.title}
+                  </h3>
+                </div>
+                <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums">{longDate(p.created_at)}</p>
+              </Link>
+            ))}
           </div>
-
-          <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] dark:lg:border-[#1E293B]">
-            <Overline className="text-[#234ba0] mb-3 block">— Reading List —</Overline>
-            <h2 className="font-editorial font-semibold tracking-tight text-3xl leading-tight mb-6">
-              Saved for later.
-            </h2>
-            <ul>
-              {recent.slice(0, 2).map((p) => (
-                <li
-                  key={p.id}
-                  className="py-5 border-b border-[#E2E8F0] dark:border-[#1E293B] flex items-start justify-between gap-4"
-                >
-                  <Link to={`/mockup/article/${p.id}`} className="group flex-1">
-                    <Overline className="text-[#234ba0] mb-2 block">{p.theme || 'Saved'}</Overline>
-                    <h3 className="font-editorial font-semibold text-lg leading-snug group-hover:text-[#234ba0] transition-colors duration-200">
-                      {p.title}
-                    </h3>
-                    <Overline className="block mt-2">{fmtDate(p.created_at)}</Overline>
-                  </Link>
-                  <button
-                    type="button"
-                    aria-label="Remove from reading list"
-                    className="text-[#94A3B8] hover:text-[var(--accent)] transition-colors duration-200"
-                  >
-                    <Bookmark className="h-4 w-4 fill-current" strokeWidth={1.5} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="font-plex tabular-nums text-[10px] tracking-[0.22em] uppercase text-[#94A3B8] mt-6">
-              Bookmarks sync across devices · Coming soon
-            </p>
-          </aside>
         </div>
       </section>
 
-      {/* Tools row — Insider Drops, Notifications, Billing */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#0F172A] text-white">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <Overline className="!text-[var(--accent)] mb-3 block">— Membership Tools —</Overline>
-              <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
-                Yours to run.
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/15 border-y border-white/15">
-            {/* Insider Drops */}
-            <div className="py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">01</span>
-                <span className="h-px w-6 bg-white/30" />
-                <Overline className="!text-[var(--accent)]">Insider Drops · Soon</Overline>
-              </div>
-              <Bell className="h-5 w-5 text-white/60 mb-4" strokeWidth={1.5} />
-              <h3 className="font-editorial font-semibold text-2xl leading-tight mb-3">
-                Private intel, off the record.
-              </h3>
-              <p className="font-plex text-sm text-white/60 leading-relaxed mb-5 max-w-[35ch]">
-                Subscriber-only feed of deal whispers, tip-offs and short notes — published as they break.
-              </p>
-              <button
-                type="button"
-                data-testid="account-notify-drops"
-                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
-              >
-                Notify me
-                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-              </button>
-            </div>
-
-            {/* Preferences */}
-            <div className="py-10 md:py-12 md:px-10">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">02</span>
-                <span className="h-px w-6 bg-white/30" />
-                <Overline className="!text-white/70">Notifications</Overline>
-              </div>
-              <Bookmark className="h-5 w-5 text-white/60 mb-4" strokeWidth={1.5} />
-              <h3 className="font-editorial font-semibold text-2xl leading-tight mb-3">
-                Tune the cadence.
-              </h3>
-              <ul className="space-y-3 mb-5">
-                {[
-                  ['Weekly TSOP', true],
-                  ['Left Field briefs', true],
-                  ['Breaking news alerts', false],
-                ].map(([label, on]) => (
-                  <li key={label} className="flex items-center justify-between">
-                    <span className="font-plex text-sm text-white/80">{label}</span>
-                    <span
-                      className={`inline-flex items-center justify-center h-5 w-9 ${on ? 'bg-[var(--accent)]' : 'bg-white/15'} relative`}
-                    >
-                      <span className={`absolute h-4 w-4 bg-white ${on ? 'right-0.5' : 'left-0.5'}`} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
-              >
-                Save
-                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-              </button>
-            </div>
-
-            {/* Billing */}
-            <div className="py-10 md:py-12 md:px-10 first:md:pl-0 last:md:pr-0">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="font-plex tabular-nums text-[10px] tracking-[0.22em] text-white/40 tabular-nums">03</span>
-                <span className="h-px w-6 bg-white/30" />
-                <Overline className="!text-white/70">Billing</Overline>
-              </div>
-              <Receipt className="h-5 w-5 text-white/60 mb-4" strokeWidth={1.5} />
-              <h3 className="font-editorial font-semibold text-2xl leading-tight mb-3">
-                Invoices & receipts.
-              </h3>
-              <p className="font-plex text-sm text-white/60 leading-relaxed mb-5 max-w-[35ch]">
-                Last invoice issued <span className="text-white">12 Feb 2026</span> · ₹2,495 · Razorpay.
-              </p>
-              <a
-                href="#billing"
-                className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
-              >
-                Download GST invoice
-                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-              </a>
-            </div>
-          </div>
+      {/* Tools — restrained, single column list, no dark CTA */}
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
+        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+          <p className="font-editorial italic text-lg mb-6">Membership tools</p>
+          <ul className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+            {[
+              ['Reading list', 'Saved articles, synced across devices.', 'View →'],
+              ['Notifications', 'Weekly TSOP · Left Field briefs · Breaking news.', 'Edit →'],
+              ['Billing', 'Last invoice 12 Feb 2026 · ₹2,495 · Razorpay.', 'Download invoice →'],
+              ['Insider Drops · Soon', 'Subscriber-only feed of deal whispers and short notes.', 'Notify me →'],
+            ].map(([title, desc, cta]) => (
+              <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]">
+                <div className="col-span-12 md:col-span-4">
+                  <h3 className="font-editorial font-medium text-lg">{title}</h3>
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">{desc}</p>
+                </div>
+                <div className="col-span-12 md:col-span-2 md:text-right">
+                  <span className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1">{cta}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </MockupLayout>
