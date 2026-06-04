@@ -1,68 +1,104 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 
-export const RazorpayButton = ({ className }) => {
-  const containerRef = useRef(null);
+/* Razorpay Payment Button — TSOP-styled proxy.
+
+   Razorpay's checkout script injects a default blue button inside a
+   <form> we provide. We render that <form> off-screen and surface our
+   own DM-Sans / burgundy / sharp-corner button that programmatically
+   clicks the injected Razorpay button. Razorpay's checkout session,
+   analytics and click handler are preserved as-is — only the visual
+   chrome is replaced.                                                 */
+export const RazorpayButton = ({
+  className = '',
+  dataTestId = 'razorpay-cta',
+  showSecuredBy = true,
+}) => {
+  const hiddenFormRef = useRef(null);
   const pricing = useGeoPricing();
-  const scriptLoadedRef = useRef(false);
+  const [ready, setReady] = useState(false);
+
+  // Two Razorpay payment buttons supplied by the publisher
+  //   pl_ROAFZZjAvjHhfQ  → India   (₹2,499 + GST ≈ ₹2,949)
+  //   pl_ROAIM0inFWbpC2  → World   ($120)
+  const isIndia = pricing.country === 'IN';
+  const buttonId = isIndia ? 'pl_ROAFZZjAvjHhfQ' : 'pl_ROAIM0inFWbpC2';
+  const label = isIndia
+    ? 'Subscribe — ₹2,499 + GST / year'
+    : 'Subscribe — $120 / year';
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || pricing.loading || scriptLoadedRef.current) return;
+    if (pricing.loading) return;
+    const form = hiddenFormRef.current;
+    if (!form) return;
 
-    // Payment button IDs based on location
-    const paymentButtonId = pricing.country === 'IN' 
-      ? 'pl_ROAFZZjAvjHhfQ'  // India: ₹2,499
-      : 'pl_ROAIM0inFWbpC2';  // International: $120
+    // Replace any previously injected script (e.g. country flipped)
+    form.innerHTML = '';
+    setReady(false);
 
-    console.log('Loading Razorpay button for country:', pricing.country, 'Button ID:', paymentButtonId);
-
-    // Clear the container
-    container.innerHTML = '';
-
-    // Create form
-    const form = document.createElement('form');
-    
-    // Create script
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/payment-button.js';
-    script.setAttribute('data-payment_button_id', paymentButtonId);
     script.async = true;
-
-    script.onload = () => {
-      console.log('Razorpay script loaded successfully');
-      scriptLoadedRef.current = true;
-    };
-
-    script.onerror = () => {
-      console.error('Failed to load Razorpay script');
-    };
-
+    script.setAttribute('data-payment_button_id', buttonId);
     form.appendChild(script);
-    container.appendChild(form);
 
-    // Cleanup
-    return () => {
-      if (container) {
-        container.innerHTML = '';
+    // Razorpay injects its own <button.razorpay-payment-button> after
+    // the script loads. Poll briefly until it shows up.
+    const start = Date.now();
+    const t = setInterval(() => {
+      if (form.querySelector('.razorpay-payment-button')) {
+        setReady(true);
+        clearInterval(t);
+      } else if (Date.now() - start > 15000) {
+        clearInterval(t);
       }
-      scriptLoadedRef.current = false;
-    };
-  }, [pricing.loading, pricing.country]);
+    }, 200);
 
-  if (pricing.loading) {
-    return (
-      <div className={`flex justify-center py-4 ${className || ''}`}>
-        <div className="animate-pulse bg-gray-200 h-12 w-48 rounded"></div>
-      </div>
-    );
-  }
+    return () => clearInterval(t);
+  }, [pricing.loading, buttonId]);
+
+  const handleClick = () => {
+    const btn = hiddenFormRef.current?.querySelector('.razorpay-payment-button');
+    if (btn) btn.click();
+  };
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`razorpay-button-container flex justify-center ${className || ''}`}
-      data-testid="razorpay-button-container"
-    />
+    <div className={className} data-testid="razorpay-button-container">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={!ready || pricing.loading}
+        data-testid={dataTestId}
+        aria-label={label}
+        className="tsop-subscribe-btn inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 transition-colors duration-200 disabled:opacity-70"
+        style={{ borderRadius: 0, padding: '0 32px', cursor: ready ? 'pointer' : 'wait' }}
+      >
+        {label}
+      </button>
+
+      {showSecuredBy && (
+        <p className="font-plex text-[11px] text-[#999999] mt-3">
+          Payments secured by Razorpay
+        </p>
+      )}
+
+      {/* Hidden Razorpay form — present in DOM so the injected button
+          remains clickable from our proxy button. Off-screen, never
+          visible to the user. */}
+      <form
+        ref={hiddenFormRef}
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 'auto',
+          width: 0,
+          height: 0,
+          overflow: 'hidden',
+        }}
+      />
+    </div>
   );
 };
+
+export default RazorpayButton;

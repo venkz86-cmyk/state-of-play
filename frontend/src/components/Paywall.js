@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { RazorpayButton } from './RazorpayButton';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 /* Subscriber paywall — typographic continuation of the article, not a card.
-   Geo-IP detection picks INR vs USD pricing automatically.                */
+   The CTA is a real Razorpay button rendered through our TSOP-styled proxy
+   (RazorpayButton). Geo-IP picks India (₹2,499 + GST) vs International ($120). */
 export const Paywall = () => {
   const [isIndia, setIsIndia] = useState(true);
 
@@ -19,21 +21,17 @@ export const Paywall = () => {
         const cc = (r.data && r.data.country_code) || 'IN';
         setIsIndia(cc === 'IN');
       } catch {
-        if (active) setIsIndia(true); // sensible default for an Indian publication
+        if (active) setIsIndia(true);
       }
     })();
     return () => { active = false; };
   }, []);
 
-  const subtext = `The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them. Read by investors, league executives, and sports business professionals across India and internationally.`;
+  const subtext = 'The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them. Read by investors, league executives, and sports business professionals across India and internationally.';
 
   const priceLine = isIndia
     ? '₹2,499 + 18% GST per year (₹2,949 total)'
     : '$120 / year';
-
-  const ctaLabel = isIndia
-    ? 'Subscribe — ₹2,499 + GST / year'
-    : 'Subscribe — $120 / year';
 
   return (
     <section
@@ -71,16 +69,12 @@ export const Paywall = () => {
           Weekly deep-dives · Full archive · Member events
         </p>
 
-        <Link
-          to="/signup"
-          data-testid="paywall-subscribe"
-          className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 transition-colors duration-200"
-          style={{ borderRadius: 0, padding: '0 32px' }}
-        >
-          {ctaLabel}
-        </Link>
+        <RazorpayButton
+          dataTestId="paywall-subscribe"
+          showSecuredBy={isIndia}
+        />
 
-        <div className="mt-3">
+        <div className="mt-4">
           <Link
             to="/login"
             data-testid="paywall-login"
@@ -89,12 +83,6 @@ export const Paywall = () => {
             Already a member? Sign in →
           </Link>
         </div>
-
-        {isIndia && (
-          <p className="font-plex text-[11px] text-[#999999] mt-6">
-            Payments secured by Razorpay
-          </p>
-        )}
       </div>
     </section>
   );

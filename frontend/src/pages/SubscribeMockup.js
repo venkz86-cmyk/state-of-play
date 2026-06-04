@@ -4,6 +4,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { Plus, Minus } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { RazorpayButton } from '../components/RazorpayButton';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -70,30 +71,29 @@ export const SubscribeMockup = () => {
 
       {/* Pricing */}
       <section data-testid="mockup-pricing-card" className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+        <div className="border-t border-[var(--rule)] pt-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
-            <p className="font-editorial italic text-lg text-[#0F172A] dark:text-[#F8FAFC] mb-3">Annual Membership</p>
-            <div className="flex items-end gap-3 mb-4">
-              <span className="font-editorial font-semibold tracking-tight text-[4rem] lg:text-[6rem] leading-[0.9] text-[#0F172A] dark:text-[#F8FAFC]">
-                {pricing.symbol}{pricing.amount}
+            <p className="font-editorial italic text-lg text-[var(--text)] mb-3">Annual Membership</p>
+            <div className="flex items-end gap-3 mb-2">
+              <span className="font-editorial font-semibold tracking-tight text-[3.5rem] lg:text-[5rem] leading-[0.9] text-[var(--text)]">
+                {pricing.country === 'IN' ? '₹2,499' : '$120'}
               </span>
-              <span className="font-plex text-base text-[#475569] pb-3">/ year</span>
+              <span className="font-plex text-base text-[var(--text-muted)] pb-3">
+                {pricing.country === 'IN' ? '+ 18% GST / year' : '/ year'}
+              </span>
             </div>
-            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] max-w-[55ch]">
-              {pricing.note || 'Billed annually. 12 months of full access.'} Secured by Razorpay · GST-compliant invoice.
+            {pricing.country === 'IN' && (
+              <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹2,949 / year total</p>
+            )}
+            <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
+              Billed annually. 12 months of full access. GST-compliant invoice.
             </p>
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
-            <button
-              type="button"
-              data-testid="pricing-subscribe"
-              className="font-editorial text-2xl lg:text-[1.875rem] text-[var(--accent)] underline underline-offset-[8px] decoration-1 hover:decoration-2 transition-all"
-            >
-              Subscribe via Razorpay →
-            </button>
+            <RazorpayButton dataTestId="pricing-subscribe" showSecuredBy={pricing.country === 'IN'} />
             <Link
               to="/mockup/login"
-              className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] underline underline-offset-4 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] transition-colors"
+              className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors"
             >
               Already a subscriber? Sign in
             </Link>
