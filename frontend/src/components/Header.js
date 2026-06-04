@@ -36,11 +36,11 @@ export const Header = () => {
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center group">
+          <Link to="/" className="flex items-center group py-3">
             <img 
               src={isDark ? LOGO_DARK : LOGO_LIGHT}
               alt="The State of Play" 
-              className="h-12 w-auto transition-opacity duration-200 group-hover:opacity-80"
+              className="h-9 w-auto transition-opacity duration-200 group-hover:opacity-80"
             />
           </Link>
 
