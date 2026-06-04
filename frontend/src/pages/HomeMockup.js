@@ -147,7 +147,7 @@ export const HomeMockup = () => {
         </section>
       )}
 
-      {/* RECENT — quiet list, smaller titles, two-column hint on desktop */}
+      {/* RECENT — clean index: title + byline + date. Subtitles live on the article page. */}
       {articles.length > 0 && (
         <section className="max-w-[1100px] mx-auto px-6 lg:px-12 pb-24 lg:pb-32">
           <div className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
@@ -156,17 +156,19 @@ export const HomeMockup = () => {
                 key={a.id}
                 to={`/${a.id}`}
                 data-testid={`row-${a.id}`}
-                className="group grid grid-cols-1 md:grid-cols-12 gap-x-10 gap-y-2 py-8 lg:py-9 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                className="group flex items-baseline justify-between gap-6 lg:gap-10 py-6 lg:py-7 border-b border-[#E2E8F0] dark:border-[#1E293B]"
               >
-                <h2 className="md:col-span-7 font-editorial font-medium tracking-tight text-xl lg:text-[1.625rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] max-w-[34ch] group-hover:text-[var(--accent)] transition-colors duration-300">
-                  {a.title}
-                </h2>
-                {a.subtitle && (
-                  <p className="md:col-span-4 font-plex text-base leading-relaxed text-[#475569] dark:text-[#94A3B8] max-w-[40ch] line-clamp-2">
-                    {a.subtitle}
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-editorial font-medium tracking-tight text-lg lg:text-xl leading-[1.25] text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-300">
+                    {a.title}
+                  </h2>
+                  <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] mt-1.5">
+                    {a.author || 'The State of Play'}
+                    {a.theme ? <span className="text-[#94A3B8]"> · {a.theme}</span> : null}
+                    {a.read_time ? <span className="text-[#94A3B8]"> · {a.read_time} min</span> : null}
                   </p>
-                )}
-                <p className="md:col-span-1 font-plex text-sm text-[#475569] dark:text-[#94A3B8] md:text-right tabular-nums">
+                </div>
+                <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums whitespace-nowrap">
                   {shortDate(a.created_at)}
                 </p>
               </Link>
