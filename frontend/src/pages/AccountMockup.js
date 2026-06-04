@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -14,6 +15,7 @@ export const AccountMockup = () => {
   const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
   const [recent, setRecent] = useState([]);
   const [details, setDetails] = useState(null);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -158,17 +160,9 @@ export const AccountMockup = () => {
                 desc: canAccessPremium
                   ? `Last invoice ${memberSince || '—'} · ₹2,949 · Razorpay.`
                   : 'No active subscription.',
-                cta: 'Need GST invoice? Request →',
-                href: canAccessPremium
-                  ? `mailto:venkat@stateofplay.club?subject=GST%20invoice%20request%20%E2%80%94%20${encodeURIComponent(memberEmail)}&body=${encodeURIComponent(
-                      'Hi,\n\nPlease share the GST tax invoice for my annual subscription.\n\n' +
-                      `Email on file: ${memberEmail}\n` +
-                      `Plan: ${planLabel}\n` +
-                      `Subscription start: ${memberSince || '—'}\n` +
-                      `Amount: ₹2,949 (incl. 18% GST)\n\n` +
-                      'GSTIN (if applicable): \nBilling name / company: \nBilling address: \n\nThank you.'
-                    )}`
-                  : '#',
+                cta: 'Need GST invoice? Download →',
+                onClick: canAccessPremium ? () => setInvoiceOpen(true) : null,
+                href: canAccessPremium ? null : '#',
               },
               {
                 title: 'Insider Drops · Soon',
@@ -176,7 +170,7 @@ export const AccountMockup = () => {
                 cta: 'Notify me →',
                 href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%20%E2%80%94%20notify%20me',
               },
-            ].map(({ title, desc, cta, href }) => (
+            ].map(({ title, desc, cta, href, onClick }) => (
               <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]">
                 <div className="col-span-12 md:col-span-4">
                   <h3 className="font-editorial font-medium text-lg">{title}</h3>
@@ -185,13 +179,24 @@ export const AccountMockup = () => {
                   <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">{desc}</p>
                 </div>
                 <div className="col-span-12 md:col-span-2 md:text-right">
-                  <a
-                    href={href}
-                    data-testid={`account-tool-${title.toLowerCase().split(' ')[0]}`}
-                    className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-                  >
-                    {cta}
-                  </a>
+                  {onClick ? (
+                    <button
+                      type="button"
+                      onClick={onClick}
+                      data-testid={`account-tool-${title.toLowerCase().split(' ')[0]}`}
+                      className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                    >
+                      {cta}
+                    </button>
+                  ) : (
+                    <a
+                      href={href}
+                      data-testid={`account-tool-${title.toLowerCase().split(' ')[0]}`}
+                      className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                    >
+                      {cta}
+                    </a>
+                  )}
                 </div>
               </li>
             ))}

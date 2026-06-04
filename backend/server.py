@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Header, Request, Depends
+from fastapi.responses import Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -1233,6 +1234,199 @@ async def health_check():
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "stateofplay-backend"
     }
+
+
+# ════════════════════════════════════════════════════════════════════════
+# GST Tax Invoice — self-serve PDF generator
+# ════════════════════════════════════════════════════════════════════════
+from invoice_generator import (
+    SELLER as INVOICE_SELLER,
+    SAC_CODE,
+    DESCRIPTION as INVOICE_DESCRIPTION,
+    fiscal_year as inv_fiscal_year,
+    validate_gstin as inv_validate_gstin,
+    compute_tax as inv_compute_tax,
+    build_invoice_pdf,
+)
+
+
+INDIAN_STATES = {
+    "01": "Jammu and Kashmir", "02": "Himachal Pradesh", "03": "Punjab",
+    "04": "Chandigarh", "05": "Uttarakhand", "06": "Haryana", "07": "Delhi",
+    "08": "Rajasthan", "09": "Uttar Pradesh", "10": "Bihar", "11": "Sikkim",
+    "12": "Arunachal Pradesh", "13": "Nagaland", "14": "Manipur", "15": "Mizoram",
+    "16": "Tripura", "17": "Meghalaya", "18": "Assam", "19": "West Bengal",
+    "20": "Jharkhand", "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh",
+    "24": "Gujarat", "25": "Daman and Diu", "26": "Dadra and Nagar Haveli",
+    "27": "Maharashtra", "28": "Andhra Pradesh (Old)", "29": "Karnataka",
+    "30": "Goa", "31": "Lakshadweep", "32": "Kerala", "33": "Tamil Nadu",
+    "34": "Puducherry", "35": "Andaman and Nicobar Islands", "36": "Telangana",
+    "37": "Andhra Pradesh", "38": "Ladakh",
+}
+
+
+class InvoiceGenerateRequest(BaseModel):
+    email: EmailStr
+    legal_name: str = Field(..., min_length=2, max_length=200)
+    gstin: Optional[str] = None        # 15-char; optional → B2C
+    address: str = Field(..., min_length=5, max_length=500)
+    state_code: Optional[str] = None   # "29" etc. None / "00" → international
+    is_international: bool = False
+
+
+async def _next_invoice_number(fy: str) -> str:
+    """Atomic per-fiscal-year sequential counter, persisted in MongoDB."""
+    if db is None:
+        # No persistence available — fall back to timestamp suffix
+        return f"TSOP/{fy}/{int(datetime.now(timezone.utc).timestamp()) % 100000:05d}"
+    res = await db.invoice_counters.find_one_and_update(
+        {"_id": fy},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True,
+    )
+    seq = (res or {}).get("seq", 1)
+    return f"TSOP/{fy}/{seq:04d}"
+
+
+@api_router.post("/invoice/generate")
+async def generate_gst_invoice(req: InvoiceGenerateRequest):
+    """Generate a GST tax invoice PDF for a paid member.
+
+    Flow:
+      1. Verify the email belongs to a paid Ghost member (label or comped status)
+      2. Either return the existing invoice (same buyer, same payment ref) OR
+         allocate the next fiscal-year sequence number
+      3. Render the PDF, persist a record, return the bytes
+    """
+    # ─── 1. validate input ────────────────────────────────────
+    gstin = (req.gstin or "").strip().upper() or None
+    if gstin and not inv_validate_gstin(gstin):
+        raise HTTPException(status_code=400, detail="Invalid GSTIN format")
+
+    if not req.is_international:
+        if not req.state_code or req.state_code not in INDIAN_STATES:
+            raise HTTPException(status_code=400, detail="Invalid Indian state code")
+        # Sanity check: GSTIN's first 2 digits should match the chosen state code
+        if gstin and gstin[:2] != req.state_code:
+            raise HTTPException(
+                status_code=400,
+                detail=f"GSTIN state prefix ({gstin[:2]}) does not match selected state ({req.state_code})",
+            )
+
+    # ─── 2. confirm paid member ───────────────────────────────
+    member = None
+    try:
+        if GHOST_ADMIN_API_KEY:
+            import httpx
+            token = create_ghost_admin_token()
+            async with httpx.AsyncClient() as http_client:
+                r = await http_client.get(
+                    f"{GHOST_URL}/ghost/api/admin/members/",
+                    params={"filter": f"email:{req.email}", "include": "subscriptions,labels"},
+                    headers={"Authorization": f"Ghost {token}"},
+                )
+                if r.status_code == 200:
+                    members = r.json().get("members", [])
+                    if members:
+                        member = members[0]
+    except Exception as e:
+        logger.error(f"Ghost lookup for invoice failed: {e}")
+
+    if not member:
+        raise HTTPException(status_code=404, detail="No matching member found")
+
+    labels = [(lbl.get("name") or "").lower() for lbl in (member.get("labels") or [])]
+    is_paid = (
+        "paid-via-razorpay" in labels
+        or member.get("status") in ("paid", "comped")
+        or len(member.get("subscriptions") or []) > 0
+    )
+    if not is_paid:
+        raise HTTPException(status_code=403, detail="Invoice available for paid members only")
+
+    # ─── 3. derive subscription period + razorpay ref ─────────
+    created_at_str = member.get("created_at") or datetime.now(timezone.utc).isoformat()
+    try:
+        sub_start = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+    except Exception:
+        sub_start = datetime.now(timezone.utc)
+    sub_end = sub_start + timedelta(days=365)
+
+    # Best-effort Razorpay reference extraction from member note
+    note = member.get("note") or ""
+    rzp_ref = "—"
+    for token in note.split():
+        if token.startswith("pay_") and len(token) > 8:
+            rzp_ref = token.strip(".,;|")
+            break
+
+    # ─── 4. tax computation ───────────────────────────────────
+    taxable_value = 2499
+    tax = inv_compute_tax(
+        taxable_value=taxable_value,
+        buyer_state_code=req.state_code,
+        is_international=req.is_international,
+    )
+
+    # ─── 5. invoice number — re-use if already issued ─────────
+    invoice_record = None
+    if db is not None:
+        invoice_record = await db.invoices.find_one(
+            {"email": req.email, "razorpay_ref": rzp_ref},
+            {"_id": 0},
+        )
+
+    if invoice_record:
+        invoice_number = invoice_record["invoice_number"]
+        issued_at = datetime.fromisoformat(invoice_record["issued_at"])
+    else:
+        issued_at = datetime.now(timezone.utc)
+        fy = inv_fiscal_year(issued_at)
+        invoice_number = await _next_invoice_number(fy)
+        if db is not None:
+            await db.invoices.insert_one({
+                "invoice_number": invoice_number,
+                "email": req.email,
+                "razorpay_ref": rzp_ref,
+                "buyer_name": req.legal_name,
+                "buyer_gstin": gstin,
+                "buyer_state_code": req.state_code,
+                "is_international": req.is_international,
+                "taxable_value": taxable_value,
+                "total": tax["total"],
+                "issued_at": issued_at.isoformat(),
+            })
+
+    # ─── 6. render PDF ────────────────────────────────────────
+    buyer_state_name = (
+        "International" if req.is_international
+        else INDIAN_STATES.get(req.state_code or "", "—")
+    )
+    pdf_bytes = build_invoice_pdf({
+        "invoice_number": invoice_number,
+        "issued_at": issued_at,
+        "buyer": {
+            "name": req.legal_name,
+            "gstin": gstin,
+            "address": req.address,
+            "state_name": buyer_state_name,
+            "state_code": req.state_code or "—",
+            "is_international": req.is_international,
+        },
+        "period_start": sub_start.strftime("%d %b %Y"),
+        "period_end": sub_end.strftime("%d %b %Y"),
+        "razorpay_ref": rzp_ref,
+        "taxable_value": taxable_value,
+        "tax": tax,
+    })
+
+    safe_num = invoice_number.replace("/", "-")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{safe_num}.pdf"'},
+    )
 
 # Root health check (without /api prefix)
 @app.get("/health")
