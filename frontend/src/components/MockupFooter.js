@@ -18,14 +18,15 @@ const COL_LEGAL = [
   { label: 'Privacy Policy', to: '/privacy' },
 ];
 
-export const MockupFooter = () => {
+export const MockupFooter = ({ hideHeroCta = false }) => {
   const year = new Date().getFullYear();
   return (
     <footer
       data-testid="mockup-footer"
       className="bg-[#090E17] text-white border-t border-white/10"
     >
-      {/* Editorial masthead row */}
+      {/* Editorial masthead row — hidden on pages with their own conversion section */}
+      {!hideHeroCta && (
       <div className="border-b border-white/10">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
@@ -53,6 +54,7 @@ export const MockupFooter = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Index columns — newspaper masthead style */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">

@@ -69,6 +69,14 @@ Build a premium content website for sports business intelligence with a focus on
 - [ ] "Insider Drops" - Subscriber-only private intel feed
 - [ ] Premium design overhaul (when ready)
 
+### Mockup Redesign (`/mockup/*`) — Editorial Aesthetic
+- [x] All 10 mockup surfaces rebuilt in dense WSJ/FT/Information style (Feb 2026)
+- [x] Font system locked: **Fraunces** (headlines) × **Newsreader** (article body + deks) × **Geist** (UI)
+- [x] Headline colour-lock CSS rule (`.headline-lock`) prevents visited/hover link colour leaking into list/archive/sidebar headlines
+- [x] LeftField page: secondary brief added beneath lead to balance left column, envelope icon removed, redundant global footer CTA suppressed via `hideFooterHeroCta` prop
+- [x] MockupFooter: copy locked ("…Money, media, ownership, and power — reported from Bengaluru."), location simplified to "Bengaluru", italic tagline at `#AAAAAA` contrast
+- [ ] Final user sign-off → rollout to live routes
+
 ## Key URLs
 - Teams Sales: `/teams`
 - Team Dashboard: `/teams/manage?token={token}`

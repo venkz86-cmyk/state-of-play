@@ -220,17 +220,21 @@ body::before {
   }
 }
 
-/* Mockup accent + typography — locked Fraunces × Geist */
+/* Mockup accent + typography — locked Fraunces × Newsreader × Geist
+   - Fraunces  → all headlines (display)
+   - Newsreader → article body + deks on article pages (reading)
+   - Geist     → UI, labels, dates, bylines, captions, buttons, metadata */
 :root {
   --accent: #8B1E2D;
   --accent-hover: #6f1824;
   --display-font: 'Fraunces';
+  --reading-font: 'Newsreader';
   --body-font: 'Geist';
   --label-font: 'Geist';
   --label-tracking: 0.14em;
 }
 
-/* All-family override: headline + body + overline are driven by CSS vars */
+/* Family overrides — driven by CSS variables */
 .font-editorial {
   font-family: var(--display-font), 'Playfair Display', Georgia, serif !important;
   font-optical-sizing: auto;
@@ -239,12 +243,33 @@ body::before {
   font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif !important;
   font-optical-sizing: auto;
 }
-
-/* Prevent visited link colour leaking into headlines (Safari + iOS in particular) */
-a:visited,
-a:visited * {
-  color: inherit;
+.font-reading {
+  font-family: var(--reading-font), 'Source Serif 4', Georgia, serif !important;
+  font-optical-sizing: auto;
 }
+
+/* === Headline colour lock (lists, archives, sidebars) ============
+   Browsers restrict descendant styling of :visited links, so we set
+   the colour on the headline directly for every link state, plus an
+   !important override. Apply class `headline-lock` to any headline
+   wrapped in a <Link>/<a> inside a list/archive/sidebar context. */
+.headline-lock,
+a:link .headline-lock,
+a:visited .headline-lock,
+a:hover .headline-lock,
+a:active .headline-lock {
+  color: #1A1A1A !important;
+}
+.dark .headline-lock,
+.dark a:link .headline-lock,
+.dark a:visited .headline-lock,
+.dark a:hover .headline-lock,
+.dark a:active .headline-lock {
+  color: #F8FAFC !important;
+}
+
+/* Prevent visited link colour leaking through to non-headline children */
+a:visited { color: inherit; }
 /* Overline language — small caps, tracked, tabular figures */
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
@@ -403,9 +428,9 @@ a:visited * {
   background: rgba(248, 250, 252, 0.08);
 }
 
-/* ========== Quiet prose (restrained article) ========== */
+/* ========== Quiet prose (article reading) — Newsreader serif ========== */
 .editorial-prose-quiet {
-  font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--reading-font), 'Source Serif 4', Georgia, serif;
   font-size: 1.1875rem;
   line-height: 1.7;
   color: #0F172A;

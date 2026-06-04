@@ -108,7 +108,7 @@ export const ArticleMockup = () => {
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="font-plex text-lg lg:text-xl leading-[1.45] text-[#334155] dark:text-[#CBD5E1] mb-8 max-w-[55ch]">
+            <p className="font-reading text-xl lg:text-[1.375rem] italic leading-[1.45] text-[#334155] dark:text-[#CBD5E1] mb-8 max-w-[55ch]">
               {article.subtitle}
             </p>
           )}

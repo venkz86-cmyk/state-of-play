@@ -254,7 +254,7 @@ export const HomeMockup = () => {
                   className="group flex items-baseline justify-between gap-6 py-4 border-b border-[#E2E8F0] dark:border-[#1E293B]"
                 >
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                    <h2 className="headline-lock font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug">
                       {a.title}
                     </h2>
                     <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] mt-1">

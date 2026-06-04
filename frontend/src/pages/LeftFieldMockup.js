@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ArrowUpRight, Mail } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -92,11 +92,12 @@ export const LeftFieldMockup = () => {
   }, []);
 
   const lead = items[0];
-  const grid = items.slice(1, 5);
+  const secondary = items[1];
+  const grid = items.slice(2, 5);
   const list = items.slice(5);
 
   return (
-    <MockupLayout testId="mockup-leftfield">
+    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta>
       {/* Hero */}
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
@@ -122,7 +123,6 @@ export const LeftFieldMockup = () => {
               data-testid="leftfield-subscribe"
               className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >
-              <Mail className="h-4 w-4" strokeWidth={2} />
               Subscribe on Substack
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </a>
@@ -161,23 +161,24 @@ export const LeftFieldMockup = () => {
           {lead && (
             <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+              <div className="lg:col-span-7 flex flex-col">
                 <a
                   href={lead.external_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="leftfield-lead"
-                  className="group lg:col-span-7 block"
+                  className="group block"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <Overline className="text-[#234ba0]">Latest Brief</Overline>
                     <span className="h-px w-6 bg-[#234ba0]/40" />
                     <Overline>{fmtDate(lead.created_at)}</Overline>
                   </div>
-                  <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-5 group-hover:text-[#234ba0] transition-colors duration-200">
+                  <h2 className="headline-lock font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-5">
                     {lead.title}
                   </h2>
                   {lead.subtitle && (
-                    <p className="font-plex text-lg text-[#475569] dark:text-[#94A3B8] max-w-[60ch] leading-relaxed mb-6">
+                    <p className="font-reading italic text-xl lg:text-[1.5rem] text-[#334155] dark:text-[#CBD5E1] max-w-[60ch] leading-[1.5] mb-6">
                       {lead.subtitle}
                     </p>
                   )}
@@ -186,6 +187,32 @@ export const LeftFieldMockup = () => {
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                   </span>
                 </a>
+
+                {/* Secondary brief — fills the column visually when no body text is available */}
+                {secondary && (
+                  <a
+                    href={secondary.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="leftfield-secondary"
+                    className="group block mt-12 pt-10 border-t border-[#E2E8F0] dark:border-[#1E293B]"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Overline className="text-[#234ba0]">Also this week</Overline>
+                      <span className="h-px w-6 bg-[#234ba0]/40" />
+                      <Overline>{fmtDate(secondary.created_at)}</Overline>
+                    </div>
+                    <h3 className="headline-lock font-editorial font-semibold tracking-tight text-2xl lg:text-[1.875rem] leading-[1.15] mb-3">
+                      {secondary.title}
+                    </h3>
+                    {secondary.subtitle && (
+                      <p className="font-reading italic text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] max-w-[60ch] leading-snug">
+                        {secondary.subtitle}
+                      </p>
+                    )}
+                  </a>
+                )}
+              </div>
 
                 <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] dark:lg:border-[#1E293B]">
                   <Overline className="text-[var(--accent)] mb-8 block">— Recent briefs —</Overline>
@@ -203,7 +230,7 @@ export const LeftFieldMockup = () => {
                           data-testid={`leftfield-side-${p.id}`}
                         >
                           <Overline className="block mb-2">{fmtDate(p.created_at)}</Overline>
-                          <h3 className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2 group-hover:text-[#234ba0] transition-colors duration-200">
+                          <h3 className="headline-lock font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2">
                             {p.title}
                           </h3>
                           {p.subtitle && (

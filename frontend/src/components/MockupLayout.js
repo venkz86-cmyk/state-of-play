@@ -12,14 +12,14 @@ export const Overline = ({ children, className = '' }) => (
 );
 
 // Wrapper that gives every mockup page the editorial nav/footer + base palette
-export const MockupLayout = ({ children, testId = 'mockup-page' }) => (
+export const MockupLayout = ({ children, testId = 'mockup-page', hideFooterHeroCta = false }) => (
   <div
     data-testid={testId}
     className="min-h-screen bg-[#F7F7F5] dark:bg-[#090E17] text-[#0F172A] dark:text-[#F8FAFC]"
   >
     <MockupHeader />
     <main>{children}</main>
-    <MockupFooter />
+    <MockupFooter hideHeroCta={hideFooterHeroCta} />
   </div>
 );
 
