@@ -62,7 +62,7 @@ export const FeedMockup = () => {
         <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
             <Link
-              to={`/mockup/article/${lead.id}`}
+              to={`/${lead.id}`}
               data-testid="feed-lead"
               className="group lg:col-span-7"
             >
@@ -100,7 +100,7 @@ export const FeedMockup = () => {
                     className={i === grid.length - 1 ? '' : 'pb-8 mb-8 border-b border-[#E2E8F0] dark:border-[#1E293B]'}
                   >
                     <Link
-                      to={`/mockup/article/${p.id}`}
+                      to={`/${p.id}`}
                       className="group block"
                       data-testid={`feed-side-${p.id}`}
                     >
@@ -133,7 +133,7 @@ export const FeedMockup = () => {
               {list.map((p, i) => (
                 <li key={p.id}>
                   <Link
-                    to={`/mockup/article/${p.id}`}
+                    to={`/${p.id}`}
                     data-testid={`feed-row-${p.id}`}
                     className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                   >

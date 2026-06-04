@@ -307,7 +307,7 @@ export const LeftFieldMockup = () => {
           </div>
           <div className="lg:col-span-5 flex flex-col gap-4 lg:items-end">
             <a
-              href="/mockup/subscribe"
+              href="/signup"
               data-testid="leftfield-upgrade"
               className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
             >

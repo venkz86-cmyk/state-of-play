@@ -8,6 +8,7 @@ import { ShareRow } from '../components/ShareRow';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
+import { NotFoundMockup } from './NotFoundMockup';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -76,14 +77,7 @@ export const ArticleMockup = () => {
     );
   }
   if (!article) {
-    return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-6">
-        <div className="text-center">
-          <p className="font-editorial text-2xl mb-3 text-[var(--text)]">Not found.</p>
-          <Link to="/mockup/home" className="text-[var(--accent-burgundy)] underline underline-offset-4">Back home</Link>
-        </div>
-      </div>
-    );
+    return <NotFoundMockup />;
   }
 
   const isPaywalled = article.is_premium && !isMember;
@@ -104,7 +98,7 @@ export const ArticleMockup = () => {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
-            <Link to="/mockup/home" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
+            <Link to="/" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
               ← The State of Play
             </Link>
             <span className="mx-2 text-[var(--text-label)]">·</span>
@@ -188,7 +182,7 @@ export const ArticleMockup = () => {
               {related.map((a) => (
                 <li key={a.id} className="border-t border-[var(--rule)] md:border-t-0">
                   <Link
-                    to={`/mockup/article/${a.id}`}
+                    to={`/${a.id}`}
                     data-testid={`related-${a.id}`}
                     className="group block py-5"
                   >

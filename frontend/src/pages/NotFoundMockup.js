@@ -11,7 +11,7 @@ export const NotFoundMockup = () => (
         The stories that do are here.
       </p>
       <Link
-        to="/mockup/home"
+        to="/"
         data-testid="notfound-cta"
         className="inline-flex items-center font-plex text-[15px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
       >

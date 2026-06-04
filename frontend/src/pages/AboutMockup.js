@@ -114,7 +114,7 @@ export const AboutMockup = () => (
               venkat@stateofplay.club
             </a>
           </div>
-          <Link to="/mockup/subscribe" data-testid="about-cta" className="inline-block mt-10 font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
+          <Link to="/signup" data-testid="about-cta" className="inline-block mt-10 font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
             View membership →
           </Link>
         </div>

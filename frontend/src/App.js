@@ -1,98 +1,66 @@
 import "@/index.css";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
-import { BackToTop } from "./components/BackToTop";
 import { MockupBackToTop } from "./components/MockupBackToTop";
-import { Home } from "./pages/Home";
-import { StateOfPlay } from "./pages/StateOfPlay";
-import { LeftField } from "./pages/LeftField";
-import { ArticlePage } from "./pages/ArticlePage";
-import { Login } from "./pages/Login";
-import { Signup } from "./pages/Signup";
-import { Dashboard } from "./pages/Dashboard";
-import { MemberDashboard } from "./pages/MemberDashboard";
-import { Welcome } from "./pages/Welcome";
-import { About } from "./pages/About";
-import { Contact } from "./pages/Contact";
-import { Membership } from "./pages/Membership";
-import { Outfield } from "./pages/Outfield";
-import { Terms } from "./pages/Terms";
-import { Privacy } from "./pages/Privacy";
-import { Archive } from "./pages/Archive";
-import { Teams } from "./pages/Teams";
-import { TeamsManage } from "./pages/TeamsManage";
-import { Partnerships } from "./pages/Partnerships";
-import { HomeMockup } from "./pages/HomeMockup";
-import { ArticleMockup } from "./pages/ArticleMockup";
+// Live page components (renamed → driven by the new editorial designs)
+import { HomeMockup as Home } from "./pages/HomeMockup";
+import { ArticleMockup as ArticlePage } from "./pages/ArticleMockup";
+import { FeedMockup as StateOfPlay } from "./pages/FeedMockup";
+import { LeftFieldMockup as LeftField } from "./pages/LeftFieldMockup";
+import { OutfieldMockup as Outfield } from "./pages/OutfieldMockup";
+import { LoginMockup as Login } from "./pages/LoginMockup";
+import { SubscribeMockup as Signup } from "./pages/SubscribeMockup";
+import { AccountMockup as MemberDashboard } from "./pages/AccountMockup";
+import { AboutMockup as About } from "./pages/AboutMockup";
+import { ContactMockup as Contact } from "./pages/ContactMockup";
+import { TeamsMockup as Teams } from "./pages/TeamsMockup";
+import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
+import { TermsMockup as Terms } from "./pages/TermsMockup";
+import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
+import { NotFoundMockup as NotFound } from "./pages/NotFoundMockup";
+// Keep the mockup index reachable for future review
 import { MockupIndex } from "./pages/MockupIndex";
-import { FeedMockup } from "./pages/FeedMockup";
-import { SubscribeMockup } from "./pages/SubscribeMockup";
-import { AboutMockup } from "./pages/AboutMockup";
-import { TeamsMockup } from "./pages/TeamsMockup";
-import { OutfieldMockup } from "./pages/OutfieldMockup";
-import { LoginMockup } from "./pages/LoginMockup";
-import { AccountMockup } from "./pages/AccountMockup";
-import { LeftFieldMockup } from "./pages/LeftFieldMockup";
-import { PartnershipsMockup } from "./pages/PartnershipsMockup";
-import { ContactMockup } from "./pages/ContactMockup";
-import { TermsMockup } from "./pages/TermsMockup";
-import { PrivacyMockup } from "./pages/PrivacyMockup";
-import { NotFoundMockup } from "./pages/NotFoundMockup";
+import { TeamsManage } from "./pages/TeamsManage";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
-  const location = useLocation();
-  const isMockup = location.pathname.startsWith('/mockup');
   return (
-    <div className="App min-h-screen flex flex-col bg-background text-foreground">
-      {!isMockup && <Header />}
+    <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
       <main className="flex-grow">
         <Routes>
+          {/* Production URLs — preserved exactly */}
           <Route path="/" element={<Home />} />
           <Route path="/state-of-play" element={<StateOfPlay />} />
           <Route path="/left-field" element={<LeftField />} />
           <Route path="/outfield" element={<Outfield />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<MemberDashboard />} />
           <Route path="/account" element={<MemberDashboard />} />
-          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/welcome" element={<MemberDashboard />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/membership" element={<Membership />} />
+          <Route path="/membership" element={<Signup />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/archive" element={<Archive />} />
+          <Route path="/archive" element={<StateOfPlay />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/partnerships" element={<Partnerships />} />
+
+          {/* Mockup review index — kept for future design previews */}
           <Route path="/mockup" element={<MockupIndex />} />
-          <Route path="/mockup/home" element={<HomeMockup />} />
-          <Route path="/mockup/feed" element={<FeedMockup />} />
-          <Route path="/mockup/subscribe" element={<SubscribeMockup />} />
-          <Route path="/mockup/about" element={<AboutMockup />} />
-          <Route path="/mockup/teams" element={<TeamsMockup />} />
-          <Route path="/mockup/outfield" element={<OutfieldMockup />} />
-          <Route path="/mockup/left-field" element={<LeftFieldMockup />} />
-          <Route path="/mockup/login" element={<LoginMockup />} />
-          <Route path="/mockup/account" element={<AccountMockup />} />
-          <Route path="/mockup/article/:id" element={<ArticleMockup />} />
-          <Route path="/mockup/article" element={<ArticleMockup />} />
-          <Route path="/mockup/partnerships" element={<PartnershipsMockup />} />
-          <Route path="/mockup/contact" element={<ContactMockup />} />
-          <Route path="/mockup/terms" element={<TermsMockup />} />
-          <Route path="/mockup/privacy" element={<PrivacyMockup />} />
-          <Route path="/mockup/404" element={<NotFoundMockup />} />
-          {/* Article route MUST be last - catches /:slug */}
+
+          {/* Article catch-all (Ghost slug). MUST be last. */}
           <Route path="/:id" element={<ArticlePage />} />
+
+          {/* Custom 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isMockup && <Footer />}
-      {isMockup ? <MockupBackToTop /> : <BackToTop />}
+      <MockupBackToTop />
       <Toaster position="top-right" />
     </div>
   );

@@ -92,7 +92,7 @@ export const SubscribeMockup = () => {
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
             <RazorpayButton dataTestId="pricing-subscribe" />
             <Link
-              to="/mockup/login"
+              to="/login"
               className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors"
             >
               Already a subscriber? Sign in
@@ -126,7 +126,7 @@ export const SubscribeMockup = () => {
               {premium.map((p) => (
                 <Link
                   key={p.id}
-                  to={`/mockup/article/${p.id}`}
+                  to={`/${p.id}`}
                   className="group block py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
                 >
                   <p className="font-plex text-xs tracking-[0.18em] uppercase text-[#475569] dark:text-[#94A3B8] mb-2">{p.theme || 'Reportage'}</p>

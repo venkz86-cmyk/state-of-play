@@ -10,7 +10,7 @@ const LOGO_DARK =
   'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
 
 const NAV = [
-  { path: '/mockup/home', label: 'Home' },
+  { path: '/', label: 'Home' },
   { path: '/state-of-play', label: 'The State of Play' },
   { path: '/left-field', label: 'The Left Field' },
   { path: '/outfield', label: 'The Outfield' },
@@ -41,7 +41,7 @@ export const MockupHeader = () => {
         <div className="flex items-center justify-between h-16 lg:h-20 gap-6">
           {/* Logo */}
           <Link
-            to="/mockup/home"
+            to="/"
             data-testid="mockup-header-logo"
             className="flex items-center group shrink-0"
           >

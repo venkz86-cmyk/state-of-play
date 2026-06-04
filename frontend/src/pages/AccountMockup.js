@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
+import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
 export const AccountMockup = () => {
+  const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
   const [recent, setRecent] = useState([]);
   useEffect(() => {
     (async () => {
@@ -15,15 +17,21 @@ export const AccountMockup = () => {
     })();
   }, []);
 
-  const memberName = 'Venkatesh';
-  const memberEmail = 'venkz86@gmail.com';
+  // Gate: visitors who aren't signed in are bounced to /login
+  if (!loading && !isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const memberName = (user?.name?.split(' ')[0]) || 'Reader';
+  const memberEmail = user?.email || '';
+  const planLabel = canAccessPremium ? 'Annual' : 'Free';
 
   return (
-    <MockupLayout testId="mockup-account">
+    <MockupLayout testId="page-account">
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
-          <span className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">{memberEmail}</span>
-          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">Member Lounge</span>
+        <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
+          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">{memberEmail}</span>
+          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">Member Lounge</span>
         </div>
       </div>
 
@@ -32,12 +40,17 @@ export const AccountMockup = () => {
           <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] mb-5">
             Hello, <em className="italic font-normal">{memberName}.</em>
           </h1>
-          <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] max-w-[55ch] leading-relaxed">
-            Your reading list, billing and preferences live here. Plan renews <span className="text-[#0F172A] dark:text-[#F8FAFC]">12 February 2027</span>.
+          <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
+            Your reading list, billing and preferences live here.
           </p>
         </div>
         <div className="lg:col-span-4 lg:text-right">
-          <button type="button" data-testid="account-signout" className="font-plex text-sm text-[#475569] hover:text-[var(--accent)] underline underline-offset-[6px] decoration-1 transition-all">
+          <button
+            type="button"
+            onClick={logout}
+            data-testid="account-signout"
+            className="font-plex text-sm text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 transition-all"
+          >
             Sign out →
           </button>
         </div>
@@ -47,10 +60,10 @@ export const AccountMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
         <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4">
           {[
-            ['Plan', 'Annual'],
-            ['Renews', '12 Feb 2027'],
-            ['Next charge', '₹2,949'],
-            ['Member since', '12 Feb 2026'],
+            ['Plan', planLabel],
+            ['Renews', '—'],
+            ['Next charge', canAccessPremium ? '₹2,949' : '—'],
+            ['Member since', '—'],
           ].map(([k, v], i) => (
             <div
               key={k}
@@ -72,7 +85,7 @@ export const AccountMockup = () => {
             {recent.map((p) => (
               <Link
                 key={p.id}
-                to={`/mockup/article/${p.id}`}
+                to={`/${p.id}`}
                 className="group flex items-baseline justify-between gap-6 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
               >
                 <div className="flex-1 min-w-0">
