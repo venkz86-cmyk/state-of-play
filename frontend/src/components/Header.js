@@ -8,9 +8,9 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { User, LogOut, Menu, Mail, Calendar, Users } from 'lucide-react';
 import { useState } from 'react';
 
-// Logo URLs
-const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_leftfield-hub/artifacts/fx9mc000_TSOP-Logo%20Final%3AColour.jpg";
-const LOGO_DARK = "https://customer-assets.emergentagent.com/job_dcd955ba-7b95-4793-aa4a-cd2ca65f8014/artifacts/gykve31s_Publication%20Icon.jpg";
+// Logo URLs — transparent (no white box)
+const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png";
+const LOGO_DARK = "https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png";
 
 export const Header = () => {
   const { user, logout } = useAuth();
@@ -36,14 +36,12 @@ export const Header = () => {
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="bg-white rounded shadow-sm p-1">
-              <img 
-                src={isDark ? LOGO_DARK : LOGO_LIGHT}
-                alt="The State of Play" 
-                className="h-12 w-auto transition-transform group-hover:scale-105"
-              />
-            </div>
+          <Link to="/" className="flex items-center group">
+            <img 
+              src={isDark ? LOGO_DARK : LOGO_LIGHT}
+              alt="The State of Play" 
+              className="h-12 w-auto transition-opacity duration-200 group-hover:opacity-80"
+            />
           </Link>
 
           {/* Desktop Navigation */}

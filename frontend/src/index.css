@@ -397,6 +397,62 @@ body::before {
   background: rgba(248, 250, 252, 0.08);
 }
 
+/* ========== Quiet prose (restrained article) ========== */
+.editorial-prose-quiet {
+  font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 1.1875rem;
+  line-height: 1.7;
+  color: #0F172A;
+  font-optical-sizing: auto;
+}
+.dark .editorial-prose-quiet { color: #F8FAFC; }
+@media (min-width: 768px) {
+  .editorial-prose-quiet { font-size: 1.25rem; line-height: 1.75; }
+}
+.editorial-prose-quiet p { margin: 0 0 1.5rem; }
+.editorial-prose-quiet h2 {
+  font-family: var(--display-font), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 3rem 0 1rem;
+}
+.editorial-prose-quiet h3 {
+  font-family: var(--display-font), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  margin: 2.25rem 0 0.75rem;
+}
+.editorial-prose-quiet a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(15, 23, 42, 0.35);
+  transition: text-decoration-color 0.2s ease;
+}
+.dark .editorial-prose-quiet a { text-decoration-color: rgba(248, 250, 252, 0.35); }
+.editorial-prose-quiet a:hover { text-decoration-color: var(--accent); }
+.editorial-prose-quiet strong { font-weight: 600; }
+.editorial-prose-quiet em { font-style: italic; }
+.editorial-prose-quiet blockquote {
+  margin: 2rem 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 1px solid #0F172A;
+  font-style: italic;
+  color: inherit;
+}
+.dark .editorial-prose-quiet blockquote { border-left-color: #F8FAFC; }
+.editorial-prose-quiet ul, .editorial-prose-quiet ol { margin: 0 0 1.5rem; padding-left: 1.25rem; }
+.editorial-prose-quiet li { margin-bottom: 0.5rem; }
+.editorial-prose-quiet hr { border: 0; border-top: 1px solid #E2E8F0; margin: 3rem auto; width: 3rem; }
+.dark .editorial-prose-quiet hr { border-color: #1E293B; }
+.editorial-prose-quiet img { display: block; width: 100%; height: auto; margin: 2rem 0; }
+.editorial-prose-quiet figure { margin: 2rem 0; }
+.editorial-prose-quiet figcaption { font-size: 0.8125rem; color: #94A3B8; margin-top: 0.5rem; }
+
 /* ========== Serif body variant (?body=serif) ========== */
 .editorial-prose--serif,
 .editorial-prose--serif p {

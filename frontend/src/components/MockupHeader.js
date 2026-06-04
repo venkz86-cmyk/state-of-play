@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Menu, X, Search, ArrowUpRight } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const LOGO_LIGHT =
   'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
@@ -52,78 +52,60 @@ export const MockupHeader = () => {
             />
           </Link>
 
-          {/* Desktop nav — mono caps, sharp underlines */}
+          {/* Desktop nav — sentence case, restrained */}
           <nav className="hidden lg:flex items-center gap-7 flex-1 justify-center">
             {NAV.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 data-testid={`mockup-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`relative font-plex tabular-nums text-[11px] font-medium tracking-[0.22em] uppercase transition-colors duration-200 ${
+                className={`font-plex text-sm transition-colors duration-200 ${
                   isActive(item.path)
-                    ? 'text-[#234ba0]'
-                    : 'text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0]'
+                    ? 'text-[var(--accent)]'
+                    : 'text-[#0F172A] dark:text-[#F8FAFC] hover:text-[var(--accent)]'
                 }`}
               >
                 {item.label}
-                {isActive(item.path) && (
-                  <span className="absolute -bottom-2 left-0 right-0 h-px bg-[#234ba0]" />
-                )}
               </Link>
             ))}
           </nav>
 
-          {/* Right rail — search + auth + subscribe */}
+          {/* Right rail — auth links only, no search button (decorative until wired) */}
           <div className="flex items-center gap-3 lg:gap-5 shrink-0">
-            <button
-              type="button"
-              aria-label="Search"
-              data-testid="mockup-header-search"
-              className="hidden sm:inline-flex h-9 w-9 items-center justify-center text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
-            >
-              <Search className="h-4 w-4" strokeWidth={1.5} />
-            </button>
 
             {isMember ? (
-              <div className="hidden sm:flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-5">
                 <Link
                   to="/account"
                   data-testid="mockup-header-account"
-                  className="flex items-center gap-2 group"
+                  className="font-plex text-sm text-[#0F172A] dark:text-[#F8FAFC] hover:text-[var(--accent)] transition-colors duration-200"
                 >
-                  <span className="h-8 w-8 bg-[#0F172A] dark:bg-[#F8FAFC] text-[#F7F7F5] dark:text-[#090E17] flex items-center justify-center font-editorial text-sm">
-                    {memberName ? memberName.charAt(0).toUpperCase() : 'M'}
-                  </span>
-                  <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[#234ba0] transition-colors duration-200">
-                    {memberName || 'Member'}
-                  </span>
+                  {memberName || 'Account'}
                 </Link>
-                <span className="h-4 w-px bg-[#0F172A]/15 dark:bg-[#F8FAFC]/15" />
                 <button
                   type="button"
                   onClick={logout}
                   data-testid="mockup-header-logout"
-                  className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569] dark:text-[#94A3B8] hover:text-[#234ba0] transition-colors duration-200"
+                  className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] hover:text-[var(--accent)] transition-colors duration-200"
                 >
                   Sign out
                 </button>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-5">
+              <div className="hidden sm:flex items-center gap-6">
                 <Link
                   to="/login"
                   data-testid="mockup-header-login"
-                  className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] hover:text-[#234ba0] transition-colors duration-200"
+                  className="font-plex text-sm text-[#0F172A] dark:text-[#F8FAFC] hover:text-[var(--accent)] transition-colors duration-200"
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/signup"
                   data-testid="mockup-header-subscribe"
-                  className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold text-sm px-5 py-2.5 transition-colors duration-200"
+                  className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                 >
                   Subscribe
-                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </Link>
               </div>
             )}
@@ -149,9 +131,9 @@ export const MockupHeader = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase ${
+                  className={`font-plex text-base ${
                     isActive(item.path)
-                      ? 'text-[#234ba0]'
+                      ? 'text-[var(--accent)]'
                       : 'text-[#0F172A] dark:text-[#F8FAFC]'
                   }`}
                 >
@@ -164,13 +146,13 @@ export const MockupHeader = () => {
                   <Link
                     to="/account"
                     onClick={() => setMobileOpen(false)}
-                    className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
+                    className="font-plex text-base text-[#0F172A] dark:text-[#F8FAFC]"
                   >
-                    Member Lounge
+                    Account
                   </Link>
                   <button
                     onClick={() => { logout(); setMobileOpen(false); }}
-                    className="text-left font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569]"
+                    className="text-left font-plex text-base text-[#475569]"
                   >
                     Sign out
                   </button>
@@ -180,17 +162,16 @@ export const MockupHeader = () => {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC]"
+                    className="font-plex text-base text-[#0F172A] dark:text-[#F8FAFC]"
                   >
                     Sign in
                   </Link>
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="inline-flex w-fit items-center gap-2 bg-[var(--accent)] text-white font-plex font-semibold text-sm px-5 py-2.5"
+                    className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1"
                   >
                     Subscribe
-                    <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
                   </Link>
                 </>
               )}
