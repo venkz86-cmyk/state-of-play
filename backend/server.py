@@ -1272,21 +1272,63 @@ class InvoiceGenerateRequest(BaseModel):
     address: str = Field(..., min_length=5, max_length=500)
     state_code: Optional[str] = None   # "29" etc. None / "00" → international
     is_international: bool = False
+    issue_date: Optional[str] = None   # ISO date 'YYYY-MM-DD'; default = payment date
 
 
-async def _next_invoice_number(fy: str) -> str:
-    """Atomic per-fiscal-year sequential counter, persisted in MongoDB."""
-    if db is None:
-        # No persistence available — fall back to timestamp suffix
-        return f"TSOP/{fy}/{int(datetime.now(timezone.utc).timestamp()) % 100000:05d}"
-    res = await db.invoice_counters.find_one_and_update(
-        {"_id": fy},
-        {"$inc": {"seq": 1}},
-        upsert=True,
-        return_document=True,
-    )
-    seq = (res or {}).get("seq", 1)
-    return f"TSOP/{fy}/{seq:04d}"
+def _fy_bounds(d: datetime) -> tuple[datetime, datetime]:
+    """Return (fy_start, fy_end_exclusive) for the Indian fiscal year containing d."""
+    y = d.year if d.month >= 4 else d.year - 1
+    fy_start = datetime(y, 4, 1, tzinfo=timezone.utc)
+    fy_end = datetime(y + 1, 4, 1, tzinfo=timezone.utc)
+    return fy_start, fy_end
+
+
+async def _ghost_seq_for_member(member_id: str, member_created_at: datetime) -> int:
+    """1-based chronological position of this member among 'paid-via-razorpay'
+    members in the current FY, ordered by created_at ascending. Deterministic
+    and sequential within the FY — no DB required. Returns 0 on failure."""
+    if not GHOST_ADMIN_API_KEY or not member_id:
+        return 0
+
+    fy_start, fy_end = _fy_bounds(member_created_at)
+    import httpx
+    token = create_ghost_admin_token()
+    members: list[dict] = []
+    page = 1
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            while True:
+                r = await client.get(
+                    f"{GHOST_URL}/ghost/api/admin/members/",
+                    params={
+                        "filter": (
+                            f"label:paid-via-razorpay+"
+                            f"created_at:>='{fy_start.strftime('%Y-%m-%d %H:%M:%S')}'+"
+                            f"created_at:<'{fy_end.strftime('%Y-%m-%d %H:%M:%S')}'"
+                        ),
+                        "limit": 100,
+                        "page": page,
+                        "order": "created_at asc",
+                        "include": "labels",
+                    },
+                    headers={"Authorization": f"Ghost {token}"},
+                )
+                if r.status_code != 200:
+                    break
+                payload = r.json()
+                members.extend(payload.get("members", []))
+                pages = (payload.get("meta", {}).get("pagination") or {}).get("pages") or 1
+                if page >= pages:
+                    break
+                page += 1
+    except Exception as e:
+        logger.warning(f"Ghost FY member listing failed: {e!r}")
+        return 0
+
+    for i, m in enumerate(members):
+        if m.get("id") == member_id:
+            return i + 1
+    return 0
 
 
 @api_router.post("/invoice/generate")
@@ -1358,17 +1400,18 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
     # ─── 3. derive subscription period + razorpay ref ─────────
     created_at_str = member.get("created_at") or datetime.now(timezone.utc).isoformat()
     try:
-        sub_start = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+        payment_dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
     except Exception:
-        sub_start = datetime.now(timezone.utc)
+        payment_dt = datetime.now(timezone.utc)
+    sub_start = payment_dt
     sub_end = sub_start + timedelta(days=365)
 
     # Best-effort Razorpay reference extraction from member note
     note = member.get("note") or ""
     rzp_ref = "—"
-    for token in note.split():
-        if token.startswith("pay_") and len(token) > 8:
-            rzp_ref = token.strip(".,;|")
+    for tok in note.split():
+        if tok.startswith("pay_") and len(tok) > 8:
+            rzp_ref = tok.strip(".,;|")
             break
 
     # ─── 4. tax computation ───────────────────────────────────
@@ -1379,34 +1422,60 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
         is_international=req.is_international,
     )
 
-    # ─── 5. invoice number — re-use if already issued ─────────
-    invoice_record = None
-    if db is not None:
-        invoice_record = await db.invoices.find_one(
-            {"email": req.email, "razorpay_ref": rzp_ref},
-            {"_id": 0},
-        )
+    # ─── 5. issued_at: default = payment date, optional override ──
+    issued_at = payment_dt
+    if req.issue_date:
+        try:
+            override = datetime.strptime(req.issue_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="issue_date must be YYYY-MM-DD")
+        today = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59)
+        # Cannot be before payment, cannot be in the future
+        payment_day = payment_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        if override < payment_day:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%d %b %Y')})",
+            )
+        if override > today:
+            raise HTTPException(status_code=400, detail="Issue date cannot be in the future")
+        # Must remain in the same fiscal year as the payment
+        if inv_fiscal_year(override) != inv_fiscal_year(payment_dt):
+            raise HTTPException(
+                status_code=400,
+                detail="Issue date must fall within the same fiscal year as the payment",
+            )
+        issued_at = override
 
-    if invoice_record:
-        invoice_number = invoice_record["invoice_number"]
-        issued_at = datetime.fromisoformat(invoice_record["issued_at"])
-    else:
-        issued_at = datetime.now(timezone.utc)
-        fy = inv_fiscal_year(issued_at)
-        invoice_number = await _next_invoice_number(fy)
-        if db is not None:
-            await db.invoices.insert_one({
-                "invoice_number": invoice_number,
-                "email": req.email,
-                "razorpay_ref": rzp_ref,
-                "buyer_name": req.legal_name,
-                "buyer_gstin": gstin,
-                "buyer_state_code": req.state_code,
-                "is_international": req.is_international,
-                "taxable_value": taxable_value,
-                "total": tax["total"],
-                "issued_at": issued_at.isoformat(),
-            })
+    # ─── 6. invoice number — Ghost-derived sequential ─────────
+    fy = inv_fiscal_year(issued_at)
+    seq = await _ghost_seq_for_member(member.get("id"), payment_dt)
+    if seq <= 0:
+        # Defensive fallback — should never normally fire
+        seq = abs(hash(member.get("id") or req.email)) % 9999 + 1
+    invoice_number = f"TSOP/{fy}/{seq:04d}"
+
+    # Optional persistence (only if Mongo is wired) — for auditing only
+    if db is not None:
+        try:
+            await db.invoices.update_one(
+                {"member_id": member.get("id"), "fy": fy},
+                {"$set": {
+                    "invoice_number": invoice_number,
+                    "email": req.email,
+                    "razorpay_ref": rzp_ref,
+                    "buyer_name": req.legal_name,
+                    "buyer_gstin": gstin,
+                    "buyer_state_code": req.state_code,
+                    "is_international": req.is_international,
+                    "taxable_value": taxable_value,
+                    "total": tax["total"],
+                    "issued_at": issued_at.isoformat(),
+                }},
+                upsert=True,
+            )
+        except Exception as e:
+            logger.warning(f"Invoice persistence failed (non-fatal): {e!r}")
 
     # ─── 6. render PDF ────────────────────────────────────────
     buyer_state_name = (

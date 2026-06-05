@@ -27,6 +27,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
   const [address, setAddress] = useState('');
   const [stateCode, setStateCode] = useState('29');
   const [isInternational, setIsInternational] = useState(false);
+  const [issueDate, setIssueDate] = useState(''); // YYYY-MM-DD; blank = use payment date
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -34,7 +35,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
 
   const reset = () => {
     setIsBusiness(false); setLegalName(''); setGstin(''); setAddress('');
-    setStateCode('29'); setIsInternational(false); setError(null);
+    setStateCode('29'); setIsInternational(false); setIssueDate(''); setError(null);
   };
 
   const handleClose = () => { reset(); onClose(); };
@@ -69,6 +70,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
           address: address.trim(),
           state_code: isInternational ? null : stateCode,
           is_international: isInternational,
+          issue_date: issueDate || null,
         }),
       });
       if (!res.ok) {
@@ -233,6 +235,24 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
               className="w-full bg-transparent border border-[var(--text)] font-plex text-base p-3 focus:outline-none focus:border-[var(--accent-burgundy)]"
               style={{ borderRadius: 0 }}
             />
+          </div>
+
+          {/* Optional issue date — defaults to Razorpay payment date */}
+          <div>
+            <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-2">
+              Issue date <span className="text-[#999]">(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={issueDate}
+              onChange={(e) => setIssueDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              data-testid="invoice-issue-date"
+              className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-base py-2 focus:outline-none focus:border-[var(--accent-burgundy)]"
+            />
+            <p className="font-plex text-[12px] text-[var(--text-label)] mt-2">
+              Leave blank to use your payment date. Must be on or after the payment date, within the same fiscal year, and not in the future.
+            </p>
           </div>
 
           {error && (
