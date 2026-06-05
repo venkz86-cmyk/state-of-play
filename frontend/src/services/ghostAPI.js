@@ -135,6 +135,8 @@ class GhostAPI {
       publication: this.getPublicationType(post),
       is_premium: isPremium,
       theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
+      primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
+      tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),
       image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
       read_time: post.reading_time || 5,
@@ -166,6 +168,63 @@ class GhostAPI {
       limit,
       filters: { filter: `tag:${tag}` }
     });
+  }
+
+  /**
+   * Related posts strategy (in order of preference):
+   *   1. Same primary tag, excluding the current post.
+   *   2. Any overlapping tag (other than the broad publication tags), most recent first.
+   *   3. Fallback to the most-recent posts, excluding the current post.
+   * Returns up to `limit` items.
+   */
+  async getRelatedPosts(post, limit = 3) {
+    if (!post) return [];
+    const skipTags = new Set(['state-of-play', 'left-field', 'leftfield', 'public']);
+    const meaningfulTags = (post.tag_slugs || []).filter((s) => s && !skipTags.has(s));
+    const primary = post.primary_tag_slug && !skipTags.has(post.primary_tag_slug)
+      ? post.primary_tag_slug
+      : meaningfulTags[0] || null;
+
+    const exclude = (list) => list.filter((p) => p.id !== post.id && p.slug !== post.slug);
+
+    // 1. Same primary tag
+    if (primary) {
+      const sameTag = await this.getPosts({
+        limit: limit + 3,
+        filters: { filter: `tag:${primary}` },
+      });
+      const filtered = exclude(sameTag);
+      if (filtered.length >= limit) return filtered.slice(0, limit);
+
+      // 2. Any overlapping tag (excluding the primary one already tried)
+      const otherTags = meaningfulTags.filter((t) => t !== primary);
+      if (otherTags.length > 0) {
+        const filterExpr = otherTags.map((t) => `tag:${t}`).join(',');
+        const overlap = await this.getPosts({
+          limit: limit + 3,
+          filters: { filter: filterExpr },
+        });
+        const seen = new Set(filtered.map((p) => p.id));
+        const merged = [
+          ...filtered,
+          ...exclude(overlap).filter((p) => !seen.has(p.id)),
+        ];
+        if (merged.length >= limit) return merged.slice(0, limit);
+      }
+
+      // 3. Top up with recent posts
+      const recent = await this.getPosts({ limit: limit + 3 });
+      const seen = new Set(filtered.map((p) => p.id));
+      const merged = [
+        ...filtered,
+        ...exclude(recent).filter((p) => !seen.has(p.id)),
+      ];
+      return merged.slice(0, limit);
+    }
+
+    // No tag info at all → recent fallback
+    const recent = await this.getPosts({ limit: limit + 1 });
+    return exclude(recent).slice(0, limit);
   }
 }
 

@@ -60,9 +60,9 @@ export const ArticleMockup = () => {
         }
         if (!active) return;
         setArticle(post);
-        const recent = await ghostAPI.getPosts({ limit: 6 });
+        const rel = await ghostAPI.getRelatedPosts(post, 3);
         if (!active) return;
-        setRelated(recent.filter((p) => p.id !== post?.id).slice(0, 3));
+        setRelated(rel);
       } catch (e) {
         console.error(e);
       } finally {
