@@ -56,16 +56,16 @@ const MOCK_ACCOUNTS = {
 
 const MOCK_MEMBERS = {
   active: [
-    { member_id: 'MEM301', email: 'rohini@acmesports.in', added_at: '2026-04-14' },
-    { member_id: 'MEM302', email: 'arjun@acmesports.in', added_at: '2026-04-21' },
-    { member_id: 'MEM303', email: 'kavita@acmesports.in', added_at: '2026-05-09' },
+    { member_id: 'MEM301', email: 'rohini@acmesports.in', added_at: '2026-04-14', last_seen_at: '2026-06-04T11:24:00Z' },
+    { member_id: 'MEM302', email: 'arjun@acmesports.in',  added_at: '2026-04-21', last_seen_at: '2026-05-19T08:42:00Z' },
+    { member_id: 'MEM303', email: 'kavita@acmesports.in', added_at: '2026-05-09', last_seen_at: null },
   ],
   full: [
-    { member_id: 'MEM501', email: 'priya@bombayinnings.com', added_at: '2025-11-02' },
-    { member_id: 'MEM502', email: 'rahul@bombayinnings.com', added_at: '2025-11-05' },
-    { member_id: 'MEM503', email: 'meera@bombayinnings.com', added_at: '2025-12-12' },
-    { member_id: 'MEM504', email: 'sahil@bombayinnings.com', added_at: '2026-01-08' },
-    { member_id: 'MEM505', email: 'ananya@bombayinnings.com', added_at: '2026-02-17' },
+    { member_id: 'MEM501', email: 'priya@bombayinnings.com',  added_at: '2025-11-02', last_seen_at: '2026-06-03T17:02:00Z' },
+    { member_id: 'MEM502', email: 'rahul@bombayinnings.com',  added_at: '2025-11-05', last_seen_at: '2026-06-01T09:14:00Z' },
+    { member_id: 'MEM503', email: 'meera@bombayinnings.com',  added_at: '2025-12-12', last_seen_at: '2026-05-20T15:30:00Z' },
+    { member_id: 'MEM504', email: 'sahil@bombayinnings.com',  added_at: '2026-01-08', last_seen_at: '2026-04-09T11:00:00Z' },
+    { member_id: 'MEM505', email: 'ananya@bombayinnings.com', added_at: '2026-02-17', last_seen_at: null },
   ],
   expired: [],
 };
@@ -84,6 +84,20 @@ const shortDate = (iso) =>
 const inrFormat = (n) => `\u20B9${(n || 0).toLocaleString('en-IN')}`;
 
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+
+// Member-status pill computed from Ghost's `last_seen_at`.
+// active < 30d  →  burgundy "Active"
+// dormant      →  grey   "Last seen Nd ago"
+// never        →  grey   "Not signed in yet"
+const memberStatus = (lastSeenIso) => {
+  if (!lastSeenIso) return { label: 'Not signed in yet', tone: 'muted' };
+  const last = new Date(lastSeenIso);
+  const days = Math.floor((Date.now() - last.getTime()) / 86_400_000);
+  if (days <= 30) return { label: 'Active', tone: 'accent' };
+  if (days < 365) return { label: `Last seen ${days}d ago`, tone: 'muted' };
+  const years = Math.floor(days / 365);
+  return { label: `Last seen ${years}y ago`, tone: 'muted' };
+};
 
 // ─── Empty-state / error block (used for invalid + expired states) ───────────
 const Notice = ({ title, body, ctaHref = 'https://www.stateofplay.club', ctaText = '\u2190 Back to The State of Play' }) => (
@@ -373,6 +387,9 @@ const DashboardView = ({ account, initialMembers }) => {
             <ul className="border-t border-[var(--rule)]">
               {members.map((m) => {
                 const isPending = pendingRemove === m.member_id;
+                const status = memberStatus(m.last_seen_at);
+                const statusColor =
+                  status.tone === 'accent' ? 'var(--accent-burgundy)' : '#999999';
                 return (
                   <li
                     key={m.member_id}
@@ -381,15 +398,20 @@ const DashboardView = ({ account, initialMembers }) => {
                   >
                     {!isPending ? (
                       <>
-                        <div className="col-span-12 md:col-span-6 min-w-0">
+                        <div className="col-span-12 md:col-span-5 min-w-0">
                           <p className="font-plex text-[15px] text-[var(--text)] truncate">{m.email}</p>
                         </div>
-                        <div className="col-span-7 md:col-span-4 self-center">
+                        <div className="col-span-7 md:col-span-3 self-center">
                           <p className="font-plex text-[12px] text-[#999999]">
                             Added {shortDate(m.added_at)}
                           </p>
                         </div>
-                        <div className="col-span-5 md:col-span-2 md:text-right self-center">
+                        <div className="col-span-5 md:col-span-3 self-center md:text-left">
+                          <p className="font-plex text-[12px] tabular-nums" style={{ color: statusColor }}>
+                            {status.label}
+                          </p>
+                        </div>
+                        <div className="col-span-12 md:col-span-1 md:text-right self-center">
                           <button
                             type="button"
                             onClick={() => setPendingRemove(m.member_id)}

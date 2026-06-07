@@ -22,9 +22,9 @@ const ADMIN_EMAIL = {
 const MEMBER_EMAIL = {
   from: 'Venkat Ananth <venkat@stateofplay.club>',
   to: 'arjun@acmesports.in',
-  subject: 'Acme Sports just added you to The State of Play',
+  subject: 'Acme Sports has added you to The State of Play',
   preheader:
-    'Rohini added you to your company’s subscription. Click below to sign in — no password needed.',
+    'A one-time sign-in link inside. Single use, 24-hour expiry, no password needed.',
 };
 
 const EmailFrame = ({ children, meta }) => (
@@ -154,19 +154,18 @@ const MemberEmail = () => (
 
     <Body>
       <p>
-        <strong className="font-semibold">Rohini at Acme Sports</strong> has added you to your
-        company’s State of Play subscription. You now have full access to everything we publish —
-        long-reads, the weekly briefing, and the subscriber-only notes.
+        <strong className="font-semibold">rohini@acmesports.in at Acme Sports</strong> has added
+        you to your team’s State of Play subscription.
       </p>
 
       <p>
-        Sign in with the button below. We don’t use passwords — we’ll email you a one-time link
-        any time you need to come back.
+        Sign in with the one-time link below. It works once, expires in 24 hours, and signs you
+        in across every device you open it on.
       </p>
 
       <p className="!my-8">
         <a
-          href="https://www.stateofplay.club/login?email=arjun@acmesports.in"
+          href="https://www.stateofplay.club/members/auth?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtZW1iZXItc2lnbmluLXVybCJ9.MOCK_TOKEN"
           style={{ borderRadius: 0 }}
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 no-underline transition-colors"
         >
@@ -175,17 +174,20 @@ const MemberEmail = () => (
       </p>
 
       <p className="font-plex text-[13px] text-[var(--text-muted)] !mt-3">
-        Or visit <a href="https://www.stateofplay.club/login" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">stateofplay.club/login</a> and enter <strong className="font-semibold text-[var(--text)]">arjun@acmesports.in</strong>.
+        Or paste this into your browser:<br />
+        <span className="text-[var(--accent-burgundy)] break-all">
+          https://www.stateofplay.club/members/auth?token=eyJhbGc…
+        </span>
       </p>
 
       <p className="pt-2">
-        <strong className="font-semibold">Where to start.</strong>{' '}
-        Try the latest from <a href="https://www.stateofplay.club/state-of-play" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">The State of Play</a> — our long-reads on the business of Indian sport. The
-        weekly briefing is <a href="https://www.stateofplay.club/left-field" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">The Left Field</a>; the events we host live at <a href="https://www.stateofplay.club/outfield" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">The Outfield</a>.
+        Once you’re in, you’ll have full access to everything we publish — the long-reads, the
+        weekly <a href="https://www.stateofplay.club/left-field" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">Left Field</a> briefing,
+        and the subscriber-only notes from the desk.
       </p>
 
-      <p>
-        If something here is broken or you’re not the right person on Rohini’s team, write to{' '}
+      <p className="text-[var(--text-muted)]">
+        If you weren’t expecting this, or you’re not the right person at Acme Sports, write to{' '}
         <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
           prerna@stateofplay.club
         </a>{' '}

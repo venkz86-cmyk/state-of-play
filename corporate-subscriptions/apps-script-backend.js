@@ -82,7 +82,11 @@ function doGet(e) {
     
     // Get members for this account
     const members = getMembers(account.account_id);
-    
+
+    // Enrich each member with Ghost `last_seen_at` so the dashboard can
+    // surface "Active / Dormant / Never signed in" status.
+    const lastSeenMap = getGhostLastSeenBatch(members.map(m => m.email));
+
     return jsonResponse({
       success: true,
       data: {
@@ -99,7 +103,8 @@ function doGet(e) {
         members: members.map(m => ({
           member_id: m.member_id,
           email: m.email,
-          added_at: m.added_at
+          added_at: m.added_at,
+          last_seen_at: lastSeenMap[m.email] || null
         }))
       }
     });
@@ -297,12 +302,25 @@ function handleAddMember(payload) {
     ]);
     
     Logger.log('Added member: ' + email + ' to account ' + account.account_id);
+
+    // Mint a Ghost one-time magic-link and email it to the new member.
+    // Failure is non-fatal — the seat is allocated; admin can re-send.
+    const mailResult = sendMagicLinkInvitation({
+      memberEmail: email,
+      ghostMemberId: ghostResult.ghost_member_id,
+      companyName: account.company_name,
+      adminEmail: account.admin_email,
+    });
+    if (!mailResult.success) {
+      Logger.log('Magic-link send failed for ' + email + ': ' + mailResult.error);
+    }
     
     return jsonResponse({
       success: true,
       data: {
         member_id: memberId,
-        email: email
+        email: email,
+        invitation_sent: !!mailResult.success
       }
     });
     
@@ -719,6 +737,143 @@ function deleteGhostMember(ghostMemberId) {
   } catch (error) {
     Logger.log('deleteGhostMember error: ' + error.toString());
     return { success: false, error: 'Failed to delete member. Please try again.' };
+  }
+}
+
+/**
+ * Fetch the Ghost `last_seen_at` timestamp for a batch of member emails.
+ * Returns: { "email@x.com": "2026-04-12T08:14:00.000Z" | null }
+ * Failures are silent — the dashboard simply falls back to "no status".
+ */
+function getGhostLastSeenBatch(emails) {
+  const out = {};
+  if (!emails || emails.length === 0) return out;
+
+  try {
+    const token = generateGhostJWT();
+    if (!token) return out;
+
+    // Ghost NQL: email:[a@x.com,b@y.com,...]  — single round-trip
+    var quoted = emails.map(function (e) { return "'" + e + "'"; }).join(',');
+    var filter = 'email:[' + quoted + ']';
+    var url = GHOST_URL + '/ghost/api/admin/members/' +
+              '?filter=' + encodeURIComponent(filter) +
+              '&fields=email,last_seen_at&limit=' + emails.length;
+
+    var response = UrlFetchApp.fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': 'Ghost ' + token },
+      muteHttpExceptions: true,
+    });
+
+    if (response.getResponseCode() === 200) {
+      var data = JSON.parse(response.getContentText());
+      (data.members || []).forEach(function (m) {
+        out[(m.email || '').toLowerCase()] = m.last_seen_at || null;
+      });
+    } else {
+      Logger.log('getGhostLastSeenBatch HTTP ' + response.getResponseCode() + ': ' + response.getContentText());
+    }
+  } catch (err) {
+    Logger.log('getGhostLastSeenBatch error: ' + err.toString());
+  }
+
+  return out;
+}
+
+/**
+ * Mint a Ghost one-time signin URL and email it to the invited team member.
+ * Uses Ghost Admin API: POST /ghost/api/admin/members/{id}/signin_urls/
+ * Sends the email via Apps Script's MailApp using the editorial template.
+ *
+ * Returns: { success: true } or { success: false, error: "..." }
+ */
+function sendMagicLinkInvitation(opts) {
+  var memberEmail = opts.memberEmail;
+  var ghostMemberId = opts.ghostMemberId;
+  var companyName = opts.companyName || 'your team';
+  var adminEmail = opts.adminEmail || '';
+
+  try {
+    var token = generateGhostJWT();
+    if (!token) {
+      return { success: false, error: 'Ghost JWT not available' };
+    }
+
+    // 1. Mint a one-time signin URL from Ghost.
+    var signinResp = UrlFetchApp.fetch(
+      GHOST_URL + '/ghost/api/admin/members/' + ghostMemberId + '/signin_urls/',
+      {
+        method: 'GET',
+        headers: { 'Authorization': 'Ghost ' + token },
+        muteHttpExceptions: true,
+      }
+    );
+
+    if (signinResp.getResponseCode() !== 200) {
+      Logger.log('signin_urls HTTP ' + signinResp.getResponseCode() + ': ' + signinResp.getContentText());
+      return { success: false, error: 'Could not generate signin URL' };
+    }
+
+    var payload = JSON.parse(signinResp.getContentText());
+    var url = (payload.member_signin_urls || [])[0] && payload.member_signin_urls[0].url;
+    if (!url) {
+      return { success: false, error: 'Empty signin URL from Ghost' };
+    }
+
+    // 2. Compose the editorial-style invitation email.
+    var firstName = (memberEmail.split('@')[0] || '').split(/[._-]/)[0];
+    firstName = firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : 'there';
+
+    var subject = companyName + ' has added you to The State of Play';
+
+    var textBody =
+      'Hi ' + firstName + ',\n\n' +
+      (adminEmail ? adminEmail + ' at ' + companyName : companyName) +
+      ' has added you to your team\u2019s State of Play subscription.\n\n' +
+      'Sign in with the one-time link below \u2014 it works once, expires in 24 hours, and signs you in across every device you open it on.\n\n' +
+      url + '\n\n' +
+      'You\u2019ll then have full access to everything we publish: long-reads, the weekly Left Field briefing, and the subscriber-only notes.\n\n' +
+      'If you weren\u2019t expecting this, or you\u2019re not the right person at ' + companyName + ', write to prerna@stateofplay.club and we\u2019ll sort it out.\n\n' +
+      'Welcome aboard.\n\n' +
+      'Venkat\nEditor, The State of Play\n' +
+      '\u2014\nLeft Field Ventures \u00B7 Ground Floor, 36 Infantry Road, Bengaluru 560001';
+
+    var htmlBody =
+      '<div style="font-family: Georgia, \'Times New Roman\', serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">' +
+      '<p style="font-family: -apple-system, sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">\u2014 The State of Play \u2014</p>' +
+      '<h1 style="font-size: 28px; font-weight: 600; line-height: 1.15; margin: 0 0 24px;">You\u2019re in, <em style="font-weight: normal;">' + firstName + '.</em></h1>' +
+      '<p><strong>' + (adminEmail || companyName) + '</strong>' + (adminEmail ? ' at ' + companyName : '') + ' has added you to your team\u2019s State of Play subscription.</p>' +
+      '<p>Sign in with the one-time link below. It works once, expires in 24 hours, and signs you in across every device you open it on.</p>' +
+      '<p style="margin: 32px 0;"><a href="' + url + '" style="display: inline-block; background: #A0291C; color: #FFFFFF; padding: 14px 28px; text-decoration: none; font-family: -apple-system, sans-serif; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;">Sign in to read \u2192</a></p>' +
+      '<p style="font-family: -apple-system, sans-serif; font-size: 13px; color: #666666;">Or paste this into your browser:<br><span style="color: #A0291C; word-break: break-all;">' + url + '</span></p>' +
+      '<p>Once you\u2019re in, you\u2019ll have full access to everything we publish: the long-reads, the weekly <em>Left Field</em> briefing, and the subscriber-only notes from the desk.</p>' +
+      '<p style="color: #555555;">If you weren\u2019t expecting this, or you\u2019re not the right person at ' + companyName + ', write to <a href="mailto:prerna@stateofplay.club" style="color: #A0291C;">prerna@stateofplay.club</a> and we\u2019ll sort it out.</p>' +
+      '<p>Welcome aboard.</p>' +
+      '<p style="margin-top: 32px;">Venkat<br><span style="font-family: -apple-system, sans-serif; font-size: 13px; color: #666666;">Editor, The State of Play</span></p>' +
+      '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">' +
+      '<p style="font-family: -apple-system, sans-serif; font-size: 12px; color: #999999; line-height: 1.7;">Left Field Ventures \u00B7 Ground Floor, 36 Infantry Road, Bengaluru 560001<br>For anything you need on this account, write to <a href="mailto:prerna@stateofplay.club" style="color: #A0291C;">prerna@stateofplay.club</a>.</p>' +
+      '</div>';
+
+    // 3. Send via Apps Script's MailApp.
+    // Note: To send "from venkat@stateofplay.club" the script owner must have
+    //       added that address as a Gmail "Send mail as" alias. Otherwise the
+    //       From: will be the script owner's default Gmail.
+    MailApp.sendEmail({
+      to: memberEmail,
+      subject: subject,
+      htmlBody: htmlBody,
+      body: textBody,
+      name: 'Venkat Ananth \u00B7 The State of Play',
+      replyTo: 'prerna@stateofplay.club',
+    });
+
+    Logger.log('Invitation sent to ' + memberEmail);
+    return { success: true };
+
+  } catch (err) {
+    Logger.log('sendMagicLinkInvitation error: ' + err.toString());
+    return { success: false, error: err.toString() };
   }
 }
 
