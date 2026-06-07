@@ -25,6 +25,7 @@ import { InvoicePreviewMockup } from "./pages/InvoicePreviewMockup";
 import { MockupIndex } from "./pages/MockupIndex";
 import { TeamsManage } from "./pages/TeamsManage";
 import { TeamsManageMockup } from "./pages/TeamsManageMockup";
+import { TeamsEmailsMockup } from "./pages/TeamsEmailsMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
@@ -56,6 +57,7 @@ function Shell() {
           <Route path="/mockup" element={<MockupIndex />} />
           <Route path="/mockup/invoice" element={<InvoicePreviewMockup />} />
           <Route path="/mockup/teams-manage" element={<TeamsManageMockup />} />
+          <Route path="/mockup/teams-emails" element={<TeamsEmailsMockup />} />
 
           {/* Article catch-all (Ghost slug). MUST be last. */}
           <Route path="/:id" element={<ArticlePage />} />
