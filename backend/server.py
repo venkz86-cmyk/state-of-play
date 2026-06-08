@@ -1518,11 +1518,19 @@ APPS_SCRIPT_URL = os.environ.get(
     "https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec",
 )
 
-# Taxable value per plan (pre-GST). Founding-partner rates.
+# Taxable value per plan (pre-GST). Founding-partner rates. Keys are
+# normalised (lowercase, digits-only) so we accept any spelling the admin
+# wrote into the Google Sheet: "Team-5", "Team 5", "5-seat", "team5".
 TEAM_PLAN_TAXABLE_VALUE = {
-    "Team-5":  10000,   # ₹11,800 incl. GST
-    "Team-10": 20000,   # ₹23,600 incl. GST
+    "5":  10000,   # Team-5  → ₹11,800 incl. GST
+    "10": 20000,   # Team-10 → ₹23,600 incl. GST
 }
+
+
+def _plan_seats_key(plan_name: str) -> str:
+    import re
+    digits = re.sub(r"\D", "", plan_name or "")
+    return digits  # "Team-5" / "5-seat" / "team 5" → "5"
 
 
 class TeamInvoiceGenerateRequest(BaseModel):
@@ -1607,11 +1615,13 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
         raise HTTPException(status_code=403, detail="This team subscription is no longer active")
 
     plan_name = account.get("plan_name") or ""
-    taxable_value = TEAM_PLAN_TAXABLE_VALUE.get(plan_name)
+    seats = account.get("seats")
+    plan_key = _plan_seats_key(plan_name) or (str(seats) if seats else "")
+    taxable_value = TEAM_PLAN_TAXABLE_VALUE.get(plan_key)
     if not taxable_value:
         raise HTTPException(
             status_code=400,
-            detail=f"Unrecognised plan '{plan_name}'. Please contact prerna@stateofplay.club.",
+            detail=f"Unrecognised plan '{plan_name}' ({seats} seats). Please contact prerna@stateofplay.club.",
         )
 
     # ─── 3. derive subscription period + payment ref ──────────

@@ -74,8 +74,16 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
         }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Generation failed (HTTP ${res.status})`);
+        let detail = `Generation failed (HTTP ${res.status})`;
+        try {
+          const err = await res.json();
+          if (err && err.detail) {
+            detail = typeof err.detail === 'string'
+              ? err.detail
+              : (err.detail[0] && err.detail[0].msg) || detail;
+          }
+        } catch (_e) { /* keep default */ }
+        throw new Error(detail);
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
