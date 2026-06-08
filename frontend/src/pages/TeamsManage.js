@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { TeamInvoiceRequestModal } from '../components/TeamInvoiceRequestModal';
 
 /* =============================================================================
    /teams/manage — Corporate team dashboard
@@ -202,6 +203,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
   const [pendingRemove, setPendingRemove] = useState(null);
   const [removeError, setRemoveError] = useState('');
   const [removing, setRemoving] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   const seatsUsed = members.length;
   const seatsTotal = account.seats;
@@ -518,13 +520,14 @@ const DashboardView = ({ token, account, members, onChange }) => {
             </div>
             <div className="md:text-right">
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">Invoice</Overline>
-              <a
-                href={`mailto:prerna@stateofplay.club?subject=GST%20invoice%20%E2%80%94%20${encodeURIComponent(account.company_name)}%20(${account.account_id})`}
+              <button
+                type="button"
+                onClick={() => setInvoiceOpen(true)}
                 className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                 data-testid="teams-invoice-link"
               >
-                Request invoice →
-              </a>
+                Download invoice →
+              </button>
             </div>
           </div>
           <p className="font-plex text-[12px] text-[#999999] mt-6 max-w-[55ch]">
@@ -545,6 +548,14 @@ const DashboardView = ({ token, account, members, onChange }) => {
           </p>
         </section>
       </div>
+
+      <TeamInvoiceRequestModal
+        open={invoiceOpen}
+        onClose={() => setInvoiceOpen(false)}
+        token={token}
+        companyName={account.company_name}
+        planName={account.plan_name}
+      />
     </MockupLayout>
   );
 };

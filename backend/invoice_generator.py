@@ -228,7 +228,7 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
     c.line(MARGIN, cursor_y, W - MARGIN, cursor_y)
     cursor_y -= 16
 
-    _draw_text(c, MARGIN, cursor_y, DESCRIPTION, "Helvetica", 10.5)
+    _draw_text(c, MARGIN, cursor_y, invoice_data.get("description_override") or DESCRIPTION, "Helvetica", 10.5)
     _draw_text(c, W * 0.62, cursor_y, SAC_CODE)
     _draw_right(c, W - MARGIN, cursor_y, _rupee(invoice_data['taxable_value']))
     cursor_y -= 14

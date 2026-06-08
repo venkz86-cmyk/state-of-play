@@ -1507,6 +1507,192 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
         headers={"Content-Disposition": f'attachment; filename="{safe_num}.pdf"'},
     )
 
+
+# ════════════════════════════════════════════════════════════════════════
+# Corporate (Team) GST invoice — verifies the dashboard token via Apps
+# Script before generating the PDF. Buyer name comes from Apps Script.
+# ════════════════════════════════════════════════════════════════════════
+
+APPS_SCRIPT_URL = os.environ.get(
+    "APPS_SCRIPT_URL",
+    "https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec",
+)
+
+# Taxable value per plan (pre-GST). Founding-partner rates.
+TEAM_PLAN_TAXABLE_VALUE = {
+    "Team-5":  10000,   # ₹11,800 incl. GST
+    "Team-10": 20000,   # ₹23,600 incl. GST
+}
+
+
+class TeamInvoiceGenerateRequest(BaseModel):
+    token: str = Field(..., min_length=8, max_length=200)
+    legal_name: str = Field(..., min_length=2, max_length=200)
+    gstin: Optional[str] = None         # 15-char; optional → B2C-style
+    address: str = Field(..., min_length=5, max_length=500)
+    state_code: Optional[str] = None
+    is_international: bool = False
+    issue_date: Optional[str] = None    # ISO 'YYYY-MM-DD'
+
+
+def _team_invoice_seq(account_id: str) -> int:
+    """Derive a stable, idempotent 4-digit serial from the Apps Script
+    account_id (e.g. 'ACC129' → 129). Falls back to a hash if the id
+    doesn't carry a numeric suffix."""
+    import re
+    m = re.search(r"(\d+)$", account_id or "")
+    if m:
+        try:
+            return int(m.group(1)) % 10000 or 1
+        except ValueError:
+            pass
+    return abs(hash(account_id or "")) % 9999 + 1
+
+
+@api_router.post("/invoice/generate-team")
+async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
+    """Self-serve GST invoice for corporate team subscribers.
+
+    Flow:
+      1. Validate input (GSTIN format, state code, GSTIN↔state prefix match)
+      2. Verify the dashboard token by calling Apps Script (re-uses the
+         GET /exec?token=… handler that powers /teams/manage)
+      3. Compute tax based on plan name + buyer state
+      4. Allocate a deterministic invoice number from the account_id
+      5. Render the PDF, return the bytes
+    """
+    # ─── 1. validate input ────────────────────────────────────
+    gstin = (req.gstin or "").strip().upper() or None
+    if gstin and not inv_validate_gstin(gstin):
+        raise HTTPException(status_code=400, detail="Invalid GSTIN format")
+
+    if not req.is_international:
+        if not req.state_code or req.state_code not in INDIAN_STATES:
+            raise HTTPException(status_code=400, detail="Invalid Indian state code")
+        if gstin and gstin[:2] != req.state_code:
+            raise HTTPException(
+                status_code=400,
+                detail=f"GSTIN state prefix ({gstin[:2]}) does not match selected state ({req.state_code})",
+            )
+
+    # ─── 2. verify token via Apps Script ──────────────────────
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http_client:
+            r = await http_client.get(
+                APPS_SCRIPT_URL,
+                params={"token": req.token},
+                follow_redirects=True,
+            )
+    except Exception as e:
+        logger.error(f"Apps Script lookup failed: {e!r}")
+        raise HTTPException(status_code=502, detail="Could not reach team directory, please try again")
+
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail="Team directory returned an error")
+
+    try:
+        body = r.json()
+    except Exception:
+        raise HTTPException(status_code=502, detail="Unexpected response from team directory")
+
+    if not body.get("success"):
+        err = (body.get("error") or "").lower()
+        if "no longer active" in err:
+            raise HTTPException(status_code=403, detail="This team subscription is no longer active")
+        raise HTTPException(status_code=403, detail="Invalid team dashboard token")
+
+    account = (body.get("data") or {}).get("account") or {}
+    if account.get("status") != "active":
+        raise HTTPException(status_code=403, detail="This team subscription is no longer active")
+
+    plan_name = account.get("plan_name") or ""
+    taxable_value = TEAM_PLAN_TAXABLE_VALUE.get(plan_name)
+    if not taxable_value:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unrecognised plan '{plan_name}'. Please contact prerna@stateofplay.club.",
+        )
+
+    # ─── 3. derive subscription period + payment ref ──────────
+    renewal_str = account.get("renewal_date") or ""
+    try:
+        sub_end = datetime.fromisoformat(renewal_str)
+        if sub_end.tzinfo is None:
+            sub_end = sub_end.replace(tzinfo=timezone.utc)
+    except Exception:
+        sub_end = datetime.now(timezone.utc) + timedelta(days=365)
+    sub_start = sub_end - timedelta(days=365)
+    payment_dt = sub_start
+
+    rzp_ref = f"team-{account.get('account_id') or '—'}"
+
+    # ─── 4. tax computation ───────────────────────────────────
+    tax = inv_compute_tax(
+        taxable_value=taxable_value,
+        buyer_state_code=req.state_code,
+        is_international=req.is_international,
+    )
+
+    # ─── 5. issued_at: default = payment date; optional override ──
+    issued_at = payment_dt
+    if req.issue_date:
+        try:
+            override = datetime.strptime(req.issue_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="issue_date must be YYYY-MM-DD")
+        today = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59)
+        payment_day = payment_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        if override < payment_day:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%d %b %Y')})",
+            )
+        if override > today:
+            raise HTTPException(status_code=400, detail="Issue date cannot be in the future")
+        if inv_fiscal_year(override) != inv_fiscal_year(payment_dt):
+            raise HTTPException(
+                status_code=400,
+                detail="Issue date must fall within the same fiscal year as the subscription start",
+            )
+        issued_at = override
+
+    # ─── 6. invoice number — deterministic from account_id ────
+    fy = inv_fiscal_year(issued_at)
+    seq = _team_invoice_seq(account.get("account_id") or "")
+    invoice_number = f"TSOP-T/{fy}/{seq:04d}"
+
+    # ─── 7. render PDF ────────────────────────────────────────
+    buyer_state_name = (
+        "International" if req.is_international
+        else INDIAN_STATES.get(req.state_code or "", "—")
+    )
+    pdf_bytes = build_invoice_pdf({
+        "invoice_number": invoice_number,
+        "issued_at": issued_at,
+        "buyer": {
+            "name": req.legal_name,
+            "gstin": gstin,
+            "address": req.address,
+            "state_name": buyer_state_name,
+            "state_code": req.state_code or "—",
+            "is_international": req.is_international,
+        },
+        "period_start": sub_start.strftime("%d %b %Y"),
+        "period_end": sub_end.strftime("%d %b %Y"),
+        "razorpay_ref": rzp_ref,
+        "taxable_value": taxable_value,
+        "tax": tax,
+        "description_override": f"The State of Play \u2014 {plan_name} ({account.get('seats') or '—'} seats, annual)",
+    })
+
+    safe_num = invoice_number.replace("/", "-")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{safe_num}.pdf"'},
+    )
+
 # Root health check (without /api prefix)
 @app.get("/health")
 async def root_health_check():
