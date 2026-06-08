@@ -24,6 +24,7 @@ import { InvoicePreviewMockup } from "./pages/InvoicePreviewMockup";
 // Keep the mockup index reachable for future review
 import { MockupIndex } from "./pages/MockupIndex";
 import { TeamsManage } from "./pages/TeamsManage";
+import { TeamsLogin } from "./pages/TeamsLogin";
 import { TeamsEmailsMockup } from "./pages/TeamsEmailsMockup";
 import { Toaster } from "./components/ui/sonner";
 
@@ -50,6 +51,7 @@ function Shell() {
           <Route path="/archive" element={<StateOfPlay />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
+          <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
 
           {/* Mockup review index — kept for future design previews */}
