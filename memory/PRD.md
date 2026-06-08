@@ -124,6 +124,13 @@ Build a premium content website for sports business intelligence with a focus on
 - [x] `doGet()` enriches each member with `last_seen_at`.
 - [x] Tested end-to-end by user; deployed to Apps Script.
 
+### Round 10 — Self-serve team GST invoice + `/teams/login` (Feb 2026)
+- [x] **Backend** `POST /api/invoice/generate-team`: verifies dashboard token via Apps Script GET, picks taxable value from plan name (Team-5 → ₹10,000 / Team-10 → ₹20,000), computes CGST+SGST / IGST / 0% per buyer state, supports optional `issue_date` backdate within payment FY, deterministic serial `TSOP-T/{FY}/{NNNN}` derived from `account_id`, custom line description with seat count.
+- [x] **Frontend** `TeamInvoiceRequestModal`: pre-fills company legal name from Apps Script, defaults to GSTIN-issued, full 37-state picker, international export option, optional backdate. Same editorial UI as individual invoice modal.
+- [x] `/teams/manage` Billing block: replaced "Request invoice →" mailto with **"Download invoice →"** button that opens the modal — admins get their PDF instantly, no Prerna round-trip.
+- [x] **`/teams/login`** self-serve dashboard-link recovery page. Single email input → POSTs `{action: "send_dashboard_link", email}` to Apps Script (handler shipped by user). Same confirmation message shown regardless of success/failure to prevent email enumeration.
+- [x] `/teams` landing: added "Already a customer? Access your dashboard →" line below plans.
+
 ### Round 7 — Self-serve GST tax invoice (Feb 2026)
 - [x] Backend: `POST /api/invoice/generate` returns a GST-compliant PDF (reportlab + num2words). Verifies paid member against Ghost Admin API (label `paid-via-razorpay`, status `paid|comped`, or active subscription). Atomic per-FY invoice counter persisted in `db.invoice_counters`; issued invoices recorded in `db.invoices` and reused on subsequent requests for the same buyer/payment ref. Currency rendered as `Rs.` (Helvetica lacks ₹ glyph). Karnataka → 9% CGST + 9% SGST; other Indian states → 18% IGST; international → 0% (export of services).
 - [x] Frontend: `InvoiceRequestModal` (business/individual toggle, GSTIN validation against state prefix, 37 Indian states, international export option, blob → file download) wired into the Account page **Billing** row for paid members (replaces the old mailto fallback).
