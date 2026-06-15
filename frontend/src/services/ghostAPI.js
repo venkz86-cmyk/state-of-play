@@ -26,6 +26,7 @@ class GhostAPI {
         include: 'tags,authors',
         ...options.filters
       });
+      if (options.page) params.set('page', options.page);
 
       const response = await axios.get(`${this.contentURL}/posts/?${params}`);
       return this.transformPosts(response.data.posts);
@@ -33,6 +34,38 @@ class GhostAPI {
       console.error('Ghost API Error:', error);
       return [];
     }
+  }
+
+  /**
+   * Fetch every post in the publication, paginating through the Ghost
+   * Content API in chunks of 50 (Ghost's hard limit per request).
+   * Returns the merged list in published-desc order.
+   */
+  async getAllPosts() {
+    const PER_PAGE = 50;
+    const all = [];
+    let page = 1;
+    try {
+      // Loop until Ghost reports no more pages.
+      // Safety cap of 20 pages (=1000 posts) is plenty headroom.
+      for (let i = 0; i < 20; i += 1) {
+        const params = new URLSearchParams({
+          key: GHOST_CONTENT_KEY,
+          limit: PER_PAGE,
+          include: 'tags,authors',
+          page: String(page),
+        });
+        const resp = await axios.get(`${this.contentURL}/posts/?${params}`);
+        const batch = this.transformPosts(resp.data.posts || []);
+        all.push(...batch);
+        const meta = resp.data?.meta?.pagination;
+        if (!meta || page >= (meta.pages || 1)) break;
+        page += 1;
+      }
+    } catch (error) {
+      console.error('Ghost getAllPosts error:', error);
+    }
+    return all;
   }
 
   // Total post count — used for the dateline edition number ("No. X")
@@ -151,13 +184,12 @@ class GhostAPI {
   }
 
   getPublicationType(post) {
-    // Check tags to determine publication
-    const tags = post.tags?.map(t => t.name.toLowerCase()) || [];
-    
-    if (tags.includes('left-field') || tags.includes('leftfield')) {
-      return 'The Left Field';
-    }
-    
+    // Check tags (both name and slug) to determine publication
+    const tagTokens = (post.tags || [])
+      .flatMap((t) => [t.name || '', t.slug || ''])
+      .map((s) => s.toLowerCase().replace(/[\s-_]/g, ''));
+
+    if (tagTokens.includes('leftfield')) return 'The Left Field';
     return 'The State of Play';
   }
 

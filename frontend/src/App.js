@@ -9,6 +9,7 @@ import { HomeMockup as Home } from "./pages/HomeMockup";
 import { ArticleMockup as ArticlePage } from "./pages/ArticleMockup";
 import { FeedMockup as StateOfPlay } from "./pages/FeedMockup";
 import { LeftFieldMockup as LeftField } from "./pages/LeftFieldMockup";
+import { Archive } from "./pages/Archive";
 import { OutfieldMockup as Outfield } from "./pages/OutfieldMockup";
 import { LoginMockup as Login } from "./pages/LoginMockup";
 import { SubscribeMockup as Signup } from "./pages/SubscribeMockup";
@@ -37,6 +38,7 @@ function Shell() {
           <Route path="/" element={<Home />} />
           <Route path="/state-of-play" element={<StateOfPlay />} />
           <Route path="/left-field" element={<LeftField />} />
+          <Route path="/archive" element={<Archive />} />
           <Route path="/outfield" element={<Outfield />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -48,7 +50,6 @@ function Shell() {
           <Route path="/membership" element={<Signup />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/archive" element={<StateOfPlay />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
