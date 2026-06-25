@@ -1,4 +1,5 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { PartnersBlock } from '../components/PartnersBlock';
 
 const TIERS = [
   {
@@ -82,6 +83,8 @@ export const PartnershipsMockup = () => (
         </div>
       </div>
     </section>
+
+    <PartnersBlock variant="tiers" />
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
