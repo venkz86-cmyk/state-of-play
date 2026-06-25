@@ -97,11 +97,11 @@ const TestimonialBlock = () => {
 /* ============ Partners block (Fix 13) ============ */
 const PARTNERS = [
   {
-    name: 'Sportz Interactive',
+    name: 'SI',
+    fullName: 'SI (formerly Sportz Interactive)',
     role: 'Associate Partner',
     url: 'https://www.sportzinteractive.net/',
-    // logo slot — text-only fallback until real asset is wired
-    logoText: 'Sportz Interactive',
+    logoSrc: '/partners/si.png',
   },
 ];
 
@@ -120,17 +120,29 @@ const PartnersBlock = () => (
             href={p.url}
             target="_blank"
             rel="noopener noreferrer"
+            title={p.fullName}
             data-testid={`partner-${p.name.toLowerCase().replace(/\s+/g, '-')}`}
             className="group flex flex-col items-center"
           >
-            <span
-              className="font-editorial font-semibold text-[18px] text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors duration-200"
-              style={{ maxHeight: '32px' }}
-            >
-              {p.logoText}
-            </span>
-            <span className="mt-2 font-plex text-[10px] uppercase tracking-[0.08em] text-[#999999]">
+            <span className="mt-1 mb-3 font-plex text-[10px] uppercase tracking-[0.08em] text-[#999999] group-hover:text-[var(--text-muted)] transition-colors">
               {p.role}
+            </span>
+            {p.logoSrc ? (
+              <img
+                src={p.logoSrc}
+                alt={p.fullName}
+                className="h-14 w-auto object-contain opacity-75 group-hover:opacity-100 transition-opacity duration-200"
+                loading="lazy"
+              />
+            ) : (
+              <span
+                className="font-editorial font-semibold text-[18px] text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors duration-200"
+              >
+                {p.fullName}
+              </span>
+            )}
+            <span className="mt-2 font-plex text-[12px] text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">
+              {p.fullName}
             </span>
           </a>
         ))}
@@ -425,6 +437,8 @@ export const HomeMockup = () => {
           </div>
         </section>
       )}
+
+      <PartnersBlock />
 
       <MockupFooter />
     </div>
