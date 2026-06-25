@@ -47,7 +47,7 @@ export const PartnersBlock = ({
           )}
           <PartnerGrid />
           {showFooterCTA && (
-            <p className="mt-10 font-plex text-[13px] text-[var(--text-label)] max-w-[60ch]">
+            <p className="mt-10 text-center font-plex text-[13px] text-[var(--text-label)] max-w-[60ch] mx-auto">
               Each cycle is bespoke. If your brand belongs alongside the names above, write to{' '}
               <a
                 href="mailto:prerna@stateofplay.club?subject=Partnerships"
