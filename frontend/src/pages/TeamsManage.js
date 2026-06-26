@@ -401,7 +401,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 </button>
               </form>
               <p className="font-plex text-[13px] text-[#999999] mt-3">
-                Each person added receives a private one-time sign-in link by email.
+                Once added, your colleague can sign in at stateofplay.club using their work email.
               </p>
               {emailError && (
                 <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3" data-testid="teams-add-error">
