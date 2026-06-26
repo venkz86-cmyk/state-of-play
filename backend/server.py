@@ -456,11 +456,14 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             status = member.get('status', 'free')
                             
                             # Check for paid labels (Razorpay individual + corporate team seats + invoice-billed)
+                            # Also any label prefixed with "team-" (e.g. team-sportz-interactive)
+                            # so bespoke clients can be onboarded by Ghost label alone, no backend redeploy.
                             labels = member.get('labels', [])
                             label_names = [lbl.get('name', '').lower() for lbl in labels]
-                            has_paid_label = any(
-                                label in label_names 
-                                for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member']
+                            has_paid_label = (
+                                any(label in label_names
+                                    for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
+                                or any(name.startswith('team-') for name in label_names)
                             )
                             
                             # User is paid if: status is paid/comped, OR has subscriptions, OR has paid labels
@@ -550,9 +553,11 @@ async def get_member_details(request: MemberVerifyRequest):
                     labels = member.get('labels', []) or []
                     label_names = [(lbl.get('name') or '').lower() for lbl in labels]
                     has_razorpay_label = 'paid-via-razorpay' in label_names
-                    has_paid_label = has_razorpay_label or any(
-                        name in label_names for name in
-                        ['paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member']
+                    has_paid_label = (
+                        has_razorpay_label
+                        or any(name in label_names for name in
+                               ['paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
+                        or any(name.startswith('team-') for name in label_names)
                     )
 
                     # 2. Ghost-native subscriptions
@@ -657,11 +662,13 @@ async def get_full_article_content(request: ArticleContentRequest):
             member = members[0]
             # Member is paid if: Ghost status is paid/comped, OR has a Ghost subscription,
             # OR carries a recognised paid label (covers Razorpay individual subscribers,
-            # corporate-team seats provisioned via Apps Script, AND bespoke invoice-billed accounts).
+            # corporate-team seats provisioned via Apps Script, bespoke invoice-billed
+            # accounts, AND any team-* identifier label for bespoke client cohorts).
             labels = [(lbl.get('name') or '').lower() for lbl in member.get('labels', []) or []]
-            has_paid_label = any(
-                l in labels
-                for l in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member']
+            has_paid_label = (
+                any(l in labels for l in
+                    ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
+                or any(l.startswith('team-') for l in labels)
             )
             is_paid = (
                 member.get('status') in ('paid', 'comped')
