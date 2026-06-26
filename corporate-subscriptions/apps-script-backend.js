@@ -250,12 +250,24 @@ function handleAddMember(payload) {
     // Normalize email
     const email = payload.email.toLowerCase().trim();
     
-    // STRICT EMAIL VALIDATION - Must match company domain
+    // STRICT EMAIL VALIDATION - Must match one of the allowed company domains
+    // company_domain may be a single domain ("acme.in") OR a comma/whitespace
+    // separated list for bespoke clients with multiple corporate domains
+    // (e.g. "sportzinteractive.net, marathon-edge.com").
     const emailDomain = email.split('@')[1];
-    if (emailDomain !== account.company_domain) {
-      return jsonResponse({ 
-        success: false, 
-        error: 'Only emails from ' + account.company_domain + ' are allowed' 
+    const allowedDomains = String(account.company_domain || '')
+      .toLowerCase()
+      .split(/[,\s;]+/)
+      .map(function (d) { return d.trim(); })
+      .filter(Boolean);
+
+    if (allowedDomains.length === 0 || allowedDomains.indexOf(emailDomain) === -1) {
+      var domainList = allowedDomains.length > 1
+        ? allowedDomains.slice(0, -1).join(', ') + ' or ' + allowedDomains.slice(-1)
+        : (allowedDomains[0] || 'the registered company');
+      return jsonResponse({
+        success: false,
+        error: 'Only emails from ' + domainList + ' are allowed'
       });
     }
     

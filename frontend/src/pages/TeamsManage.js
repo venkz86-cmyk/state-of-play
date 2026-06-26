@@ -213,7 +213,20 @@ const DashboardView = ({ token, account, members, onChange }) => {
     [seatsUsed, seatsTotal]
   );
   const fillColor = seatsFull ? 'var(--text)' : 'var(--accent-burgundy)';
-  const memberDomain = account.company_domain;
+  // company_domain may be a single domain ("acme.in") OR a comma/whitespace
+  // separated list ("sportzinteractive.net, marathon-edge.com") for bespoke
+  // clients that span multiple corporate domains.
+  const memberDomains = useMemo(() => (
+    String(account.company_domain || '')
+      .toLowerCase()
+      .split(/[,\s;]+/)
+      .map((d) => d.trim())
+      .filter(Boolean)
+  ), [account.company_domain]);
+  const primaryDomain = memberDomains[0] || '';
+  const domainHint = memberDomains.length > 1
+    ? memberDomains.slice(0, -1).join(', ') + ' or ' + memberDomains.slice(-1)
+    : (memberDomains[0] || 'your company');
   const planPrice = PLAN_PRICE_INR[account.plan_name] || 0;
 
   // ─── Add member ───────────────────────────────────────────────────────────
@@ -230,9 +243,12 @@ const DashboardView = ({ token, account, members, onChange }) => {
       setEmailError('This email is already a team member.');
       return;
     }
-    if (memberDomain && !email.endsWith(`@${memberDomain}`)) {
-      setEmailError(`Only ${memberDomain} email addresses can be added to this account.`);
-      return;
+    if (memberDomains.length > 0) {
+      const emailDomain = email.split('@')[1] || '';
+      if (!memberDomains.includes(emailDomain)) {
+        setEmailError(`Only ${domainHint} email addresses can be added to this account.`);
+        return;
+      }
     }
     if (seatsFull) {
       setEmailError(`All ${seatsTotal} seats are filled. Remove a member to add someone new.`);
@@ -368,7 +384,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                     if (emailError) setEmailError('');
                     if (successMessage) setSuccessMessage('');
                   }}
-                  placeholder={`colleague@${memberDomain}`}
+                  placeholder={primaryDomain ? `colleague@${primaryDomain}` : 'colleague@yourcompany.com'}
                   disabled={submitting}
                   data-testid="teams-add-email"
                   className="flex-1 h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
