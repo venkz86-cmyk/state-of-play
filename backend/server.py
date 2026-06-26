@@ -455,12 +455,12 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             # Check subscription status - comped members are also paid
                             status = member.get('status', 'free')
                             
-                            # Check for paid labels (for Razorpay payments that add labels)
+                            # Check for paid labels (Razorpay individual + corporate team seats)
                             labels = member.get('labels', [])
                             label_names = [lbl.get('name', '').lower() for lbl in labels]
                             has_paid_label = any(
                                 label in label_names 
-                                for label in ['paid-via-razorpay', 'premium-subscriber', 'paid', 'premium']
+                                for label in ['paid-via-razorpay', 'premium-subscriber', 'paid', 'premium', 'corporate-member']
                             )
                             
                             # User is paid if: status is paid/comped, OR has subscriptions, OR has paid labels
@@ -552,7 +552,7 @@ async def get_member_details(request: MemberVerifyRequest):
                     has_razorpay_label = 'paid-via-razorpay' in label_names
                     has_paid_label = has_razorpay_label or any(
                         name in label_names for name in
-                        ['premium-subscriber', 'paid', 'premium']
+                        ['premium-subscriber', 'paid', 'premium', 'corporate-member']
                     )
 
                     # 2. Ghost-native subscriptions
@@ -655,8 +655,20 @@ async def get_full_article_content(request: ArticleContentRequest):
                 raise HTTPException(status_code=401, detail="Not a member")
             
             member = members[0]
-            is_paid = member.get('status') == 'paid' or member.get('status') == 'comped' or len(member.get('subscriptions', [])) > 0
-            
+            # Member is paid if: Ghost status is paid/comped, OR has a Ghost subscription,
+            # OR carries a recognised paid label (covers Razorpay individual subscribers
+            # AND corporate-team seats provisioned via Apps Script).
+            labels = [(lbl.get('name') or '').lower() for lbl in member.get('labels', []) or []]
+            has_paid_label = any(
+                l in labels
+                for l in ['paid-via-razorpay', 'premium-subscriber', 'paid', 'premium', 'corporate-member']
+            )
+            is_paid = (
+                member.get('status') in ('paid', 'comped')
+                or len(member.get('subscriptions', []) or []) > 0
+                or has_paid_label
+            )
+
             if not is_paid:
                 raise HTTPException(status_code=403, detail="Paid membership required")
             
