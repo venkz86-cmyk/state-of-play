@@ -5,6 +5,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
+import { NominateReaderBlock } from '../components/NominateReaderBlock';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -203,6 +204,16 @@ export const AccountMockup = () => {
           </ul>
         </div>
       </section>
+
+      {canAccessPremium && (
+        <section className="max-w-[1080px] mx-auto px-6 lg:px-12 pb-20">
+          <NominateReaderBlock
+            subscriberName={user?.name || ''}
+            subscriberEmail={memberEmail}
+            subscriberGhostId={details?.id || details?.ghost_member_id || ''}
+          />
+        </section>
+      )}
 
       <InvoiceRequestModal
         open={invoiceOpen}
