@@ -22,6 +22,14 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
+
+    // Sticky shared-story attribution: once we land with ?ref=shared-story,
+    // remember it for this session so a signup later still credits the nominator.
+    try {
+      if (new URLSearchParams(window.location.search).get('ref') === 'shared-story') {
+        sessionStorage.setItem('tsop_ref_shared', '1');
+      }
+    } catch (_e) { /* SSR/private-mode guard */ }
   }, []);
 
   // Verify member status with Ghost via backend
@@ -43,11 +51,32 @@ export const AuthProvider = ({ children }) => {
           status: data.status,
           verified_at: new Date().toISOString()
         };
-        
+
         // Save to localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(member));
         setUser(member);
-        
+
+        // Conversion attribution: if this verify follows a shared-story visit,
+        // ping the backend so we can credit the nominator. Fire-and-forget.
+        try {
+          const token = sessionStorage.getItem('tsop_referrer_token');
+          const fromShared = new URLSearchParams(window.location.search).get('ref') === 'shared-story';
+          if (token && (fromShared || sessionStorage.getItem('tsop_ref_shared') === '1')) {
+            const eventType = data.is_paid ? 'signup_paid' : 'signup_free';
+            fetch(`${API}/api/cold-link/event`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token_id: token,
+                event_type: eventType,
+                nominee_email: data.email,
+              }),
+            }).catch(() => { /* non-fatal */ });
+            sessionStorage.removeItem('tsop_referrer_token');
+            sessionStorage.removeItem('tsop_ref_shared');
+          }
+        } catch (_e) { /* non-fatal */ }
+
         return { success: true, member };
       } else {
         return { 

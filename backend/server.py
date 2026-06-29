@@ -1734,6 +1734,14 @@ async def root_health_check():
 
 app.include_router(api_router)
 
+# Mount Session 2 nominations / story-token / cold-link routes
+try:
+    from nominations import router as nominations_router, init as nominations_init
+    nominations_init(db)
+    app.include_router(nominations_router)
+except Exception as _e:
+    logging.warning(f"nominations module not mounted: {_e!r}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

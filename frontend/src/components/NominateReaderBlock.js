@@ -4,6 +4,8 @@ import { Overline } from './MockupLayout';
 const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec';
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
 
 const CONTEXT_MAX = 200;
@@ -33,11 +35,12 @@ export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscribe
 
     setSubmitting(true);
     try {
-      await fetch(APPS_SCRIPT_URL, {
+      // Backend handles Ghost member creation, token mint, nominee email,
+      // and forwards to Apps Script for Sheet/Slack. Single round-trip.
+      await fetch(`${API}/api/nominations/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'nominate',
           subscriber_ghost_id: subscriberGhostId || '',
           subscriber_name: subscriberName || '',
           subscriber_email: subscriberEmail || '',
@@ -73,8 +76,7 @@ export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscribe
             Know someone who should be <em className="italic font-normal">reading?</em>
           </h2>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-8 max-w-[58ch]">
-            Nominate them and Venkat will reach out personally. We send one note,
-            on your behalf, with a single story we think they’ll value.
+            Someone in your world should be reading this. Tell us who — we’ll take it from there.
           </p>
 
           <form onSubmit={onSubmit} className="space-y-6 max-w-[640px]">
@@ -130,12 +132,12 @@ export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscribe
                 }}
                 data-testid="nominate-context"
                 disabled={submitting}
-                placeholder="Head of digital at an IPL franchise. We've discussed sponsorship economics."
+                placeholder="Works in franchise strategy. We were on a panel together last year."
                 className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-plex text-[15px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
                 style={{ borderRadius: 0 }}
               />
               <p className="font-plex text-[12px] text-[var(--text-muted)] mt-2 max-w-[55ch]">
-                A line or two on what they do, and what connects them to your circle. Helps Venkat make the note feel personal — not pitched.
+                What do they do, and how do you know them?
               </p>
             </div>
 

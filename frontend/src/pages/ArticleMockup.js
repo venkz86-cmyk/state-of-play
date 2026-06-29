@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
+import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
@@ -156,6 +157,12 @@ export const ArticleMockup = () => {
             By {article.author || 'Venkat Ananth'}
             {article.read_time ? <span> · {article.read_time} min read</span> : null}
           </p>
+
+          <ColdLinkAdminButton
+            user={user}
+            postSlug={article.slug || article.id}
+            isPremium={!!article.is_premium}
+          />
 
           {/* Share row + Font-size toggle: left + right within the column */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">

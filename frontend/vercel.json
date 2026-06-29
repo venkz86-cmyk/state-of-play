@@ -7,6 +7,10 @@
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
     },
     {
+      "source": "/s/:token",
+      "destination": "https://stateofplay-backend.onrender.com/api/shared/:token"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
