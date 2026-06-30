@@ -1,0 +1,44 @@
+{
+  "summary": "iteration_5 verification: the new `/api/:path*` rewrite in /app/frontend/vercel.json is correctly structured and ordered. Created /app/backend/tests/test_vercel_api_rewrite.py (12 focused assertions covering valid JSON, rewrites count = 7, /api/:path* at index 4 with backend destination + no UA condition, full ordering, /api/:path* before /:slug and before catch-all, /sitemap.xml + /robots.txt preserved and ordered before /api/:path*, /:slug negative-lookahead still excludes 'api/', /:slug still UA-conditional with all major social-bot UAs, catch-all is last). Re-ran iteration_3 regression (test_og_endpoints.py, 14 tests) and iteration_4 regression (test_robots_txt_fix.py, 40 tests). Result: 66/66 pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_vercel_api_rewrite.py",
+    "/app/backend/tests/test_og_endpoints.py",
+    "/app/backend/tests/test_robots_txt_fix.py",
+    "/app/test_reports/pytest/iteration_5_results.xml"
+  ],
+  "action_items": [
+    "Deploy the new vercel.json to Vercel (commit + push). The Vercel rewrite cannot be exercised in the preview emergent environment.",
+    "Post-deploy E2E: `curl -sI https://www.stateofplay.club/api/og-image/pio-oci-aiff-sports-passport` should return `content-type: image/png` (not text/html). Same for /api/og/{slug} with Twitterbot UA should return text/html with the og:image meta. If still HTML, double-check vercel.json was actually picked up by the latest deploy and the rewrite ordering didn't get reshuffled.",
+    "Re-run Twitter Card Validator (https://cards-dev.twitter.com/validator) and LinkedIn Post Inspector (https://www.linkedin.com/post-inspector/) on https://www.stateofplay.club/pio-oci-aiff-sports-passport after deploy."
+  ],
+  "critical_code_review_comments": [
+    "vercel.json structure is correct: exactly 7 rewrites, order is [content, /s/:token, sitemap.xml, robots.txt, /api/:path*, /:slug-UA-conditional, /(.*)]. First-match-wins semantics ensure (a) sitemap.xml and robots.txt keep their specific destinations, (b) all other /api/* paths fall through to the new /api/:path* rewrite before reaching the slug/catchall, (c) the og:image PNG endpoint will be proxied to Render instead of being swallowed by the SPA catch-all.",
+    "The /:slug UA-conditional rewrite's negative lookahead still contains `api/`, which is belt-and-suspenders: even if a bot UA matches, /api/... will not be re-routed to /api/og/:slug (preventing a potential infinite indirection).",
+    "/sitemap.xml and /robots.txt rewrites correctly sit BEFORE /api/:path* — important because they live at the root of www.stateofplay.club (not under /api/* on the user-facing domain), and Vercel must hit those first.",
+    "The new /api/:path* rewrite intentionally has no `has` clause, so it applies to all UAs (browsers AND bots). This is what makes the og:image fetch by Twitter/LinkedIn finally work.",
+    "No backend code change required this iteration — the fix is purely the missing Vercel edge rewrite. Backend /api/og-image/{slug}, /api/og/{slug}, /api/sitemap.xml, /api/robots.txt all still respond correctly through the preview proxy (54/54 backend tests pass).",
+    "Optional polish (NOT a bug, NOT required): /api/og-image/{slug} content is the same regardless of UA, but social bots cache aggressively. Consider adding `Cache-Control: public, max-age=86400, immutable` (or a 7-day max-age) to the PNG response to reduce Render egress when posts go viral. Currently the endpoint does not set Cache-Control."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_vercel_api_rewrite.py (NEW)"
+  ],
+  "success_rate": {
+    "backend": "100% (66/66)",
+    "frontend": "N/A (backend-only run as requested)"
+  },
+  "test_credentials": "N/A — no auth involved in vercel.json / OG / robots.txt endpoints.",
+  "seed_data_creation": "None.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "iteration_5 fix is a Vercel edge config change in /app/frontend/vercel.json — adding `/api/:path*` -> Render backend BEFORE the /:slug UA-conditional and catch-all rewrites. Cannot be exercised in the preview emergent environment (Vercel rewrites only apply on the production Vercel deploy). The user must deploy vercel.json to Vercel, then verify with `curl -I https://www.stateofplay.club/api/og-image/pio-oci-aiff-sports-passport` — expect `content-type: image/png` (was `text/html` before the fix). For local/preview backend testing, run: `export $(grep REACT_APP_BACKEND_URL /app/frontend/.env) && cd /app && python -m pytest backend/tests/test_vercel_api_rewrite.py backend/tests/test_og_endpoints.py backend/tests/test_robots_txt_fix.py -v`. Preview emergent edge proxy 403s default urllib UA — always pass a Mozilla UA on raw HTTP fetches. Real Ghost slug for testing: pio-oci-aiff-sports-passport.",
+  "rca of the issue": "Root cause: /app/frontend/vercel.json had no rewrite for /api/*. Vercel evaluates rewrites in document order; with `/api/*` absent, requests to https://www.stateofplay.club/api/og-image/{slug} fell through the existing rewrites (none matched on the canonical www domain) and hit the final catch-all `/(.*) -> /index.html`, which served the React SPA shell (text/html, 6.5KB). Twitter/LinkedIn fetched the og:image URL, got HTML instead of image/png, dropped the image, and rendered the card with no preview. Fix (verified here): added `{ source: '/api/:path*', destination: 'https://stateofplay-backend.onrender.com/api/:path*' }` as the 5th rewrite — AFTER /sitemap.xml and /robots.txt (so those keep their specific destinations) and BEFORE the /:slug UA-conditional and /(.*) catch-all (so /api/* always reaches the Render backend regardless of UA). Validation: 12 structural assertions on vercel.json (count, ordering, source/destination, no UA condition on /api/:path*, negative-lookahead still excludes api/ in /:slug, etc.) all pass; 54 backend regression tests confirm the underlying Render endpoints still serve the correct payloads. The end-to-end resolution can only be confirmed after Vercel redeploys the new config to production."
+}

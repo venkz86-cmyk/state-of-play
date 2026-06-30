@@ -19,6 +19,10 @@
       "destination": "https://stateofplay-backend.onrender.com/api/robots.txt"
     },
     {
+      "source": "/api/:path*",
+      "destination": "https://stateofplay-backend.onrender.com/api/:path*"
+    },
+    {
       "source": "/:slug((?!api/|s/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|mockup$|mockup/).+)",
       "has": [
         {
