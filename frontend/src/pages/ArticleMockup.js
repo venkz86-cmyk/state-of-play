@@ -8,6 +8,7 @@ import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
+import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
@@ -278,6 +279,14 @@ export const ArticleMockup = () => {
       )}
 
       <MockupFooter />
+
+      {/* Print / Save-as-PDF intercept. Hidden on screen; activates on @media print */}
+      <PrintInterceptBlock
+        isPaidSubscriber={!!isMember}
+        subscriberName={user?.name || ''}
+        subscriberEmail={user?.email || ''}
+        subscriberGhostId={user?.id || ''}
+      />
     </div>
   );
 };

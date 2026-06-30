@@ -1,0 +1,56 @@
+{
+  "summary": "Comprehensive frontend testing of PrintInterceptBlock on https://preview-polish.preview.emergentagent.com/pio-oci-aiff-sports-passport. All 13 functional requirements PASSED across two variants (anonymous Subscribe block + paid-subscriber nominate form). DOM portal, screen hiding, Chrome print emulation, Safari/Firefox class-based simulation, headline NBSP, burgundy color, @page rule, accessibility, validation flow, and network payload all verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Component is clean, well-commented, lint passes with zero warnings.",
+    "Portal node `tsop-print-portal` is created lazily but never cleaned up on unmount — minor leak risk if many ArticleMockup instances mount/unmount in a long SPA session. Low priority since article pages are top-level routes.",
+    "The conditional `if (typeof document !== 'undefined' && !portalNodeRef.current)` runs in the render body (side effect during render). For React 18 strict mode / concurrent rendering, this is acceptable here because it's idempotent (re-uses existing node by id), but moving into useLayoutEffect would be more idiomatic.",
+    "fetch error is swallowed and submitted=true is set regardless (mirrors NominateReaderBlock fail-open behaviour — intentional per code comment, OK)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "N/A — used ?preview=member query string to simulate paid subscriber per ArticleMockup.js line 47",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PrintInterceptBlock at /app/frontend/src/components/PrintInterceptBlock.js is fully verified. Anonymous user (no ?preview=member) sees Subscribe → block; ?preview=member shows full nominate form. Form posts to /api/nominations/submit with 6 keys: subscriber_ghost_id, subscriber_name, subscriber_email, nominee_name, nominee_email, nominee_context. Use page.emulate_media(media='print') for Chrome and document.documentElement.classList.add('tsop-printing') for Safari/Firefox simulation.",
+  "test_results_detail": {
+    "anonymous_variant": {
+      "dom_portal_exists": "PASS — parentNode.id === 'tsop-print-portal'",
+      "hidden_on_screen": "PASS — getComputedStyle().display === 'none'",
+      "chrome_print_emulation": "PASS — #root display:none, block display:flex, offsetWidth=1920",
+      "headline_with_nbsp": "PASS — exact match including U+00A0 before PDF",
+      "subscribe_cta": "PASS — href=https://www.stateofplay.club, data-testid=print-cta-subscribe",
+      "burgundy_color": "PASS — rgb(160, 41, 28) === #A0291C",
+      "at_page_rule": "PASS — '@page { margin: 0px; size: a4; }' found in stylesheet",
+      "accessibility": "PASS — role=region, aria-label='Print intercept — please nominate instead'",
+      "safari_firefox_simulation": "PASS — html.tsop-printing class hides #root and shows block",
+      "css_isolation": "PASS — only one .tsop-print-only__cta element on page, inside portal"
+    },
+    "paid_subscriber_variant": {
+      "form_rendered": "PASS — all 4 testids present (name, email, context, submit)",
+      "counter_initial": "PASS — '0 / 200'",
+      "submit_label": "PASS — 'Nominate them →'",
+      "validation_empty": "PASS — 'Please enter the nominee’s name.'",
+      "validation_name_only": "PASS — 'Please enter a valid email address.'",
+      "validation_invalid_email": "PASS — 'Please enter a valid email address.'",
+      "validation_empty_context": "PASS — 'A line of context helps us reach out well.'",
+      "successful_submit_network": "PASS — POST to /api/nominations/submit captured with all 6 required keys",
+      "success_ui_state": "PASS — 'Sent. Jane Doe will receive the full story shortly — straight from us.'"
+    },
+    "regression": {
+      "article_renders_on_screen": "PASS — mockup-article, mockup-header, article-body all visible after print mode reset"
+    },
+    "lint": "PASS — ESLint zero warnings on PrintInterceptBlock.js"
+  }
+}
