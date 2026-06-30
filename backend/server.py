@@ -1697,12 +1697,12 @@ async def robots_txt():
         "\n"
         # ─── Default rules for everyone else (search engines etc.) ───
         "User-agent: *\n"
-        "Allow: /\n"
         "Disallow: /account\n"
         "Disallow: /login\n"
         "Disallow: /teams/manage\n"
         "Disallow: /teams/login\n"
         "Disallow: /s/\n"
+        "Allow: /\n"
         "\n"
         "Sitemap: https://www.stateofplay.club/sitemap.xml\n"
     )
