@@ -47,6 +47,7 @@ const SECTIONS = [
 
 export const PrivacyMockup = () => (
   <LegalLayout
+    seo={{ title: 'Privacy', path: '/privacy', description: 'How The State of Play collects, stores, and uses information about its readers and subscribers.' }}
     testId="mockup-privacy"
     kicker="Privacy Policy"
     updated="04 June 2026"

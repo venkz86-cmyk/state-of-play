@@ -21,7 +21,7 @@ const READERS = [
 ];
 
 export const AboutMockup = () => (
-  <MockupLayout testId="mockup-about">
+  <MockupLayout testId="mockup-about" seo={{ title: 'About', path: '/about', description: 'About The State of Play — a sports business publication out of Bengaluru. Reportage, analysis, and intelligence on the people, money, and decisions shaping Indian sport.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>

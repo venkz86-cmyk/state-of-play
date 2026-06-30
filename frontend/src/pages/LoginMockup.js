@@ -38,7 +38,7 @@ export const LoginMockup = () => {
   };
 
   return (
-    <MockupLayout testId="page-login">
+    <MockupLayout testId="page-login" seo={{ title: 'Sign In', path: '/login', noindex: true }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">

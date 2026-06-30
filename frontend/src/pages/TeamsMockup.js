@@ -50,7 +50,7 @@ export const TeamsMockup = () => {
   const [open, setOpen] = useState(0);
 
   return (
-    <MockupLayout testId="mockup-teams">
+    <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Corporate access to The State of Play. Multi-seat plans for federations, leagues, agencies, and newsrooms.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>

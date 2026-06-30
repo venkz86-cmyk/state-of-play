@@ -900,13 +900,34 @@ async def generate_og_image(slug: str):
         img = Image.alpha_composite(img, overlay)
         draw = ImageDraw.Draw(img)
         
-        # Load fonts
+        # Load editorial fonts (Fraunces for title, DM Sans for UI). These
+        # are variable fonts shipped in /app/backend/assets/fonts.
+        FONT_DIR = os.path.join(os.path.dirname(__file__), "assets", "fonts")
+        FRAUNCES = os.path.join(FONT_DIR, "Fraunces.ttf")
+        DMSANS = os.path.join(FONT_DIR, "DMSans.ttf")
         try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 54)
-            badge_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-        except:
+            title_font = ImageFont.truetype(FRAUNCES, 60)
+            try:
+                title_font.set_variation_by_name('SemiBold')
+            except Exception:
+                pass
+            masthead_font = ImageFont.truetype(FRAUNCES, 22)
+            try:
+                masthead_font.set_variation_by_name('SemiBold')
+            except Exception:
+                pass
+            badge_font = ImageFont.truetype(DMSANS, 16)
+            try:
+                badge_font.set_variation_by_axes([14, 700])
+            except Exception:
+                pass
+            byline_font = ImageFont.truetype(DMSANS, 16)
+        except Exception as font_err:
+            logger.warning(f"Editorial fonts failed, falling back: {font_err}")
             title_font = ImageFont.load_default()
+            masthead_font = ImageFont.load_default()
             badge_font = ImageFont.load_default()
+            byline_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
@@ -963,15 +984,47 @@ async def generate_og_image(slug: str):
             )
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
         
-        # --- TITLE (larger for mobile readability) ---
-        wrapped_title = textwrap.fill(title, width=32)
-        title_lines = wrapped_title.split('\n')[:3]  # Max 3 lines
-        
-        title_line_height = 62
-        title_start_y = 150
-        
+        # --- TITLE (pixel-measured wrap so Fraunces lays out cleanly) ---
+        max_text_width = width - 100  # 50px padding each side
+        words = title.split()
+        title_lines = []
+        current = ''
+        for w in words:
+            test = (current + ' ' + w).strip()
+            tb = draw.textbbox((0, 0), test, font=title_font)
+            if (tb[2] - tb[0]) <= max_text_width:
+                current = test
+            else:
+                if current:
+                    title_lines.append(current)
+                current = w
+        if current:
+            title_lines.append(current)
+        # Cap at 4 lines, ellipsise the last if truncated
+        if len(title_lines) > 4:
+            title_lines = title_lines[:4]
+            last = title_lines[-1].rstrip('.,;:')
+            while last and (draw.textbbox((0, 0), last + '…', font=title_font)[2] > max_text_width):
+                last = last[:-1].rstrip()
+            title_lines[-1] = (last + '…') if last else '…'
+
+        title_line_height = 70
+        title_block_h = title_line_height * len(title_lines)
+        # vertically center the title in the middle band of the canvas
+        title_start_y = max(170, (height - title_block_h) // 2 - 20)
+
         for i, line in enumerate(title_lines):
             draw.text((50, title_start_y + i * title_line_height), line, fill=white, font=title_font)
+
+        # --- BYLINE (bottom-left) ---
+        authors = article.get('authors') or []
+        author_name = (authors[0] or {}).get('name') if authors else 'The State of Play'
+        byline_text = f"{author_name.upper()}  ·  STATEOFPLAY.CLUB"
+        byline_y = height - 60
+        draw.text((50, byline_y), byline_text, fill=(220, 220, 220), font=byline_font)
+
+        # subtle accent rule above byline
+        draw.rectangle([50, byline_y - 14, 130, byline_y - 12], fill=coral)
         
         # Convert to RGB
         img = img.convert('RGB')
@@ -1034,8 +1087,8 @@ async def get_og_meta(slug: str, request: Request):
         # Extract metadata
         title = article.get('title', 'The State of Play')
         description = article.get('custom_excerpt') or article.get('excerpt') or "India's premium sports business publication"
-        # Use original feature image from Ghost
-        image = article.get('feature_image') or 'https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png'
+        # Use dynamic branded OG card (Fraunces masthead + headline)
+        image = f"https://www.stateofplay.club/api/og-image/{slug}"
         article_url = f"https://www.stateofplay.club/{slug}"
         author = article.get('primary_author', {}).get('name', 'The State of Play') if article.get('primary_author') else 'The State of Play'
         published_time = article.get('published_at', '')
@@ -1731,6 +1784,95 @@ async def root_health_check():
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "stateofplay-backend"
     }
+
+# ─── SEO: sitemap.xml + robots.txt ────────────────────────────────
+@api_router.get("/sitemap.xml")
+async def sitemap_xml():
+    """Dynamic XML sitemap. Lists static routes + every published Ghost post."""
+    import httpx
+    from fastapi.responses import Response as FastResponse
+
+    SITE = "https://www.stateofplay.club"
+    static_paths = [
+        ("/",            "1.0", "daily"),
+        ("/state-of-play","0.9", "daily"),
+        ("/archive",     "0.8", "daily"),
+        ("/left-field",  "0.8", "weekly"),
+        ("/outfield",    "0.7", "weekly"),
+        ("/about",       "0.6", "monthly"),
+        ("/contact",     "0.5", "monthly"),
+        ("/teams",       "0.6", "monthly"),
+        ("/partnerships","0.6", "monthly"),
+        ("/membership",  "0.7", "monthly"),
+        ("/terms",       "0.3", "yearly"),
+        ("/privacy",     "0.3", "yearly"),
+    ]
+
+    posts = []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            page = 1
+            while True:
+                r = await client.get(
+                    f"{GHOST_URL}/ghost/api/content/posts/",
+                    params={
+                        'key': GHOST_CONTENT_API_KEY,
+                        'limit': 100,
+                        'page': page,
+                        'fields': 'slug,updated_at,published_at',
+                        'filter': 'status:published+visibility:[public,paid,members]',
+                    },
+                )
+                if r.status_code != 200:
+                    break
+                data = r.json()
+                posts.extend(data.get('posts', []))
+                meta = (data.get('meta') or {}).get('pagination') or {}
+                if not meta.get('next'):
+                    break
+                page = meta['next']
+                if page > 10:
+                    break
+    except Exception as e:
+        logger.error(f"sitemap ghost fetch failed: {e}")
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for path, prio, freq in static_paths:
+        lines.append(
+            f'<url><loc>{SITE}{path}</loc><changefreq>{freq}</changefreq><priority>{prio}</priority></url>')
+    for p in posts:
+        slug = p.get('slug')
+        if not slug:
+            continue
+        lastmod = p.get('updated_at') or p.get('published_at') or ''
+        lastmod_tag = f'<lastmod>{lastmod}</lastmod>' if lastmod else ''
+        lines.append(
+            f'<url><loc>{SITE}/{slug}</loc>{lastmod_tag}<changefreq>monthly</changefreq><priority>0.7</priority></url>')
+    lines.append('</urlset>')
+    return FastResponse(
+        content='\n'.join(lines),
+        media_type='application/xml',
+        headers={'Cache-Control': 'public, max-age=3600'},
+    )
+
+
+@api_router.get("/robots.txt")
+async def robots_txt():
+    """Public robots.txt served from the backend."""
+    from fastapi.responses import Response as FastResponse
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /account\n"
+        "Disallow: /login\n"
+        "Disallow: /teams/manage\n"
+        "Disallow: /teams/login\n"
+        "Disallow: /s/\n"
+        "Disallow: /api/\n"
+        "Sitemap: https://www.stateofplay.club/sitemap.xml\n"
+    )
+    return FastResponse(content=body, media_type='text/plain')
 
 app.include_router(api_router)
 

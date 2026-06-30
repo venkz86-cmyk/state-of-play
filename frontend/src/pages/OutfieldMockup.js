@@ -44,7 +44,7 @@ const Sched = ({ rows }) => (
 );
 
 export const OutfieldMockup = () => (
-  <MockupLayout testId="mockup-outfield">
+  <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'Outfield — a weekly read on the lateral edges of sport. Culture, identity, and the stories beyond the scoreboard.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>

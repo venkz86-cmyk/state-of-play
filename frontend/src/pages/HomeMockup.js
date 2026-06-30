@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { PartnersBlock } from '../components/PartnersBlock';
+import { SEO } from '../components/SEO';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -154,6 +155,10 @@ export const HomeMockup = () => {
       className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
       data-testid="mockup-home"
     >
+      <SEO
+        path="/"
+        description="India's sports business publication. Reportage, analysis, and intelligence from sport's most consequential rooms — written for the people who run the game."
+      />
       <MockupHeader />
 
       {/* DATELINE — Geist, #444, weight 400, "No. X · Year Two" */}

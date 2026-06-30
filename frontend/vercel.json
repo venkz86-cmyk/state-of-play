@@ -11,6 +11,14 @@
       "destination": "https://stateofplay-backend.onrender.com/api/shared/:token"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "https://stateofplay-backend.onrender.com/api/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://stateofplay-backend.onrender.com/api/robots.txt"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

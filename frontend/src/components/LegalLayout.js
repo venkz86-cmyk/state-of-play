@@ -2,8 +2,8 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 
 /* A shared "legal document" layout used by both Terms and Privacy mockups.
    Designed to feel like a serious masthead, not a generic SaaS legal page. */
-export const LegalLayout = ({ testId, title, subtitle, kicker, updated, sections }) => (
-  <MockupLayout testId={testId}>
+export const LegalLayout = ({ testId, title, subtitle, kicker, updated, sections, seo = null }) => (
+  <MockupLayout testId={testId} seo={seo}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">{kicker}</Overline>

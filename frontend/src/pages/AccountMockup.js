@@ -64,7 +64,7 @@ export const AccountMockup = () => {
   const nextCharge = autoRenews && canAccessPremium ? '₹2,949' : '—';
 
   return (
-    <MockupLayout testId="page-account">
+    <MockupLayout testId="page-account" seo={{ title: 'Your Account', path: '/account', noindex: true }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">{memberEmail}</span>

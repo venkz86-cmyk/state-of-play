@@ -11,6 +11,7 @@ import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
+import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -121,6 +122,14 @@ export const ArticleMockup = () => {
       className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
       data-testid="mockup-article"
     >
+      <SEO
+        title={article.title}
+        description={article.subtitle || article.excerpt}
+        path={`/${article.slug || article.id}`}
+        image={`https://www.stateofplay.club/api/og-image/${article.slug || article.id}`}
+        type="article"
+        article={article}
+      />
       <ReadingProgress />
       <MockupHeader />
 

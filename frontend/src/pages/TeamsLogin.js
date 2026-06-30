@@ -51,7 +51,7 @@ export const TeamsLogin = () => {
   };
 
   return (
-    <MockupLayout testId="page-teams-login" hideFooterHeroCta>
+    <MockupLayout testId="page-teams-login" hideFooterHeroCta seo={{ title: 'Teams Login', path: '/teams/login', noindex: true }}>
       <div className="max-w-[560px] mx-auto px-6 pt-12 lg:pt-16 pb-32">
         <div className="border-b border-[var(--rule)] pb-3 mb-12 flex items-baseline justify-between">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>

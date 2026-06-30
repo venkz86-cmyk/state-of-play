@@ -15,7 +15,7 @@ const ADDRESS_LINES = [
 ];
 
 export const ContactMockup = () => (
-  <MockupLayout testId="mockup-contact">
+  <MockupLayout testId="mockup-contact" seo={{ title: 'Contact', path: '/contact', description: 'Get in touch with The State of Play — for editorial pitches, corporate enquiries, and partnerships.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Contact</Overline>

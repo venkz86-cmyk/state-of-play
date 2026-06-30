@@ -30,7 +30,7 @@ export const FeedMockup = () => {
 
   if (loading) {
     return (
-      <MockupLayout testId="mockup-feed">
+      <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play — India\'s sports business desk.' }}>
         <div className="min-h-[60vh] flex items-center justify-center">
           <Overline>Loading desk…</Overline>
         </div>
@@ -43,7 +43,7 @@ export const FeedMockup = () => {
   const list = posts.slice(5);
 
   return (
-    <MockupLayout testId="mockup-feed">
+    <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play — India\'s sports business desk.' }}>
       {/* Section header */}
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">

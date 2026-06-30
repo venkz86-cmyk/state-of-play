@@ -42,7 +42,7 @@ export const SubscribeMockup = () => {
   }, []);
 
   return (
-    <MockupLayout testId="mockup-subscribe">
+    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play — India\'s sports business publication. Premium reportage, member benefits, and a private subscriber community.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>

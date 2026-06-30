@@ -1,5 +1,6 @@
 import { MockupHeader } from './MockupHeader';
 import { MockupFooter } from './MockupFooter';
+import { SEO } from './SEO';
 
 // Shared overline style — used across every mockup page
 export const Overline = ({ children, className = '' }) => (
@@ -11,11 +12,17 @@ export const Overline = ({ children, className = '' }) => (
 );
 
 // Wrapper that gives every mockup page the editorial nav/footer + base palette
-export const MockupLayout = ({ children, testId = 'mockup-page', hideFooterHeroCta = false }) => (
+export const MockupLayout = ({
+  children,
+  testId = 'mockup-page',
+  hideFooterHeroCta = false,
+  seo = null, // { title, description, path, image, noindex }
+}) => (
   <div
     data-testid={testId}
     className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]"
   >
+    {seo && <SEO {...seo} />}
     <MockupHeader />
     <main>{children}</main>
     <MockupFooter hideHeroCta={hideFooterHeroCta} />

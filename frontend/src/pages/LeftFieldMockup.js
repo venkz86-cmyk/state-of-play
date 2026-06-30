@@ -97,7 +97,7 @@ export const LeftFieldMockup = () => {
   const list = items.slice(5);
 
   return (
-    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta>
+    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: 'Left Field — a sister read from the Left Field Ventures stable. Sport, identity, and the cultural undercurrent.' }}>
       {/* Hero */}
       <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">

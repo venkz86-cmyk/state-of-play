@@ -308,7 +308,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
   };
 
   return (
-    <MockupLayout testId="page-teams-manage" hideFooterHeroCta>
+    <MockupLayout testId="page-teams-manage" hideFooterHeroCta seo={{ title: 'Team Dashboard', path: '/teams/manage', noindex: true }}>
       <div className="max-w-[860px] mx-auto px-6 lg:px-0 pt-10 lg:pt-12">
         {/* SECTION A — Dateline + headline */}
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3 gap-4 flex-wrap">

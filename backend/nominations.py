@@ -523,6 +523,8 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     title = html.escape(post.get('title') or 'The State of Play')
     excerpt = html.escape((post.get('custom_excerpt') or post.get('excerpt') or '')[:200])
     image = html.escape(post.get('feature_image') or f'{PUBLIC_BASE_URL}/og-default.png')
+    # Dynamic, branded OG card (Fraunces masthead + headline) for socials
+    og_card = f"{PUBLIC_BASE_URL}/api/og-image/{html.escape(post.get('slug') or '')}"
     canonical_url = f"{PUBLIC_BASE_URL}/{post.get('slug') or ''}"
     body_html = post.get('html') or ''
     authors = post.get('authors') or []
@@ -546,12 +548,14 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
 <meta property="og:type" content="article">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{excerpt}">
-<meta property="og:image" content="{image}">
+<meta property="og:image" content="{og_card}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="{PUBLIC_BASE_URL}/s/{html.escape(token_id)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{excerpt}">
-<meta name="twitter:image" content="{image}">
+<meta name="twitter:image" content="{og_card}">
 <style>
   :root{{--bg:#FAF9F7;--text:#1A1A1A;--muted:#555;--rule:#E5E2DC;--accent:#A0291C;}}
   body{{background:var(--bg);color:var(--text);font-family:'Newsreader',Georgia,'Times New Roman',serif;margin:0;}}

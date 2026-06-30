@@ -84,7 +84,7 @@ export const Archive = () => {
   }, [filtered]);
 
   return (
-    <MockupLayout testId="page-archive">
+    <MockupLayout testId="page-archive" seo={{ title: 'Archive', path: '/archive', description: 'Browse every dispatch from The State of Play, chronologically — by month, by year.' }}>
       {/* Header */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1100px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
