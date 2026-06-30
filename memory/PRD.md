@@ -157,6 +157,13 @@ Build a premium content website for sports business intelligence with a focus on
 - [x] Vercel rewrites: `/sitemap.xml` and `/robots.txt` → Render backend.
 - [x] Full code review committed to `/app/CODE_REVIEW.md` — 40 findings categorised by severity.
 
+### Session 4.1 (30 June 2026) — Security hardening (top-3 critical from review)
+- [x] **JWT_SECRET fallback removed** — server now refuses to boot without it (server.py:31).
+- [x] **Legacy `/auth/*`, `/articles`, `/payment/*`, `/user/subscription` deleted** — Mongo `db.users` / `db.articles` write paths gone. ~270 lines removed.
+- [x] Removed unused imports: `bcrypt`, `Header`, `HTTPBearer`, `HTTPAuthorizationCredentials`, `Depends`.
+- [x] **Rate limit on `/api/ghost/article-content`** — in-memory token bucket per (email, IP). 6-burst, 1 token / 10s sustained. Verified: 6×200, then 429.
+- [x] server.py reduced from 1898 → 1684 LOC (-11%).
+
 ## Key URLs
 - Teams Sales: `/teams`
 - Team Dashboard: `/teams/manage?token={token}`

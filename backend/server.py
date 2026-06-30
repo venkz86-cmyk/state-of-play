@@ -1,6 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Header, Request, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import os
@@ -11,7 +10,6 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
-import bcrypt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -28,9 +26,9 @@ if mongo_url and 'placeholder' not in mongo_url:
     except Exception as e:
         logging.warning(f"MongoDB connection failed: {e}")
 
-JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key')
-JWT_ALGORITHM = 'HS256'
-JWT_EXPIRATION_HOURS = 24 * 7
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is required")
 
 # In-memory store for recent payments (email -> timestamp)
 # In production, you'd use Redis or MongoDB
@@ -48,7 +46,6 @@ except Exception as e:
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
-security = HTTPBearer()
 
 # Set up logging early
 logging.basicConfig(
@@ -57,65 +54,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class User(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    email: EmailStr
-    name: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    is_subscriber: bool = False
-    subscription_end_date: Optional[datetime] = None
-    razorpay_customer_id: Optional[str] = None
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    name: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class AuthResponse(BaseModel):
-    token: str
-    user: User
-
-class Article(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str
-    subtitle: Optional[str] = None
-    content: str
-    preview_content: str
-    author: str
-    publication: str
-    is_premium: bool
-    theme: Optional[str] = None
-    image_url: Optional[str] = None
-    read_time: int = 5
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class ArticleCreate(BaseModel):
-    title: str
-    subtitle: Optional[str] = None
-    content: str
-    preview_content: str
-    author: str
-    publication: str
-    is_premium: bool
-    theme: Optional[str] = None
-    image_url: Optional[str] = None
-    read_time: int = 5
-
-class PaymentOrder(BaseModel):
-    amount: int
-    currency: str = "INR"
-
-class PaymentVerification(BaseModel):
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+# Subscription model kept for the Razorpay webhook handler which writes to
+# db.subscriptions. All legacy JWT/auth/article/payment-order routes were
+# removed in Session 4 — the live site uses Ghost magic-link auth, Razorpay
+# payment links, and the Ghost Content/Admin APIs for content.
 
 class Subscription(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -127,204 +69,6 @@ class Subscription(BaseModel):
     amount: int
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     subscription_end_date: Optional[datetime] = None
-
-def create_token(user_id: str, email: str) -> str:
-    payload = {
-        'user_id': user_id,
-        'email': email,
-        'exp': datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
-    }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-def verify_token(token: str) -> dict:
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    payload = verify_token(token)
-    user = await db.users.find_one({"email": payload['email']}, {"_id": 0, "password": 0})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if isinstance(user.get('created_at'), str):
-        user['created_at'] = datetime.fromisoformat(user['created_at'])
-    if user.get('subscription_end_date') and isinstance(user['subscription_end_date'], str):
-        user['subscription_end_date'] = datetime.fromisoformat(user['subscription_end_date'])
-    return User(**user)
-
-@api_router.post("/auth/signup", response_model=AuthResponse)
-async def signup(user_data: UserCreate):
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt())
-    user = User(email=user_data.email, name=user_data.name)
-    user_dict = user.model_dump()
-    user_dict['password'] = hashed_password.decode('utf-8')
-    user_dict['created_at'] = user_dict['created_at'].isoformat()
-    
-    await db.users.insert_one(user_dict)
-    token = create_token(user.id, user.email)
-    
-    return AuthResponse(token=token, user=user)
-
-@api_router.post("/auth/login", response_model=AuthResponse)
-async def login(login_data: UserLogin):
-    user_doc = await db.users.find_one({"email": login_data.email})
-    if not user_doc:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if not bcrypt.checkpw(login_data.password.encode('utf-8'), user_doc['password'].encode('utf-8')):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    user_doc.pop('password')
-    user_doc.pop('_id', None)
-    if isinstance(user_doc.get('created_at'), str):
-        user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
-    if user_doc.get('subscription_end_date') and isinstance(user_doc['subscription_end_date'], str):
-        user_doc['subscription_end_date'] = datetime.fromisoformat(user_doc['subscription_end_date'])
-    
-    user = User(**user_doc)
-    token = create_token(user.id, user.email)
-    
-    return AuthResponse(token=token, user=user)
-
-@api_router.get("/auth/me", response_model=User)
-async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-@api_router.get("/articles", response_model=List[Article])
-async def get_articles(publication: Optional[str] = None, theme: Optional[str] = None, limit: int = 50):
-    query = {}
-    if publication:
-        query['publication'] = publication
-    if theme:
-        query['theme'] = theme
-    
-    articles = await db.articles.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
-    
-    for article in articles:
-        if isinstance(article.get('created_at'), str):
-            article['created_at'] = datetime.fromisoformat(article['created_at'])
-        if isinstance(article.get('updated_at'), str):
-            article['updated_at'] = datetime.fromisoformat(article['updated_at'])
-    
-    return articles
-
-@api_router.get("/articles/{article_id}", response_model=Article)
-async def get_article(article_id: str, current_user: Optional[User] = None):
-    article = await db.articles.find_one({"id": article_id}, {"_id": 0})
-    if not article:
-        raise HTTPException(status_code=404, detail="Article not found")
-    
-    if isinstance(article.get('created_at'), str):
-        article['created_at'] = datetime.fromisoformat(article['created_at'])
-    if isinstance(article.get('updated_at'), str):
-        article['updated_at'] = datetime.fromisoformat(article['updated_at'])
-    
-    return Article(**article)
-
-@api_router.post("/articles", response_model=Article)
-async def create_article(article_data: ArticleCreate, current_user: User = Depends(get_current_user)):
-    article = Article(**article_data.model_dump())
-    article_dict = article.model_dump()
-    article_dict['created_at'] = article_dict['created_at'].isoformat()
-    article_dict['updated_at'] = article_dict['updated_at'].isoformat()
-    
-    await db.articles.insert_one(article_dict)
-    return article
-
-@api_router.post("/payment/create-order")
-async def create_payment_order(order: PaymentOrder, current_user: User = Depends(get_current_user)):
-    try:
-        razorpay_order = razorpay_client.order.create({
-            "amount": order.amount,
-            "currency": order.currency,
-            "payment_capture": 1
-        })
-        
-        subscription = Subscription(
-            user_id=current_user.id,
-            razorpay_order_id=razorpay_order["id"],
-            status="created",
-            amount=order.amount
-        )
-        
-        sub_dict = subscription.model_dump()
-        sub_dict['created_at'] = sub_dict['created_at'].isoformat()
-        await db.subscriptions.insert_one(sub_dict)
-        
-        return {
-            "order_id": razorpay_order["id"],
-            "amount": razorpay_order["amount"],
-            "currency": razorpay_order["currency"],
-            "key_id": os.environ.get('RAZORPAY_KEY_ID')
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.post("/payment/verify")
-async def verify_payment(verification: PaymentVerification, current_user: User = Depends(get_current_user)):
-    try:
-        params_dict = {
-            'razorpay_order_id': verification.razorpay_order_id,
-            'razorpay_payment_id': verification.razorpay_payment_id,
-            'razorpay_signature': verification.razorpay_signature
-        }
-        
-        razorpay_client.utility.verify_payment_signature(params_dict)
-        
-        subscription_end = datetime.now(timezone.utc) + timedelta(days=365)
-        
-        await db.subscriptions.update_one(
-            {"razorpay_order_id": verification.razorpay_order_id},
-            {
-                "$set": {
-                    "razorpay_payment_id": verification.razorpay_payment_id,
-                    "status": "completed",
-                    "subscription_end_date": subscription_end.isoformat()
-                }
-            }
-        )
-        
-        await db.users.update_one(
-            {"id": current_user.id},
-            {
-                "$set": {
-                    "is_subscriber": True,
-                    "subscription_end_date": subscription_end.isoformat()
-                }
-            }
-        )
-        
-        return {"status": "success", "message": "Payment verified and subscription activated"}
-    except razorpay.errors.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid payment signature")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.get("/user/subscription")
-async def get_subscription_status(current_user: User = Depends(get_current_user)):
-    user = await db.users.find_one({"id": current_user.id}, {"_id": 0})
-    
-    is_active = False
-    if user.get('is_subscriber') and user.get('subscription_end_date'):
-        end_date = user['subscription_end_date']
-        if isinstance(end_date, str):
-            end_date = datetime.fromisoformat(end_date)
-        is_active = end_date > datetime.now(timezone.utc)
-    
-    return {
-        "is_subscriber": user.get('is_subscriber', False),
-        "subscription_end_date": user.get('subscription_end_date'),
-        "is_active": is_active
-    }
 
 @api_router.get("/substack/feed")
 async def get_substack_feed():
@@ -631,14 +375,56 @@ class ArticleContentResponse(BaseModel):
     title: str
     feature_image: Optional[str] = None
 
+# In-memory rate limiter for the article-content endpoint.
+# Keyed by lower-cased email + client IP. A burst of 6 requests is allowed,
+# replenished at 1 token / 10s. A leaked subscriber email can therefore fetch
+# at most ~360 articles/hour from a single IP — fast enough for genuine
+# reading, slow enough that bulk-scraping the archive is impractical.
+from collections import defaultdict
+_ARTICLE_BUCKET: dict = defaultdict(lambda: {'tokens': 6.0, 'last': 0.0})
+_ARTICLE_BUCKET_BURST = 6.0
+_ARTICLE_BUCKET_REFILL_PER_SEC = 0.1  # 1 token / 10s
+
+def _check_article_rate_limit(key: str) -> bool:
+    """Token-bucket. Returns True if the request is allowed."""
+    import time as _t
+    now = _t.monotonic()
+    bucket = _ARTICLE_BUCKET[key]
+    elapsed = now - bucket['last']
+    bucket['tokens'] = min(
+        _ARTICLE_BUCKET_BURST,
+        bucket['tokens'] + elapsed * _ARTICLE_BUCKET_REFILL_PER_SEC,
+    )
+    bucket['last'] = now
+    if bucket['tokens'] >= 1.0:
+        bucket['tokens'] -= 1.0
+        return True
+    return False
+
 @api_router.post("/ghost/article-content", response_model=ArticleContentResponse)
-async def get_full_article_content(request: ArticleContentRequest):
-    """Get full article content for verified paid members using Admin API"""
+async def get_full_article_content(request: ArticleContentRequest, http_request: Request):
+    """Get full article content for verified paid members using Admin API.
+
+    Rate-limited per (email, ip) to prevent a leaked subscriber email being
+    used to scrape the entire premium archive.
+    """
     import httpx
-    
+
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail="Admin API not configured")
-    
+
+    # Rate-limit: 6-burst, 1 token / 10s sustained, per (email, ip).
+    client_ip = (
+        http_request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+        or (http_request.client.host if http_request.client else '0.0.0.0')
+    )
+    bucket_key = f"{(request.email or '').lower()}|{client_ip}"
+    if not _check_article_rate_limit(bucket_key):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Please slow down.",
+        )
+
     token = create_ghost_admin_token()
     if not token:
         raise HTTPException(status_code=503, detail="Failed to create admin token")

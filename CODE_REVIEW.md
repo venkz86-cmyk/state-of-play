@@ -166,9 +166,9 @@ None.
 
 If you can only do five things this week, do these:
 
-1. **(🔴 #1)** Remove the `JWT_SECRET` default fallback.
-2. **(🔴 #2 + #3)** Delete the legacy `/auth/*` and `/articles` endpoints + the `db.users` collection bcrypt path. ~80 lines removed, attack surface gone.
-3. **(🔴 #5)** Add rate-limiting (`slowapi`) to `/api/ghost/article-content`, OR require a short-lived token from `/ghost/integrity-token`.
+1. ~~**(🔴 #1)** Remove the `JWT_SECRET` default fallback.~~ ✅ **DONE — Session 4.1**
+2. ~~**(🔴 #2 + #3)** Delete the legacy `/auth/*` and `/articles` endpoints + the `db.users` collection bcrypt path. ~80 lines removed, attack surface gone.~~ ✅ **DONE — Session 4.1** (270 lines gone, including the parallel payment-order surface)
+3. ~~**(🔴 #5)** Add rate-limiting (`slowapi`) to `/api/ghost/article-content`, OR require a short-lived token from `/ghost/integrity-token`.~~ ✅ **DONE — Session 4.1** (in-memory token bucket: 6-burst, 1 token / 10s per email+IP)
 4. **(🟠 #19)** Delete the 12 orphan page files. Frees the testing agent from "which file is the real one?" confusion.
 5. **(🟠 #11)** Add an in-memory cache for the OG image generator. Render's free dyno will thank you.
 
