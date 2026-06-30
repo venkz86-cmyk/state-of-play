@@ -10,13 +10,33 @@ const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
 
 const CONTEXT_MAX = 200;
 
-export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscriberGhostId }) => {
+export const NominateReaderBlock = ({
+  subscriberName,
+  subscriberEmail,
+  subscriberGhostId,
+  variant = 'account',          // 'account' | 'story'
+}) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [context, setContext] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // Variant-specific copy
+  const COPY = variant === 'story'
+    ? {
+        rightLabel: 'Reader to reader',
+        heading: { plain: 'Worth more than a PDF', emphasis: 'forward, no?' },
+        subheading: 'Send this piece to someone who should be reading it. We’ll take it from there.',
+        confirmation: (nominee) => `Sent. ${nominee} will receive this story.`,
+      }
+    : {
+        rightLabel: 'Reader to reader',
+        heading: { plain: 'Know someone who should be', emphasis: 'reading?' },
+        subheading: 'Someone in your world should be reading this. Tell us who — we’ll take it from there.',
+        confirmation: () => null, // existing long-form confirmation
+      };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -66,17 +86,17 @@ export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscribe
       <div className="flex items-baseline justify-between mb-5 flex-wrap gap-3">
         <Overline>Nominate a reader</Overline>
         <span className="font-plex text-[12px] text-[var(--text-muted)] uppercase tracking-[0.06em]">
-          Reader to reader
+          {COPY.rightLabel}
         </span>
       </div>
 
       {!submitted ? (
         <>
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4 max-w-[24ch]">
-            Know someone who should be <em className="italic font-normal">reading?</em>
+            {COPY.heading.plain} <em className="italic font-normal">{COPY.heading.emphasis}</em>
           </h2>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-8 max-w-[58ch]">
-            Someone in your world should be reading this. Tell us who — we’ll take it from there.
+            {COPY.subheading}
           </p>
 
           <form onSubmit={onSubmit} className="space-y-6 max-w-[640px]">
@@ -166,6 +186,24 @@ export const NominateReaderBlock = ({ subscriberName, subscriberEmail, subscribe
             </div>
           </form>
         </>
+      ) : variant === 'story' ? (
+        <div data-testid="nominate-confirmation" className="max-w-[55ch]">
+          <h2 className="font-editorial font-semibold text-[1.5rem] md:text-[1.75rem] leading-[1.2] mb-3">
+            {COPY.confirmation((name || 'Your colleague').trim().split(' ')[0])}
+          </h2>
+          <p className="font-plex text-[13px] text-[var(--text-muted)]">
+            Want to send it to someone else too?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setName(''); setEmail(''); setContext(''); setSubmitted(false);
+              }}
+              className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+            >
+              Add another →
+            </button>
+          </p>
+        </div>
       ) : (
         <div data-testid="nominate-confirmation" className="max-w-[55ch]">
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4">

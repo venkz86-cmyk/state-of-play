@@ -7,6 +7,7 @@ import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
+import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
@@ -207,6 +208,17 @@ export const ArticleMockup = () => {
           </div>
         )}
       </article>
+
+      {canAccessPremium && (
+        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
+          <NominateReaderBlock
+            variant="story"
+            subscriberName={user?.name || ''}
+            subscriberEmail={user?.email || ''}
+            subscriberGhostId={user?.id || ''}
+          />
+        </section>
+      )}
 
       {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks */}
       {related.length > 0 && (
