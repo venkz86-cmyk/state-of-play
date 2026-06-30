@@ -1,0 +1,49 @@
+{
+  "summary": "Backend-only verification of the OG (Open Graph) fix for WhatsApp/social-bot sharing. All 13 pytest cases passed (100%). Verified /api/og/{slug} returns 200 + HTML with correct og:title 'Passported out' and og:image pointing at /api/og-image/{slug} across WhatsApp, facebookexternalhit, Twitterbot, LinkedInBot, Slackbot and browser UAs. Confirmed unknown slug returns 200 with site-default OG meta (NEVER a 301/302 — would cause infinite loop with the new Vercel UA rewrite). Dynamic /api/og-image/{slug} returns a real 1200x630 PNG (>50KB, valid PNG header). Sitemap (>=12 <url> entries) and robots.txt (correct Sitemap line) verified. vercel.json parses as valid JSON and contains the bot-UA rewrite to https://stateofplay-backend.onrender.com/api/og/:slug with all required bot signatures (whatsapp, facebookexternalhit, twitterbot, linkedinbot, slackbot). OG endpoint does not touch Mongo.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "/api/og/pio-oci-aiff-sports-passport with WhatsApp UA -> 200, og:title='Passported out', og:image=https://www.stateofplay.club/api/og-image/pio-oci-aiff-sports-passport",
+    "/api/og/{real-slug} with facebookexternalhit UA -> 200 + correct OG meta",
+    "/api/og/{real-slug} with Twitterbot UA -> 200 + correct OG meta",
+    "/api/og/{real-slug} with LinkedInBot UA -> 200 + correct OG meta",
+    "/api/og/{real-slug} with Slackbot UA -> 200 + correct OG meta",
+    "/api/og/{real-slug} with regular Chrome browser UA -> 200 (backend bot-detection deliberately removed)",
+    "/api/og/this-slug-does-not-exist-1234 with WhatsApp UA -> 200 with site-default OG meta (CRITICAL no-redirect behaviour confirmed)",
+    "/api/og-image/{real-slug} -> 200, content-type image/png, 50KB+, valid PNG magic bytes",
+    "/api/og-image/{fake-slug} -> graceful (not 500)",
+    "/api/sitemap.xml -> 200, xml, >=12 <url> entries",
+    "/api/robots.txt -> 200, contains 'Sitemap: https://www.stateofplay.club/sitemap.xml'",
+    "/app/frontend/vercel.json -> valid JSON, contains UA-bot rewrite with whatsapp/facebookexternalhit/twitterbot/linkedinbot/slackbot to /api/og/:slug",
+    "/api/og/{any-slug} works independently of Mongo"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_og_endpoints.py",
+    "/app/test_reports/pytest/og_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Code is clean. /api/og/{slug} correctly falls through to site-default OG meta on Ghost failure without redirecting — exactly what the fix required. Try/except wraps the Ghost lookup; defaults are set before the try block so any exception path still yields a valid 200 HTML response.",
+    "Minor: /api/og-image/{slug} falls back to a hard-coded Ghost CDN image URL on exception (302 redirect). This is acceptable but worth noting — if the Ghost CDN image is ever removed, the fallback will break. Consider serving a static bundled PNG asset instead for true zero-dependency fallback. Not blocking for this fix.",
+    "/api/og/{slug} response does not set X-Robots-Tag or noindex; since only bots reached by Vercel UA rewrite will see this minimal HTML, consider adding 'X-Robots-Tag: noindex' to avoid the OG endpoint itself being indexed (e.g. by Googlebot which is in the UA list). Optional polish."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_og_endpoints.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "skipped (per request)"
+  },
+  "test_credentials": "Not required for OG endpoints (public).",
+  "seed_data_creation": "None — used real Ghost slug pio-oci-aiff-sports-passport.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "OG fix verified end-to-end on the backend. The only remaining validation is the Vercel rewrite itself, which can only be tested in production after deploy (curl with WhatsApp UA against https://www.stateofplay.club/{slug}). Real Ghost slug for retesting: pio-oci-aiff-sports-passport (title 'Passported out'). Test file at /app/backend/tests/test_og_endpoints.py runs in ~4s and is safe to re-run as regression. Note: BASE_URL is read from REACT_APP_BACKEND_URL env var — pytest run must export it (it's already in /app/frontend/.env but not in the shell by default)."
+}

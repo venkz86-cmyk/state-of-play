@@ -19,6 +19,17 @@
       "destination": "https://stateofplay-backend.onrender.com/api/robots.txt"
     },
     {
+      "source": "/:slug((?!api/|s/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|mockup$|mockup/).+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare|googlebot|bingbot|yandexbot|duckduckbot|applebot|ia_archiver).*"
+        }
+      ],
+      "destination": "https://stateofplay-backend.onrender.com/api/og/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -839,85 +839,88 @@ async def generate_og_image(slug: str):
 # OG Meta endpoint for social sharing
 @api_router.get("/og/{slug}")
 async def get_og_meta(slug: str, request: Request):
-    """Serve Open Graph meta tags for social media crawlers"""
+    """Serve Open Graph meta tags for social-media crawlers.
+
+    Vercel routes incoming `/{slug}` requests here when the User-Agent matches
+    a known social-bot signature (see frontend/vercel.json). Humans never see
+    this endpoint — they fall through to the React SPA. The endpoint therefore
+    always returns OG-tag-rich HTML (never a redirect — that would loop).
+    """
     import httpx
-    from fastapi.responses import HTMLResponse, RedirectResponse
-    
-    user_agent = request.headers.get('user-agent', '').lower()
-    bot_patterns = ['whatsapp', 'facebookexternalhit', 'facebot', 'twitterbot', 
-                    'linkedinbot', 'slackbot', 'telegrambot', 'discordbot', 'pinterest']
-    
-    is_bot = any(bot in user_agent for bot in bot_patterns)
-    
-    # For non-bots, redirect to the actual page
-    if not is_bot:
-        return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
-    
+    from fastapi.responses import HTMLResponse
+
+    def _escape(text):
+        if not text:
+            return ''
+        return (text.replace('&', '&amp;').replace('<', '&lt;')
+                    .replace('>', '&gt;').replace('"', '&quot;')
+                    .replace("'", '&#039;'))
+
+    article_url = f"https://www.stateofplay.club/{slug}"
+    site_default_image = f"https://www.stateofplay.club/api/og-image/{slug}"
+
+    # Defaults — used if the Ghost fetch fails or the slug is unknown.
+    title = "The State of Play"
+    description = "India's sports business publication. Reportage, analysis, and intelligence from sport's most consequential rooms."
+    image = site_default_image
+    published_time = ''
+
     try:
-        # Fetch article from Ghost
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=8.0) as client:
             response = await client.get(
                 f"{GHOST_URL}/ghost/api/content/posts/slug/{slug}/",
-                params={'key': GHOST_CONTENT_API_KEY, 'include': 'authors'}
+                params={'key': GHOST_CONTENT_API_KEY, 'include': 'authors'},
             )
-            
-            if response.status_code != 200:
-                return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
-            
-            data = response.json()
-            article = data.get('posts', [{}])[0] if data.get('posts') else None
-            
-            if not article:
-                return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
-        
-        # Extract metadata
-        title = article.get('title', 'The State of Play')
-        description = article.get('custom_excerpt') or article.get('excerpt') or "India's premium sports business publication"
-        # Use dynamic branded OG card (Fraunces masthead + headline)
-        image = f"https://www.stateofplay.club/api/og-image/{slug}"
-        article_url = f"https://www.stateofplay.club/{slug}"
-        author = article.get('primary_author', {}).get('name', 'The State of Play') if article.get('primary_author') else 'The State of Play'
-        published_time = article.get('published_at', '')
-        
-        # Escape HTML
-        def escape_html(text):
-            if not text:
-                return ''
-            return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#039;')
-        
-        html = f'''<!DOCTYPE html>
+            if response.status_code == 200:
+                data = response.json()
+                article = data.get('posts', [{}])[0] if data.get('posts') else None
+                if article:
+                    title = article.get('title') or title
+                    description = (
+                        article.get('custom_excerpt')
+                        or article.get('excerpt')
+                        or description
+                    )
+                    published_time = article.get('published_at') or ''
+                    # image stays as the dynamic OG card endpoint
+    except Exception as e:
+        logger.error(f"OG meta fetch failed for {slug}: {e}")
+        # Fall through with defaults — DO NOT redirect (would loop).
+
+    html_body = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escape_html(title)} | The State of Play</title>
-  <meta name="description" content="{escape_html(description)}">
+  <title>{_escape(title)} | The State of Play</title>
+  <meta name="description" content="{_escape(description)}">
+  <link rel="canonical" href="{article_url}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{article_url}">
-  <meta property="og:title" content="{escape_html(title)}">
-  <meta property="og:description" content="{escape_html(description)}">
+  <meta property="og:title" content="{_escape(title)}">
+  <meta property="og:description" content="{_escape(description)}">
   <meta property="og:image" content="{image}">
+  <meta property="og:image:secure_url" content="{image}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:site_name" content="The State of Play">
   <meta property="article:published_time" content="{published_time}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{escape_html(title)}">
-  <meta name="twitter:description" content="{escape_html(description)}">
+  <meta name="twitter:site" content="@stateofplayclub">
+  <meta name="twitter:title" content="{_escape(title)}">
+  <meta name="twitter:description" content="{_escape(description)}">
   <meta name="twitter:image" content="{image}">
 </head>
 <body>
-  <h1>{escape_html(title)}</h1>
-  <p>{escape_html(description)}</p>
-  <p><a href="{article_url}">Read the full article</a></p>
+  <h1>{_escape(title)}</h1>
+  <p>{_escape(description)}</p>
+  <p><a href="{article_url}">Read the full article at The State of Play</a></p>
 </body>
 </html>'''
-        
-        return HTMLResponse(content=html, status_code=200)
-        
-    except Exception as e:
-        logging.error(f"OG meta error for {slug}: {e}")
-        return RedirectResponse(url=f"https://www.stateofplay.club/{slug}", status_code=301)
+    return HTMLResponse(content=html_body, status_code=200, headers={
+        'Cache-Control': 'public, max-age=300, s-maxage=3600',
+    })
 
 # Razorpay Webhook for payment success
 class RazorpayWebhookPayload(BaseModel):
