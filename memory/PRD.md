@@ -142,7 +142,20 @@ Build a premium content website for sports business intelligence with a focus on
 - [ ] "Insider Drops" subscriber-only feed
 - [ ] Reading list / bookmarks
 - [ ] Next.js App Router migration
-- [ ] Cleanup: delete orphaned legacy pages (Home.js, ArticlePage.js, Signup.js, etc. — superseded by `*Mockup.js` after the live cut-over)
+- [ ] Cleanup: delete orphaned legacy pages (Home.js, ArticlePage.js, Signup.js, etc. — superseded by `*Mockup.js` after the live cut-over). Tracked in `/app/CODE_REVIEW.md` section 19/20.
+
+### Session 4 (30 June 2026) — SEO + Dynamic OG
+- [x] Dynamic OG Image Generator (`/api/og-image/{slug}`) — Fraunces title + masthead, premium/category badges, byline with accent rule, sourced from Ghost feature image with dark overlay. 1200×630 PNG, cached 24h.
+- [x] Editorial fonts shipped to backend (`backend/assets/fonts/Fraunces.ttf`, `DMSans.ttf`, `Newsreader.ttf` — Google Fonts variable fonts).
+- [x] Cold link SSR (`/api/shared/{token}`) now serves dynamic OG cards on social previews.
+- [x] Public OG meta (`/api/og/{slug}`) now serves dynamic OG cards.
+- [x] Structured data: `NewsArticle` JSON-LD on article pages, `WebSite` JSON-LD elsewhere (with SearchAction).
+- [x] Centralised `<SEO>` component (`/app/frontend/src/components/SEO.js`) — imperative `document.head` manager (bypasses `react-helmet-async` due to babel-visual-edits incompatibility).
+- [x] All 14 live pages now have proper `<title>`, description, canonical, OG, Twitter card.
+- [x] Dynamic `/api/sitemap.xml` (12 static + Ghost-published articles with lastmod).
+- [x] `/api/robots.txt` with allow/disallow + sitemap pointer.
+- [x] Vercel rewrites: `/sitemap.xml` and `/robots.txt` → Render backend.
+- [x] Full code review committed to `/app/CODE_REVIEW.md` — 40 findings categorised by severity.
 
 ## Key URLs
 - Teams Sales: `/teams`
