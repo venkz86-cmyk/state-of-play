@@ -556,53 +556,257 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{excerpt}">
 <meta name="twitter:image" content="{og_card}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
-  :root{{--bg:#FAF9F7;--text:#1A1A1A;--muted:#555;--rule:#E5E2DC;--accent:#A0291C;}}
-  body{{background:var(--bg);color:var(--text);font-family:'Newsreader',Georgia,'Times New Roman',serif;margin:0;}}
-  .tsop-mast{{border-bottom:1px solid var(--rule);background:#fff;}}
-  .tsop-mast__inner{{max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;}}
-  .tsop-mast__logo{{font-family:Georgia,serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;letter-spacing:.02em;}}
-  .tsop-mast__cta{{font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);text-decoration:none;}}
-  .tsop-article{{max-width:680px;margin:0 auto;padding:64px 24px 48px;}}
-  .tsop-article__kicker{{font-family:'DM Sans',-apple-system,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-bottom:18px;}}
-  .tsop-article__title{{font-family:Georgia,serif;font-weight:600;font-size:42px;line-height:1.1;letter-spacing:-.01em;margin:0 0 18px;}}
-  .tsop-article__sub{{font-family:Georgia,serif;font-style:italic;font-size:20px;color:var(--muted);line-height:1.4;margin:0 0 28px;}}
-  .tsop-article__byline{{font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;color:var(--muted);margin-bottom:28px;border-bottom:1px solid var(--rule);padding-bottom:18px;}}
-  .tsop-article__hero{{margin:0 -24px 32px;}}
-  .tsop-article__hero img{{width:100%;display:block;}}
-  .tsop-article__body{{font-size:18px;line-height:1.65;}}
-  .tsop-article__body p{{margin:0 0 1.2em;}}
-  .tsop-article__body a{{color:var(--accent);}}
-  .tsop-article__body h2{{font-family:Georgia,serif;font-weight:600;font-size:24px;margin:36px 0 12px;}}
-  .tsop-article__body blockquote{{border-left:3px solid var(--accent);padding:6px 0 6px 22px;margin:24px 0;font-style:italic;color:#333;}}
-  .tsop-attribution{{margin:48px -24px 24px;background:#1A1A1A;color:#fff;padding:40px 24px;text-align:left;}}
-  .tsop-attribution__hed{{font-family:Georgia,serif;font-weight:600;font-size:24px;line-height:1.25;margin:0 0 12px;color:#fff;}}
-  .tsop-attribution p{{font-family:'DM Sans',-apple-system,sans-serif;font-size:15px;color:#bbb;line-height:1.6;margin:0 0 24px;}}
-  .tsop-attribution__cta{{display:inline-block;background:var(--accent);color:#fff;font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;letter-spacing:.05em;text-transform:uppercase;font-weight:500;padding:14px 26px;text-decoration:none;}}
-  .tsop-related{{max-width:1120px;margin:64px auto;padding:0 24px;}}
-  .tsop-related__label{{font-family:'DM Sans',-apple-system,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-bottom:20px;border-top:1px solid var(--rule);padding-top:20px;}}
-  .tsop-related__grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}}
-  .tsop-related-card{{display:block;background:#fff;border:1px solid var(--rule);color:var(--text);text-decoration:none;transition:transform .15s ease;}}
-  .tsop-related-card:hover{{transform:translateY(-2px);}}
-  .tsop-related-card__image{{aspect-ratio:16/9;background-size:cover;background-position:center;}}
-  .tsop-related-card__body{{padding:18px 18px 22px;}}
-  .tsop-related-card__title{{font-family:Georgia,serif;font-weight:600;font-size:18px;line-height:1.25;margin:0 0 8px;}}
-  .tsop-related-card__excerpt{{font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 14px;}}
-  .tsop-related-card__cta{{font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);}}
-  .tsop-foot{{border-top:1px solid var(--rule);background:#fff;padding:32px 24px;text-align:center;font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;color:#999;}}
+  :root{{
+    --bg:#FAF9F7;
+    --text:#1A1A1A;
+    --muted:#444;
+    --label:#888;
+    --rule:#E5E2DC;
+    --accent:#A0291C;
+    --editorial:'Fraunces','Source Serif 4',Georgia,serif;
+    --reading:'Newsreader','Source Serif 4',Georgia,serif;
+    --ui:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }}
+  *{{box-sizing:border-box;}}
+  html,body{{margin:0;padding:0;}}
+  body{{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--reading);
+    font-feature-settings:"liga","kern";
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }}
+
+  /* ─── Masthead ─── */
+  .tsop-mast{{
+    position:sticky;top:0;z-index:50;
+    background:#fff;border-bottom:1px solid var(--rule);
+  }}
+  .tsop-mast__inner{{
+    max-width:1400px;margin:0 auto;
+    padding:0 24px;
+    display:flex;justify-content:space-between;align-items:center;
+    height:64px;
+  }}
+  @media(min-width:1024px){{ .tsop-mast__inner{{padding:0 48px;height:80px;}} }}
+  .tsop-mast__logo{{display:flex;align-items:center;text-decoration:none;}}
+  .tsop-mast__logo img{{height:40px;width:auto;display:block;}}
+  @media(min-width:1024px){{ .tsop-mast__logo img{{height:48px;}} }}
+  .tsop-mast__cta{{
+    font-family:var(--ui);
+    font-size:13px;font-weight:500;
+    letter-spacing:.04em;text-transform:uppercase;
+    color:var(--accent);text-decoration:none;
+    padding:10px 18px;border:1px solid var(--accent);
+    transition:background .15s ease,color .15s ease;
+  }}
+  .tsop-mast__cta:hover{{background:var(--accent);color:#fff;}}
+
+  /* ─── Dateline strip ─── */
+  .tsop-dateline{{
+    max-width:1280px;margin:0 auto;
+    padding:40px 24px 12px;
+  }}
+  @media(min-width:1024px){{ .tsop-dateline{{padding:48px 48px 12px;}} }}
+  .tsop-dateline__inner{{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid var(--rule);padding-bottom:14px;
+    font-family:var(--ui);font-size:14px;color:#444;
+  }}
+  .tsop-dateline a{{color:inherit;text-decoration:none;}}
+  .tsop-dateline a:hover{{color:var(--accent);}}
+
+  /* ─── Article ─── */
+  .tsop-article{{
+    max-width:680px;margin:0 auto;
+    padding:48px 24px 32px;
+  }}
+  @media(min-width:1024px){{ .tsop-article{{padding:64px 0 48px;}} }}
+
+  .tsop-article__kicker{{
+    font-family:var(--ui);
+    font-size:11px;font-weight:500;
+    letter-spacing:.12em;text-transform:uppercase;
+    color:var(--label);
+    margin:0 0 20px;
+  }}
+  .tsop-article__title{{
+    font-family:var(--editorial);
+    font-weight:600;
+    font-size:40px;line-height:1.08;
+    letter-spacing:-0.012em;
+    margin:0 0 20px;
+    max-width:24ch;
+  }}
+  @media(min-width:768px){{ .tsop-article__title{{font-size:48px;}} }}
+  .tsop-article__sub{{
+    font-family:var(--reading);
+    font-style:italic;
+    font-size:20px;line-height:1.5;
+    color:var(--muted);
+    margin:0 0 28px;
+    max-width:55ch;
+  }}
+  .tsop-article__byline{{
+    font-family:var(--ui);
+    font-size:13px;color:var(--muted);
+    margin:0 0 24px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--rule);
+  }}
+  .tsop-article__hero{{
+    margin:0 -24px 32px;
+  }}
+  @media(min-width:1024px){{ .tsop-article__hero{{margin:0 0 32px;}} }}
+  .tsop-article__hero img{{
+    width:100%;display:block;
+    filter:saturate(0);transition:filter .7s ease;
+  }}
+  .tsop-article__hero:hover img{{filter:saturate(1);}}
+
+  /* ─── Article body ─── */
+  .tsop-article__body{{
+    font-family:var(--reading);
+    font-size:19px;line-height:1.7;
+    color:#222;
+  }}
+  .tsop-article__body p{{margin:0 0 1.3em;}}
+  .tsop-article__body a{{color:var(--accent);text-decoration:underline;text-underline-offset:3px;}}
+  .tsop-article__body h2{{
+    font-family:var(--editorial);
+    font-weight:600;
+    font-size:26px;line-height:1.2;letter-spacing:-0.005em;
+    margin:48px 0 16px;
+  }}
+  .tsop-article__body h3{{
+    font-family:var(--editorial);
+    font-weight:500;
+    font-size:21px;line-height:1.25;
+    margin:36px 0 12px;
+  }}
+  .tsop-article__body blockquote{{
+    border-left:2px solid var(--accent);
+    padding:4px 0 4px 22px;
+    margin:32px 0;
+    font-style:italic;color:#333;
+    font-size:20px;line-height:1.55;
+  }}
+  .tsop-article__body img{{
+    max-width:100%;height:auto;
+    margin:24px 0;
+  }}
+  .tsop-article__body figure{{margin:24px 0;}}
+  .tsop-article__body figcaption{{
+    font-family:var(--ui);font-size:12px;font-style:italic;
+    color:var(--label);margin-top:8px;
+  }}
+  .tsop-article__body ul,.tsop-article__body ol{{
+    padding-left:24px;margin:0 0 1.3em;
+  }}
+  .tsop-article__body li{{margin:0 0 .5em;}}
+
+  /* ─── Attribution block ─── */
+  .tsop-attribution{{
+    margin:56px -24px 0;
+    background:#1A1A1A;color:#fff;
+    padding:48px 24px;
+  }}
+  @media(min-width:1024px){{ .tsop-attribution{{margin:64px 0 0;padding:56px 48px;}} }}
+  .tsop-attribution__hed{{
+    font-family:var(--editorial);font-weight:600;
+    font-size:26px;line-height:1.2;letter-spacing:-0.005em;
+    margin:0 0 14px;color:#fff;
+  }}
+  .tsop-attribution p{{
+    font-family:var(--ui);font-size:15px;line-height:1.6;
+    color:#bbb;margin:0 0 24px;
+  }}
+  .tsop-attribution__cta{{
+    display:inline-block;background:var(--accent);color:#fff;
+    font-family:var(--ui);font-size:13px;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;
+    padding:14px 28px;text-decoration:none;
+    transition:opacity .15s ease;
+  }}
+  .tsop-attribution__cta:hover{{opacity:.88;}}
+
+  /* ─── Related ─── */
+  .tsop-related{{
+    max-width:1280px;margin:0 auto;
+    padding:64px 24px;
+  }}
+  @media(min-width:1024px){{ .tsop-related{{padding:80px 48px;}} }}
+  .tsop-related__label{{
+    font-family:var(--ui);font-size:11px;font-weight:500;
+    letter-spacing:.12em;text-transform:uppercase;
+    color:var(--label);
+    margin:0 0 28px;
+    border-top:1px solid var(--rule);padding-top:24px;
+  }}
+  .tsop-related__grid{{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:32px;
+  }}
+  .tsop-related-card{{
+    display:block;color:var(--text);text-decoration:none;
+    transition:opacity .2s ease;
+  }}
+  .tsop-related-card:hover{{opacity:.7;}}
+  .tsop-related-card__image{{
+    aspect-ratio:16/9;background-size:cover;background-position:center;
+    margin-bottom:16px;
+    filter:saturate(0);transition:filter .5s ease;
+  }}
+  .tsop-related-card:hover .tsop-related-card__image{{filter:saturate(1);}}
+  .tsop-related-card__title{{
+    font-family:var(--editorial);font-weight:600;
+    font-size:20px;line-height:1.22;letter-spacing:-0.005em;
+    margin:0 0 8px;
+  }}
+  .tsop-related-card__excerpt{{
+    font-family:var(--reading);
+    font-size:15px;line-height:1.5;
+    color:var(--muted);
+    margin:0 0 12px;
+  }}
+  .tsop-related-card__cta{{
+    font-family:var(--ui);font-size:11px;font-weight:500;
+    letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent);
+  }}
+
+  /* ─── Footer ─── */
+  .tsop-foot{{
+    border-top:1px solid var(--rule);background:#fff;
+    padding:32px 24px;text-align:center;
+    font-family:var(--ui);font-size:12px;color:var(--label);
+  }}
 </style>
 </head>
 <body>
   <header class="tsop-mast"><div class="tsop-mast__inner">
-    <a class="tsop-mast__logo" href="{PUBLIC_BASE_URL}">The State of Play</a>
+    <a class="tsop-mast__logo" href="{PUBLIC_BASE_URL}">
+      <img src="https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png" alt="The State of Play">
+    </a>
     <a class="tsop-mast__cta" href="{PUBLIC_BASE_URL}?ref=shared-story">Subscribe &rarr;</a>
   </div></header>
 
+  <div class="tsop-dateline"><div class="tsop-dateline__inner">
+    <span><a href="{PUBLIC_BASE_URL}">&larr; The State of Play</a> · {published if published else 'Year Two'}</span>
+    <span style="font-variant-numeric:tabular-nums;">Year Two</span>
+  </div></div>
+
   <main class="tsop-article">
-    <p class="tsop-article__kicker">{html.escape((post.get('primary_tag') or {{}}).get('name') or 'Reportage')}</p>
+    <p class="tsop-article__kicker">{html.escape((post.get('primary_tag') or {{}}).get('name') or 'Reportage')} · For Subscribers</p>
     <h1 class="tsop-article__title">{title}</h1>
     {'<p class="tsop-article__sub">' + excerpt + '</p>' if excerpt else ''}
-    <p class="tsop-article__byline">{html.escape(author or '')} {' · ' + published if published else ''}</p>
+    <p class="tsop-article__byline">By {html.escape(author or '')}{' · ' + published if published else ''}</p>
     {'<figure class="tsop-article__hero"><img alt="" src="' + image + '"></figure>' if image else ''}
     <div class="tsop-article__body">{body_html}</div>
     {_attribution_block(token_doc)}
