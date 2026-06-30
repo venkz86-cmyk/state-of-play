@@ -1648,9 +1648,54 @@ async def sitemap_xml():
 
 @api_router.get("/robots.txt")
 async def robots_txt():
-    """Public robots.txt served from the backend."""
+    """Public robots.txt served from the backend.
+
+    Strategy: explicit per-bot allow rules for the major social crawlers
+    (Twitter / Facebook / LinkedIn / WhatsApp / Slack / Discord / Telegram),
+    so they can fetch the dynamic OG image at /api/og-image/{slug} without
+    being blocked by the more general `User-agent: *` rules.
+
+    `Disallow: /api/` is deliberately NOT used — it was previously blocking
+    Twitter and LinkedIn from rendering the OG card. API endpoints that need
+    protection use auth / rate-limiting, not robots.txt.
+    """
     from fastapi.responses import Response as FastResponse
     body = (
+        # ─── Social-media crawlers: allow everything they need ───
+        "User-agent: Twitterbot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: facebookexternalhit\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: facebot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: LinkedInBot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: WhatsApp\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Slackbot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Slackbot-LinkExpanding\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: TelegramBot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Discordbot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Pinterest\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: SkypeUriPreview\n"
+        "Allow: /\n"
+        "\n"
+        # ─── Default rules for everyone else (search engines etc.) ───
         "User-agent: *\n"
         "Allow: /\n"
         "Disallow: /account\n"
@@ -1658,7 +1703,7 @@ async def robots_txt():
         "Disallow: /teams/manage\n"
         "Disallow: /teams/login\n"
         "Disallow: /s/\n"
-        "Disallow: /api/\n"
+        "\n"
         "Sitemap: https://www.stateofplay.club/sitemap.xml\n"
     )
     return FastResponse(content=body, media_type='text/plain')

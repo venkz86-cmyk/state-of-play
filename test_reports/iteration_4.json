@@ -1,0 +1,40 @@
+{
+  "summary": "Verified robots.txt fix for OG-card blocking on Twitter/LinkedIn/etc. Created /app/backend/tests/test_robots_txt_fix.py with 40 focused assertions (basics + per-bot Allow blocks + wildcard rules + robotparser semantic can_fetch checks for og-image + downstream OG endpoint sanity). Re-ran the iteration_3 regression suite /app/backend/tests/test_og_endpoints.py (14 tests). Result: 54/54 pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_robots_txt_fix.py",
+    "/app/backend/tests/test_og_endpoints.py",
+    "/app/test_reports/pytest/iteration_4_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "robots.txt body is correct. CRITICAL line `Disallow: /api/` is confirmed absent — this was the bug.",
+    "All requested per-bot Allow blocks present (Twitterbot, facebookexternalhit, facebot, LinkedInBot, WhatsApp, Slackbot, Slackbot-LinkExpanding, TelegramBot, Discordbot, Pinterest, SkypeUriPreview). Each is followed by `Allow: /` with a blank line between blocks — syntactically valid REP format.",
+    "Wildcard block `User-agent: *` preserved with Disallow rules for /account, /login, /teams/manage, /teams/login, /s/ plus Sitemap pointer.",
+    "Implementation note (not a bug): The wildcard block places `Allow: /` BEFORE the Disallow rules. Modern crawlers (Google/Bing/Twitter — longest-match-wins per the 2022 REP RFC draft) handle this correctly. However, naive first-match-wins parsers like Python's urllib.robotparser will return True for /account. Not a real-world concern, but worth knowing if a strict-RFC1996 crawler is ever encountered. Optional polish: place `Disallow:` rules before `Allow: /` in the wildcard block.",
+    "RobotFileParser semantic check confirmed: Twitterbot, LinkedInBot, facebookexternalhit, WhatsApp, Slackbot — ALL can_fetch('/api/og-image/pio-oci-aiff-sports-passport') == True. The Twitter Card Validator warning will be resolved.",
+    "Unknown crawler (SomeRandomCrawler) also gets True for /api/og-image/... confirming the wildcard no longer blocks /api/.",
+    "Downstream still healthy: /api/og-image/pio-oci-aiff-sports-passport returns 200 + image/png + 50KB+ valid PNG; /api/og/{slug} with Twitterbot UA returns the expected og:image meta tag; /api/sitemap.xml still serves XML with 14+ <url> entries."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_robots_txt_fix.py (NEW)"
+  ],
+  "success_rate": {
+    "backend": "100% (54/54)",
+    "frontend": "N/A (backend-only run as requested)"
+  },
+  "test_credentials": "N/A — no auth involved in robots.txt or OG endpoints.",
+  "seed_data_creation": "None.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "iteration_4 verified the robots.txt fix. Two test files cover OG/SEO infra: test_og_endpoints.py (broad regression on /api/og, /api/og-image, /api/sitemap.xml, vercel.json) and test_robots_txt_fix.py (focused on robots.txt body + robotparser semantics). Both must be run with REACT_APP_BACKEND_URL exported (the env file uses `export $(grep REACT_APP_BACKEND_URL /app/frontend/.env)` pattern). Preview emergent edge proxy 403s the default Python urllib UA — when calling robots.txt with urllib.robotparser, fetch the body manually with a Mozilla UA via requests and feed via `parser.parse(body.splitlines())`, not `parser.read()`.",
+  "rca of the issue": "Root cause: previous robots.txt had `Disallow: /api/` under `User-agent: *`. Twitter/LinkedIn/Facebook/WhatsApp bots respect this rule and skipped fetching the dynamic /api/og-image/{slug} PNG, resulting in missing OG card images. Fix (verified in server.py:1649-1709): rewrote /api/robots.txt with explicit per-bot User-agent blocks each ending in `Allow: /`, then a wildcard `User-agent: *` block that allows everything except /account|/login|/teams/manage|/teams/login|/s/. `Disallow: /api/` is no longer present anywhere in the body. Verified via (a) raw body grep, (b) RobotFileParser.can_fetch() for all 5 major social bots against the real og-image URL — all True, (c) functional GET on /api/og-image and /api/og still returns the same correct payloads."
+}
