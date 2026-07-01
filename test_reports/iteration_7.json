@@ -1,0 +1,57 @@
+{
+  "summary": "Iteration 7 tests QR-fallback + shared-hook refactor on PrintInterceptBlock. All 15 tests on paid-preview variant PASS and all 6 anonymous-variant tests PASS. Shared hook useNominate.js is imported by both NominateReaderBlock and PrintInterceptBlock (grep verified). ESLint clean on all 3 target files. @page rule preserved. Screen-side NominateReaderBlock could not be exercised through the preview URL because ArticleMockup.js gates it on `canAccessPremium` (real auth) rather than `isMember` (preview-inclusive) — this is by design and iteration_6 already covered the hook logic via the print variant, which shares the same submit/validation code path.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "useNominate.js is now the SINGLE source of truth for both nominate surfaces — clean separation, no drift possible. Good refactor.",
+    "PrintInterceptBlock.js still creates the portal node in render body (line 46-54) with the guard from iteration_6 — same low-priority note applies (would be more idiomatic in useLayoutEffect, but idempotent-by-id lookup makes it safe).",
+    "Portal node #tsop-print-portal is never removed on unmount — still a minor leak risk if many ArticleMockup routes mount/unmount in a long session. Low priority.",
+    "handleSubmit in useNominate.js swallows fetch errors and always sets submitted=true (fail-open by design per comment) — acceptable given Apps Script webhook queue.",
+    "ArticleMockup.js line 222 gates on-screen NominateReaderBlock via `canAccessPremium` while the print block uses `isMember` (includes ?preview=member). Consider aligning these (either both use isMember for consistent preview behaviour, or add a note) — makes preview-mode testing of the on-screen block harder. Minor.",
+    "QRCodeSVG data-testid=\"print-qr\" — qrcode.react passes unknown props through to the root <svg>, verified rendered as SVG with 104x104 dimensions."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100% on tested surfaces (21/21 assertions PASS)"},
+  "test_credentials": "N/A — ?preview=member query string used to simulate paid subscriber path",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PrintInterceptBlock at /app/frontend/src/components/PrintInterceptBlock.js and shared hook at /app/frontend/src/hooks/useNominate.js are verified. Chrome print emulation via page.emulate_media(media='print'); Safari/Firefox simulation via document.documentElement.classList.add('tsop-printing'). Form posts to /api/nominations/submit with 6 keys (subscriber_ghost_id, subscriber_name, subscriber_email, nominee_name, nominee_email, nominee_context). QR renders as SVG (qrcode.react QRCodeSVG) at 104x104 with value = https://www.stateofplay.club/{slug}?ref=print. QR + URL fallback block (data-testid='print-fallback-block') appears for BOTH paid and anonymous variants. On-screen NominateReaderBlock is gated on canAccessPremium (real auth) not isMember, so preview-mode cannot exercise it directly — the hook's logic is still verified indirectly via the print variant which shares the same useNominate hook.",
+  "test_results_detail": {
+    "paid_variant_print_block": {
+      "screen_print_block_hidden": "PASS (display=none on screen)",
+      "print_form_tags": "PASS (name=INPUT, email=INPUT, context=TEXTAREA — real DOM elements, not svg/img/canvas)",
+      "print_form_fillable": "PASS (page.fill works on all 3 fields)",
+      "print_field_borders": "PASS (all 3 fields: 1px solid rgb(26,26,26) border, rgb(255,255,255) bg in print media)",
+      "print_qr": "PASS (found=true, tag=svg, width=104, height=104)",
+      "print_url_fallback": "PASS (text = 'www.stateofplay.club/pio-oci-aiff-sports-passport?ref=print')",
+      "print_fallback_after_form": "PASS (fallback block DOM position follows the form)",
+      "print_validation_empty": "PASS (error = 'Please enter the nominee\u2019s name.' — matches useNominate hook)",
+      "print_submit_endpoint": "PASS (POST /api/nominations/submit intercepted)",
+      "print_submit_6_keys": "PASS (exactly: subscriber_ghost_id, subscriber_name, subscriber_email, nominee_name, nominee_email, nominee_context)",
+      "print_success_ui": "PASS ('Sent. Print Nominee will receive the full story shortly \u2014 straight from us.')",
+      "print_form_hidden_after_success": "PASS",
+      "print_fallback_visible_after_success": "PASS",
+      "at_page_rule": "PASS ('@page { margin: 0px; size: a4; }' in stylesheet)",
+      "screen_qr_hidden": "PASS (QR ancestor .tsop-print-only is display:none on screen)",
+      "tsop_printing_class": "PASS (root display=none, block display=flex when html.tsop-printing is added — Safari/Firefox path works)"
+    },
+    "anonymous_variant": {
+      "anon_no_form": "PASS (no print-nominate-form for non-paid)",
+      "anon_subscribe_cta": "PASS (print-cta-subscribe present)",
+      "anon_fallback_block": "PASS (print-fallback-block present)",
+      "anon_qr_present": "PASS",
+      "anon_url_fallback": "PASS (text = 'www.stateofplay.club/pio-oci-aiff-sports-passport?ref=print')",
+      "anon_qr_svg_104": "PASS (tag=svg, 104x104)"
+    },
+    "shared_hook_grep": "PASS — both /app/frontend/src/components/NominateReaderBlock.js and /app/frontend/src/components/PrintInterceptBlock.js import from '../hooks/useNominate'",
+    "lint": "PASS — ESLint zero warnings on PrintInterceptBlock.js, NominateReaderBlock.js, useNominate.js",
+    "screen_nominate_reader_block": "SKIPPED — ArticleMockup.js gates NRB on canAccessPremium (real auth) rather than isMember. ?preview=member does not render NRB. Shared hook logic is verified via print variant."
+  }
+}

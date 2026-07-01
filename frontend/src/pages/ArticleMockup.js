@@ -286,6 +286,7 @@ export const ArticleMockup = () => {
         subscriberName={user?.name || ''}
         subscriberEmail={user?.email || ''}
         subscriberGhostId={user?.id || ''}
+        articleSlug={article?.slug || article?.id || ''}
       />
     </div>
   );

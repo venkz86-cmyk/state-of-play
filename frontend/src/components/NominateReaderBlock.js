@@ -1,14 +1,5 @@
-import { useState } from 'react';
+import { useNominate } from '../hooks/useNominate';
 import { Overline } from './MockupLayout';
-
-const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec';
-
-const API = process.env.REACT_APP_BACKEND_URL;
-
-const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
-
-const CONTEXT_MAX = 200;
 
 export const NominateReaderBlock = ({
   subscriberName,
@@ -16,12 +7,20 @@ export const NominateReaderBlock = ({
   subscriberGhostId,
   variant = 'account',          // 'account' | 'story'
 }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [context, setContext] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const {
+    name,
+    email,
+    context,
+    submitting,
+    submitted,
+    error,
+    setName,
+    setEmail,
+    setContext,
+    handleSubmit,
+    reset,
+    CONTEXT_MAX,
+  } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId });
 
   // Variant-specific copy
   const COPY = variant === 'story'
@@ -38,45 +37,7 @@ export const NominateReaderBlock = ({
         confirmation: () => null, // existing long-form confirmation
       };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedContext = context.trim();
-
-    if (!trimmedName) return setError('Please enter the nominee’s name.');
-    if (!isValidEmail(trimmedEmail)) return setError('Please enter a valid email address.');
-    if (!trimmedContext) return setError('A line of context helps Venkat reach out well.');
-    if (trimmedEmail === (subscriberEmail || '').toLowerCase()) {
-      return setError('You’re already a reader. Try nominating someone else.');
-    }
-
-    setSubmitting(true);
-    try {
-      // Backend handles Ghost member creation, token mint, nominee email,
-      // and forwards to Apps Script for Sheet/Slack. Single round-trip.
-      await fetch(`${API}/api/nominations/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subscriber_ghost_id: subscriberGhostId || '',
-          subscriber_name: subscriberName || '',
-          subscriber_email: subscriberEmail || '',
-          nominee_name: trimmedName,
-          nominee_email: trimmedEmail,
-          nominee_context: trimmedContext,
-        }),
-      });
-      // Same confirmation regardless of response — like /teams/login pattern.
-    } catch (err) {
-      console.debug('nominate fetch error (suppressed):', err);
-    } finally {
-      setSubmitted(true);
-      setSubmitting(false);
-    }
-  };
+  const onSubmit = handleSubmit;
 
   return (
     <section
@@ -108,7 +69,7 @@ export const NominateReaderBlock = ({
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => { setName(e.target.value); if (error) setError(''); }}
+                  onChange={(e) => setName(e.target.value)}
                   data-testid="nominate-name"
                   disabled={submitting}
                   placeholder="Jane Doe"
@@ -123,7 +84,7 @@ export const NominateReaderBlock = ({
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+                  onChange={(e) => setEmail(e.target.value)}
                   data-testid="nominate-email"
                   disabled={submitting}
                   placeholder="jane@company.com"
@@ -145,11 +106,7 @@ export const NominateReaderBlock = ({
               <textarea
                 rows={3}
                 value={context}
-                onChange={(e) => {
-                  const next = e.target.value.slice(0, CONTEXT_MAX);
-                  setContext(next);
-                  if (error) setError('');
-                }}
+                onChange={(e) => setContext(e.target.value)}
                 data-testid="nominate-context"
                 disabled={submitting}
                 placeholder="Works in franchise strategy. We were on a panel together last year."
@@ -195,9 +152,7 @@ export const NominateReaderBlock = ({
             Want to send it to someone else too?{' '}
             <button
               type="button"
-              onClick={() => {
-                setName(''); setEmail(''); setContext(''); setSubmitted(false);
-              }}
+              onClick={reset}
               className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             >
               Add another →
@@ -216,9 +171,7 @@ export const NominateReaderBlock = ({
             Want to nominate someone else?{' '}
             <button
               type="button"
-              onClick={() => {
-                setName(''); setEmail(''); setContext(''); setSubmitted(false);
-              }}
+              onClick={reset}
               className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             >
               Add another →
