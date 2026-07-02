@@ -905,7 +905,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
 <body>
   <header class="tsop-mast"><div class="tsop-mast__inner">
     <a class="tsop-mast__logo" href="{PUBLIC_BASE_URL}">
-      <img src="https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png" alt="The State of Play">
+      <img src="https://www.stateofplay.club/tsop-logo.png" alt="The State of Play">
     </a>
     <a class="tsop-mast__cta" href="{PUBLIC_BASE_URL}?ref=shared-story">Subscribe &rarr;</a>
   </div></header>

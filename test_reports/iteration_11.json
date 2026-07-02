@@ -1,0 +1,30 @@
+{
+  "summary": "Verified self-hosted TSOP logo fix. All 8 verification checks passed: static asset serves 200 with correct 177715 bytes, homepage and article page header logos load with naturalWidth=2267 (image intact, not broken), no emergent CDN references remain anywhere in frontend/src or backend, backend SSR HTML uses stateofplay.club domain, and ESLint is clean on both modified header components.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Logo self-hosting fix is verified working. /tsop-logo.png serves correctly from webpack public folder in preview. Both MockupHeader and Header components render the logo with proper natural dimensions. Backend nominations.py SSR cold-link uses https://www.stateofplay.club/tsop-logo.png (verified via grep). grep for 'customer-assets.emergentagent' across /app/frontend/src/ and /app/backend/ returns 0 matches.",
+  "verification_details": {
+    "static_asset_check": "GET /tsop-logo.png -> HTTP 200, content-type image/png, content-length 177715",
+    "home_logo": "src=https://preview-polish.preview.emergentagent.com/tsop-logo.png, naturalWidth=2267, complete=true",
+    "article_logo": "src=https://preview-polish.preview.emergentagent.com/tsop-logo.png, naturalWidth=2267, complete=true, page=/pio-oci-aiff-sports-passport",
+    "emergent_cdn_refs_on_home": "empty array []",
+    "grep_audit": "0 matches for customer-assets.emergentagent in /app/frontend/src/ and /app/backend/",
+    "backend_ssr_url": "nominations.py line 908: <img src=\"https://www.stateofplay.club/tsop-logo.png\" alt=\"The State of Play\">",
+    "eslint": "clean on both MockupHeader.js and Header.js"
+  }
+}

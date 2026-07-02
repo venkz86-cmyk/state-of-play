@@ -9,8 +9,8 @@ import { User, LogOut, Menu, Mail, Calendar, Users } from 'lucide-react';
 import { useState } from 'react';
 
 // Logo URLs — transparent (no white box)
-const LOGO_LIGHT = "https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png";
-const LOGO_DARK = "https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png";
+const LOGO_LIGHT = "/tsop-logo.png";
+const LOGO_DARK = "/tsop-logo.png";
 
 export const Header = () => {
   const { user, logout } = useAuth();

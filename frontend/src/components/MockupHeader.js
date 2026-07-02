@@ -5,9 +5,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 
 const LOGO_LIGHT =
-  'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
+  '/tsop-logo.png';
 const LOGO_DARK =
-  'https://customer-assets.emergentagent.com/job_f68263cc-9957-4870-a972-878e48c308d2/artifacts/nka0eua2_TSOP_Logo_Transparent.png';
+  '/tsop-logo.png';
 
 const NAV = [
   { path: '/', label: 'Home' },
