@@ -47,6 +47,14 @@ export const ArticleMockup = () => {
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
 
+  // Effective subscriber identity — used by the nominate quota fetch. In
+  // preview-member mode there is no real user, so use a synthetic address
+  // that clearly signals the request came from a preview session.
+  const effectiveSubscriberEmail =
+    user?.email || (previewMember ? 'preview-member@stateofplay.club' : '');
+  const effectiveSubscriberName = user?.name || (previewMember ? 'Preview Member' : '');
+  const effectiveSubscriberGhostId = user?.id || '';
+
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -219,13 +227,13 @@ export const ArticleMockup = () => {
         )}
       </article>
 
-      {canAccessPremium && (
+      {isMember && (
         <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
           <NominateReaderBlock
             variant="story"
-            subscriberName={user?.name || ''}
-            subscriberEmail={user?.email || ''}
-            subscriberGhostId={user?.id || ''}
+            subscriberName={effectiveSubscriberName}
+            subscriberEmail={effectiveSubscriberEmail}
+            subscriberGhostId={effectiveSubscriberGhostId}
           />
         </section>
       )}
@@ -283,9 +291,9 @@ export const ArticleMockup = () => {
       {/* Print / Save-as-PDF intercept. Hidden on screen; activates on @media print */}
       <PrintInterceptBlock
         isPaidSubscriber={!!isMember}
-        subscriberName={user?.name || ''}
-        subscriberEmail={user?.email || ''}
-        subscriberGhostId={user?.id || ''}
+        subscriberName={effectiveSubscriberName}
+        subscriberEmail={effectiveSubscriberEmail}
+        subscriberGhostId={effectiveSubscriberGhostId}
         articleSlug={article?.slug || article?.id || ''}
       />
     </div>

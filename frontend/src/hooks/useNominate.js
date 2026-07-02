@@ -101,6 +101,7 @@ export function useNominate({
     }
 
     setSubmitting(true);
+    let success = false;
     try {
       const res = await fetch(`${API}/api/nominations/submit`, {
         method: 'POST',
@@ -118,7 +119,13 @@ export function useNominate({
       try {
         data = await res.json();
       } catch (_) {
-        /* non-JSON — treat as fail-open success below */
+        /* non-JSON response */
+      }
+      if (!res.ok) {
+        // 4xx / 5xx from server (e.g. validation on empty subscriber_email).
+        setError('Something went wrong. Try again in a moment.');
+        setSubmitting(false);
+        return;
       }
       if (data && data.success === false) {
         // Abuse-prevention rejects
@@ -152,11 +159,15 @@ export function useNominate({
             : { used: 5 - data.nominations_remaining, quota: 5, remaining: data.nominations_remaining, resets_on: resetsOn },
         );
       }
+      success = true;
     } catch (err) {
-      // Fail-open — Apps Script still receives via webhook queue.
+      // Network-level error only — Apps Script webhook may still receive it.
       console.debug('nominate fetch error (suppressed):', err);
+      // Treat network failure as best-effort success (mirrors iteration_6
+      // "fail-open" spec — user shouldn't see a fetch failure).
+      success = true;
     }
-    setSubmitted(true);
+    if (success) setSubmitted(true);
     setSubmitting(false);
   };
 

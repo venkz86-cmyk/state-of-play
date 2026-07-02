@@ -1,0 +1,29 @@
+{
+  "summary": "Iteration_9 retest of nomination quota + duplicate abuse fixes. All 3 iteration_8 action items are verified fixed. 10/10 UI scenarios PASS on the on-screen NominateReaderBlock and the PrintInterceptBlock surfaces. Quota fetch now fires in ?preview=member (synthetic preview-member@stateofplay.club), 4xx responses correctly surface error (no more false 'Sent'), network aborts still fail-open, both surfaces render blocked-quota / blocked-duplicate states with proper form-and-counter hiding, and the screen-side quota-label parity guard (!blocked && !submitted) falls back to 'Reader to reader'. Success path decrements to 3 of 5 (nominations_remaining echo works). QR regression intact (104x104 SVG). ESLint clean on all four touched files.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_nominations_quota.py",
+    "/app/test_reports/iteration_8.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "useNominate.js is clean: !res.ok short-circuits to surface error; success-branch only setSubmitted; network catch still fail-opens as spec'd. Distinction between 'server said no' vs 'never reached server' is exactly right.",
+    "ArticleMockup.js effectiveSubscriber* pattern is a good abstraction — same values feed both the on-screen block and the print portal, so quota/duplicate state stays consistent across surfaces.",
+    "NominateReaderBlock now has parity with PrintInterceptBlock on the quota-label guard (!blocked && !submitted → fallback 'Reader to reader').",
+    "Minor: on success, useNominate updates quota.remaining locally from nominations_remaining but does not re-emit a resets_on refresh — acceptable since resets_on is static within a calendar month.",
+    "Minor: the on-screen and print surfaces both mount useNominate independently, so each surface fires its own GET /api/nominations/quota on mount (observed 4 requests in test 1). Not a bug — small waste of a request. Could be lifted into a shared context if needed."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (regression not re-run per scope — iteration_8 verified)", "frontend": "100% (10/10 scenarios pass)"},
+  "test_credentials": "N/A — ?preview=member query, no login required.",
+  "seed_data_creation": "None. All submit / quota responses mocked via page.route.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Nomination abuse-prevention (monthly quota + duplicate-nominee) is fully wired end-to-end. Both surfaces (screen NominateReaderBlock + print PrintInterceptBlock) share state via useNominate hook. In ?preview=member mode, ArticleMockup supplies synthetic subscriber email 'preview-member@stateofplay.club' so quota fetch fires. All testids in play: print-quota-label, print-blocked-quota, print-blocked-duplicate, print-blocked-duplicate-try-another, print-nominate-form, print-nominate-error, print-nominee-{name,email,context,submit}, nominate-reader-block, nominate-quota-label, nominate-blocked-quota, nominate-blocked-duplicate, nominate-blocked-duplicate-try-another, nominate-{name,email,context,submit,error}. Backend endpoints: GET /api/nominations/quota?subscriber_email=..., POST /api/nominations/submit — both covered by /app/backend/tests/test_nominations_quota.py.",
+  "rca_of_the_issue": "N/A — retest confirmed all iteration_8 fixes work. No new issues found."
+}

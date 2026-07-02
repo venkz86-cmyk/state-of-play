@@ -54,7 +54,7 @@ export const NominateReaderBlock = ({
           className="font-plex text-[12px] text-[var(--text-muted)] uppercase tracking-[0.06em]"
           data-testid="nominate-quota-label"
         >
-          {quota && typeof quota.remaining === 'number'
+          {!blocked && !submitted && quota && typeof quota.remaining === 'number'
             ? `${quota.remaining} of ${quota.quota} nominations remaining this month`
             : COPY.rightLabel}
         </span>
