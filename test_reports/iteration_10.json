@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration_10 backend regression testing for the OG image logo/feature-image redirect fix. Verified follow_redirects=True is applied on both httpx.AsyncClient calls (line 650 feature image, line 731 logo) in /app/backend/server.py. Primary endpoint /api/og-image/pio-oci-aiff-sports-passport returns HTTP 200, image/png, exact 1200x630 dimensions, 226KB body — well above the >100KB threshold indicating logo + feature image are composited. Visual verification via pixel analysis confirmed ALL five overlay elements are present (logo top-left, feature-photo background, title middle, badges top-right, byline bottom-left). Regression suite test_og_endpoints.py passes 13/13 (spec said 14 but file has only 13 items — no missing tests). robots.txt still has per-bot Allow blocks. Twitterbot on /api/og/preview-polish returns HTML with og:image pointing to https://www.stateofplay.club/api/og-image/preview-polish. Nominations quota + submit smoke tests both return HTTP 200. Performance: 1.8s first fetch, 1.5s second — well under 5s.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/og-image/{unknown-slug}", "issue": "Returns HTTP 302 redirect to a Ghost storage URL (storage.ghost.io/.../rcb-rr-bid-story.png) instead of a branded 1200x630 fallback PNG. Spec asked for HTTP 200 with fallback PNG. Behavior is not a 500 (bots will follow redirects), but a stale-URL social crawl will show an unrelated article's raw feature image without TSOP branding/logo/badges. Consider serving a branded generic fallback PNG at 200 instead of 302-ing to Ghost."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_og_endpoints.py",
+    "/app/test_reports/pytest/iteration_10_og.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: For unknown OG slugs, return a branded 200 PNG (dark canvas + logo + generic 'The State of Play' title) instead of 302-redirecting to a Ghost storage image URL. Not blocking — Twitterbot/Facebook/LinkedIn all follow redirects fine, but the current fallback shows a random article's raw feature image which is off-brand.",
+    "OPTIONAL: /app/backend/tests/test_og_endpoints.py assumes REACT_APP_BACKEND_URL is exported in the shell. Adding a conftest.py that reads /app/frontend/.env would harden the test invocation (currently pytest fails at collection if env not exported)."
+  ],
+  "critical_code_review_comments": [
+    "Fix verified correct: lines 650 (feature image fetch) and 731 (logo fetch) both use httpx.AsyncClient(timeout=10.0, follow_redirects=True). Ghost's 301 from /content/images/ to storage.ghost.io/... is now followed correctly.",
+    "Audited all 17 httpx.AsyncClient(...) calls in server.py. All others target Ghost API paths (/ghost/api/content/posts/, /ghost/api/admin/members/, /members/api/...) which do NOT redirect — those correctly do not need follow_redirects=True. No latent redirect bugs.",
+    "server.py is 1600+ lines — recommend splitting into modules (og_image.py, ghost_client.py, nominations.py, auth.py). File-size code-review threshold exceeded.",
+    "OG image generation takes ~1.5-1.8s per uncached request (two external Ghost fetches + PIL composite). Consider in-memory LRU cache keyed on slug with short TTL (e.g. 10 min) to reduce Ghost load during social-share bursts."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "not tested (backend-only per request)"},
+  "test_credentials": "Not required for this iteration — all tested endpoints are unauthenticated (OG image, robots, og HTML, nominations quota/submit).",
+  "seed_data_creation": "Created one nomination via smoke test: subscriber_email=test_smoke@example.com, nominee=TEST_Smoke, token_id=936381b3-144b-46e1-9053-270a5208e1e9. Quota consumed 1/5.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Fix from iteration_10 (follow_redirects=True on lines 650 and 731 of server.py) is verified working end-to-end. OG image renders logo+feature-image+title+badges+byline correctly. Test file test_og_endpoints.py requires REACT_APP_BACKEND_URL env var to be exported before pytest — the file crashes at collection otherwise. Nominations schema: quota needs ?subscriber_email query param; submit needs subscriber_email and nominee_email in body (not nominator_email — the spec's field name is different from actual API). Unknown OG slug returns 302, not 200 — flagged as minor.",
+  "rca_of_the_issue": "RCA (confirmed by testing): httpx.AsyncClient() defaults to follow_redirects=False. Ghost's image CDN silently changed to issue 301 redirects from /content/images/... to storage.ghost.io/.../content/images/... (a storage migration). The two image fetches in the OG image generator (feature image at line ~647 pre-fix / 650 post-fix, and LOGO_URL at line ~728 pre-fix / 731 post-fix) received the 301 but did not follow it, so both img_response.status_code and logo_response.status_code fell into their fallback 'skip paste' branches. Result: OG image rendered as a bare dark canvas with only text overlays (no branded logo top-left, no feature-image background). Reproduction: revert follow_redirects=True on either line and hit /api/og-image/pio-oci-aiff-sports-passport — image would drop to <60KB with black background. Mitigation applied by main agent: pass follow_redirects=True to both httpx.AsyncClient() constructors. Verified: 226KB output, logo pixels detected at y=45-73, photo background detected (only 59.6% dark pixels vs >90% for bare canvas)."
+}

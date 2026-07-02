@@ -644,7 +644,10 @@ async def generate_og_image(slug: str):
         bg_img = None
         if feature_image_url:
             try:
-                async with httpx.AsyncClient(timeout=10.0) as img_client:
+                # Ghost CDN redirects /content/images/... to storage.ghost.io —
+                # must follow redirects or the feature image is silently dropped
+                # and the OG card renders on the plain dark background.
+                async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as img_client:
                     img_response = await img_client.get(feature_image_url)
                     if img_response.status_code == 200:
                         bg_img = Image.open(BytesIO(img_response.content))
@@ -722,7 +725,10 @@ async def generate_og_image(slug: str):
         
         # --- LOGO at top left ---
         try:
-            async with httpx.AsyncClient(timeout=10.0) as logo_client:
+            # Ghost CDN redirects /content/images/... to storage.ghost.io —
+            # httpx does NOT follow redirects by default, which silently
+            # drops the logo. Explicitly enable follow_redirects.
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as logo_client:
                 logo_response = await logo_client.get(LOGO_URL)
                 if logo_response.status_code == 200:
                     logo = Image.open(BytesIO(logo_response.content))
