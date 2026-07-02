@@ -207,12 +207,76 @@ async def _ensure_token_indexes() -> None:
         await _db.story_tokens.create_index('token_id', unique=True)
         await _db.story_tokens.create_index('expires_at')
         await _db.story_tokens.create_index('status')
+        # Abuse-prevention indexes (session 8):
+        # Quota query filters by (subscriber_email, token_type, created_at range).
+        # Duplicate-nominee filter uses (subscriber_email, nominee_email, token_type).
+        await _db.story_tokens.create_index(
+            [('subscriber_email', 1), ('token_type', 1), ('created_at', -1)]
+        )
+        await _db.story_tokens.create_index(
+            [('subscriber_email', 1), ('nominee_email', 1), ('token_type', 1)]
+        )
     except Exception as e:
         logger.warning(f'story_tokens index ensure failed (non-fatal): {e!r}')
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+# ─── Abuse-prevention constants ──────────────────────────────────────────────
+MONTHLY_NOMINATION_QUOTA = 5      # per calendar month per subscriber
+DUPLICATE_NOMINEE_LIMIT = 2       # all-time per (subscriber, nominee) pair
+
+
+def _current_month_bounds(now: Optional[datetime] = None) -> tuple:
+    """Return (start_of_this_month_utc, start_of_next_month_utc)."""
+    now = now or _utcnow()
+    start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if start.month == 12:
+        nxt = start.replace(year=start.year + 1, month=1)
+    else:
+        nxt = start.replace(month=start.month + 1)
+    return start, nxt
+
+
+async def _count_monthly_nominations(subscriber_email: str) -> int:
+    """Count this subscriber's nominations in the current calendar month.
+    Returns 0 if Mongo is unavailable (fail-open — the endpoint itself will
+    still fail gracefully when it tries to insert without a DB)."""
+    if _db is None or not subscriber_email:
+        return 0
+    start, nxt = _current_month_bounds()
+    try:
+        return await _db.story_tokens.count_documents({
+            'subscriber_email': subscriber_email.lower().strip(),
+            'token_type': 'nomination',
+            'created_at': {'$gte': start, '$lt': nxt},
+        })
+    except Exception as e:
+        logger.warning(f'monthly-nomination count failed: {e!r}')
+        return 0
+
+
+async def _count_pair_nominations(subscriber_email: str, nominee_email: str) -> int:
+    """Count all-time nominations from this subscriber to this specific nominee."""
+    if _db is None or not (subscriber_email and nominee_email):
+        return 0
+    try:
+        return await _db.story_tokens.count_documents({
+            'subscriber_email': subscriber_email.lower().strip(),
+            'nominee_email': nominee_email.lower().strip(),
+            'token_type': 'nomination',
+        })
+    except Exception as e:
+        logger.warning(f'pair-nomination count failed: {e!r}')
+        return 0
+
+
+def _month_reset_label() -> str:
+    """Human-readable reset date, e.g. '1 August'."""
+    _, nxt = _current_month_bounds()
+    return nxt.strftime('%-d %B') if hasattr(nxt, 'strftime') else '1st of next month'
 
 
 # ─── Pydantic models ─────────────────────────────────────────────────────────
@@ -241,11 +305,37 @@ class ColdLinkEvent(BaseModel):
 @router.post('/api/nominations/submit')
 async def nominations_submit(req: NominationSubmit):
     """One-shot nomination handler.
-    Order matters: Ghost first, then Supabase-like token row, then hand-off."""
+
+    Order (session 8): abuse checks → Ghost member → token row → hand-off.
+    The two checks must run before any external side effect so a rejected
+    submission never creates orphan Ghost accounts or leaks nominee emails
+    to Apps Script.
+    """
     await _ensure_token_indexes()
 
     nominee_email_norm = req.nominee_email.lower().strip()
     nominee_name = (req.nominee_name or '').strip()
+    subscriber_email_norm = (req.subscriber_email or '').lower().strip()
+
+    # 0a) Monthly quota
+    used_this_month = await _count_monthly_nominations(subscriber_email_norm)
+    if used_this_month >= MONTHLY_NOMINATION_QUOTA:
+        return {
+            'success': False,
+            'error': 'quota_exceeded',
+            'nominations_remaining': 0,
+            'quota': MONTHLY_NOMINATION_QUOTA,
+            'resets_on': _month_reset_label(),
+        }
+
+    # 0b) All-time cap on nominating the same email
+    pair_count = await _count_pair_nominations(subscriber_email_norm, nominee_email_norm)
+    if pair_count >= DUPLICATE_NOMINEE_LIMIT:
+        return {
+            'success': False,
+            'error': 'duplicate_nominee',
+            'nominations_remaining': MONTHLY_NOMINATION_QUOTA - used_this_month,
+        }
 
     # 1) Ghost free member (non-fatal)
     ghost_id = await _ghost_create_free_member(nominee_email_norm, nominee_name)
@@ -259,8 +349,9 @@ async def nominations_submit(req: NominationSubmit):
         'post_slug': req.post_slug or '',
         'token_type': 'nomination',
         'created_by': req.subscriber_email,
+        'subscriber_ghost_id': req.subscriber_ghost_id or '',
         'subscriber_name': req.subscriber_name or '',
-        'subscriber_email': req.subscriber_email,
+        'subscriber_email': subscriber_email_norm,
         'nominee_name': nominee_name,
         'nominee_email': nominee_email_norm,
         'personal_note': (req.personal_note or '').strip() or (req.nominee_context or '').strip(),
@@ -294,7 +385,29 @@ async def nominations_submit(req: NominationSubmit):
     })
 
     # Mongo response carries _no_ ObjectId — token_doc was built fresh.
-    return {'success': True, 'token_id': token_id, 'story_url': story_url}
+    return {
+        'success': True,
+        'token_id': token_id,
+        'story_url': story_url,
+        'nominations_remaining': max(0, MONTHLY_NOMINATION_QUOTA - (used_this_month + 1)),
+    }
+
+
+@router.get('/api/nominations/quota')
+async def nominations_quota(subscriber_email: str):
+    """Return the current subscriber's nomination quota state.
+
+    Query param `subscriber_email`. Response:
+      { used: int, quota: int, remaining: int, resets_on: str }
+    Fail-open: if Mongo is unavailable, returns full quota available.
+    """
+    used = await _count_monthly_nominations(subscriber_email)
+    return {
+        'used': used,
+        'quota': MONTHLY_NOMINATION_QUOTA,
+        'remaining': max(0, MONTHLY_NOMINATION_QUOTA - used),
+        'resets_on': _month_reset_label(),
+    }
 
 
 @router.get('/api/story-token/validate/{token}')

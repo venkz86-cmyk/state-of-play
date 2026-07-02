@@ -1,0 +1,43 @@
+{
+  "summary": "Session-8 tested end-to-end: monthly quota + duplicate-nominee abuse prevention. Backend is FULLY VERIFIED (9/9 new tests + 66/66 regression). Frontend has one CRITICAL integration gap: /api/nominations/quota is never called in ?preview=member mode because ArticleMockup passes subscriberEmail = user?.email which is empty when there is no real logged-in user. This means print-quota-label never renders in the specified preview URL, and the block-on-remaining=0 path can't fire from the UI. All UI markup / testids for the three states are present in the built bundle. Backend behaviour and all abuse rules work exactly as specified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "PrintInterceptBlock quota fetch",
+        "issue": "useNominate hook bails on empty subscriberEmail (line 42 of useNominate.js: `if (!subscriberEmail || !API) return;`). ArticleMockup passes `user?.email || ''` — in ?preview=member mode `user` is null (previewMember flag doesn't populate a mock user), so subscriberEmail='' and the GET /api/nominations/quota call is skipped. Effect: print-quota-label never renders, quota state stays null, remaining=0 block path can't be triggered from preview URL, and form submissions POST subscriber_email='' (all preview-member subs share the same empty-string quota bucket in Mongo).",
+        "affected_selectors": ["[data-testid=\"print-quota-label\"]", "[data-testid=\"print-blocked-quota\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_nominations_quota.py",
+    "/app/test_reports/pytest/iteration_8_results.xml"
+  ],
+  "action_items": [
+    "In /app/frontend/src/pages/ArticleMockup.js, when `previewMember === true` and `user?.email` is empty, pass a stable mock email (e.g. `subscriberEmail={user?.email || (previewMember ? 'preview-member@stateofplay.club' : '')}`) so the quota fetch fires and the print-quota-label / blocked-quota states can render in preview mode. Same for the on-screen NominateReaderBlock when it eventually becomes reachable in preview.",
+    "Consider aligning NominateReaderBlock's gating from canAccessPremium → isMember (carried over from iteration_7) so preview-member reaches the on-screen block too.",
+    "Optional hardening: reject POST /api/nominations/submit with empty subscriber_email in the backend (currently EmailStr should already reject '', but the FE's fail-open catch swallows the 422 and shows a success UI — misleading UX)."
+  ],
+  "critical_code_review_comments": [
+    "Backend abuse-prevention logic in /app/backend/nominations.py is clean: quota check runs before duplicate check (line 321-329 before 332-338), both checks run BEFORE Ghost create (line 341) — no orphan Ghost members on rejection. Case-normalisation via .lower().strip() is consistent for both subscriber_email and nominee_email. subscriber_ghost_id is persisted (line 352). _month_reset_label uses '%-d %B' — POSIX-only strftime flag; on non-POSIX systems this would output literally '-d'. Non-issue on Linux runtime; note for portability.",
+    "useNominate.js effect (line 41-60) reruns on subscriberEmail change but does not re-fetch when window regains focus or after a successful submit — quota display can drift if user leaves tab open. Low priority given nominations_remaining is echoed back on each submit response.",
+    "The fail-open in useNominate.js line 155-160 (catch → setSubmitted(true)) hides real 4xx failures (including EmailStr validation on empty subscriber_email) as success. Preview-member users get a false 'Sent' message when submitter email is empty. Move setSubmitted(true) inside the success branch only.",
+    "NominateReaderBlock renders `nominate-quota-label` in both blocked and unblocked states (line 53-60). Spec item 14 ('When blocked === 'quota', the print-quota-label above the headline is NOT rendered') is enforced on PrintInterceptBlock (guard `!blocked && !submitted`) but not on NominateReaderBlock — the on-screen counter still shows behind the block message. If parity is desired, wrap the header row in a `{!blocked && !submitted}` check."
+  ],
+  "updated_files": ["/app/backend/tests/test_nominations_quota.py", "/app/test_reports/pytest/iteration_8_results.xml"],
+  "success_rate": {"backend": "100% (9/9 new tests, 66/66 regression PASS)", "frontend": "70% — all testids present in bundle & form flow works; quota-label render blocked by empty subscriberEmail in preview mode"},
+  "test_credentials": "N/A — ?preview=member query for print-block UI. No real login required.",
+  "seed_data_creation": "Backend tests generate TEST_ prefixed subscriber_email docs in db.story_tokens and clean up in test teardown (delete_many by subscriber_email). Order-check test pre-seeds 5 docs via direct Mongo insert. Cold-link isolation test inserts one token_type='cold-link' doc directly.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend at /app/backend/nominations.py is verified. Test suite at /app/backend/tests/test_nominations_quota.py covers: quota endpoint (fresh + missing param), 5→0 decrement + 6th blocked, duplicate-nominee 3rd blocked, order-of-checks (quota before duplicate), subscriber_ghost_id persistence, case-insensitive subscriber_email, cold-link token_type isolation. Frontend: all 8 testids (print-quota-label, print-blocked-quota, print-blocked-duplicate, print-blocked-duplicate-try-another, and 4 nominate-* equivalents) EXIST in built JS bundle. Only integration gap: useNominate skips quota fetch when subscriberEmail is empty; ArticleMockup does not supply a mock email in previewMember mode. Fix location: /app/frontend/src/pages/ArticleMockup.js line 227 & 287 — supply a fallback subscriberEmail when previewMember. After fix, re-verify by loading ?preview=member with print emulation and asserting `[data-testid=\"print-quota-label\"]` text matches /\\d of 5 nominations remaining this month/. To exercise blocked-quota UI, use page.route to mock /api/nominations/quota → remaining:0. To exercise blocked-duplicate, use page.route on /api/nominations/submit → {success:false,error:'duplicate_nominee',nominations_remaining:3}.",
+  "rca_of_the_issue": {
+    "problem": "print-quota-label never rendered in ?preview=member mode",
+    "root_cause": "useNominate.js has `if (!subscriberEmail || !API) return;` guard on the quota-fetch useEffect. ArticleMockup.js passes `subscriberEmail={user?.email || ''}` and previewMember mode does not populate `user`, so subscriberEmail is always empty in preview.",
+    "reproduction": "1) Load https://preview-polish.preview.emergentagent.com/pio-oci-aiff-sports-passport?preview=member 2) page.emulate_media(media='print') 3) Query [data-testid=\"print-quota-label\"] → null. Confirmed via 0 outbound calls to /api/nominations/quota.",
+    "mitigation": "In ArticleMockup.js, when previewMember is true, pass a synthetic email (e.g., 'preview-member@stateofplay.club') so the hook fetches quota. Alternatively, drop the guard in useNominate and let the backend endpoint fail-open with remaining:5 for empty inputs."
+  }
+}

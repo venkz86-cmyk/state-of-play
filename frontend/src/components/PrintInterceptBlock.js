@@ -38,7 +38,8 @@ export const PrintInterceptBlock = ({
 
   const {
     name, email, context, submitting, submitted, error,
-    setName, setEmail, setContext, handleSubmit, CONTEXT_MAX,
+    setName, setEmail, setContext, handleSubmit, clearBlock,
+    quota, blocked, resetsOn, CONTEXT_MAX,
   } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId });
 
   // Create portal host node once. Lives outside #root so the CSS rule
@@ -139,7 +140,13 @@ export const PrintInterceptBlock = ({
           font-family: 'DM Sans', -apple-system, sans-serif;
           font-size: 11px; font-weight: 500;
           letter-spacing: 0.18em; text-transform: uppercase;
-          color: #888; margin: 0 0 40px;
+          color: #888; margin: 0 0 12px;
+        }
+        .tsop-print-only__quota {
+          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-size: 11px; font-weight: 500;
+          letter-spacing: 0.08em; text-transform: uppercase;
+          color: #A0291C; margin: 0 0 32px;
         }
         .tsop-print-only__hed {
           font-family: 'Fraunces', Georgia, serif;
@@ -244,12 +251,44 @@ export const PrintInterceptBlock = ({
       >
         <p className="tsop-print-only__mast">— The State of Play —</p>
 
+        {isPaidSubscriber && quota && typeof quota.remaining === 'number' && !blocked && !submitted && (
+          <p
+            className="tsop-print-only__quota"
+            data-testid="print-quota-label"
+          >
+            {quota.remaining} of {quota.quota} nominations remaining this month
+          </p>
+        )}
+
         <h2 className="tsop-print-only__hed">
           This piece doesn’t travel well as a&nbsp;PDF.
         </h2>
 
         {isPaidSubscriber ? (
-          submitted ? (
+          blocked === 'quota' ? (
+            <div data-testid="print-blocked-quota">
+              <p className="tsop-print-only__sub">
+                You’ve used all 5 nominations this month.
+              </p>
+              <p className="tsop-print-only__footnote">
+                Your quota resets on {resetsOn || 'the 1st of next month'}.
+              </p>
+            </div>
+          ) : blocked === 'duplicate' ? (
+            <div data-testid="print-blocked-duplicate">
+              <p className="tsop-print-only__sub">
+                You’ve already nominated this person twice. Time to let them decide.
+              </p>
+              <button
+                type="button"
+                onClick={clearBlock}
+                className="tsop-print-only__cta"
+                data-testid="print-blocked-duplicate-try-another"
+              >
+                Nominate someone else →
+              </button>
+            </div>
+          ) : submitted ? (
             <>
               <p className="tsop-print-only__sub">
                 Sent. {name || 'Your nominee'} will receive the full story

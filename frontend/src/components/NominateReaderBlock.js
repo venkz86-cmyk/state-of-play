@@ -19,6 +19,10 @@ export const NominateReaderBlock = ({
     setContext,
     handleSubmit,
     reset,
+    clearBlock,
+    quota,
+    blocked,
+    resetsOn,
     CONTEXT_MAX,
   } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId });
 
@@ -46,12 +50,45 @@ export const NominateReaderBlock = ({
     >
       <div className="flex items-baseline justify-between mb-5 flex-wrap gap-3">
         <Overline>Nominate a reader</Overline>
-        <span className="font-plex text-[12px] text-[var(--text-muted)] uppercase tracking-[0.06em]">
-          {COPY.rightLabel}
+        <span
+          className="font-plex text-[12px] text-[var(--text-muted)] uppercase tracking-[0.06em]"
+          data-testid="nominate-quota-label"
+        >
+          {quota && typeof quota.remaining === 'number'
+            ? `${quota.remaining} of ${quota.quota} nominations remaining this month`
+            : COPY.rightLabel}
         </span>
       </div>
 
-      {!submitted ? (
+      {blocked === 'quota' ? (
+        <div data-testid="nominate-blocked-quota" className="max-w-[55ch]">
+          <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4">
+            You’ve used all 5 nominations{' '}
+            <em className="italic font-normal">this month.</em>
+          </h2>
+          <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)]">
+            Your quota resets on {resetsOn || 'the 1st of next month'}.
+          </p>
+        </div>
+      ) : blocked === 'duplicate' ? (
+        <div data-testid="nominate-blocked-duplicate" className="max-w-[55ch]">
+          <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4">
+            You’ve already nominated this person{' '}
+            <em className="italic font-normal">twice.</em>
+          </h2>
+          <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)]">
+            Time to let them decide.
+          </p>
+          <button
+            type="button"
+            onClick={clearBlock}
+            className="mt-6 font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+            data-testid="nominate-blocked-duplicate-try-another"
+          >
+            Nominate someone else →
+          </button>
+        </div>
+      ) : !submitted ? (
         <>
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4 max-w-[24ch]">
             {COPY.heading.plain} <em className="italic font-normal">{COPY.heading.emphasis}</em>
