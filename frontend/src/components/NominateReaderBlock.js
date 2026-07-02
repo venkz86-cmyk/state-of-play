@@ -69,6 +69,20 @@ export const NominateReaderBlock = ({
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)]">
             Your quota resets on {resetsOn || 'the 1st of next month'}.
           </p>
+          {/* Highest-intent moment: they've spent all their goodwill this
+              month, so nudge the alternative — a paid gift subscription. */}
+          <a
+            href={
+              process.env.REACT_APP_GIFT_URL ||
+              'mailto:hello@venkatananth.me?subject=Gift a subscription&body=I%27d like to gift a subscription to a reader%20—%20how do I do that%3F'
+            }
+            target={process.env.REACT_APP_GIFT_URL ? '_blank' : '_self'}
+            rel="noopener noreferrer"
+            className="inline-block mt-6 font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+            data-testid="nominate-gift-cta"
+          >
+            Gift a subscription instead →
+          </a>
         </div>
       ) : blocked === 'duplicate' ? (
         <div data-testid="nominate-blocked-duplicate" className="max-w-[55ch]">

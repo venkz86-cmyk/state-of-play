@@ -273,6 +273,19 @@ export const PrintInterceptBlock = ({
               <p className="tsop-print-only__footnote">
                 Your quota resets on {resetsOn || 'the 1st of next month'}.
               </p>
+              <a
+                href={
+                  process.env.REACT_APP_GIFT_URL ||
+                  'mailto:hello@venkatananth.me?subject=Gift a subscription&body=I%27d like to gift a subscription to a reader%20—%20how do I do that%3F'
+                }
+                target={process.env.REACT_APP_GIFT_URL ? '_blank' : '_self'}
+                rel="noopener noreferrer"
+                className="tsop-print-only__cta"
+                style={{ marginTop: '20px' }}
+                data-testid="print-gift-cta"
+              >
+                Gift a subscription instead &rarr;
+              </a>
             </div>
           ) : blocked === 'duplicate' ? (
             <div data-testid="print-blocked-duplicate">
