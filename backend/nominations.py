@@ -301,6 +301,14 @@ class ColdLinkEvent(BaseModel):
     nominee_email: Optional[EmailStr] = None
 
 
+class NominationRefund(BaseModel):
+    subscriber_email: EmailStr
+    # Optional surgical target. If omitted, we refund the subscriber's most
+    # recent nomination in the current calendar month (i.e. the one that
+    # would have consumed their quota).
+    token_id: Optional[str] = None
+
+
 # ─── Routes ──────────────────────────────────────────────────────────────────
 @router.post('/api/nominations/submit')
 async def nominations_submit(req: NominationSubmit):
@@ -406,6 +414,85 @@ async def nominations_quota(subscriber_email: str):
         'used': used,
         'quota': MONTHLY_NOMINATION_QUOTA,
         'remaining': max(0, MONTHLY_NOMINATION_QUOTA - used),
+        'resets_on': _month_reset_label(),
+    }
+
+
+@router.post('/api/nominations/refund')
+async def nominations_refund(
+    req: NominationRefund,
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    """Admin-only. Refund one nomination back to a subscriber's monthly quota
+    by deleting the underlying `story_tokens` row.
+
+    Two modes:
+      • `token_id` provided → surgical delete of that specific nomination
+        (must belong to `subscriber_email` and be `token_type=nomination`).
+      • `token_id` omitted   → delete the subscriber's most recent nomination
+        in the current calendar month (the one that consumed their quota).
+
+    Response:
+      {
+        refunded: bool,
+        token_id: str | null,
+        nominee_email: str | null,
+        nominations_remaining: int,     # after the refund
+        resets_on: str,
+      }
+    """
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=503, detail='Admin key not configured on server')
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail='Invalid admin key')
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Token store unavailable')
+
+    sub_email = req.subscriber_email.lower().strip()
+
+    # Locate the row we'd refund.
+    if req.token_id:
+        target = await _db.story_tokens.find_one({
+            'token_id': req.token_id,
+            'subscriber_email': sub_email,
+            'token_type': 'nomination',
+        })
+    else:
+        start, nxt = _current_month_bounds()
+        target = await _db.story_tokens.find_one(
+            {
+                'subscriber_email': sub_email,
+                'token_type': 'nomination',
+                'created_at': {'$gte': start, '$lt': nxt},
+            },
+            sort=[('created_at', -1)],
+        )
+
+    if not target:
+        # Nothing to refund. Return current state so the caller can decide
+        # whether that's a bug on their side or a benign no-op.
+        used = await _count_monthly_nominations(sub_email)
+        return {
+            'refunded': False,
+            'token_id': None,
+            'nominee_email': None,
+            'nominations_remaining': max(0, MONTHLY_NOMINATION_QUOTA - used),
+            'resets_on': _month_reset_label(),
+        }
+
+    result = await _db.story_tokens.delete_one({'_id': target['_id']})
+    refunded = result.deleted_count == 1
+
+    used_after = await _count_monthly_nominations(sub_email)
+    logger.info(
+        f'nomination refund: subscriber={sub_email} token={target.get("token_id")} '
+        f'nominee={target.get("nominee_email")} refunded={refunded}'
+    )
+    return {
+        'refunded': refunded,
+        'token_id': target.get('token_id'),
+        'nominee_email': target.get('nominee_email'),
+        'nominations_remaining': max(0, MONTHLY_NOMINATION_QUOTA - used_after),
         'resets_on': _month_reset_label(),
     }
 

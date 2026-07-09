@@ -206,3 +206,117 @@ class TestRegressionRootHealth:
     def test_backend_root_reachable(self):
         r = requests.get(f"{BASE_URL}/api/", timeout=15)
         assert r.status_code in (200, 404, 405), r.status_code
+
+
+# ─── /api/nominations/refund — admin refund flow ────────────────────────
+ADMIN_KEY_ENV = os.environ.get('ADMIN_KEY', '')
+
+
+@pytest.mark.skipif(not ADMIN_KEY_ENV, reason='ADMIN_KEY not set in env')
+class TestNominationRefund:
+    def _refund(self, sub_email, token_id=None, admin_key=None):
+        payload = {'subscriber_email': sub_email}
+        if token_id:
+            payload['token_id'] = token_id
+        return requests.post(
+            f"{BASE_URL}/api/nominations/refund",
+            json=payload,
+            headers={'X-Admin-Key': admin_key or ADMIN_KEY_ENV},
+            timeout=15,
+        )
+
+    def test_requires_admin_key(self):
+        sub = _unique_sub_email()
+        r = requests.post(
+            f"{BASE_URL}/api/nominations/refund",
+            json={'subscriber_email': sub},
+            timeout=15,
+        )
+        assert r.status_code == 403
+
+    def test_rejects_bad_admin_key(self):
+        sub = _unique_sub_email()
+        r = self._refund(sub, admin_key='nope')
+        assert r.status_code == 403
+
+    def test_refund_most_recent_restores_quota(self):
+        sub = _unique_sub_email()
+        _cleanup(sub)
+        try:
+            # 3 nominations → quota=2 remaining
+            latest_nom = None
+            for i in range(3):
+                nom = _unique_nom_email()
+                if i == 2:
+                    latest_nom = nom
+                r = _submit(sub, nom, f"N{i}")
+                assert r.json().get('success') is True
+            r = self._refund(sub)
+            assert r.status_code == 200, r.text
+            d = r.json()
+            assert d['refunded'] is True
+            assert d['nominee_email'] == latest_nom.lower()
+            assert d['nominations_remaining'] == 3   # back from 2 to 3
+            # DB actually shrunk
+            assert _db.story_tokens.count_documents({
+                'subscriber_email': sub.lower(), 'token_type': 'nomination'
+            }) == 2
+        finally:
+            _cleanup(sub)
+
+    def test_refund_by_token_id_surgical(self):
+        sub = _unique_sub_email()
+        _cleanup(sub)
+        try:
+            targets = []
+            for i in range(3):
+                nom = _unique_nom_email()
+                r = _submit(sub, nom, f"N{i}")
+                targets.append((r.json()['token_id'], nom.lower()))
+            # Refund the MIDDLE one (not the most recent)
+            middle_token, middle_nom = targets[1]
+            r = self._refund(sub, token_id=middle_token)
+            assert r.status_code == 200
+            d = r.json()
+            assert d['refunded'] is True
+            assert d['token_id'] == middle_token
+            assert d['nominee_email'] == middle_nom
+            # Other two should survive
+            surviving = list(_db.story_tokens.find(
+                {'subscriber_email': sub.lower(), 'token_type': 'nomination'},
+                {'token_id': 1, '_id': 0},
+            ))
+            surviving_ids = {s['token_id'] for s in surviving}
+            assert middle_token not in surviving_ids
+            assert targets[0][0] in surviving_ids
+            assert targets[2][0] in surviving_ids
+        finally:
+            _cleanup(sub)
+
+    def test_refund_no_matching_row_is_noop(self):
+        sub = _unique_sub_email()
+        _cleanup(sub)
+        try:
+            r = self._refund(sub)
+            assert r.status_code == 200
+            d = r.json()
+            assert d['refunded'] is False
+            assert d['nominations_remaining'] == 5
+        finally:
+            _cleanup(sub)
+
+    def test_refund_wrong_subscriber_cannot_touch_others_tokens(self):
+        sub_a = _unique_sub_email()
+        sub_b = _unique_sub_email()
+        _cleanup(sub_a); _cleanup(sub_b)
+        try:
+            r = _submit(sub_a, _unique_nom_email(), "A's nominee")
+            token_a = r.json()['token_id']
+            # Attempt to refund sub_A's token via sub_B → must be a no-op
+            r = self._refund(sub_b, token_id=token_a)
+            assert r.status_code == 200
+            assert r.json()['refunded'] is False
+            # A's token still there
+            assert _db.story_tokens.find_one({'token_id': token_a}) is not None
+        finally:
+            _cleanup(sub_a); _cleanup(sub_b)
