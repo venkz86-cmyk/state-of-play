@@ -100,8 +100,18 @@ export function useNominate({
       return setError('You’re already a reader. Try nominating someone else.');
     }
 
+    // Guard: without a configured backend URL the fetch would silently
+    // resolve to a relative path (e.g. /account/api/nominations/submit)
+    // and 404 on Vercel — the exact "no server log, quota untouched"
+    // symptom we've seen in production.
+    if (!API) {
+      console.error('nominate: REACT_APP_BACKEND_URL is not set at build time');
+      setError('Could not reach the server. Please refresh and try again.');
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitting(true);
-    let success = false;
     try {
       const res = await fetch(`${API}/api/nominations/submit`, {
         method: 'POST',
@@ -159,16 +169,18 @@ export function useNominate({
             : { used: 5 - data.nominations_remaining, quota: 5, remaining: data.nominations_remaining, resets_on: resetsOn },
         );
       }
-      success = true;
+      setSubmitted(true);
+      setSubmitting(false);
     } catch (err) {
-      // Network-level error only — Apps Script webhook may still receive it.
-      console.debug('nominate fetch error (suppressed):', err);
-      // Treat network failure as best-effort success (mirrors iteration_6
-      // "fail-open" spec — user shouldn't see a fetch failure).
-      success = true;
+      // Network-level throw (CORS preflight, offline, aborted during print
+      // preview, DNS blip, mixed content). Previously we treated this as
+      // fail-open success — that lied to the user and the backend never
+      // received the nomination. Surface it instead so the subscriber can
+      // retry and we don't lose intent.
+      console.error('nominate submit fetch failed:', err);
+      setError('Could not reach the server. Please check your connection and try again.');
+      setSubmitting(false);
     }
-    if (success) setSubmitted(true);
-    setSubmitting(false);
   };
 
   return {
