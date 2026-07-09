@@ -337,7 +337,14 @@ async def get_member_details(request: MemberVerifyRequest):
                             try:
                                 start_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                                 subscription_end = (start_dt + timedelta(days=365)).isoformat().replace('+00:00', 'Z')
-                            except Exception:
+                            except Exception as e:
+                                # Rare — Ghost created_at came back in an unexpected shape.
+                                # Log so we can spot format drift; account page will show
+                                # a blank expiry until this is fixed.
+                                logger.warning(
+                                    f"Razorpay subscription_end parse failed: "
+                                    f"email={request.email} created_at={created_at!r} err={e!r}"
+                                )
                                 subscription_end = None
                     elif status == 'comped':
                         subscription_start = member.get('created_at')
@@ -1273,7 +1280,14 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
     created_at_str = member.get("created_at") or datetime.now(timezone.utc).isoformat()
     try:
         payment_dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-    except Exception:
+    except Exception as e:
+        # Falling back to "now" means the GST invoice PDF will show today's
+        # date instead of the real payment date. Log so we can spot Ghost
+        # format drift instead of quietly issuing wrong-dated invoices.
+        logger.warning(
+            f"Invoice payment_dt parse failed — falling back to now(): "
+            f"email={req.email} created_at={created_at_str!r} err={e!r}"
+        )
         payment_dt = datetime.now(timezone.utc)
     sub_start = payment_dt
     sub_end = sub_start + timedelta(days=365)
@@ -1473,7 +1487,11 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
 
     try:
         body = r.json()
-    except Exception:
+    except Exception as e:
+        logger.error(
+            f"Team directory returned non-JSON: status={r.status_code} "
+            f"body={r.text[:400]!r} err={e!r}"
+        )
         raise HTTPException(status_code=502, detail="Unexpected response from team directory")
 
     if not body.get("success"):
@@ -1502,7 +1520,13 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
         sub_end = datetime.fromisoformat(renewal_str)
         if sub_end.tzinfo is None:
             sub_end = sub_end.replace(tzinfo=timezone.utc)
-    except Exception:
+    except Exception as e:
+        # Apps Script sent an unparseable renewal_date. Log — the team
+        # invoice would otherwise silently show a made-up 12-month period.
+        logger.warning(
+            f"Team invoice sub_end parse failed — falling back to now()+365: "
+            f"account_id={account.get('account_id')} renewal_date={renewal_str!r} err={e!r}"
+        )
         sub_end = datetime.now(timezone.utc) + timedelta(days=365)
     sub_start = sub_end - timedelta(days=365)
     payment_dt = sub_start

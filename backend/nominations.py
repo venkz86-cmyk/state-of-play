@@ -1083,8 +1083,8 @@ async def shared_story_page(token: str, request: Request):
             {'token_id': token},
             {'$inc': {'open_count': 1}, '$set': {'last_opened_at': _utcnow()}},
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f'open_count increment failed for shared_story_page token={token}: {e!r}')
 
     related = await _ghost_fetch_related(post, limit=3)
     return HTMLResponse(_shared_story_page(doc, post, related, token))
