@@ -174,13 +174,39 @@ async def _ghost_fetch_related(post: dict, limit: int = 3) -> list:
 
 
 async def _post_to_apps_script(payload: dict) -> None:
-    """Fire-and-forget POST to Apps Script. Failure is non-fatal."""
+    """Fire-and-forget POST to Apps Script. Failure is non-fatal but is
+    logged loudly enough to be visible in Render logs.
+
+    Historical note: this helper previously called httpx.json_dumps(payload)
+    which doesn't exist on httpx >= 0.20. Every call was silently
+    AttributeError-ing into the except block, meaning no nomination email,
+    Sheet row, or Slack ping ever reached Apps Script.
+    """
     try:
         async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-            await client.post(APPS_SCRIPT_URL, content=httpx.json_dumps(payload),
-                              headers={'Content-Type': 'text/plain;charset=utf-8'})
+            resp = await client.post(
+                APPS_SCRIPT_URL,
+                json=payload,
+                headers={'Content-Type': 'application/json'},
+            )
+        # Apps Script returns 200 for both success and script errors — the
+        # actual outcome is in the JSON body. Log both status and body so
+        # handler-missing / auth issues surface in Render logs without a
+        # redeploy.
+        if resp.status_code >= 400:
+            logger.warning(
+                f'Apps Script POST non-2xx: action={payload.get("action")} '
+                f'status={resp.status_code} body={resp.text[:400]!r}'
+            )
+        else:
+            logger.info(
+                f'Apps Script POST ok: action={payload.get("action")} '
+                f'status={resp.status_code} body={resp.text[:200]!r}'
+            )
     except Exception as e:
-        logger.warning(f'Apps Script POST failed: {e!r}')
+        logger.warning(
+            f'Apps Script POST failed: action={payload.get("action")} err={e!r}'
+        )
 
 
 def _post_to_apps_script_payload_json(payload: dict) -> str:
