@@ -167,6 +167,10 @@ class MemberVerifyResponse(BaseModel):
     email: str
     name: Optional[str] = None
     status: Optional[str] = None
+    # Ghost's internal member id (24-char hex). Needed downstream by
+    # /api/nominations/submit so we can attribute nominations to the
+    # authenticated subscriber even if their email later changes.
+    id: Optional[str] = None
 
 @api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
 async def verify_ghost_member(request: MemberVerifyRequest):
@@ -222,7 +226,8 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                                 is_paid=is_paid,
                                 email=member.get('email', request.email),
                                 name=member.get('name'),
-                                status=status if not has_paid_label else 'paid'
+                                status=status if not has_paid_label else 'paid',
+                                id=member.get('id'),
                             )
                         else:
                             return MemberVerifyResponse(

@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       
       if (data.is_member) {
         const member = {
+          id: data.id || '',           // Ghost member id — used by nominations
           email: data.email,
           name: data.name,
           is_paid: data.is_paid,

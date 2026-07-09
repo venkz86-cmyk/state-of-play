@@ -5,6 +5,7 @@ export const NominateReaderBlock = ({
   subscriberName,
   subscriberEmail,
   subscriberGhostId,
+  postSlug,                      // slug of the story the nomination is anchored to
   variant = 'account',          // 'account' | 'story'
 }) => {
   const {
@@ -24,7 +25,7 @@ export const NominateReaderBlock = ({
     blocked,
     resetsOn,
     CONTEXT_MAX,
-  } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId });
+  } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId, postSlug });
 
   // Variant-specific copy
   const COPY = variant === 'story'

@@ -234,6 +234,7 @@ export const ArticleMockup = () => {
             subscriberName={effectiveSubscriberName}
             subscriberEmail={effectiveSubscriberEmail}
             subscriberGhostId={effectiveSubscriberGhostId}
+            postSlug={article?.slug || article?.id || ''}
           />
         </section>
       )}

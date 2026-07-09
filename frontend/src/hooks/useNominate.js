@@ -25,6 +25,7 @@ export function useNominate({
   subscriberEmail,
   subscriberName,
   subscriberGhostId,
+  postSlug,
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -123,6 +124,7 @@ export function useNominate({
           nominee_name: nName,
           nominee_email: nEmail,
           nominee_context: nCtx,
+          post_slug: postSlug || '',
         }),
       });
       let data = null;

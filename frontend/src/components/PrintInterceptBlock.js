@@ -40,7 +40,12 @@ export const PrintInterceptBlock = ({
     name, email, context, submitting, submitted, error,
     setName, setEmail, setContext, handleSubmit, clearBlock,
     quota, blocked, resetsOn, CONTEXT_MAX,
-  } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId });
+  } = useNominate({
+    subscriberName,
+    subscriberEmail,
+    subscriberGhostId,
+    postSlug: articleSlug,       // anchor the nomination to the story being printed
+  });
 
   // Create portal host node once. Lives outside #root so the CSS rule
   // `#root { display: none }` doesn't hide us.
