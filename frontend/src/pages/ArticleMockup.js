@@ -9,6 +9,7 @@ import { ShareRow } from '../components/ShareRow';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
+import { GiftArticleModal } from '../components/GiftArticleModal';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
@@ -59,6 +60,7 @@ export const ArticleMockup = () => {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [size, setSize] = useArticleSize();
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -185,7 +187,10 @@ export const ArticleMockup = () => {
 
           {/* Share row + Font-size toggle: left + right within the column */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
-            <ShareRow title={article.title} />
+            <ShareRow
+              title={article.title}
+              onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
+            />
             <MockupFontSizeToggle value={size} onChange={setSize} />
           </div>
         </header>
@@ -296,6 +301,20 @@ export const ArticleMockup = () => {
         subscriberEmail={effectiveSubscriberEmail}
         subscriberGhostId={effectiveSubscriberGhostId}
         articleSlug={article?.slug || article?.id || ''}
+      />
+
+      {/* Gift-article modal — opened via the Gift icon in the ShareRow.
+          Uses the same backend as nominations; only reader-facing copy
+          differs. Only bound for subscribers via onGiftClick above. */}
+      <GiftArticleModal
+        open={giftModalOpen}
+        onOpenChange={setGiftModalOpen}
+        isPaidSubscriber={!!isMember}
+        subscriberName={effectiveSubscriberName}
+        subscriberEmail={effectiveSubscriberEmail}
+        subscriberGhostId={effectiveSubscriberGhostId}
+        postSlug={article?.slug || article?.id || ''}
+        articleTitle={article?.title || ''}
       />
     </div>
   );

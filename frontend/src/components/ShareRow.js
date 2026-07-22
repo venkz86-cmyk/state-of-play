@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Gift } from 'lucide-react';
 
 const PLATFORMS = ['x', 'linkedin', 'whatsapp', 'copy'];
 
@@ -15,7 +16,10 @@ const hrefFor = (k, { url, title }) => {
 };
 
 // Flat, no icons, Geist 12px uppercase. Hover: text → primary.
-export const ShareRow = ({ title = '', url }) => {
+// The Gift icon is the one deliberate exception — it's the only affordance
+// that opens a modal (not a share URL), so we lean on iconography +
+// tooltip to signal a different interaction class.
+export const ShareRow = ({ title = '', url, onGiftClick }) => {
   const [copied, setCopied] = useState(false);
   const pageUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
 
@@ -36,7 +40,8 @@ export const ShareRow = ({ title = '', url }) => {
     >
       <span className="text-[var(--text-label)] mr-2">Share</span>
       {PLATFORMS.map((k, i) => {
-        const isLast = i === PLATFORMS.length - 1;
+        const isLastPlatform = i === PLATFORMS.length - 1;
+        const showSeparatorAfter = !isLastPlatform || !!onGiftClick;
         const common =
           'inline-flex items-center text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200';
         return (
@@ -61,10 +66,22 @@ export const ShareRow = ({ title = '', url }) => {
                 {labelFor(k)}
               </a>
             )}
-            {!isLast && <span className="mx-2 text-[var(--text-label)]">·</span>}
+            {showSeparatorAfter && <span className="mx-2 text-[var(--text-label)]">·</span>}
           </span>
         );
       })}
+      {onGiftClick && (
+        <button
+          type="button"
+          onClick={onGiftClick}
+          title="Gift this article."
+          aria-label="Gift this article"
+          data-testid="share-gift"
+          className="inline-flex items-center text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+        >
+          <Gift className="w-[15px] h-[15px]" strokeWidth={1.5} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 };
