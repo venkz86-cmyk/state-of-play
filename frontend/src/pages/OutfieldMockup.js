@@ -1,7 +1,7 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const ROUNDTABLES = [
-  { period: 'May', city: 'Mumbai', done: true },
+  { period: 'May', city: 'Mumbai', done: true, heldDate: '07 May 2026' },
   { period: 'June / July', city: 'Bengaluru', tentative: true },
   { period: 'September / October', city: 'New Delhi', tentative: true },
   { period: 'December', city: 'Mumbai or Bengaluru', tentative: true },
@@ -11,8 +11,7 @@ const SPEAKEASIES = [
   { period: 'November', city: 'New Delhi', tentative: true },
 ];
 const SANDBOXES = [
-  { period: 'Q2', city: 'Bengaluru', tentative: true },
-  { period: 'Q4', city: 'Mumbai', tentative: true },
+  { period: '18 July', city: 'Bengaluru', name: 'The Auction Room', done: true, heldDate: '18 July 2026' },
 ];
 const AUDIENCE = [
   'VCs investing in gaming and sports tech', 'Founders running platforms and apps',
@@ -26,11 +25,16 @@ const Sched = ({ rows }) => (
     {rows.map((r) => (
       <li key={`${r.period}-${r.city}`} className="grid grid-cols-12 gap-3 items-baseline py-3 border-b border-[#E2E8F0] dark:border-[#1E293B]">
         <span className="col-span-4 font-plex text-sm tabular-nums text-[#475569] dark:text-[#94A3B8]">{r.period}</span>
-        <div className="col-span-6 flex items-center gap-2">
+        <div className="col-span-6 flex items-center gap-2 flex-wrap">
           <span className={`font-plex text-sm ${r.done ? 'text-[#475569] dark:text-[#94A3B8] line-through decoration-[#94A3B8]/40' : (r.confirmed ? 'font-medium text-[#0F172A] dark:text-[#F8FAFC]' : 'text-[#475569] dark:text-[#94A3B8]')}`}>
             {r.city}
           </span>
-          {r.done && <span className="font-plex text-xs text-[#94A3B8]">held · 07 May 2026</span>}
+          {r.name && (
+            <span className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC]">
+              · {r.name}
+            </span>
+          )}
+          {r.done && <span className="font-plex text-xs text-[#94A3B8]">held · {r.heldDate || r.period}</span>}
           {r.tentative && <span className="font-plex text-xs text-[#94A3B8]">tentative</span>}
         </div>
         <div className="col-span-2 flex justify-end">
@@ -110,7 +114,7 @@ export const OutfieldMockup = () => (
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
             <li><span className="text-[#94A3B8]">Size · </span>20–30 people</li>
-            <li><span className="text-[#94A3B8]">In 2026 · </span>2 events</li>
+            <li><span className="text-[#94A3B8]">In 2026 · </span>1 event so far</li>
             <li><span className="text-[#94A3B8]">Setting · </span>Weekend, hands-on</li>
             <li><span className="text-[#94A3B8]">Cost · </span>Low-cost</li>
           </ul>
