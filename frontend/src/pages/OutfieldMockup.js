@@ -10,6 +10,10 @@ const SPEAKEASIES = [
   { period: 'June', city: 'Bengaluru', tentative: true },
   { period: 'November', city: 'New Delhi', tentative: true },
 ];
+const SANDBOXES = [
+  { period: 'Q2', city: 'Bengaluru', tentative: true },
+  { period: 'Q4', city: 'Mumbai', tentative: true },
+];
 const AUDIENCE = [
   'VCs investing in gaming and sports tech', 'Founders running platforms and apps',
   'Gaming company executives', 'IPL franchise executives',
@@ -57,12 +61,12 @@ export const OutfieldMockup = () => (
         Where sports business <em className="italic font-normal">meets, in person.</em>
       </h1>
       <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[58ch] leading-relaxed">
-        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Quarterly Roundtables for subscribers and premium Speakeasies for decision-makers, both off the record, both in person.
+        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Roundtable is a conversation. Speakeasy is a room. Sandbox is a game. All in person, all off the record.
       </p>
     </section>
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-      <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+      <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-12">
         <div data-testid="outfield-roundtables">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">01 — Quarterly subscriber discussions</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Roundtables.</h2>
@@ -93,6 +97,25 @@ export const OutfieldMockup = () => (
           </ul>
           <p className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC] mb-3">2026 schedule</p>
           <Sched rows={SPEAKEASIES} />
+        </div>
+
+        <div data-testid="outfield-sandbox" className="lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
+          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">03 — Weekend experiential first-contact</Overline>
+          <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Sandbox.</h2>
+          <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed mb-4 max-w-[50ch]">
+            Twenty to thirty people spend an hour as someone they aren’t — a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport: actual pricing, actual deal structure, actual leverage points. Nobody’s reading from a script.
+          </p>
+          <p className="font-editorial italic text-base text-[#0F172A] dark:text-[#F8FAFC] leading-relaxed mb-6 max-w-[50ch]">
+            Sports business is easier to argue about than to feel. Sandbox is where you feel it.
+          </p>
+          <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
+            <li><span className="text-[#94A3B8]">Size · </span>20–30 people</li>
+            <li><span className="text-[#94A3B8]">In 2026 · </span>2 events</li>
+            <li><span className="text-[#94A3B8]">Setting · </span>Weekend, hands-on</li>
+            <li><span className="text-[#94A3B8]">Cost · </span>Low-cost</li>
+          </ul>
+          <p className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC] mb-3">2026 schedule</p>
+          <Sched rows={SANDBOXES} />
         </div>
       </div>
     </section>
