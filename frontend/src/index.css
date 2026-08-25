@@ -468,27 +468,38 @@ a:visited { color: inherit; }
   background: rgba(248, 250, 252, 0.08);
 }
 
-/* ========== Quiet prose (article reading) — Newsreader serif ========== */
+/* ========== Quiet prose (article reading) — Newsreader serif ==========
+   Typography scale finalised 2026-08-25 after readability audit.
+   Benchmark: NYT/FT premium long-form runs 19–21 px body on desktop.
+   Prior version was 17 px on both, which sat below the premium floor.
+   Column max stays at 680 px on the <article> wrapper — with 19 px body
+   the natural CPL lands ~68, inside the 60–75 sweet spot. */
 .editorial-prose-quiet {
   font-family: var(--reading-font), 'Source Serif 4', Georgia, serif;
-  font-size: 17px;
-  line-height: 1.75;
+  font-size: 18px;          /* mobile default */
+  line-height: 1.65;
   color: var(--text);
   font-optical-sizing: auto;
 }
-.dark .editorial-prose-quiet { color: var(--text); line-height: 1.8; }
+.dark .editorial-prose-quiet { color: var(--text); line-height: 1.7; }
 @media (min-width: 768px) {
-  .editorial-prose-quiet { font-size: 17px; line-height: 1.75; }
-  .dark .editorial-prose-quiet { line-height: 1.8; }
+  .editorial-prose-quiet { font-size: 19px; line-height: 1.6; }  /* desktop default */
+  .dark .editorial-prose-quiet { line-height: 1.65; }
 }
 
-/* Font-size toggle states (article page) */
-.editorial-prose-quiet[data-size="small"]   { font-size: 15px; line-height: 1.7; }
-.editorial-prose-quiet[data-size="default"] { font-size: 17px; line-height: 1.75; }
-.editorial-prose-quiet[data-size="large"]   { font-size: 20px; line-height: 1.85; }
-.dark .editorial-prose-quiet[data-size="small"]   { line-height: 1.75; }
-.dark .editorial-prose-quiet[data-size="default"] { line-height: 1.8; }
-.dark .editorial-prose-quiet[data-size="large"]   { line-height: 1.9; }
+/* Font-size toggle states (article page)
+   S is the mobile floor (never below 17 px). L is a meaningful step
+   larger with tighter leading — bigger fonts read better with less
+   leading, so line-height eases in as size increases. */
+.editorial-prose-quiet[data-size="small"]   { font-size: 17px; line-height: 1.7; }
+.editorial-prose-quiet[data-size="default"] { font-size: 18px; line-height: 1.65; }
+.editorial-prose-quiet[data-size="large"]   { font-size: 22px; line-height: 1.55; }
+@media (min-width: 768px) {
+  .editorial-prose-quiet[data-size="default"] { font-size: 19px; line-height: 1.6; }
+}
+.dark .editorial-prose-quiet[data-size="small"]   { line-height: 1.7; }
+.dark .editorial-prose-quiet[data-size="default"] { line-height: 1.65; }
+.dark .editorial-prose-quiet[data-size="large"]   { line-height: 1.55; }
 .editorial-prose-quiet p { margin: 0 0 1.5rem; }
 .editorial-prose-quiet h2 {
   font-family: var(--display-font), Georgia, serif;

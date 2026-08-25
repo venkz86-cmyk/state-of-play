@@ -185,13 +185,14 @@ export const ArticleMockup = () => {
             isPremium={!!article.is_premium}
           />
 
-          {/* Share row + Font-size toggle: left + right within the column */}
+          {/* Utility strip: Text-size toggle (leftmost, prioritised for
+              discoverability per audit) + Share row */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
+            <MockupFontSizeToggle value={size} onChange={setSize} />
             <ShareRow
               title={article.title}
               onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
             />
-            <MockupFontSizeToggle value={size} onChange={setSize} />
           </div>
         </header>
 

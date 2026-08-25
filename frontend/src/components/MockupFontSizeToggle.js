@@ -28,9 +28,9 @@ export const useArticleSize = () => {
 export const MockupFontSizeToggle = ({ value, onChange }) => (
   <div
     data-testid="font-size-toggle"
-    className="inline-flex items-center font-plex text-[11px] uppercase tracking-[0.08em]"
+    className="inline-flex items-center font-plex text-[12px] uppercase tracking-[0.08em]"
   >
-    <span className="text-[var(--text-label)] mr-3">Text</span>
+    <span className="text-[var(--text-label)] mr-3">Text size</span>
     {SIZES.map((s, i) => (
       <span key={s.id} className="inline-flex items-center">
         <button

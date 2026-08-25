@@ -1855,7 +1855,7 @@ async def get_story_ssr(slug: str, request: Request):
     .tsop-hero {{ margin:0 0 32px; }}
     .tsop-hero img {{ width:100%; height:auto; display:block; }}
     .tsop-hero-caption {{ font-size:12px; color:var(--muted); padding:8px 4px 0; font-style:italic; }}
-    article.tsop p, article.tsop li {{ font-size:19px; line-height:1.7; margin:0 0 22px; }}
+    article.tsop p, article.tsop li {{ font-size:19px; line-height:1.6; margin:0 0 22px; }}
     article.tsop h2 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:26px; line-height:1.25; margin:44px 0 12px; }}
     article.tsop h3 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:21px; line-height:1.3; margin:36px 0 10px; }}
     article.tsop a {{ color:var(--accent); text-underline-offset:4px; }}
