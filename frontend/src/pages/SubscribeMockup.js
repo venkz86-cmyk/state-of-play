@@ -46,7 +46,7 @@ export const SubscribeMockup = () => {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
-          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">
+          <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">
             Subscribe
           </span>
         </div>
@@ -57,13 +57,13 @@ export const SubscribeMockup = () => {
           <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[22ch]">
             India’s premier <em className="italic font-normal">sports business intelligence.</em>
           </h1>
-          <p className="font-plex text-lg lg:text-xl text-[#475569] dark:text-[#94A3B8] leading-relaxed max-w-[55ch]">
+          <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
             Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport — across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[#0F172A]/15 dark:lg:border-[#F8FAFC]/15 lg:pl-10">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Cited by</Overline>
-          <p className="font-editorial italic text-base lg:text-lg leading-snug text-[#0F172A] dark:text-[#F8FAFC]">
+          <p className="font-editorial italic text-base lg:text-lg leading-snug text-[var(--text)]">
             Bloomberg · SportBusiness · ESPNCricinfo · The Athletic · SportsPro
           </p>
         </aside>
@@ -103,14 +103,14 @@ export const SubscribeMockup = () => {
 
       {/* What's included */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">What’s included</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
             {BENEFITS.map(([no, title, desc]) => (
               <div key={no}>
                 <p className="font-plex text-xs tracking-[0.18em] uppercase text-[#94A3B8] tabular-nums mb-3">{no}</p>
-                <h3 className="font-editorial font-medium text-lg leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-2">{title}</h3>
-                <p className="font-plex text-sm leading-relaxed text-[#475569] dark:text-[#94A3B8]">{desc}</p>
+                <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] mb-2">{title}</h3>
+                <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{desc}</p>
               </div>
             ))}
           </div>
@@ -120,18 +120,18 @@ export const SubscribeMockup = () => {
       {/* Sample of the desk */}
       {premium.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+          <div className="border-t border-[var(--text)] pt-8">
             <p className="font-editorial italic text-lg mb-6">A sample of the desk</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
               {premium.map((p) => (
                 <Link
                   key={p.id}
                   to={`/${p.id}`}
-                  className="group block py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                  className="group block py-5 border-b border-[var(--rule)]"
                 >
-                  <p className="font-plex text-xs tracking-[0.18em] uppercase text-[#475569] dark:text-[#94A3B8] mb-2">{p.theme || 'Reportage'}</p>
-                  <h3 className="font-editorial font-medium text-lg leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">{p.title}</h3>
-                  <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] mt-2 tabular-nums">{longDate(p.created_at)}</p>
+                  <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] mb-2">{p.theme || 'Reportage'}</p>
+                  <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">{p.title}</h3>
+                  <p className="font-plex text-xs text-[var(--text-muted)] mt-2 tabular-nums">{longDate(p.created_at)}</p>
                 </Link>
               ))}
             </div>
@@ -141,14 +141,14 @@ export const SubscribeMockup = () => {
 
       {/* FAQ */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="border-t border-[var(--text)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
             <p className="font-editorial italic text-lg">FAQ</p>
           </div>
           <div className="lg:col-span-8">
             <ul>
               {FAQS.map(([q, a], i) => (
-                <li key={q} className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+                <li key={q} className="border-b border-[var(--rule)]">
                   <button
                     type="button"
                     onClick={() => setOpen(open === i ? -1 : i)}
@@ -158,7 +158,7 @@ export const SubscribeMockup = () => {
                     {open === i ? <Minus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} /> : <Plus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} />}
                   </button>
                   {open === i && (
-                    <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed pb-6 max-w-[60ch]">{a}</p>
+                    <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>
                   )}
                 </li>
               ))}

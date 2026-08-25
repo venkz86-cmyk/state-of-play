@@ -192,7 +192,7 @@ export const HomeMockup = () => {
               <SectionLabel className="mb-3">
                 {lead.theme || 'Lead'} {lead.is_premium ? ' · For Subscribers' : ''}
               </SectionLabel>
-              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[#0F172A] dark:text-[#F8FAFC] mb-4 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
+              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
                 {lead.title}
               </h1>
               {lead.subtitle && (
@@ -200,9 +200,9 @@ export const HomeMockup = () => {
                   {lead.subtitle}
                 </p>
               )}
-              <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">
+              <p className="font-plex text-sm text-[var(--text-muted)]">
                 By {lead.author || 'Venkat Ananth'}
-                {lead.read_time ? <span className="text-[#94A3B8]"> · {lead.read_time} min read</span> : null}
+                {lead.read_time ? <span className="text-[var(--text-label)]"> · {lead.read_time} min read</span> : null}
               </p>
             </Link>
 
@@ -262,7 +262,7 @@ export const HomeMockup = () => {
       {/* SECONDARY ROW — 3 stories side by side */}
       {secondary.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12 lg:pb-14">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
+          <div className="border-t border-[var(--text)] pt-8 grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
             {secondary.map((a) => (
               <Link
                 key={a.id}
@@ -273,11 +273,11 @@ export const HomeMockup = () => {
                 <SectionLabel className="mb-3">
                   {a.theme || 'Reportage'}{a.is_premium ? ' · For Subscribers' : ''}
                 </SectionLabel>
-                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[#0F172A] dark:text-[#F8FAFC] mb-3 group-hover:text-[var(--accent)] transition-colors duration-300">
+                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent)] transition-colors duration-300">
                   {a.title}
                 </h2>
                 {a.subtitle && (
-                  <p className="font-plex text-sm leading-relaxed text-[#475569] dark:text-[#94A3B8] line-clamp-3 mb-3">
+                  <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)] line-clamp-3 mb-3">
                     {a.subtitle}
                   </p>
                 )}
@@ -361,11 +361,11 @@ export const HomeMockup = () => {
       {/* QUIET SUBSCRIBE */}
       {!isMember && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32 lg:pb-40">
-          <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 max-w-[55ch]">
-            <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-4">
+          <div className="border-t border-[var(--text)] pt-8 max-w-[55ch]">
+            <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[var(--text)] mb-4">
               The State of Play is a reader-supported publication.
             </p>
-            <p className="font-plex text-base leading-relaxed text-[#475569] dark:text-[#94A3B8] mb-5">
+            <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] mb-5">
               Independent reporting on the business of Indian sport. ₹2,499 + GST a year (₹2,949 total).
             </p>
             <Link

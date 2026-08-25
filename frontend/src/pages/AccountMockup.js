@@ -116,22 +116,22 @@ export const AccountMockup = () => {
 
       {/* Continue reading */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-6">Continue reading</p>
-          <div className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+          <div className="border-t border-[var(--rule)]">
             {recent.map((p) => (
               <Link
                 key={p.id}
                 to={`/${p.id}`}
-                className="group flex items-baseline justify-between gap-6 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]"
+                className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
               >
                 <div className="flex-1 min-w-0">
                   <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Analysis'}</Overline>
-                  <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] group-hover:text-[var(--accent)] transition-colors duration-200">
+                  <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">
                     {p.title}
                   </h3>
                 </div>
-                <p className="font-plex text-xs text-[#475569] dark:text-[#94A3B8] shrink-0 tabular-nums">{longDate(p.created_at)}</p>
+                <p className="font-plex text-xs text-[var(--text-muted)] shrink-0 tabular-nums">{longDate(p.created_at)}</p>
               </Link>
             ))}
           </div>
@@ -140,9 +140,9 @@ export const AccountMockup = () => {
 
       {/* Tools — restrained, single column list, no dark CTA */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-6">Membership tools</p>
-          <ul className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+          <ul className="border-t border-[var(--rule)]">
             {[
               {
                 title: 'Reading list',
@@ -172,12 +172,12 @@ export const AccountMockup = () => {
                 href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%20%E2%80%94%20notify%20me',
               },
             ].map(({ title, desc, cta, href, onClick }) => (
-              <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[#E2E8F0] dark:border-[#1E293B]">
+              <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[var(--rule)]">
                 <div className="col-span-12 md:col-span-4">
                   <h3 className="font-editorial font-medium text-lg">{title}</h3>
                 </div>
                 <div className="col-span-12 md:col-span-6">
-                  <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8]">{desc}</p>
+                  <p className="font-plex text-sm text-[var(--text-muted)]">{desc}</p>
                 </div>
                 <div className="col-span-12 md:col-span-2 md:text-right">
                   {onClick ? (

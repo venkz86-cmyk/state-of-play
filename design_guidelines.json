@@ -1,151 +1,57 @@
 {
-  "project_context": {
-    "name": "The State of Play",
-    "type": "Premium Sports Business Intelligence Publication",
-    "target_audience": "VCs, PE investors, franchise executives, investment bankers, media executives.",
-    "emotional_tone": "Authoritative, Exclusive, Serious, Insightful, Kickass & Premium",
-    "design_archetype": "Swiss & High-Contrast mixed with Old Money Tech"
+  "_meta": {
+    "spec_name": "The State of Play — Design System",
+    "last_updated": "2026-08-25",
+    "note": "This file mirrors the shipped code. Prior versions referenced Playfair Display / IBM Plex Sans + blue/orange accents — those are archived; the live system below is what actually ships."
   },
   "typography": {
-    "strategy": "The 'Old Money Tech' approach. Radical contrast between classic editorial authority and sterile modern data.",
-    "fonts": {
-      "headings": {
-        "family": "Playfair Display",
-        "description": "Used exclusively for article headlines, major section titles, and the hero section to evoke the prestige of legacy media.",
-        "weights": ["400", "600", "700"],
-        "css_class": "font-serif"
-      },
-      "body": {
-        "family": "IBM Plex Sans",
-        "description": "Used for all article text, UI elements, and paragraphs. Highly legible, objective, and neutral.",
-        "weights": ["400", "500", "600"],
-        "css_class": "font-sans"
-      },
-      "labels": {
-        "family": "IBM Plex Mono",
-        "description": "Used for overlines (e.g., 'FOOTBALL', 'FINANCE'), dates, author names, and UI metadata.",
-        "weights": ["500"],
-        "css_class": "font-mono tracking-widest uppercase text-xs"
-      }
+    "display": { "family": "Fraunces", "role": "H1/H2 on masthead + reading pages, marketing headlines", "weights": [400, 500, 600, 700], "fallback": ["Playfair Display", "Georgia", "serif"] },
+    "reading": { "family": "Newsreader", "role": "Article body copy (editorial-prose-quiet), long-form pull quotes", "weights": [400, 500, 600, 700], "fallback": ["Source Serif 4", "Georgia", "serif"] },
+    "body":    { "family": "DM Sans",  "role": "UI copy, byline, share row, labels, buttons",             "weights": [400, 500, 600, 700], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
+    "label":   { "family": "DM Sans",  "role": "Section labels, overlines (11-12px uppercase, 0.08 tracking)", "weights": [400, 500], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
+    "scales": {
+      "article_body": { "desktop": "19px / 1.6", "mobile": "18px / 1.65" },
+      "article_body_toggle": { "small": "17px / 1.7", "default": "18-19px / 1.65-1.6", "large": "22px / 1.55" },
+      "article_h1": "clamp(28px, 5vw, 42px) / 1.08",
+      "article_h2": "1.75rem / 1.2",
+      "article_h3": "1.375rem / 1.25",
+      "section_label": "11-12px uppercase, tracking 0.08em"
     },
-    "rules": {
-      "headlines": "Tight tracking (`tracking-tight`), especially on large sizes.",
-      "article_body": "Optimal line length of 65 characters (`max-w-[65ch]`), `text-lg` or `text-xl` on desktop, `leading-relaxed` for reading endurance.",
-      "anti_pattern": "Do NOT use Inter or standard sans-serif for main headlines. Do NOT center-align article text."
-    }
+    "column_max_width": "680px on <article>"
   },
-  "colors": {
-    "brand_strict": {
-      "primary_blue": "#234ba0",
-      "accent_orange": "#FF6B35"
+  "colour": {
+    "role_tokens_light": {
+      "bg":         "#FAF9F7",
+      "rule":       "#E5E2DC",
+      "text":       "#1A1A1A",
+      "text_muted": "#555555",
+      "text_label": "#666666"
     },
-    "light_mode": {
-      "background": "#F7F7F5",
-      "surface": "#FFFFFF",
-      "text_primary": "#0F172A",
-      "text_secondary": "#475569",
-      "border": "#E2E8F0"
+    "role_tokens_dark": {
+      "bg":         "#0F0F0F",
+      "rule":       "#2A2A2A",
+      "text":       "#F0EDE8",
+      "text_muted": "#888888",
+      "text_label": "#666666"
     },
-    "dark_mode": {
-      "background": "#090E17",
-      "surface": "#131C2D",
-      "text_primary": "#F8FAFC",
-      "text_secondary": "#94A3B8",
-      "border": "#1E293B"
+    "accents": {
+      "burgundy": { "hex": "#A0291C", "role": "Primary CTA, active nav, section rules, subscribe buttons, gift modal, paywall" },
+      "burgundy_hover": { "hex": "#7A1F14", "role": "Hover state for primary CTA" }
     },
-    "rules": {
-      "gradients": "BANNED. Use solid, flat colors only to maintain the serious publication feel.",
-      "contrast": "Ensure APCA/WCAG AA compliance. Use deep slate instead of pure black. Never use pure #000000 or #FFFFFF for large areas without slight tinting.",
-      "cta": "Use Accent Orange exclusively for high-intent conversion points (Subscribe, Buy). Primary Blue for standard interactions."
-    }
+    "usage_rule": "Always prefer CSS variables (var(--text), var(--text-muted), var(--text-label), var(--rule), var(--bg)) over hardcoded hex, so dark/light mode swaps correctly. Only exception: brand ink #234ba0 in the logo asset."
   },
-  "spacing_and_rhythm": {
-    "philosophy": "Surgical and generous. Premium publications breathe through negative space.",
-    "scale": {
-      "section_gap": "py-24 md:py-32",
-      "article_gap": "gap-8 md:gap-12",
-      "component_padding": "p-6 md:p-8"
-    },
-    "grids": {
-      "homepage_bento": "Asymmetrical magazine layouts. 12-column grid. Hero article spans 8 cols, secondary articles span 4 cols. Heavy use of 1px borders to separate content (The 'Newspaper' look).",
-      "article_page": "Single column, narrow wrapper (`max-w-3xl`) perfectly centered, with wide margins."
-    }
+  "layout": {
+    "grid": "12-column asymmetric, 8-col lead + 4-col rail on desktop",
+    "borders": "hairline rules (1px, var(--rule)) — no shadows, no rounded corners",
+    "spacing": "24-40px paragraph rhythm, 80-120px section spacing",
+    "aesthetic": "cardless newspaper — dividers replace containers"
   },
-  "component_treatments": {
-    "cards": {
-      "style": "Cardless. Do not use floating white boxes with shadows. Instead, separate articles using solid 1px borders (`border-b`, `border-r`) to mimic print columns.",
-      "shadows": "NONE for content. Flat and structural.",
-      "radius": "Zero or minimal (`rounded-none` or `rounded-sm`). Sharp edges convey seriousness."
-    },
-    "buttons": {
-      "style": "Sharp or slightly rounded (`rounded-sm`). High contrast.",
-      "primary": "bg-[#FF6B35] text-white hover:bg-[#e55e2d] transition-colors",
-      "secondary": "bg-[#234ba0] text-white hover:bg-[#1d3d82] transition-colors",
-      "ghost": "hover:bg-black/5 dark:hover:bg-white/5 text-[#0F172A] dark:text-[#F8FAFC]"
-    },
-    "inputs": {
-      "style": "Minimalist. Bottom border only (`border-b-2`) or very crisp rectangular inputs. No soft rounded bubbles."
-    }
+  "components": {
+    "cta_button": "Rectangular, no radius, uppercase 13px letter-spacing 0.05em, bg burgundy",
+    "font_size_toggle": "Leftmost of utility strip, label 'Text size' 12px uppercase, S | M | L switch",
+    "share_row": "Right of utility strip, 12px uppercase, hover to text primary; Gift icon (lucide) last for subscribers only",
+    "paywall": "180px gradient fade eating last preview paragraph, then burgundy Lock badge + editorial heading + Razorpay CTA"
   },
-  "reading_experience": {
-    "layout": "Distraction-free. Narrow width (`max-w-[65ch]`) to prevent eye fatigue.",
-    "typography_scale": "Title: `text-4xl md:text-6xl`. Subtitle: `text-xl md:text-2xl text-slate-500`. Body: `text-lg md:text-xl leading-loose`.",
-    "editorial_flair": "Use 'Drop Caps' for the first letter of an article. Pull quotes should be massive, bold, and use the brand orange as a left border.",
-    "images": "Full width of the container, crisp captions underneath in Mono font."
-  },
-  "micro_interactions": {
-    "philosophy": "Premium means restraint. No bouncy animations.",
-    "hover_states": "Images: Very slow, subtle scale (`scale-105 duration-700`). Text: Color fade (`duration-200`).",
-    "navigation": "Sticky, glassmorphism header (`backdrop-blur-xl bg-white/80 dark:bg-[#090E17]/80`) with a strict 1px bottom border.",
-    "loading": "Subtle skeleton loaders or a simple linear progress bar at the top (like Bloomberg)."
-  },
-  "media": {
-    "treatment": "Images should feel photojournalistic, not stocky. Apply a very subtle desaturation filter (`saturate-50 hover:saturate-100 transition-all`) to thumbnails for a sophisticated, unified look.",
-    "image_urls": {
-      "f1_hero": {
-        "url": "https://images.unsplash.com/photo-1774487671620-b9174d206849?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHw0fHxmb3JtdWxhJTIwMSUyMHJhY2UlMjBjYXIlMjByYWNpbmd8ZW58MHx8fHwxNzc3Njk3OTA5fDA&ixlib=rb-4.1.0&q=85",
-        "description": "Formula 1 race car speeding on track",
-        "category": "Hero Article Image"
-      },
-      "cricket_floodlights": {
-        "url": "https://images.unsplash.com/photo-1774600551775-747997267949?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxjcmlja2V0JTIwc3RhZGl1bSUyMGZsb29kbGlnaHRzfGVufDB8fHx8MTc3NzY5NzkwOXww&ixlib=rb-4.1.0&q=85",
-        "description": "Cricket stadium with stands under bright sky",
-        "category": "Article Thumbnail - Subcontinent"
-      },
-      "tennis_match": {
-        "url": "https://images.unsplash.com/photo-1758314810669-346173121689?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwyfHx0ZW5uaXMlMjBtYXRjaCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3Nzc2OTc5MDl8MA&ixlib=rb-4.1.0&q=85",
-        "description": "Tennis player on a clay court with long shadow",
-        "category": "Article Thumbnail - Global Sports"
-      },
-      "business_executive": {
-        "url": "https://images.unsplash.com/photo-1584940121258-c2553b66a739?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NzY5NzkxM3ww&ixlib=rb-4.1.0&q=85",
-        "description": "Man in black suit standing on wooden bridge",
-        "category": "Corporate Sales / Exec Profile"
-      }
-    }
-  },
-  "instructions_to_main_agent": [
-    "Tech Stack: React (Create React App), pure Javascript (.js/.jsx), Tailwind CSS.",
-    "Do NOT use TypeScript (.tsx/.ts) as this is a CRA environment.",
-    "Use Shadcn UI logic where applicable, but heavily override the styles to match the 'Cardless/Print' aesthetic.",
-    "Install required fonts from Google Fonts: Playfair Display, IBM Plex Sans, IBM Plex Mono.",
-    "Every interactive element, form, article link, and button MUST have a descriptive `data-testid` attribute (e.g., `data-testid='subscribe-hero-button'`).",
-    "Never use generic default Tailwind shadows. Rely on 1px borders (`border-border`) to establish hierarchy and grid structures.",
-    "Strict British English spelling ('optimised', 'colours', 'programme').",
-    "Layouts MUST be mobile responsive. Images must not exceed 80vh on mobile."
-  ],
-  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
-    "You tend to converge toward generic, 'on distribution' outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
-    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
-    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
-    "You MUST NOT apply universal transition. Eg: `transition: all`.",
-    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file.",
-    "Always use modern button styles, but context-aware. Here, use sharp or slightly rounded authoritative buttons.",
-    "NEVER use AI assistant Emoji characters for icons.",
-    "Every interaction needs micro-animations - hover states, transitions, and entrance animations. Static = dead.",
-    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "Subtle grain textures, custom selection states, and loading animations separate good from extraordinary.",
-    "Missing image categories = main agent will use placeholder text which is FORBIDDEN.",
-    "Components MUST use named exports, Pages MUST use default exports."
-  ]
+  "loaded_fonts": ["Fraunces", "Newsreader", "DM Sans"],
+  "dark_mode_logo": "TODO — currently uses CSS invert on the single /tsop-logo.png. Muddy on the wordmark. Replace with a proper light-on-transparent variant when time permits."
 }

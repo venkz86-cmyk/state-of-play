@@ -54,7 +54,7 @@ export const TeamsMockup = () => {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>
-          <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">Corporate plans</span>
+          <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Corporate plans</span>
         </div>
       </div>
 
@@ -62,14 +62,14 @@ export const TeamsMockup = () => {
         <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[24ch]">
           The State of Play, <em className="italic font-normal">for the whole desk.</em>
         </h1>
-        <p className="font-plex text-lg lg:text-xl text-[#475569] dark:text-[#94A3B8] max-w-[55ch] leading-relaxed">
+        <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
           One subscription, your whole team stays informed. Volume pricing, centralised management, GST-compliant invoicing.
         </p>
       </section>
 
       {/* Pricing */}
       <section data-testid="teams-pricing" className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">Two plans. One desk.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {PLANS.map((p) => (
@@ -111,14 +111,14 @@ export const TeamsMockup = () => {
 
       {/* Audiences */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-6">Who reads us together</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">
             {AUDIENCES.map(([t, d], i) => (
               <div key={t}>
                 <p className="font-plex text-xs text-[#94A3B8] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
                 <h3 className="font-editorial font-medium text-lg mb-2">{t}</h3>
-                <p className="font-plex text-sm leading-relaxed text-[#475569] dark:text-[#94A3B8]">{d}</p>
+                <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{d}</p>
               </div>
             ))}
           </div>
@@ -127,9 +127,9 @@ export const TeamsMockup = () => {
 
       {/* Features */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-6">What’s included</p>
-          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3 border-y border-[#E2E8F0] dark:border-[#1E293B] py-6">
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3 border-y border-[var(--rule)] py-6">
             {FEATURES.map((f, i) => (
               <li key={f} className="flex items-baseline gap-3">
                 <span className="font-plex text-xs text-[#94A3B8] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
@@ -142,17 +142,17 @@ export const TeamsMockup = () => {
 
       {/* FAQ */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="border-t border-[var(--text)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4"><p className="font-editorial italic text-lg">FAQ</p></div>
           <div className="lg:col-span-8">
             <ul>
               {FAQS.map(([q, a], i) => (
-                <li key={q} className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+                <li key={q} className="border-b border-[var(--rule)]">
                   <button type="button" onClick={() => setOpen(open === i ? -1 : i)} className="w-full py-5 flex items-start justify-between gap-6 text-left hover:text-[var(--accent)] transition-colors duration-200">
                     <span className="font-editorial font-medium text-lg leading-snug">{q}</span>
                     {open === i ? <Minus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} /> : <Plus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} />}
                   </button>
-                  {open === i && <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed pb-6 max-w-[60ch]">{a}</p>}
+                  {open === i && <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>}
                 </li>
               ))}
             </ul>

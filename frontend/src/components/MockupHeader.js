@@ -4,10 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 
-const LOGO_LIGHT =
-  '/tsop-logo.png';
-const LOGO_DARK =
-  '/tsop-logo.png';
+// Currently a single asset. Dark mode swaps colour via a CSS `invert` filter
+// (see className on the <img> below). Muddy on the wordmark — TODO: replace
+// with a proper light-on-transparent variant. Do NOT re-introduce a LOGO_DARK
+// constant pointing at the same file — that misled a previous audit into
+// thinking a real dark-mode swap existed.
+const LOGO_SRC = '/tsop-logo.png';
 
 const NAV = [
   { path: '/', label: 'Home' },
@@ -46,7 +48,7 @@ export const MockupHeader = () => {
             className="flex items-center group shrink-0"
           >
             <img
-              src={isDark ? LOGO_DARK : LOGO_LIGHT}
+              src={LOGO_SRC}
               alt="The State of Play"
               className={`h-10 lg:h-12 w-auto transition-opacity duration-200 group-hover:opacity-80 ${isDark ? 'invert' : ''}`}
             />

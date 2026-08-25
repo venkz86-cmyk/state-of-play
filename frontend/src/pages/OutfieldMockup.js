@@ -21,16 +21,16 @@ const AUDIENCE = [
 ];
 
 const Sched = ({ rows }) => (
-  <ul className="border-t border-[#E2E8F0] dark:border-[#1E293B]">
+  <ul className="border-t border-[var(--rule)]">
     {rows.map((r) => (
-      <li key={`${r.period}-${r.city}`} className="grid grid-cols-12 gap-3 items-baseline py-3 border-b border-[#E2E8F0] dark:border-[#1E293B]">
-        <span className="col-span-4 font-plex text-sm tabular-nums text-[#475569] dark:text-[#94A3B8]">{r.period}</span>
+      <li key={`${r.period}-${r.city}`} className="grid grid-cols-12 gap-3 items-baseline py-3 border-b border-[var(--rule)]">
+        <span className="col-span-4 font-plex text-sm tabular-nums text-[var(--text-muted)]">{r.period}</span>
         <div className="col-span-6 flex items-center gap-2 flex-wrap">
-          <span className={`font-plex text-sm ${r.done ? 'text-[#475569] dark:text-[#94A3B8] line-through decoration-[#94A3B8]/40' : (r.confirmed ? 'font-medium text-[#0F172A] dark:text-[#F8FAFC]' : 'text-[#475569] dark:text-[#94A3B8]')}`}>
+          <span className={`font-plex text-sm ${r.done ? 'text-[var(--text-muted)] line-through decoration-[#94A3B8]/40' : (r.confirmed ? 'font-medium text-[var(--text)]' : 'text-[var(--text-muted)]')}`}>
             {r.city}
           </span>
           {r.name && (
-            <span className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC]">
+            <span className="font-editorial italic text-sm text-[var(--text)]">
               · {r.name}
             </span>
           )}
@@ -56,7 +56,7 @@ export const OutfieldMockup = () => (
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>
-        <span className="font-editorial italic text-sm text-[#475569] dark:text-[#94A3B8] tabular-nums">Events · 2026</span>
+        <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Events · 2026</span>
       </div>
     </div>
 
@@ -70,11 +70,11 @@ export const OutfieldMockup = () => (
     </section>
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-      <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-12">
+      <div className="border-t border-[var(--text)] pt-8 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-12">
         <div data-testid="outfield-roundtables">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">01 — Quarterly subscriber discussions</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Roundtables.</h2>
-          <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed mb-6 max-w-[50ch]">
+          <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-6 max-w-[50ch]">
             Closed-door. Ninety minutes. We take a Friday story and go deeper with the protagonist. What couldn’t fit in 1,500 words. What has developed since.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
@@ -83,14 +83,14 @@ export const OutfieldMockup = () => (
             <li><span className="text-[#94A3B8]">Setting · </span>Boardroom or café</li>
             <li><span className="text-[#94A3B8]">Cost · </span>Free for subscribers</li>
           </ul>
-          <p className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC] mb-3">2026 schedule</p>
+          <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={ROUNDTABLES} />
         </div>
 
         <div data-testid="outfield-speakeasies" className="lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">02 — Premium off-record gatherings</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Speakeasy.</h2>
-          <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed mb-6 max-w-[50ch]">
+          <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-6 max-w-[50ch]">
             Each speaker gets 20–30 minutes for a fireside chat. Forward-looking topics. After the chats, Q&A, a short pub quiz, then networking. One drink on the house.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
@@ -99,17 +99,17 @@ export const OutfieldMockup = () => (
             <li><span className="text-[#94A3B8]">Setting · </span>Cocktail bar</li>
             <li><span className="text-[#94A3B8]">Cost · </span>Ticketed</li>
           </ul>
-          <p className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC] mb-3">2026 schedule</p>
+          <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={SPEAKEASIES} />
         </div>
 
         <div data-testid="outfield-sandbox" className="lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">03 — Weekend experiential first-contact</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Sandbox.</h2>
-          <p className="font-plex text-base text-[#475569] dark:text-[#94A3B8] leading-relaxed mb-4 max-w-[50ch]">
+          <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-4 max-w-[50ch]">
             Twenty to thirty people spend an hour as someone they aren’t — a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport: actual pricing, actual deal structure, actual leverage points. Nobody’s reading from a script.
           </p>
-          <p className="font-editorial italic text-base text-[#0F172A] dark:text-[#F8FAFC] leading-relaxed mb-6 max-w-[50ch]">
+          <p className="font-editorial italic text-base text-[var(--text)] leading-relaxed mb-6 max-w-[50ch]">
             Sports business is easier to argue about than to feel. Sandbox is where you feel it.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
@@ -118,16 +118,16 @@ export const OutfieldMockup = () => (
             <li><span className="text-[#94A3B8]">Setting · </span>Weekend, hands-on</li>
             <li><span className="text-[#94A3B8]">Cost · </span>Low-cost</li>
           </ul>
-          <p className="font-editorial italic text-sm text-[#0F172A] dark:text-[#F8FAFC] mb-3">2026 schedule</p>
+          <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={SANDBOXES} />
         </div>
       </div>
     </section>
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-      <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+      <div className="border-t border-[var(--text)] pt-8">
         <blockquote className="max-w-[60ch] border-l border-[var(--accent)] pl-6">
-          <p className="font-editorial italic text-xl lg:text-[1.75rem] leading-[1.25] text-[#0F172A] dark:text-[#F8FAFC]">
+          <p className="font-editorial italic text-xl lg:text-[1.75rem] leading-[1.25] text-[var(--text)]">
             No stages. No panels. No 500-person halls. Small rooms force depth. The Chatham House rule encourages honesty. This is where the real conversations happen.
           </p>
         </blockquote>
@@ -142,7 +142,7 @@ export const OutfieldMockup = () => (
         ============================================================ */}
     {false && (
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12" data-testid="outfield-attendees-say">
-        <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+        <div className="border-t border-[var(--text)] pt-8">
           <Overline className="block mb-6">— What attendees say —</Overline>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
             {[
@@ -150,10 +150,10 @@ export const OutfieldMockup = () => (
               { quote: '__attendee quote 2__', name: '—', title: '—' },
             ].map((q, i) => (
               <blockquote key={i} className="max-w-[55ch]">
-                <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[#0F172A] dark:text-[#F8FAFC] mb-4">
+                <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[var(--text)] mb-4">
                   “{q.quote}”
                 </p>
-                <p className="font-plex text-[13px] font-bold text-[#0F172A] dark:text-[#F8FAFC]">{q.name}</p>
+                <p className="font-plex text-[13px] font-bold text-[var(--text)]">{q.name}</p>
                 <p className="font-plex text-[13px] text-[#666666]">{q.title}</p>
               </blockquote>
             ))}
@@ -163,11 +163,11 @@ export const OutfieldMockup = () => (
     )}
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
-      <div className="border-t border-[#0F172A] dark:border-[#F8FAFC] pt-8">
+      <div className="border-t border-[var(--text)] pt-8">
         <p className="font-editorial italic text-lg mb-6">Who attends</p>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 border-t border-[#E2E8F0] dark:border-[#1E293B]">
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 border-t border-[var(--rule)]">
           {AUDIENCE.map((a, i) => (
-            <li key={a} className="flex items-baseline gap-4 py-3 border-b border-[#E2E8F0] dark:border-[#1E293B]">
+            <li key={a} className="flex items-baseline gap-4 py-3 border-b border-[var(--rule)]">
               <span className="font-plex text-xs text-[#94A3B8] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
               <span className="font-plex text-base">{a}</span>
             </li>

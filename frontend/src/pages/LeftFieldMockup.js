@@ -99,7 +99,7 @@ export const LeftFieldMockup = () => {
   return (
     <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: 'Left Field — a sister read from the Left Field Ventures stable. Sport, identity, and the cultural undercurrent.' }}>
       {/* Hero */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+      <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-8">
             <div className="flex items-center gap-3 mb-5">
@@ -111,7 +111,7 @@ export const LeftFieldMockup = () => {
               The brief on{' '}
               <em className="italic font-normal text-[#234ba0]">Indian sport, in your inbox.</em>
             </h1>
-            <p className="font-plex text-lg lg:text-xl text-[#475569] dark:text-[#94A3B8] max-w-[60ch] leading-relaxed">
+            <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
               Short, sharp news briefs on the businesses, deals and people moving Indian sport — published bi-weekly on Substack. Free to read. The on-ramp to the full TSOP desk.
             </p>
           </div>
@@ -134,13 +134,13 @@ export const LeftFieldMockup = () => {
       </section>
 
       {/* Editor's pitch — italic strip */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B] bg-[#F1F1EE] dark:bg-[#0F172A]">
+      <section className="border-b border-[var(--rule)] bg-[#F1F1EE] dark:bg-[#0F172A]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
             <Overline className="text-[var(--accent)]">— What it is —</Overline>
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
-            <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[#0F172A] dark:text-[#F8FAFC]">
+            <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[var(--text)]">
               “Six minutes, twice a week. The deals worth knowing about, the small stories that turn into big ones, and the curated pointers we’d send a friend who works in the industry.”
             </p>
             <footer className="mt-8 flex items-center gap-3">
@@ -159,7 +159,7 @@ export const LeftFieldMockup = () => {
       ) : (
         <>
           {lead && (
-            <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+            <section className="border-b border-[var(--rule)]">
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
               <div className="lg:col-span-7 flex flex-col">
                 <a
@@ -182,7 +182,7 @@ export const LeftFieldMockup = () => {
                       {lead.subtitle}
                     </p>
                   )}
-                  <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#0F172A] dark:text-[#F8FAFC] border-b border-[#0F172A] dark:border-[#F8FAFC] pb-1 group-hover:text-[#234ba0] group-hover:border-[#234ba0] transition-colors duration-200">
+                  <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[var(--text)] border-b border-[var(--text)] pb-1 group-hover:text-[#234ba0] group-hover:border-[#234ba0] transition-colors duration-200">
                     Read on Substack
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                   </span>
@@ -195,7 +195,7 @@ export const LeftFieldMockup = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="leftfield-secondary"
-                    className="group block mt-12 pt-10 border-t border-[#E2E8F0] dark:border-[#1E293B]"
+                    className="group block mt-12 pt-10 border-t border-[var(--rule)]"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Overline className="text-[#234ba0]">Also this week</Overline>
@@ -206,7 +206,7 @@ export const LeftFieldMockup = () => {
                       {secondary.title}
                     </h3>
                     {secondary.subtitle && (
-                      <p className="font-reading italic text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] max-w-[60ch] leading-snug">
+                      <p className="font-reading italic text-base lg:text-lg text-[var(--text-muted)] max-w-[60ch] leading-snug">
                         {secondary.subtitle}
                       </p>
                     )}
@@ -220,7 +220,7 @@ export const LeftFieldMockup = () => {
                     {grid.map((p, i) => (
                       <li
                         key={p.id}
-                        className={i === grid.length - 1 ? '' : 'pb-7 mb-7 border-b border-[#E2E8F0] dark:border-[#1E293B]'}
+                        className={i === grid.length - 1 ? '' : 'pb-7 mb-7 border-b border-[var(--rule)]'}
                       >
                         <a
                           href={p.external_url}
@@ -234,7 +234,7 @@ export const LeftFieldMockup = () => {
                             {p.title}
                           </h3>
                           {p.subtitle && (
-                            <p className="font-plex text-sm text-[#475569] dark:text-[#94A3B8] line-clamp-2 max-w-[40ch]">
+                            <p className="font-plex text-sm text-[var(--text-muted)] line-clamp-2 max-w-[40ch]">
                               {p.subtitle}
                             </p>
                           )}
@@ -249,7 +249,7 @@ export const LeftFieldMockup = () => {
 
           {/* Index list */}
           {list.length > 0 && (
-            <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+            <section className="border-b border-[var(--rule)]">
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
                 <div className="flex items-end justify-between mb-12">
                   <div>
@@ -260,7 +260,7 @@ export const LeftFieldMockup = () => {
                   </div>
                 </div>
 
-                <ul className="border-t border-[#0F172A] dark:border-[#F8FAFC]">
+                <ul className="border-t border-[var(--text)]">
                   {list.map((p, i) => (
                     <li key={p.id}>
                       <a
@@ -268,7 +268,7 @@ export const LeftFieldMockup = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         data-testid={`leftfield-list-${p.id}`}
-                        className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                        className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                       >
                         <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                           {String(i + 1).padStart(2, '0')}

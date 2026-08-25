@@ -45,13 +45,13 @@ export const FeedMockup = () => {
   return (
     <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play — India\'s sports business desk.' }}>
       {/* Section header */}
-      <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+      <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
           <Overline className="text-[#234ba0] mb-5 block">— The State of Play —</Overline>
           <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4.5rem] leading-[1] max-w-4xl">
             The week, <em className="italic font-normal text-[#234ba0]">on the record.</em>
           </h1>
-          <p className="font-plex text-base lg:text-lg text-[#475569] dark:text-[#94A3B8] mt-6 max-w-2xl leading-relaxed">
+          <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
             Long-form reportage and analysis on the businesses, deals and people moving Indian sport. Updated each Friday — read in any order.
           </p>
         </div>
@@ -59,7 +59,7 @@ export const FeedMockup = () => {
 
       {/* Lead story — full bleed split */}
       {lead && (
-        <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+        <section className="border-b border-[var(--rule)]">
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
             <Link
               to={`/${lead.id}`}
@@ -85,7 +85,7 @@ export const FeedMockup = () => {
                 {lead.title}
               </h2>
               {lead.subtitle && (
-                <p className="font-plex text-lg text-[#475569] dark:text-[#94A3B8] max-w-[60ch] leading-relaxed">
+                <p className="font-plex text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
                   {lead.subtitle}
                 </p>
               )}
@@ -97,7 +97,7 @@ export const FeedMockup = () => {
                 {grid.map((p, i) => (
                   <li
                     key={p.id}
-                    className={i === grid.length - 1 ? '' : 'pb-8 mb-8 border-b border-[#E2E8F0] dark:border-[#1E293B]'}
+                    className={i === grid.length - 1 ? '' : 'pb-8 mb-8 border-b border-[var(--rule)]'}
                   >
                     <Link
                       to={`/${p.id}`}
@@ -120,7 +120,7 @@ export const FeedMockup = () => {
 
       {/* List of remaining posts */}
       {list.length > 0 && (
-        <section className="border-b border-[#E2E8F0] dark:border-[#1E293B]">
+        <section className="border-b border-[var(--rule)]">
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
             <div className="flex items-end justify-between mb-12">
               <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
@@ -129,13 +129,13 @@ export const FeedMockup = () => {
               <Overline className="hidden md:block">{list.length.toString().padStart(2, '0')} stories</Overline>
             </div>
 
-            <ul className="border-t border-[#0F172A] dark:border-[#F8FAFC]">
+            <ul className="border-t border-[var(--text)]">
               {list.map((p, i) => (
                 <li key={p.id}>
                   <Link
                     to={`/${p.id}`}
                     data-testid={`feed-row-${p.id}`}
-                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[#E2E8F0] dark:border-[#1E293B] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
                   >
                     <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
