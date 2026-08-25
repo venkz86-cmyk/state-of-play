@@ -4,6 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#234ba0" />
+
+        <!--
+          Google Search Console — domain verification.
+          Set REACT_APP_GSC_TOKEN in the Vercel project env vars once the
+          Search Console property is created (Property → HTML tag method).
+          If unset, the meta tag renders empty and Google silently ignores it.
+          Also mirrored on all SSR endpoints (/api/story/*, /api/og/*) so
+          Google can verify off any indexable URL, not just index.html.
+        -->
+        <meta name="google-site-verification" content="%REACT_APP_GSC_TOKEN%" />
+
         <meta name="description" content="Essential intelligence on Indian sports business for global investors, leagues, and agencies. Breaking news, exclusive analysis, and on-the-ground reporting you won't find anywhere else." />
         
         <!-- Open Graph / Facebook / WhatsApp -->

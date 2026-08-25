@@ -3,6 +3,7 @@ from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import os
+import re
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
@@ -1608,6 +1609,289 @@ async def root_health_check():
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "stateofplay-backend"
     }
+
+# ─── SEARCH-ENGINE SSR: full article HTML for Googlebot/Bingbot/etc. ─────
+#
+# Routing contract (see frontend/vercel.json):
+#   • Social-media bots      →  /api/og/{slug}    → 3.9 KB stub, meta tags only
+#   • Search-engine crawlers →  /api/story/{slug} → THIS endpoint, full body
+#
+# The social stub is fine for Facebook / WhatsApp / LinkedIn / Twitter which
+# only care about <meta og:*> tags. It's a disaster for Google, which needs
+# the article body to build relevance signals. Before this endpoint existed,
+# both audiences were routed to /api/og/{slug}, meaning Google indexed only
+# ~64 words per article (title + Ghost excerpt) — the root cause behind the
+# "only 17 pages indexed" symptom flagged by the audit.
+#
+# This endpoint returns a full server-rendered article page with:
+#   • Canonical <title>, <meta description>, <link rel="canonical">, OG/Twitter tags
+#   • NewsArticle JSON-LD schema (headline, dates, author, publisher, articleBody)
+#   • <article> element with <h1>, byline, hero image, full Ghost HTML body, tags
+#   • Minimal readable styling so a human landing here directly still gets a
+#     usable page (though Vercel routes humans to the SPA, not here)
+
+
+def _escape_html(text) -> str:
+    if not text:
+        return ''
+    return (str(text)
+            .replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            .replace('"', '&quot;').replace("'", '&#039;'))
+
+
+@api_router.get("/story/{slug}")
+async def get_story_ssr(slug: str, request: Request):
+    """Full article HTML for search-engine crawlers. See module docstring above."""
+    import json as _json
+    import httpx
+    from fastapi.responses import HTMLResponse
+
+    article_url = f"https://www.stateofplay.club/{slug}"
+    site_default_image = f"https://www.stateofplay.club/api/og-image/{slug}"
+    gsc_token = os.environ.get('GSC_VERIFICATION_TOKEN', '').strip()
+
+    article = None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{GHOST_URL}/ghost/api/content/posts/slug/{slug}/",
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'include': 'authors,tags',
+                    # Explicitly request the html field — it's returned by
+                    # default, but being explicit protects against Ghost API
+                    # default changes.
+                    'formats': 'html',
+                },
+            )
+            if resp.status_code == 200:
+                posts = resp.json().get('posts') or []
+                if posts:
+                    article = posts[0]
+    except Exception as e:
+        logger.error(f"SSR story fetch failed for {slug}: {e!r}")
+
+    if not article:
+        # Slug isn't a Ghost post — return a proper 404 so Google de-indexes
+        # cleanly instead of banking a soft-404 penalty.
+        return HTMLResponse(
+            content=(
+                '<!DOCTYPE html><html lang="en"><head>'
+                '<meta charset="utf-8">'
+                '<title>Not found | The State of Play</title>'
+                '<meta name="robots" content="noindex,nofollow">'
+                '</head><body><h1>Not found</h1>'
+                '<p>This story could not be located. '
+                '<a href="https://www.stateofplay.club/">Return to The State of Play</a></p>'
+                '</body></html>'
+            ),
+            status_code=404,
+        )
+
+    # ── Extract fields with sensible fallbacks ─────────────────────────
+    title           = article.get('title') or 'The State of Play'
+    description     = (article.get('custom_excerpt')
+                       or article.get('excerpt')
+                       or "India's sports business publication.")
+    body_html       = article.get('html') or ''
+    hero_image      = article.get('feature_image') or ''
+    hero_alt        = article.get('feature_image_alt') or title
+    hero_caption    = article.get('feature_image_caption') or ''
+    published       = article.get('published_at') or ''
+    modified        = article.get('updated_at') or published
+    reading_time    = article.get('reading_time') or 0
+    authors_arr     = article.get('authors') or []
+    author_names    = [a.get('name') for a in authors_arr if a.get('name')]
+    author_primary  = author_names[0] if author_names else 'Venkat Ananth'
+    tags_arr        = article.get('tags') or []
+    tag_names       = [t.get('name') for t in tags_arr if t.get('name') and not (t.get('name') or '').startswith('#')]
+    og_image        = hero_image or site_default_image
+
+    # ── Human-readable date for the byline ─────────────────────────────
+    display_date = ''
+    if published:
+        try:
+            dt = datetime.fromisoformat(published.replace('Z', '+00:00'))
+            display_date = dt.strftime('%-d %B %Y')
+        except Exception:
+            display_date = published[:10]
+
+    # ── JSON-LD NewsArticle schema (Google's rich-results eligibility) ─
+    # articleBody is passed as plain text (Ghost's html field stripped of tags)
+    # per schema.org guidance. Keep it truncated to avoid ballooning HTML size.
+    plain_body = re.sub(r'<[^>]+>', ' ', body_html or '')
+    plain_body = re.sub(r'\s+', ' ', plain_body).strip()
+
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "mainEntityOfPage": {"@type": "WebPage", "@id": article_url},
+        "headline": title[:110],
+        "description": description[:300],
+        "image": [og_image] if og_image else [],
+        "datePublished": published,
+        "dateModified": modified,
+        "author": [
+            {"@type": "Person", "name": n} for n in author_names
+        ] or [{"@type": "Person", "name": "Venkat Ananth"}],
+        "publisher": {
+            "@type": "Organization",
+            "name": "The State of Play",
+            "url": "https://www.stateofplay.club",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://www.stateofplay.club/tsop-logo.png",
+                "width": 400,
+                "height": 400,
+            },
+        },
+        "articleBody": plain_body[:5000],
+        "url": article_url,
+    }
+    if tag_names:
+        ld["keywords"] = ", ".join(tag_names)
+        ld["articleSection"] = tag_names[0]
+    ld_json = _json.dumps(ld, ensure_ascii=False)
+
+    # ── Tags rendered as a nav strip at the foot of the article ────────
+    tags_html = ''
+    if tag_names:
+        tags_html = (
+            '<nav class="tsop-tags" aria-label="Topics">'
+            + ''.join(
+                f'<span class="tsop-tag">{_escape_html(t)}</span>'
+                for t in tag_names[:8]
+            )
+            + '</nav>'
+        )
+
+    # ── Byline: author · date · reading time ───────────────────────────
+    byline_parts = []
+    if author_primary:
+        byline_parts.append(f'By {_escape_html(author_primary)}')
+    if display_date:
+        byline_parts.append(_escape_html(display_date))
+    if reading_time:
+        byline_parts.append(f'{int(reading_time)} min read')
+    byline_html = ' &middot; '.join(byline_parts)
+
+    # ── Hero image ─────────────────────────────────────────────────────
+    hero_html = ''
+    if hero_image:
+        caption_html = (
+            f'<figcaption class="tsop-hero-caption">{hero_caption}</figcaption>'
+            if hero_caption else ''
+        )
+        hero_html = (
+            f'<figure class="tsop-hero">'
+            f'<img src="{_escape_html(hero_image)}" alt="{_escape_html(hero_alt)}" '
+            f'loading="eager" width="1600" height="900">'
+            f'{caption_html}'
+            f'</figure>'
+        )
+
+    # ── article:author + article:tag meta ──────────────────────────────
+    author_meta = ''.join(
+        f'<meta property="article:author" content="{_escape_html(n)}">'
+        for n in author_names
+    )
+    tag_meta = ''.join(
+        f'<meta property="article:tag" content="{_escape_html(t)}">'
+        for t in tag_names[:10]
+    )
+
+    gsc_meta = (
+        f'<meta name="google-site-verification" content="{_escape_html(gsc_token)}">'
+        if gsc_token else ''
+    )
+
+    html_doc = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {gsc_meta}
+  <title>{_escape_html(title)} | The State of Play</title>
+  <meta name="description" content="{_escape_html(description)}">
+  <link rel="canonical" href="{article_url}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{article_url}">
+  <meta property="og:title" content="{_escape_html(title)}">
+  <meta property="og:description" content="{_escape_html(description)}">
+  <meta property="og:image" content="{_escape_html(og_image)}">
+  <meta property="og:image:secure_url" content="{_escape_html(og_image)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="The State of Play">
+  <meta property="article:published_time" content="{published}">
+  <meta property="article:modified_time" content="{modified}">
+  {author_meta}
+  {tag_meta}
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@stateofplayclub">
+  <meta name="twitter:title" content="{_escape_html(title)}">
+  <meta name="twitter:description" content="{_escape_html(description)}">
+  <meta name="twitter:image" content="{_escape_html(og_image)}">
+
+  <!-- NewsArticle JSON-LD -->
+  <script type="application/ld+json">{ld_json}</script>
+
+  <style>
+    :root {{
+      --bg:#F5F3EE; --text:#1A1A1A; --muted:#666; --rule:#DAD5CC; --accent:#A0291C;
+    }}
+    * {{ box-sizing:border-box; }}
+    body {{ margin:0; background:var(--bg); color:var(--text); font-family: "Newsreader", Georgia, "Times New Roman", serif; line-height:1.65; -webkit-font-smoothing:antialiased; }}
+    .tsop-mast {{ border-bottom:1px solid var(--rule); padding:18px 28px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }}
+    .tsop-mast a {{ color:var(--text); text-decoration:none; font-weight:600; }}
+    article.tsop {{ max-width:720px; margin:0 auto; padding:40px 22px 80px; }}
+    article.tsop h1 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:clamp(28px,5vw,42px); line-height:1.1; letter-spacing:-0.01em; margin:0 0 16px; }}
+    .tsop-byline {{ font-family:-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; letter-spacing:0.02em; color:var(--muted); margin:0 0 32px; }}
+    .tsop-hero {{ margin:0 0 32px; }}
+    .tsop-hero img {{ width:100%; height:auto; display:block; }}
+    .tsop-hero-caption {{ font-size:12px; color:var(--muted); padding:8px 4px 0; font-style:italic; }}
+    article.tsop p, article.tsop li {{ font-size:19px; line-height:1.7; margin:0 0 22px; }}
+    article.tsop h2 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:26px; line-height:1.25; margin:44px 0 12px; }}
+    article.tsop h3 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:21px; line-height:1.3; margin:36px 0 10px; }}
+    article.tsop a {{ color:var(--accent); text-underline-offset:4px; }}
+    article.tsop blockquote {{ border-left:3px solid var(--accent); padding:2px 0 2px 18px; margin:24px 0; font-style:italic; color:#333; }}
+    article.tsop img, article.tsop figure {{ max-width:100%; height:auto; margin:28px 0; }}
+    article.tsop figcaption {{ font-size:13px; color:var(--muted); font-style:italic; padding-top:6px; }}
+    .tsop-tags {{ margin:48px 0 0; padding-top:24px; border-top:1px solid var(--rule); font-family:-apple-system,sans-serif; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }}
+    .tsop-tag {{ display:inline-block; margin-right:14px; }}
+    .tsop-foot {{ margin-top:56px; padding:28px 0 0; border-top:1px solid var(--rule); font-family:-apple-system,sans-serif; font-size:13px; color:var(--muted); }}
+    .tsop-foot a {{ color:var(--accent); text-decoration:none; }}
+  </style>
+</head>
+<body>
+  <header class="tsop-mast">
+    <a href="https://www.stateofplay.club/">The State of Play</a>
+  </header>
+  <main>
+    <article class="tsop">
+      <h1>{_escape_html(title)}</h1>
+      <p class="tsop-byline">{byline_html}</p>
+      {hero_html}
+      <div class="tsop-body">
+        {body_html}
+      </div>
+      {tags_html}
+      <p class="tsop-foot">Read the latest at <a href="https://www.stateofplay.club/">stateofplay.club</a> &middot; A publication of Left Field Ventures</p>
+    </article>
+  </main>
+</body>
+</html>'''
+    return HTMLResponse(
+        content=html_doc,
+        status_code=200,
+        headers={'Cache-Control': 'public, max-age=300, s-maxage=3600'},
+    )
+
 
 # ─── SEO: sitemap.xml + robots.txt ────────────────────────────────
 @api_router.get("/sitemap.xml")
