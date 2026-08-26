@@ -2,16 +2,13 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const COL_NAV = [
+const FOOTER_LINKS = [
   { label: 'The State of Play', to: '/state-of-play' },
   { label: 'The Left Field', to: '/left-field' },
   { label: 'The Outfield', to: '/outfield' },
   { label: 'Archive', to: '/archive' },
   { label: 'About', to: '/about' },
   { label: 'Contact', to: '/contact' },
-];
-
-const COL_LEGAL = [
   { label: 'Membership', to: '/membership' },
   { label: 'For Teams', to: '/teams' },
   { label: 'Partnerships', to: '/partnerships' },
@@ -87,11 +84,11 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
         </div>
       )}
 
-      {/* Index columns */}
+      {/* Index */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
           {/* Brand — Fix 15: Geist body copy, not italic */}
-          <div className="col-span-2">
+          <div className="md:col-span-2">
             <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-4">
               The Publication
             </span>
@@ -103,43 +100,19 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
             </div>
           </div>
 
-          {/* Navigation */}
-          <div>
-            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
-              Navigation
-            </span>
-            <ul className="space-y-3">
-              {COL_NAV.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Membership & Legal */}
-          <div>
-            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-5 pb-3 border-b border-white/10">
-              Membership & Legal
-            </span>
-            <ul className="space-y-3">
-              {COL_LEGAL.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links — one plain list, no section grid */}
+          <ul className="flex flex-wrap gap-x-6 gap-y-3 md:block md:space-y-3">
+            {FOOTER_LINKS.map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
