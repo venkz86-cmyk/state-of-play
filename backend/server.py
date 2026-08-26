@@ -702,28 +702,28 @@ async def generate_og_image(slug: str):
         img = Image.alpha_composite(img, overlay)
         draw = ImageDraw.Draw(img)
         
-        # Load editorial fonts (Fraunces for title, DM Sans for UI). These
-        # are variable fonts shipped in /app/backend/assets/fonts.
+        # Load editorial fonts (Literata for title, Schibsted Grotesk for UI).
+        # These are variable fonts shipped in /app/backend/assets/fonts.
         FONT_DIR = os.path.join(os.path.dirname(__file__), "assets", "fonts")
-        FRAUNCES = os.path.join(FONT_DIR, "Fraunces.ttf")
-        DMSANS = os.path.join(FONT_DIR, "DMSans.ttf")
+        LITERATA = os.path.join(FONT_DIR, "Literata.ttf")
+        SCHIBSTED = os.path.join(FONT_DIR, "SchibstedGrotesk.ttf")
         try:
-            title_font = ImageFont.truetype(FRAUNCES, 60)
+            title_font = ImageFont.truetype(LITERATA, 60)
             try:
                 title_font.set_variation_by_name('SemiBold')
             except Exception:
                 pass
-            masthead_font = ImageFont.truetype(FRAUNCES, 22)
+            masthead_font = ImageFont.truetype(LITERATA, 22)
             try:
                 masthead_font.set_variation_by_name('SemiBold')
             except Exception:
                 pass
-            badge_font = ImageFont.truetype(DMSANS, 16)
+            badge_font = ImageFont.truetype(SCHIBSTED, 16)
             try:
-                badge_font.set_variation_by_axes([14, 700])
+                badge_font.set_variation_by_name('Bold')
             except Exception:
                 pass
-            byline_font = ImageFont.truetype(DMSANS, 16)
+            byline_font = ImageFont.truetype(SCHIBSTED, 16)
         except Exception as font_err:
             logger.warning(f"Editorial fonts failed, falling back: {font_err}")
             title_font = ImageFont.load_default()
@@ -789,7 +789,7 @@ async def generate_og_image(slug: str):
             )
             draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
         
-        # --- TITLE (pixel-measured wrap so Fraunces lays out cleanly) ---
+        # --- TITLE (pixel-measured wrap so Literata lays out cleanly) ---
         max_text_width = width - 100  # 50px padding each side
         words = title.split()
         title_lines = []
@@ -1846,18 +1846,18 @@ async def get_story_ssr(slug: str, request: Request):
       --bg:#F5F3EE; --text:#1A1A1A; --muted:#666; --rule:#DAD5CC; --accent:#A0291C;
     }}
     * {{ box-sizing:border-box; }}
-    body {{ margin:0; background:var(--bg); color:var(--text); font-family: "Newsreader", Georgia, "Times New Roman", serif; line-height:1.65; -webkit-font-smoothing:antialiased; }}
+    body {{ margin:0; background:var(--bg); color:var(--text); font-family: "Literata", Georgia, "Times New Roman", serif; line-height:1.65; -webkit-font-smoothing:antialiased; }}
     .tsop-mast {{ border-bottom:1px solid var(--rule); padding:18px 28px; font-family:-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }}
     .tsop-mast a {{ color:var(--text); text-decoration:none; font-weight:600; }}
     article.tsop {{ max-width:720px; margin:0 auto; padding:40px 22px 80px; }}
-    article.tsop h1 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:clamp(28px,5vw,42px); line-height:1.1; letter-spacing:-0.01em; margin:0 0 16px; }}
+    article.tsop h1 {{ font-family:"Literata",Georgia,serif; font-weight:600; font-size:clamp(28px,5vw,42px); line-height:1.1; letter-spacing:-0.01em; margin:0 0 16px; }}
     .tsop-byline {{ font-family:-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; letter-spacing:0.02em; color:var(--muted); margin:0 0 32px; }}
     .tsop-hero {{ margin:0 0 32px; }}
     .tsop-hero img {{ width:100%; height:auto; display:block; }}
     .tsop-hero-caption {{ font-size:12px; color:var(--muted); padding:8px 4px 0; font-style:italic; }}
     article.tsop p, article.tsop li {{ font-size:19px; line-height:1.6; margin:0 0 22px; }}
-    article.tsop h2 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:26px; line-height:1.25; margin:44px 0 12px; }}
-    article.tsop h3 {{ font-family:"Fraunces","Newsreader",Georgia,serif; font-weight:600; font-size:21px; line-height:1.3; margin:36px 0 10px; }}
+    article.tsop h2 {{ font-family:"Literata",Georgia,serif; font-weight:600; font-size:26px; line-height:1.25; margin:44px 0 12px; }}
+    article.tsop h3 {{ font-family:"Literata",Georgia,serif; font-weight:600; font-size:21px; line-height:1.3; margin:36px 0 10px; }}
     article.tsop a {{ color:var(--accent); text-underline-offset:4px; }}
     article.tsop blockquote {{ border-left:3px solid var(--accent); padding:2px 0 2px 18px; margin:24px 0; font-style:italic; color:#333; }}
     article.tsop img, article.tsop figure {{ max-width:100%; height:auto; margin:28px 0; }}
