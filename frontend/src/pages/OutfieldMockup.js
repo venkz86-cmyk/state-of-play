@@ -7,8 +7,8 @@ const ROUNDTABLES = [
   { period: 'December', city: 'Mumbai or Bengaluru', tentative: true },
 ];
 const SPEAKEASIES = [
-  { period: 'June', city: 'Bengaluru', tentative: true },
-  { period: 'November', city: 'New Delhi', tentative: true },
+  { period: 'October', city: 'Mumbai', tentative: true },
+  { period: 'December', city: 'Bengaluru or New Delhi', tentative: true },
 ];
 const SANDBOXES = [
   { period: '18 July', city: 'Bengaluru', name: 'The Auction Room', done: true, heldDate: '18 July 2026' },
