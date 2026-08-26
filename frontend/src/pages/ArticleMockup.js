@@ -20,6 +20,9 @@ import { NotFoundMockup } from './NotFoundMockup';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+const VENKAT_LINKEDIN_URL = 'https://www.linkedin.com/in/venkat-ananth/';
+const VENKAT_X_URL = 'https://x.com/venkatananth';
+
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
@@ -130,6 +133,7 @@ export const ArticleMockup = () => {
     ? previewParagraphs(article.content, 3)
     : (article.content || article.preview_content || '');
   const beat = article.theme || 'Long Read';
+  const isVenkatByline = !article.author || article.author === 'Venkat Ananth';
 
   return (
     <div
@@ -181,6 +185,30 @@ export const ArticleMockup = () => {
           <p className="font-plex text-[14px] text-[var(--text)] mb-6">
             By {article.author || 'Venkat Ananth'}
             {article.read_time ? <span className="text-[var(--text-label)]"> · {article.read_time} min read</span> : null}
+            {isVenkatByline && (
+              <>
+                <span className="text-[var(--text-label)]"> · </span>
+                <a
+                  href={VENKAT_LINKEDIN_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="byline-linkedin"
+                  className="text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200"
+                >
+                  LinkedIn
+                </a>
+                <span className="text-[var(--text-label)]"> · </span>
+                <a
+                  href={VENKAT_X_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="byline-x"
+                  className="text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200"
+                >
+                  X
+                </a>
+              </>
+            )}
           </p>
 
           <ColdLinkAdminButton
