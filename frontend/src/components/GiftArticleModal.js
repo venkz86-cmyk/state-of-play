@@ -77,7 +77,7 @@ export const GiftArticleModal = ({
               <a
                 href="/signup"
                 className="inline-block h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] leading-[44px] transition-colors"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 'var(--control-radius)' }}
                 data-testid="gift-modal-subscribe-cta"
               >
                 Subscribe to gift articles →
@@ -124,7 +124,7 @@ export const GiftArticleModal = ({
                     placeholder="Jane Doe"
                     data-testid="gift-modal-name"
                     className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: 'var(--control-radius)' }}
                   />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export const GiftArticleModal = ({
                     placeholder="jane@company.com"
                     data-testid="gift-modal-email"
                     className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: 'var(--control-radius)' }}
                   />
                 </div>
               </div>
@@ -161,7 +161,7 @@ export const GiftArticleModal = ({
                   placeholder="Thought you’d find this interesting."
                   data-testid="gift-modal-context"
                   className="w-full px-3 py-2 bg-transparent border border-[var(--rule)] font-plex text-[14px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 />
               </div>
 
@@ -180,7 +180,7 @@ export const GiftArticleModal = ({
                   disabled={submitting}
                   data-testid="gift-modal-submit"
                   className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   {submitting ? 'Sending…' : 'Send gift →'}
                 </button>

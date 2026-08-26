@@ -82,7 +82,7 @@ export const TeamsLogin = () => {
                   disabled={submitting}
                   data-testid="teams-login-email"
                   className="w-full h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 />
                 {validationError && (
                   <p
@@ -99,7 +99,7 @@ export const TeamsLogin = () => {
                 disabled={submitting}
                 data-testid="teams-login-submit"
                 className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 'var(--control-radius)' }}
               >
                 {submitting ? 'Sending…' : 'Email me the link →'}
               </button>

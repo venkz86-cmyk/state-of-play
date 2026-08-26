@@ -71,6 +71,12 @@ body {
   /* compat with earlier mockup CSS */
   --accent: var(--accent-burgundy);
   --accent-hover: var(--accent-burgundy-hover);
+
+  /* Shared corner radius for real interactive controls (buttons, inputs).
+     Deliberately restrained — a hint of ease, not a rounded-lg SaaS pill.
+     Structural surfaces (modal panels, document previews, progress
+     tracks) stay sharp; this is only for things you click or type into. */
+  --control-radius: 4px;
 }
 .dark {
   --bg: #0F0F0F;
@@ -85,6 +91,19 @@ body {
   --footer-cta-bg: #161616;
   --accent-blue: #5B8FE0;
   /* burgundy unchanged in dark per spec */
+}
+
+/* Keyboard-focus ring — on-brand burgundy instead of the browser's default
+   blue, which nothing else on the site uses. Only shows for keyboard/
+   programmatic focus (:focus-visible), not on an ordinary mouse click. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-burgundy);
+  outline-offset: 2px;
 }
 
 /* Smooth theme switching */

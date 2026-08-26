@@ -103,7 +103,7 @@ export const PartnershipsMockup = () => (
             href="mailto:prerna@stateofplay.club?subject=Partnerships"
             data-testid="partnerships-cta"
             className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200"
-            style={{ borderRadius: 0 }}
+            style={{ borderRadius: 'var(--control-radius)' }}
           >
             Write to us
           </a>

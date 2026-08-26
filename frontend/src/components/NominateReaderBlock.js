@@ -126,7 +126,7 @@ export const NominateReaderBlock = ({
                   disabled={submitting}
                   placeholder="Jane Doe"
                   className="w-full h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 />
               </div>
               <div>
@@ -141,7 +141,7 @@ export const NominateReaderBlock = ({
                   disabled={submitting}
                   placeholder="jane@company.com"
                   className="w-full h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ export const NominateReaderBlock = ({
                 disabled={submitting}
                 placeholder="Works in franchise strategy. We were on a panel together last year."
                 className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-plex text-[15px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 'var(--control-radius)' }}
               />
               <p className="font-plex text-[12px] text-[var(--text-muted)] mt-2 max-w-[55ch]">
                 What do they do, and how do you know them?
@@ -185,7 +185,7 @@ export const NominateReaderBlock = ({
                 disabled={submitting}
                 data-testid="nominate-submit"
                 className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 'var(--control-radius)' }}
               >
                 {submitting ? 'Sending…' : 'Nominate →'}
               </button>

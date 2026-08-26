@@ -120,7 +120,7 @@ export const MockupHeader = () => {
                   to="/signup"
                   data-testid="mockup-header-subscribe"
                   className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-5 transition-colors duration-200"
-                  style={{ borderRadius: 0 }}
+                  style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   Subscribe
                 </Link>
@@ -187,7 +187,7 @@ export const MockupHeader = () => {
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
                     className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-5 w-fit"
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: 'var(--control-radius)' }}
                   >
                     Subscribe
                   </Link>

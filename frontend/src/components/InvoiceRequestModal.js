@@ -241,7 +241,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
               data-testid="invoice-address"
               placeholder="Street, city, postal code"
               className="w-full bg-transparent border border-[var(--text)] font-plex text-base p-3 focus:outline-none focus:border-[var(--accent-burgundy)]"
-              style={{ borderRadius: 0 }}
+              style={{ borderRadius: 'var(--control-radius)' }}
             />
           </div>
 
@@ -275,7 +275,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
               disabled={submitting}
               data-testid="invoice-submit"
               className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 transition-colors disabled:opacity-60"
-              style={{ borderRadius: 0 }}
+              style={{ borderRadius: 'var(--control-radius)' }}
             >
               {submitting ? 'Generating…' : 'Download invoice'}
             </button>
