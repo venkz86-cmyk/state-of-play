@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
-import { CopyQuote } from '../components/CopyQuote';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
@@ -149,7 +148,6 @@ export const ArticleMockup = () => {
         article={article}
       />
       <ReadingProgress />
-      <CopyQuote />
       <MockupHeader />
 
       {/* DATELINE STRIP */}
