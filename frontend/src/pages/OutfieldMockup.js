@@ -60,11 +60,12 @@ export const OutfieldMockup = () => (
       </div>
     </div>
 
-    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-12">
-      <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[3rem] lg:text-[4rem] leading-[1] mb-7 max-w-[22ch]">
-        Where sports business <em className="italic font-normal">meets, in person.</em>
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
+      <Overline className="mb-4 block">In person</Overline>
+      <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
+        Three rooms. No stage. No slides.
       </h1>
-      <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[58ch] leading-relaxed">
+      <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
         The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Roundtable is a conversation. Speakeasy is a room. Sandbox is a game. All in person, all off the record.
       </p>
     </section>

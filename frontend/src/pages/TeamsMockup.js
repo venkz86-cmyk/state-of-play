@@ -58,11 +58,12 @@ export const TeamsMockup = () => {
         </div>
       </div>
 
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-12">
-        <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[24ch]">
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
+        <Overline className="mb-4 block">Team plans</Overline>
+        <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[22ch]">
           The State of Play, <em className="italic font-normal">for the whole desk.</em>
         </h1>
-        <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
+        <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[50ch] leading-relaxed">
           One subscription, your whole team stays informed. Volume pricing, centralised management, GST-compliant invoicing.
         </p>
       </section>

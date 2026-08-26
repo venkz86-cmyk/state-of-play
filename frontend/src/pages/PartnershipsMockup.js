@@ -38,11 +38,12 @@ export const PartnershipsMockup = () => (
       </div>
     </div>
 
-    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-12">
-      <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-[3rem] lg:text-[3.75rem] leading-[1.05] mb-7 max-w-[22ch]">
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
+      <Overline className="mb-4 block">Partner with us</Overline>
+      <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
         Reach the people <em className="italic font-normal">writing the cheques.</em>
       </h1>
-      <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] max-w-[60ch]">
+      <p className="font-reading italic text-[18px] md:text-[20px] leading-[1.5] text-[var(--text-muted)] max-w-[55ch]">
         The State of Play is read inside the meeting rooms where Indian sport is bought, sold, structured and financed. A small audience by design, and a useful one for partners with a point of view.
       </p>
     </section>

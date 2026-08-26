@@ -29,11 +29,12 @@ export const AboutMockup = () => (
       </div>
     </div>
 
-    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-16">
-      <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-7 max-w-[22ch]">
-        A weekly publication for <em className="italic font-normal">how sport actually works.</em>
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
+      <Overline className="mb-4 block">Mission</Overline>
+      <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
+        How sport actually works.
       </h1>
-      <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
+      <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
         The State of Play is a subscription-only publication providing in-depth, original insight into the business of sport, with sharp reporting, analysis and a distinct editorial voice grounded in India.
       </p>
     </section>
