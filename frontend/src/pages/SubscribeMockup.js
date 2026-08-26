@@ -10,8 +10,8 @@ const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
 const BENEFITS = [
-  ['01', 'Weekly TSOP Story', 'Deep reportage and long-form analysis on the Indian sports business ecosystem.'],
-  ['02', 'Bi-weekly Left Field', 'Curated news briefs covering Indian and global sports business.'],
+  ['01', 'Weekly TSOP Story', 'Deep reportage and long-form analysis on Indian sports business.'],
+  ['02', 'Bi-weekly Left Field', 'News briefs covering Indian and global sports business.'],
   ['03', 'Full Archive Access', 'Every premium story since launch, searchable and always available.'],
   ['04', 'Breaking News Alerts', 'First to know about major deals and announcements.'],
   ['05', 'Exclusive Interviews', 'TSOP Transcript Q&As with industry insiders.'],
@@ -58,7 +58,7 @@ export const SubscribeMockup = () => {
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
-            Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
+            Original reporting on the business of Indian sport, across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">

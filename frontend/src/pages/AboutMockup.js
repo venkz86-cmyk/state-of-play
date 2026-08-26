@@ -42,10 +42,10 @@ export const AboutMockup = () => (
       <div className="lg:col-span-3"><p className="font-editorial italic text-lg">Editor’s note</p></div>
       <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[var(--text-secondary)] max-w-[65ch]">
         <p className="font-editorial font-medium text-xl lg:text-[1.5rem] leading-snug tracking-tight text-[var(--text)]">
-          Sport is no longer just what happens on the field. It is a high-stakes, capital-intensive and profoundly global business with fast-evolving dynamics.
+          Sport is no longer just what happens on the field. It is a capital-intensive global business, and the money is moving faster than the coverage of it.
         </p>
         <p>
-          In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained, intelligent reporting on how sport actually works.
+          In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained reporting on how sport actually works.
         </p>
         <p>
           The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition on how money, power and strategy are reordering Indian sport, and what those shifts mean for the wider sporting economy.
