@@ -23,11 +23,12 @@ export const ContactMockup = () => (
       </div>
     </div>
 
-    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-12">
-      <h1 className="font-editorial font-semibold tracking-tight text-[2.25rem] sm:text-[3rem] lg:text-[3.75rem] leading-[1.05] mb-7 max-w-[22ch]">
-        Write to us. <em className="italic font-normal">We answer.</em>
+    <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
+      <Overline className="mb-4 block">Get in touch</Overline>
+      <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
+        Write to us.
       </h1>
-      <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] max-w-[60ch]">
+      <p className="font-reading italic text-[18px] md:text-[20px] leading-[1.5] text-[var(--text-muted)] max-w-[55ch]">
         For questions about your membership, collaborations, or editorial queries, write to{' '}
         <a href="mailto:venkat@stateofplay.club" className="not-italic text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
           venkat@stateofplay.club
