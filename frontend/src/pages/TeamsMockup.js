@@ -41,7 +41,7 @@ const FEATURES = [
 
 const FAQS = [
   ['How does team access work?', 'You pay for a fixed number of seats, then use our dashboard to add team members by email. Each member gets a private login link by email.'],
-  ['Can we add or remove members?', 'Yes — use the team dashboard at any time. Changes take effect immediately.'],
+  ['Can we add or remove members?', 'Yes, use the team dashboard at any time. Changes take effect immediately.'],
   ['What payment methods do you accept?', 'All major credit/debit cards and UPI via Razorpay. International customers can pay via card.'],
   ['How does renewal work?', 'Founding customers who sign up before December 31, 2026 get Year 1 at the founding rate, then a gentle increase in Year 2.'],
 ];

@@ -53,5 +53,5 @@
     "paywall": "180px gradient fade eating last preview paragraph, then burgundy Lock badge + editorial heading + Razorpay CTA"
   },
   "loaded_fonts": ["Gloock", "Literata", "Schibsted Grotesk"],
-  "dark_mode_logo": "TODO — currently uses CSS invert on the single /tsop-logo.png. Muddy on the wordmark. Replace with a proper light-on-transparent variant when time permits."
+  "dark_mode_logo": "Fixed 2026-08-26 — single /tsop-logo.png (flat brand-blue on transparent) now uses CSS brightness-0 invert instead of plain invert, giving a clean white silhouette instead of the muddy khaki a plain invert produced on that hue. No second asset needed."
 }

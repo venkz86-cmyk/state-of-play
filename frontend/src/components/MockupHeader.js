@@ -4,11 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 
-// Currently a single asset. Dark mode swaps colour via a CSS `invert` filter
-// (see className on the <img> below). Muddy on the wordmark — TODO: replace
-// with a proper light-on-transparent variant. Do NOT re-introduce a LOGO_DARK
-// constant pointing at the same file — that misled a previous audit into
-// thinking a real dark-mode swap existed.
+// Single asset. The logo is a flat single-color PNG (brand blue on
+// transparent), so a plain CSS `invert` produced a muddy khaki tone
+// (255-34, 255-74, 255-159 -> a dull gold), not white. brightness-0 first
+// crushes it to solid black, then invert flips that to solid white — a
+// clean silhouette for dark mode with no second asset needed. Do NOT
+// re-introduce a LOGO_DARK constant pointing at the same file — that
+// misled a previous audit into thinking a real dark-mode swap existed.
 const LOGO_SRC = '/tsop-logo.png';
 
 const NAV = [
@@ -50,7 +52,7 @@ export const MockupHeader = () => {
             <img
               src={LOGO_SRC}
               alt="The State of Play"
-              className={`h-10 lg:h-12 w-auto transition-opacity duration-200 group-hover:opacity-80 ${isDark ? 'invert' : ''}`}
+              className={`h-10 lg:h-12 w-auto transition-opacity duration-200 group-hover:opacity-80 ${isDark ? 'brightness-0 invert' : ''}`}
             />
           </Link>
 

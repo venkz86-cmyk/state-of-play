@@ -749,7 +749,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     title = html.escape(post.get('title') or 'The State of Play')
     excerpt = html.escape((post.get('custom_excerpt') or post.get('excerpt') or '')[:200])
     image = html.escape(post.get('feature_image') or f'{PUBLIC_BASE_URL}/og-default.png')
-    # Dynamic, branded OG card (Literata masthead + headline) for socials
+    # Dynamic, branded OG card (Gloock masthead + headline) for socials
     og_card = f"{PUBLIC_BASE_URL}/api/og-image/{html.escape(post.get('slug') or '')}"
     canonical_url = f"{PUBLIC_BASE_URL}/{post.get('slug') or ''}"
     body_html = post.get('html') or ''
@@ -784,7 +784,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
 <meta name="twitter:image" content="{og_card}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,600&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,600&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{{
     --bg:#FAF9F7;
@@ -793,7 +793,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     --label:#888;
     --rule:#E5E2DC;
     --accent:#A0291C;
-    --editorial:'Literata','Source Serif 4',Georgia,serif;
+    --editorial:'Gloock',Georgia,serif;
     --reading:'Literata','Source Serif 4',Georgia,serif;
     --ui:'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }}
