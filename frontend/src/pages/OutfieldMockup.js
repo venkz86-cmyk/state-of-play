@@ -2,7 +2,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const ROUNDTABLES = [
   { period: 'May', city: 'Mumbai', done: true, heldDate: '07 May 2026' },
-  { period: 'June / July', city: 'Bengaluru', tentative: true },
+  { period: 'August', city: 'Bengaluru', done: true, heldDate: '01 Aug 2026' },
   { period: 'September / October', city: 'New Delhi', tentative: true },
   { period: 'December', city: 'Mumbai or Bengaluru', tentative: true },
 ];
@@ -12,6 +12,7 @@ const SPEAKEASIES = [
 ];
 const SANDBOXES = [
   { period: '18 July', city: 'Bengaluru', name: 'The Auction Room', done: true, heldDate: '18 July 2026' },
+  { period: '21 August', city: 'New Delhi', name: 'The Auction Room: Media Rights Edition', done: true, heldDate: '21 Aug 2026' },
 ];
 const AUDIENCE = [
   'VCs investing in gaming and sports tech', 'Founders running platforms and apps',
@@ -115,7 +116,7 @@ export const OutfieldMockup = () => (
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
             <li><span className="text-[var(--text-muted)]">Size · </span>20–30 people</li>
-            <li><span className="text-[var(--text-muted)]">In 2026 · </span>1 event so far</li>
+            <li><span className="text-[var(--text-muted)]">In 2026 · </span>2 events so far</li>
             <li><span className="text-[var(--text-muted)]">Setting · </span>Weekend, hands-on</li>
             <li><span className="text-[var(--text-muted)]">Cost · </span>Low-cost</li>
           </ul>
