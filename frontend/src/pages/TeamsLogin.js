@@ -107,7 +107,7 @@ export const TeamsLogin = () => {
 
             <p className="font-plex text-[13px] text-[var(--text-muted)] mt-10 max-w-[52ch]">
               The dashboard is for the company admin who set up the subscription. Team members
-              don&rsquo;t need it — they sign in at{' '}
+              don&rsquo;t need it. They sign in at{' '}
               <a
                 href="/login"
                 className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1"

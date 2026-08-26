@@ -30,7 +30,7 @@ export const FeedMockup = () => {
 
   if (loading) {
     return (
-      <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play — India\'s sports business desk.' }}>
+      <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play, India\'s sports business desk.' }}>
         <div className="min-h-[60vh] flex items-center justify-center">
           <Overline>Loading desk…</Overline>
         </div>
@@ -43,7 +43,7 @@ export const FeedMockup = () => {
   const list = posts.slice(5);
 
   return (
-    <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play — India\'s sports business desk.' }}>
+    <MockupLayout testId="mockup-feed" seo={{ title: 'The State of Play — Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play, India\'s sports business desk.' }}>
       {/* Section header */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
@@ -52,7 +52,7 @@ export const FeedMockup = () => {
             The week, <em className="italic font-normal text-[var(--accent)]">on the record.</em>
           </h1>
           <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
-            Long-form reportage and analysis on the businesses, deals and people moving Indian sport. Updated each Friday — read in any order.
+            Long-form reportage and analysis on the businesses, deals and people moving Indian sport. Updated each Friday. Read in any order.
           </p>
         </div>
       </section>

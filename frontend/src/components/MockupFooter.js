@@ -44,7 +44,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
                     Enjoying The State of Play?
                     <br />
                     <em className="italic font-normal text-[#AAAAAA]">
-                      Tell us what’s landing — and what isn’t.
+                      Tell us what’s landing, and what isn’t.
                     </em>
                   </>
                 ) : (

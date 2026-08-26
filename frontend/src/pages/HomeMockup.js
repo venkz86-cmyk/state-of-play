@@ -157,7 +157,7 @@ export const HomeMockup = () => {
     >
       <SEO
         path="/"
-        description="India's sports business publication. Reportage, analysis, and intelligence from sport's most consequential rooms — written for the people who run the game."
+        description="India's sports business publication. Reportage, analysis, and intelligence from sport's most consequential rooms, written for the people who run the game."
       />
       <MockupHeader />
 

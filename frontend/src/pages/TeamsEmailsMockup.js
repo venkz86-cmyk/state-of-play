@@ -16,7 +16,7 @@ const ADMIN_EMAIL = {
   to: 'rohini@acmesports.in',
   subject: 'Your State of Play team subscription — Acme Sports',
   preheader:
-    'Welcome aboard. Your dashboard link is inside — and a quick word on how the seats work.',
+    'Welcome aboard. Your dashboard link is inside, and a quick word on how the seats work.',
 };
 
 const MEMBER_EMAIL = {
@@ -84,7 +84,7 @@ const AdminEmail = () => (
     </h1>
 
     <Body>
-      <p>Rohini —</p>
+      <p>Rohini,</p>
 
       <p>
         Your <strong className="font-semibold">Team-5 subscription</strong> to The State of Play
@@ -93,7 +93,7 @@ const AdminEmail = () => (
       </p>
 
       <p>
-        Your team dashboard lives at the link below. Bookmark it — it’s how you’ll add or remove
+        Your team dashboard lives at the link below. Bookmark it. It’s how you’ll add or remove
         colleagues, see who has access, and pull invoices when you need them.
       </p>
 
@@ -118,14 +118,14 @@ const AdminEmail = () => (
       <p className="pt-3"><strong className="font-semibold">A few notes:</strong></p>
 
       <ul className="list-disc pl-5 space-y-2 font-reading">
-        <li>You have <strong className="font-semibold">5 seats</strong>. Add colleagues from the dashboard — they’ll get a private sign-in link by email, no password required.</li>
+        <li>You have <strong className="font-semibold">5 seats</strong>. Add colleagues from the dashboard. They’ll get a private sign-in link by email, no password required.</li>
         <li>Only <strong className="font-semibold">@acmesports.in</strong> email addresses can be added. If you need a different domain, write to Prerna.</li>
-        <li>The link in this email is unique to your account. Don’t forward it — share the dashboard with colleagues by adding them to the seats instead.</li>
+        <li>The link in this email is unique to your account. Don’t forward it. Share the dashboard with colleagues by adding them to the seats instead.</li>
         <li>For a GST tax invoice, write to <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">prerna@stateofplay.club</a>.</li>
       </ul>
 
       <p className="pt-3">
-        We publish on the business of Indian sport — money, media, ownership, and power. What
+        We publish on the business of Indian sport: money, media, ownership, and power. What
         you’ll get next is the weekly briefing, every long-read as it lands, and the occasional
         note from the desk that doesn’t go anywhere else.
       </p>
@@ -181,7 +181,7 @@ const MemberEmail = () => (
       </p>
 
       <p className="pt-2">
-        Once you’re in, you’ll have full access to everything we publish — the long-reads, the
+        Once you’re in, you’ll have full access to everything we publish: the long-reads, the
         weekly <a href="https://www.stateofplay.club/left-field" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">Left Field</a> briefing,
         and the subscriber-only notes from the desk.
       </p>

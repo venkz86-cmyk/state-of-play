@@ -12,19 +12,19 @@ const longDate = (iso) =>
 const BENEFITS = [
   ['01', 'Weekly TSOP Story', 'Deep reportage and long-form analysis on the Indian sports business ecosystem.'],
   ['02', 'Bi-weekly Left Field', 'Curated news briefs covering Indian and global sports business.'],
-  ['03', 'Full Archive Access', 'Every premium story since launch — searchable and always available.'],
+  ['03', 'Full Archive Access', 'Every premium story since launch, searchable and always available.'],
   ['04', 'Breaking News Alerts', 'First to know about major deals and announcements.'],
   ['05', 'Exclusive Interviews', 'TSOP Transcript Q&As with industry insiders.'],
   ['06', 'Data & Analysis', 'IRR models, valuation breakdowns, market sizing.'],
-  ['07', 'Ad-Free Experience', 'No sponsored content, no ads — just journalism.'],
+  ['07', 'Ad-Free Experience', 'No sponsored content, no ads. Just journalism.'],
   ['08', 'Direct Access', 'Reply to any newsletter, get responses from Venkat.'],
 ];
 
 const FAQS = [
   ['What sports do you cover?', 'The full business of Indian sport: cricket, football, kabaddi, badminton, hockey, motorsport, emerging leagues, private equity deals, media rights, sports tech, governance and regulatory developments.'],
-  ['How is this different from The Left Field?', 'The Left Field is a free news brief. TSOP is original, reported, long-form analysis — plus exclusive interviews, investigations and data breakdowns.'],
+  ['How is this different from The Left Field?', 'The Left Field is a free news brief. TSOP is original, reported, long-form analysis, plus exclusive interviews, investigations and data breakdowns.'],
   ['What happens after I subscribe?', 'Your account is created automatically after payment via Razorpay. Check your email for a verification link and you’ll have immediate access.'],
-  ['How long is the subscription?', 'Annual — 12 months from purchase. You’ll receive a renewal reminder before it expires.'],
+  ['How long is the subscription?', 'Annual. 12 months from purchase. You’ll receive a renewal reminder before it expires.'],
 ];
 
 export const SubscribeMockup = () => {
@@ -42,7 +42,7 @@ export const SubscribeMockup = () => {
   }, []);
 
   return (
-    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play — India\'s sports business publication. Premium reportage, member benefits, and a private subscriber community.' }}>
+    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play, India\'s sports business publication. Premium reportage, member benefits, and a private subscriber community.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
@@ -58,7 +58,7 @@ export const SubscribeMockup = () => {
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
-            Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport — across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
+            Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">

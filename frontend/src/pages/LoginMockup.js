@@ -55,7 +55,7 @@ export const LoginMockup = () => {
           Welcome back.
         </h1>
         <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
-          Enter the email associated with your subscription. Paid members are signed in instantly — no OTP required.
+          Enter the email associated with your subscription. Paid members are signed in instantly. No OTP required.
         </p>
 
         <form onSubmit={onSubmit} className="space-y-7">

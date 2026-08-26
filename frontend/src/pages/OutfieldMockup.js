@@ -52,7 +52,7 @@ const Sched = ({ rows }) => (
 );
 
 export const OutfieldMockup = () => (
-  <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'Outfield — a weekly read on the lateral edges of sport. Culture, identity, and the stories beyond the scoreboard.' }}>
+  <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'Outfield, a weekly read on the lateral edges of sport. Culture, identity, and the stories beyond the scoreboard.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>
@@ -107,7 +107,7 @@ export const OutfieldMockup = () => (
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">03 — Weekend experiential first-contact</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Sandbox.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-4 max-w-[50ch]">
-            Twenty to thirty people spend an hour as someone they aren’t — a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport: actual pricing, actual deal structure, actual leverage points. Nobody’s reading from a script.
+            Twenty to thirty people spend an hour as someone they aren’t: a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport, actual pricing, actual deal structure, actual leverage points. Nobody’s reading from a script.
           </p>
           <p className="font-editorial italic text-base text-[var(--text)] leading-relaxed mb-6 max-w-[50ch]">
             Sports business is easier to argue about than to feel. Sandbox is where you feel it.

@@ -38,7 +38,7 @@ export const NominateReaderBlock = ({
     : {
         rightLabel: 'Reader to reader',
         heading: { plain: 'Know someone who should be', emphasis: 'reading?' },
-        subheading: 'Someone in your world should be reading this. Tell us who — we’ll take it from there.',
+        subheading: 'Someone in your world should be reading this. Tell us who. We’ll take it from there.',
         confirmation: () => null, // existing long-form confirmation
       };
 
@@ -214,7 +214,7 @@ export const NominateReaderBlock = ({
       ) : (
         <div data-testid="nominate-confirmation" className="max-w-[55ch]">
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4">
-            Thanks — Venkat reviews every <em className="italic font-normal">nomination personally.</em>
+            Thanks. Venkat reviews every <em className="italic font-normal">nomination personally.</em>
           </h2>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-3">
             If your nominee fits the desk, you’ll see a quiet outreach go out within a few days.

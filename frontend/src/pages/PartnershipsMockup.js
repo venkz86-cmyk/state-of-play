@@ -18,7 +18,7 @@ const TIERS = [
     name: 'Associate Partner',
     fee: 'On request',
     detail:
-      'Six-month association with a named beat — cricket markets, ISL, media rights or governance. Logo placement on partner row, two Outfield invitations per cycle.',
+      'Six-month association with a named beat: cricket markets, ISL, media rights or governance. Logo placement on partner row, two Outfield invitations per cycle.',
   },
 ];
 
@@ -43,7 +43,7 @@ export const PartnershipsMockup = () => (
         Reach the people <em className="italic font-normal">writing the cheques.</em>
       </h1>
       <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] max-w-[60ch]">
-        The State of Play is read inside the meeting rooms where Indian sport is bought, sold, structured and financed. A small audience by design — and a useful one for partners with a point of view.
+        The State of Play is read inside the meeting rooms where Indian sport is bought, sold, structured and financed. A small audience by design, and a useful one for partners with a point of view.
       </p>
     </section>
 
@@ -96,7 +96,7 @@ export const PartnershipsMockup = () => (
             A short note is enough.
           </h2>
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)] mb-6">
-            Tell us who you are, what you’re trying to reach, and the cycle you have in mind. We’ll come back within a week with a tier that fits — or with a candid no.
+            Tell us who you are, what you’re trying to reach, and the cycle you have in mind. We’ll come back within a week with a tier that fits, or with a candid no.
           </p>
           <a
             href="mailto:prerna@stateofplay.club?subject=Partnerships"

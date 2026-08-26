@@ -72,7 +72,7 @@ export const GiftArticleModal = ({
           {!isPaidSubscriber ? (
             <div data-testid="gift-modal-subscribe-prompt">
               <p className="font-plex text-[14px] leading-[1.6] text-[var(--text)] mb-4">
-                Gifting is a subscriber perk. Subscribers can send any story to a colleague — full access, no paywall on their end.
+                Gifting is a subscriber perk. Subscribers can send any story to a colleague: full access, no paywall on their end.
               </p>
               <a
                 href="/signup"
@@ -206,7 +206,7 @@ export const GiftArticleModal = ({
                 {`${(name || 'Your friend').trim().split(' ')[0]} will get this${articleTitle ? ' shortly' : ''}.`}
               </p>
               <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
-                We’ve sent them a private link. They read it in full — no paywall, no sign-up.
+                We’ve sent them a private link. They read it in full: no paywall, no sign-up.
               </p>
               <button
                 type="button"

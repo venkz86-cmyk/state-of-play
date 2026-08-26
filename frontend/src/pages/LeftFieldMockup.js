@@ -98,7 +98,7 @@ export const LeftFieldMockup = () => {
   const list = items.slice(5);
 
   return (
-    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: 'Left Field — a sister read from the Left Field Ventures stable. Sport, identity, and the cultural undercurrent.' }}>
+    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: 'Left Field, a sister read from the Left Field Ventures stable. Sport, identity, and the cultural undercurrent.' }}>
       {/* Hero */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
@@ -113,7 +113,7 @@ export const LeftFieldMockup = () => {
               <em className="italic font-normal text-[var(--accent)]">Indian sport, in your inbox.</em>
             </h1>
             <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
-              Short, sharp news briefs on the businesses, deals and people moving Indian sport — published bi-weekly on Substack. Free to read. The on-ramp to the full TSOP desk.
+              Short, sharp news briefs on the businesses, deals and people moving Indian sport. Published bi-weekly on Substack. Free to read. The on-ramp to the full TSOP desk.
             </p>
           </div>
           <div className="lg:col-span-4 flex flex-col lg:items-end gap-5">

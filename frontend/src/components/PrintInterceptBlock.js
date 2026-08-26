@@ -310,7 +310,7 @@ export const PrintInterceptBlock = ({
             <>
               <p className="tsop-print-only__sub">
                 Sent. {name || 'Your nominee'} will receive the full story
-                shortly — straight from us.
+                shortly, straight from us.
               </p>
               <p className="tsop-print-only__footnote">
                 Cancel the print dialog and come back to keep reading.

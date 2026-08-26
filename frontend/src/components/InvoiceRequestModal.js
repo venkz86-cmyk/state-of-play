@@ -53,7 +53,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
     if (!isInternational && isBusiness) {
       const gstPrefix = gstin.trim().toUpperCase().slice(0, 2);
       if (gstPrefix !== stateCode) {
-        setError(`GSTIN starts with ${gstPrefix} — please pick the matching state.`);
+        setError(`GSTIN starts with ${gstPrefix}. Please pick the matching state.`);
         return;
       }
     }
