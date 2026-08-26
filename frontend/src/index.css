@@ -101,16 +101,16 @@ body {
   }
 }
 
-/* === Design system — locked Fraunces × Newsreader × Geist =====================
-   Fraunces   → headlines (H1–H3, article titles, section page titles, feed)
-   Newsreader → article body + deks on article pages
-   Geist      → UI, labels, dates, bylines, metadata, footer copy, sidebars   */
+/* === Design system — locked Literata × Schibsted Grotesk ======================
+   Literata          → headlines (H1–H3, article titles, section page titles,
+                        feed) and article body + deks on article pages
+   Schibsted Grotesk → UI, labels, dates, bylines, metadata, footer copy, sidebars */
 :root {
   /* fonts */
-  --display-font: 'Fraunces';
-  --reading-font: 'Newsreader';
-  --body-font: 'DM Sans';
-  --label-font: 'DM Sans';
+  --display-font: 'Literata';
+  --reading-font: 'Literata';
+  --body-font: 'Schibsted Grotesk';
+  --label-font: 'Schibsted Grotesk';
   --label-tracking: 0.08em;
 
   /* light palette */
@@ -197,7 +197,7 @@ a:visited { color: inherit; }
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
 
-/* ========== Quiet prose (article reading) — Newsreader serif ==========
+/* ========== Quiet prose (article reading) — Literata serif ==========
    Typography scale finalised 2026-08-25 after readability audit.
    Benchmark: NYT/FT premium long-form runs 19–21 px body on desktop.
    Prior version was 17 px on both, which sat below the premium floor.

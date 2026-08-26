@@ -8,7 +8,7 @@
  *   role        small overline above the logo (e.g. "Associate Partner")
  *   url         outbound link on logo / caption click
  *   logoSrc     optional. PNG/SVG at /public/partners/{file}.
- *               Falls back to fullName in Fraunces if omitted.
+ *               Falls back to fullName in Literata if omitted.
  */
 
 import { Overline } from './MockupLayout';

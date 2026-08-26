@@ -208,7 +208,7 @@ export const HomeMockup = () => {
 
             {/* BRIEFING RAIL — Fix 12 final: "The Briefing" italic left,
                  "THE LEFT FIELD · FREE" (FREE in burgundy) right.
-                 Each brief = date label + Fraunces 18px headline only. */}
+                 Each brief = date label + Literata 18px headline only. */}
             <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)] lg:pl-12">
               <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-[var(--rule)]">
                 <p className="font-editorial italic text-[18px] text-[var(--text)]">
