@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const SIZES = [
-  { id: 'small', label: 'S' },
-  { id: 'default', label: 'M' },
-  { id: 'large', label: 'L' },
-];
-
+const SIZES = ['small', 'default', 'large'];
 const KEY = 'tsop_mockup_article_size';
 
 // Persisted Small / Default / Large selector for the mockup article page.
@@ -15,7 +10,7 @@ export const useArticleSize = () => {
   useEffect(() => {
     try {
       const v = localStorage.getItem(KEY);
-      if (v && ['small', 'default', 'large'].includes(v)) setSize(v);
+      if (v && SIZES.includes(v)) setSize(v);
     } catch { /* ignore */ }
   }, []);
   const update = (v) => {
@@ -25,33 +20,32 @@ export const useArticleSize = () => {
   return [size, update];
 };
 
-export const MockupFontSizeToggle = ({ value, onChange }) => (
-  <div
-    data-testid="font-size-toggle"
-    className="inline-flex items-center font-plex text-[12px] uppercase tracking-[0.08em]"
-  >
-    <span className="text-[var(--text-label)] mr-3">Text size</span>
-    {SIZES.map((s, i) => (
-      <span key={s.id} className="inline-flex items-center">
-        <button
-          type="button"
-          onClick={() => onChange(s.id)}
-          data-testid={`font-size-${s.id}`}
-          aria-pressed={value === s.id}
-          className={`px-1.5 transition-colors duration-200 ${
-            value === s.id
-              ? 'text-[var(--text)] underline underline-offset-[4px] decoration-1'
-              : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-          }`}
-        >
-          {s.label}
-        </button>
-        {i < SIZES.length - 1 && (
-          <span className="text-[var(--rule)] mx-0.5" aria-hidden="true">|</span>
-        )}
-      </span>
-    ))}
-  </div>
-);
+export const MockupFontSizeToggle = ({ value, onChange }) => {
+  const index = Math.max(0, SIZES.indexOf(value));
+  const fill = `${(index / (SIZES.length - 1)) * 100}%`;
+
+  return (
+    <div
+      data-testid="font-size-toggle"
+      className="inline-flex items-center gap-3 font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)]"
+    >
+      <span>Text size</span>
+      <span className="font-editorial normal-case text-[12px] text-[var(--text-muted)]" aria-hidden="true">A</span>
+      <input
+        type="range"
+        min={0}
+        max={SIZES.length - 1}
+        step={1}
+        value={index}
+        onChange={(e) => onChange(SIZES[Number(e.target.value)])}
+        data-testid="font-size-slider"
+        aria-label="Text size"
+        className="tsop-size-slider"
+        style={{ '--tsop-slider-fill': fill }}
+      />
+      <span className="font-editorial normal-case text-[19px] text-[var(--text-muted)]" aria-hidden="true">A</span>
+    </div>
+  );
+};
 
 export default MockupFontSizeToggle;

@@ -72,7 +72,7 @@ export const SEO = ({
     : 'The State of Play | Sports Business Intelligence';
   const desc =
     description ||
-    "India's sports business publication. Reportage, analysis, and intelligence from sport's most consequential rooms.";
+    "India's sports business publication. Reportage, analysis and intelligence from sport's most consequential rooms, written for the people who run the game.";
   const url = SITE + (path.startsWith('/') ? path : '/' + path);
   const ogImage = image || (SITE + '/og-default.png');
   const ogTitle = title || 'The State of Play';
