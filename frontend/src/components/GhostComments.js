@@ -31,7 +31,7 @@ export const GhostComments = ({ postId }) => {
       const portal = document.createElement('script');
       portal.id = PORTAL_SCRIPT_ID;
       portal.defer = true;
-      portal.src = `${GHOST_URL}/portal.min.js`;
+      portal.src = `${GHOST_URL}/public/portal.min.js`;
       portal.dataset.ghost = GHOST_URL;
       portal.dataset.key = GHOST_CONTENT_KEY;
       portal.dataset.i18n = 'false';
@@ -42,7 +42,6 @@ export const GhostComments = ({ postId }) => {
       const comments = document.createElement('script');
       comments.id = COMMENTS_SCRIPT_ID;
       comments.async = true;
-      comments.crossOrigin = 'anonymous';
       comments.src = `${GHOST_URL}/public/comments-ui.min.js`;
       comments.dataset.commentsId = 'ghost-comments-root';
       comments.dataset.apiUrl = GHOST_URL;
