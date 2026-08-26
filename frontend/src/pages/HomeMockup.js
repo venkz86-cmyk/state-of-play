@@ -363,7 +363,7 @@ export const HomeMockup = () => {
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32 lg:pb-40">
           <div className="border-t border-[var(--text)] pt-8 max-w-[55ch]">
             <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[var(--text)] mb-4">
-              The State of Play is a reader-supported publication.
+              The State of Play runs on subscriptions.
             </p>
             <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] mb-5">
               Independent reporting on the business of Indian sport. ₹2,499 + GST a year (₹2,949 total).
