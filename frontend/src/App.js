@@ -1,6 +1,5 @@
 import "@/index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MockupBackToTop } from "./components/MockupBackToTop";
@@ -75,15 +74,13 @@ function Shell() {
 
 function App() {
   return (
-    <HelmetProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Shell />
-          </BrowserRouter>
-        </AuthProvider>
-      </ThemeProvider>
-    </HelmetProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Shell />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
