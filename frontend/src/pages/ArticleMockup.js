@@ -174,13 +174,13 @@ export const ArticleMockup = () => {
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] mb-6 max-w-[55ch]">
+            <p className="font-reading italic text-[19px] md:text-[22px] leading-[1.5] text-[var(--text)] mb-6 max-w-[55ch]">
               {article.subtitle}
             </p>
           )}
-          <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
+          <p className="font-plex text-[14px] text-[var(--text)] mb-6">
             By {article.author || 'Venkat Ananth'}
-            {article.read_time ? <span> · {article.read_time} min read</span> : null}
+            {article.read_time ? <span className="text-[var(--text-label)]"> · {article.read_time} min read</span> : null}
           </p>
 
           <ColdLinkAdminButton
