@@ -73,7 +73,7 @@ export const AboutMockup = () => (
         <div className="lg:col-span-4">
           <p className="font-editorial italic text-lg mb-3">Our readers</p>
           <p className="font-plex text-sm text-[var(--text-muted)] max-w-[40ch] leading-relaxed">
-            Indian sport is no longer a local story. International funds, families and franchises are actively evaluating the world’s fastest-growing sports economy — and they read us.
+            Indian sport is no longer a local story. International funds, families and franchises are evaluating Indian sport as a serious asset class. They read us first.
           </p>
         </div>
         <div className="lg:col-span-8">

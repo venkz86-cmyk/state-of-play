@@ -55,7 +55,7 @@ export const SubscribeMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8">
           <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[22ch]">
-            India’s premier <em className="italic font-normal">sports business intelligence.</em>
+            The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
             Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport — across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
