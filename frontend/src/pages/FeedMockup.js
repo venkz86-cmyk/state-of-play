@@ -104,7 +104,7 @@ export const FeedMockup = () => {
                       className="group block"
                       data-testid={`feed-side-${p.id}`}
                     >
-                      <Overline className="text-[var(--accent)] mb-2 block">{p.theme || 'Analysis'}</Overline>
+                      <Overline className="text-[var(--accent)] mb-2 block">{p.theme}</Overline>
                       <h3 className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2 group-hover:text-[var(--accent)] transition-colors duration-200">
                         {p.title}
                       </h3>
@@ -141,7 +141,7 @@ export const FeedMockup = () => {
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
-                      <Overline className="text-[var(--accent)]">{p.theme || 'Analysis'}</Overline>
+                      <Overline className="text-[var(--accent)]">{p.theme}</Overline>
                     </div>
                     <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[var(--accent)] transition-colors duration-200">
                       {p.title}

@@ -139,7 +139,8 @@ export const AccountMockup = () => {
                   className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
                 >
                   <div className="flex-1 min-w-0">
-                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Long Read'}</Overline>
+                    {/* Fallback only for history recorded before theme was added to addToReadingHistory */}
+                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Reportage'}</Overline>
                     <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">
                       {p.title}
                     </h3>

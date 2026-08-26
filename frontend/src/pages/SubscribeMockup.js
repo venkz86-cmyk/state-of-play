@@ -129,7 +129,7 @@ export const SubscribeMockup = () => {
                   to={`/${p.id}`}
                   className="group block py-5 border-b border-[var(--rule)]"
                 >
-                  <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] mb-2">{p.theme || 'Reportage'}</p>
+                  <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] mb-2">{p.theme}</p>
                   <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">{p.title}</h3>
                   <p className="font-plex text-xs text-[var(--text-muted)] mt-2 tabular-nums">{longDate(p.created_at)}</p>
                 </Link>

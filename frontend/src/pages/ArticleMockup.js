@@ -32,16 +32,16 @@ const SectionLabel = ({ children, className = '' }) => (
   <p className={`section-label ${className}`}>{children}</p>
 );
 
-/* Truncate Ghost HTML to first N <p> tags for the paywall preview. */
-const previewParagraphs = (html, count = 3) => {
+/* Truncate Ghost HTML to a preview slice before the paywall. Scales with
+   article length (roughly a third of the piece) instead of a fixed
+   paragraph count, so a short piece doesn't give away most of itself and
+   a long feature doesn't wall off after a token taste. Floor of 2
+   paragraphs, cap of 6 so the preview never runs too long either way. */
+const previewParagraphs = (html) => {
   if (!html) return '';
-  const out = [];
-  const re = /<p[\s\S]*?<\/p>/gi;
-  let m;
-  while ((m = re.exec(html)) && out.length < count) {
-    out.push(m[0]);
-  }
-  return out.join('\n');
+  const all = html.match(/<p[\s\S]*?<\/p>/gi) || [];
+  const count = Math.max(2, Math.min(6, Math.round(all.length * 0.35)));
+  return all.slice(0, count).join('\n');
 };
 
 export const ArticleMockup = () => {
@@ -129,9 +129,9 @@ export const ArticleMockup = () => {
 
   const isPaywalled = article.is_premium && !isMember;
   const bodyHtml = isPaywalled
-    ? previewParagraphs(article.content, 3)
+    ? previewParagraphs(article.content)
     : (article.content || article.preview_content || '');
-  const beat = article.theme || 'Long Read';
+  const beat = article.theme;
   const isVenkatByline = !article.author || article.author === 'Venkat Ananth';
 
   return (
@@ -288,7 +288,7 @@ export const ArticleMockup = () => {
                     data-testid={`related-${a.id}`}
                     className="group block py-5"
                   >
-                    <SectionLabel className="mb-2 block">{a.theme || 'Analysis'}</SectionLabel>
+                    <SectionLabel className="mb-2 block">{a.theme}</SectionLabel>
                     <h3 className="headline-lock font-editorial font-medium text-[17px] leading-snug mb-2">
                       {a.title}
                     </h3>

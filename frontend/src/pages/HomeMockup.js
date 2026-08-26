@@ -190,7 +190,7 @@ export const HomeMockup = () => {
                 </div>
               )}
               <SectionLabel className="mb-3">
-                {lead.theme || 'Lead'} {lead.is_premium ? ' · For Subscribers' : ''}
+                {lead.theme}{lead.is_premium ? ' · For Subscribers' : ' · Free'}
               </SectionLabel>
               <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
                 {lead.title}
@@ -271,7 +271,7 @@ export const HomeMockup = () => {
                 className="group block"
               >
                 <SectionLabel className="mb-3">
-                  {a.theme || 'Reportage'}{a.is_premium ? ' · For Subscribers' : ''}
+                  {a.theme}{a.is_premium ? ' · For Subscribers' : ' · Free'}
                 </SectionLabel>
                 <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent)] transition-colors duration-300">
                   {a.title}
@@ -307,7 +307,7 @@ export const HomeMockup = () => {
                   data-testid={`desk-${a.id}`}
                   className="group block py-5 border-b border-[var(--rule)]"
                 >
-                  <SectionLabel className="mb-2 block">{a.theme || 'Analysis'}</SectionLabel>
+                  <SectionLabel className="mb-2 block">{a.theme}</SectionLabel>
                   <h3 className="headline-lock font-editorial font-medium text-[20px] leading-snug mb-2">
                     {a.title}
                   </h3>

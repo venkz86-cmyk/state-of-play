@@ -31,7 +31,7 @@ const ArchiveEntry = ({ post }) => (
         </p>
       </span>
       <span className="hidden md:block md:col-span-2 font-plex text-[12px] text-[var(--text-muted)] uppercase tracking-[0.06em] truncate">
-        {post.theme || ''}
+        {post.theme}
       </span>
       <span className="hidden md:block md:col-span-1 font-plex text-[12px] text-[var(--text-muted)] tabular-nums text-right">
         {post.read_time || 5}m

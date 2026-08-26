@@ -167,7 +167,7 @@ class GhostAPI {
       author: authorName,
       publication: this.getPublicationType(post),
       is_premium: isPremium,
-      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Sports Business',
+      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Reportage',
       primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
       tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),
       image_url: fixImageUrl(post.feature_image),
