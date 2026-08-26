@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
+import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -19,11 +19,13 @@ export const AccountMockup = () => {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try { setRecent(await ghostAPI.getPosts({ limit: 5 })); }
-      catch (e) { console.error(e); }
-    })();
+    setRecent(getReadingHistory().slice(0, 5));
   }, []);
+
+  const handleClearRecent = () => {
+    clearReadingHistory();
+    setRecent([]);
+  };
 
   // Fetch real subscription dates from Ghost Admin API
   useEffect(() => {
@@ -114,29 +116,43 @@ export const AccountMockup = () => {
         </div>
       </section>
 
-      {/* Continue reading */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[var(--text)] pt-8">
-          <p className="font-editorial italic text-lg mb-6">Continue reading</p>
-          <div className="border-t border-[var(--rule)]">
-            {recent.map((p) => (
-              <Link
-                key={p.id}
-                to={`/${p.id}`}
-                className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
+      {/* Recently read — real per-browser history, not a placeholder feed */}
+      {recent.length > 0 && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+          <div className="border-t border-[var(--text)] pt-8">
+            <div className="flex items-baseline justify-between mb-6">
+              <p className="font-editorial italic text-lg">Recently read</p>
+              <button
+                type="button"
+                onClick={handleClearRecent}
+                data-testid="account-clear-recent"
+                className="font-plex text-xs text-[var(--text-muted)] hover:text-[var(--text)] underline underline-offset-[4px] decoration-1 transition-colors duration-200"
               >
-                <div className="flex-1 min-w-0">
-                  <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Analysis'}</Overline>
-                  <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">
-                    {p.title}
-                  </h3>
-                </div>
-                <p className="font-plex text-xs text-[var(--text-muted)] shrink-0 tabular-nums">{longDate(p.created_at)}</p>
-              </Link>
-            ))}
+                Clear
+              </button>
+            </div>
+            <div className="border-t border-[var(--rule)]">
+              {recent.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/${p.id}`}
+                  className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
+                >
+                  <div className="flex-1 min-w-0">
+                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Long Read'}</Overline>
+                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">
+                      {p.title}
+                    </h3>
+                  </div>
+                  {p.read_time ? (
+                    <p className="font-plex text-xs text-[var(--text-muted)] shrink-0 tabular-nums">{p.read_time} min read</p>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Tools — restrained, single column list, no dark CTA */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">

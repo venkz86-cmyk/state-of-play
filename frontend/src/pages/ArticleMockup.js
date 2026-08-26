@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
+import { CopyQuote } from '../components/CopyQuote';
+import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
@@ -74,6 +76,7 @@ export const ArticleMockup = () => {
         }
         if (!active) return;
         setArticle(post);
+        addToReadingHistory(post);
         const rel = await ghostAPI.getRelatedPosts(post, 3);
         if (!active) return;
         setRelated(rel);
@@ -142,6 +145,7 @@ export const ArticleMockup = () => {
         article={article}
       />
       <ReadingProgress />
+      <CopyQuote />
       <MockupHeader />
 
       {/* DATELINE STRIP */}

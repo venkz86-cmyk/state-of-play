@@ -29,7 +29,7 @@ export const CopyQuote = () => {
   }, []);
 
   useEffect(() => {
-    const articleContent = document.querySelector('.article-content');
+    const articleContent = document.querySelector('[data-testid="article-body"]');
     if (articleContent) {
       articleContent.addEventListener('mouseup', handleMouseUp);
       articleContent.addEventListener('mousedown', handleMouseDown);
@@ -63,13 +63,13 @@ export const CopyQuote = () => {
 
   return (
     <div
-      className="fixed z-50 bg-foreground text-white px-2 py-1.5 rounded shadow-xl flex items-center space-x-1 transform -translate-x-1/2 -translate-y-full"
+      className="fixed z-50 bg-[var(--footer-bg)] text-white px-2 py-1.5 rounded shadow-xl flex items-center space-x-1 transform -translate-x-1/2 -translate-y-full"
       style={{ left: position.x, top: position.y }}
     >
       <button
         onClick={shareOnTwitter}
         className="p-1.5 hover:bg-white/20 rounded transition-colors"
-        title="Share on Twitter"
+        title="Share on X"
       >
         <Twitter className="h-4 w-4" />
       </button>
