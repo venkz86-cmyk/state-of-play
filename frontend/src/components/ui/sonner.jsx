@@ -1,24 +1,24 @@
-import { useTheme } from "next-themes"
+import { useTheme } from "../../contexts/ThemeContext"
 import { Toaster as Sonner, toast } from "sonner"
 
 const Toaster = ({
   ...props
 }) => {
-  const { theme = "system" } = useTheme()
+  const { isDark } = useTheme()
 
   return (
     <Sonner
-      theme={theme}
+      theme={isDark ? "dark" : "light"}
       className="toaster group"
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
+            "group toast group-[.toaster]:bg-[var(--bg)] group-[.toaster]:text-[var(--text)] group-[.toaster]:border-[var(--rule)] group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-[var(--text-muted)]",
           actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            "group-[.toast]:bg-[var(--accent-burgundy)] group-[.toast]:text-white",
           cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "group-[.toast]:bg-[var(--surface)] group-[.toast]:text-[var(--text-muted)]",
         },
       }}
       {...props} />
