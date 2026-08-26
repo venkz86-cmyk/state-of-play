@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -126,9 +127,6 @@ export const LeftFieldMockup = () => {
               Subscribe on Substack
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[var(--text-muted)]">
-              No paywall · Unsubscribe any time
-            </span>
           </div>
         </div>
       </section>
@@ -293,36 +291,20 @@ export const LeftFieldMockup = () => {
         </>
       )}
 
-      {/* Upgrade ladder — Free → Paid */}
-      <section className="bg-[var(--footer-bg)] text-white">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
-          <div className="lg:col-span-7">
-            <Overline className="text-[var(--accent)] mb-5 block">— Want the full desk? —</Overline>
-            <h2 className="font-editorial font-semibold tracking-tight text-4xl lg:text-[3.5rem] leading-[1.05] mb-5">
-              The Left Field is free. <em className="italic font-normal text-white/60">The State of Play is the rest.</em>
-            </h2>
-            <p className="font-plex text-lg leading-relaxed text-white/70 max-w-[55ch]">
-              If the briefs are useful, the long-form reportage is where the real intelligence sits. Weekly TSOP deep-dives, full archive, and breaking news alerts.
+      {/* Closing note — a pointer to the paid desk, not a pricing pitch */}
+      <section className="bg-[var(--surface)]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
+          <div className="max-w-[640px]">
+            <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-[1.4] text-[var(--text)] mb-5">
+              If the briefs are useful, the full desk goes further. Deal analysis, franchise valuations, the reporting behind the brief.
             </p>
-          </div>
-          <div className="lg:col-span-5 flex flex-col gap-4 lg:items-end">
-            <a
-              href="/signup"
+            <Link
+              to="/state-of-play"
               data-testid="leftfield-upgrade"
-              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
+              className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-colors duration-200"
             >
-              Upgrade to TSOP
-              <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-            </a>
-            <a
-              href="https://theleftfield.substack.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-white/80 border-b border-white/40 pb-1 hover:text-white hover:border-white transition-colors duration-200"
-            >
-              Stay free on Substack
-              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </a>
+              Read The State of Play →
+            </Link>
           </div>
         </div>
       </section>
