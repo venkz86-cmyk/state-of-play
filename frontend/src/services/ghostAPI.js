@@ -164,6 +164,10 @@ class GhostAPI {
 
     return {
       id: post.slug,
+      // Ghost's actual internal post id (distinct from the slug used for
+      // routing) — needed by the Ghost Comments widget, which identifies
+      // threads by post id, not slug.
+      ghost_id: post.id,
       title: post.title,
       subtitle: post.custom_excerpt || post.excerpt,
       content: fullContent,
