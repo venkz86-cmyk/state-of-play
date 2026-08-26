@@ -27,59 +27,21 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
       className="theme-transition text-white"
       style={{ backgroundColor: 'var(--footer-bg)' }}
     >
-      {/* Editorial CTA — hidden on pages with their own conversion section */}
-      {!hideHeroCta && (
-        <div
-          className="border-t border-b border-white/10"
-          style={{ backgroundColor: 'var(--footer-cta-bg)' }}
-        >
-          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-14 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
-            <div className="lg:col-span-7">
-              <h2 className="font-editorial font-semibold tracking-tight text-3xl md:text-5xl lg:text-[3.5rem] leading-[1.05] max-w-3xl">
-                {showMemberPanel ? (
-                  <>
-                    Enjoying The State of Play?
-                    <br />
-                    <em className="italic font-normal text-[#AAAAAA]">
-                      Tell us what’s landing, and what isn’t.
-                    </em>
-                  </>
-                ) : (
-                  <>
-                    The State of Play.
-                    <br />
-                    <em className="italic font-normal text-[#AAAAAA]">
-                      The business of sport, from an India lens.
-                    </em>
-                  </>
-                )}
-              </h2>
-            </div>
-
-            <div className="lg:col-span-5 flex flex-col items-start lg:items-end gap-5">
-              <span className="font-plex text-[11px] tracking-[0.08em] uppercase text-white/60">
-                {showMemberPanel ? 'A note to the desk' : 'Read with us'}
-              </span>
-              {showMemberPanel ? (
-                <a
-                  href="mailto:venkat@stateofplay.club?subject=A%20note%20on%20The%20State%20of%20Play"
-                  data-testid="mockup-footer-feedback"
-                  className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-6 transition-colors duration-200"
-                  style={{ borderRadius: 0 }}
-                >
-                  Write to us
-                </a>
-              ) : (
-                <Link
-                  to="/signup"
-                  data-testid="mockup-footer-subscribe"
-                  className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-6 transition-colors duration-200"
-                  style={{ borderRadius: 0 }}
-                >
-                  Subscribe
-                </Link>
-              )}
-            </div>
+      {/* Editorial sign-off — logged-out readers only. Members already converted,
+          so no banner pitch; their feedback link lives in the colophon instead. */}
+      {!hideHeroCta && !showMemberPanel && (
+        <div className="border-t border-b border-white/10">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p className="font-editorial italic text-lg md:text-xl leading-snug text-white/90 max-w-xl">
+              The State of Play. The business of sport, from an India lens.
+            </p>
+            <Link
+              to="/signup"
+              data-testid="mockup-footer-subscribe"
+              className="font-plex text-sm text-white underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all whitespace-nowrap"
+            >
+              Subscribe →
+            </Link>
           </div>
         </div>
       )}
@@ -122,9 +84,20 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
           <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
             © {year} Left Field Ventures · Published as The State of Play
           </span>
-          <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
-            stateofplay.club
-          </span>
+          <div className="flex items-center gap-6">
+            {showMemberPanel && (
+              <a
+                href="mailto:venkat@stateofplay.club?subject=A%20note%20on%20The%20State%20of%20Play"
+                data-testid="mockup-footer-feedback"
+                className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 hover:text-white transition-colors duration-200"
+              >
+                Write to us
+              </a>
+            )}
+            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50">
+              stateofplay.club
+            </span>
+          </div>
         </div>
       </div>
     </footer>
