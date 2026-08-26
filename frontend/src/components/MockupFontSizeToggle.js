@@ -40,8 +40,8 @@ export const MockupFontSizeToggle = ({ value, onChange }) => (
           aria-pressed={value === s.id}
           className={`px-1.5 transition-colors duration-200 ${
             value === s.id
-              ? 'text-[var(--text)]'
-              : 'text-[#999999] hover:text-[var(--text)]'
+              ? 'text-[var(--text)] underline underline-offset-[4px] decoration-1'
+              : 'text-[var(--text-muted)] hover:text-[var(--text)]'
           }`}
         >
           {s.label}

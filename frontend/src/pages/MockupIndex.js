@@ -23,10 +23,10 @@ export const MockupIndex = () => (
   <MockupLayout testId="mockup-index">
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
-        <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
+        <span className="font-plex text-[14px] text-[var(--text-muted)]">
           Design Review · Edition Zero
         </span>
-        <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">
+        <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
           {PAGES.length.toString().padStart(2, '0')} surfaces
         </span>
       </div>

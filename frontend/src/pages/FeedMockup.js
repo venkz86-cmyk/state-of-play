@@ -47,9 +47,9 @@ export const FeedMockup = () => {
       {/* Section header */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
-          <Overline className="text-[#234ba0] mb-5 block">— The State of Play —</Overline>
+          <Overline className="text-[var(--accent)] mb-5 block">— The State of Play —</Overline>
           <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4.5rem] leading-[1] max-w-4xl">
-            The week, <em className="italic font-normal text-[#234ba0]">on the record.</em>
+            The week, <em className="italic font-normal text-[var(--accent)]">on the record.</em>
           </h1>
           <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
             Long-form reportage and analysis on the businesses, deals and people moving Indian sport. Updated each Friday — read in any order.
@@ -67,7 +67,7 @@ export const FeedMockup = () => {
               className="group lg:col-span-7"
             >
               {lead.image_url && (
-                <div className="aspect-[16/10] overflow-hidden bg-[#F1F1EE] mb-6">
+                <div className="aspect-[16/10] overflow-hidden bg-[var(--surface)] mb-6">
                   <img
                     src={lead.image_url}
                     alt={lead.title}
@@ -77,11 +77,11 @@ export const FeedMockup = () => {
                 </div>
               )}
               <div className="flex items-center gap-3 mb-4">
-                {lead.theme && <Overline className="text-[#234ba0]">{lead.theme}</Overline>}
-                <span className="h-px w-6 bg-[#234ba0]/40" />
+                {lead.theme && <Overline className="text-[var(--accent)]">{lead.theme}</Overline>}
+                <span className="h-px w-6 bg-[var(--accent)]/40" />
                 <Overline>Lead Story</Overline>
               </div>
-              <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-5 group-hover:text-[#234ba0] transition-colors duration-200">
+              <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-5 group-hover:text-[var(--accent)] transition-colors duration-200">
                 {lead.title}
               </h2>
               {lead.subtitle && (
@@ -91,7 +91,7 @@ export const FeedMockup = () => {
               )}
             </Link>
 
-            <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] lg:dark:border-[#1E293B]">
+            <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[var(--rule)]">
               <Overline className="text-[var(--accent)] mb-8 block">Also in this edition</Overline>
               <ul>
                 {grid.map((p, i) => (
@@ -104,8 +104,8 @@ export const FeedMockup = () => {
                       className="group block"
                       data-testid={`feed-side-${p.id}`}
                     >
-                      <Overline className="text-[#234ba0] mb-2 block">{p.theme || 'Analysis'}</Overline>
-                      <h3 className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2 group-hover:text-[#234ba0] transition-colors duration-200">
+                      <Overline className="text-[var(--accent)] mb-2 block">{p.theme || 'Analysis'}</Overline>
+                      <h3 className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2 group-hover:text-[var(--accent)] transition-colors duration-200">
                         {p.title}
                       </h3>
                       <Overline>{fmtDate(p.created_at)} · {p.read_time} MIN</Overline>
@@ -135,20 +135,20 @@ export const FeedMockup = () => {
                   <Link
                     to={`/${p.id}`}
                     data-testid={`feed-row-${p.id}`}
-                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[var(--surface)] -mx-3 px-3 transition-colors duration-200"
                   >
-                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[var(--text-muted)] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
-                      <Overline className="text-[#234ba0]">{p.theme || 'Analysis'}</Overline>
+                      <Overline className="text-[var(--accent)]">{p.theme || 'Analysis'}</Overline>
                     </div>
-                    <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[#234ba0] transition-colors duration-200">
+                    <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[var(--accent)] transition-colors duration-200">
                       {p.title}
                     </h3>
                     <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
                       <Overline>{fmtDate(p.created_at)}</Overline>
-                      <ArrowUpRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[#234ba0] transition-colors duration-200" strokeWidth={1.5} />
+                      <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors duration-200" strokeWidth={1.5} />
                     </div>
                   </Link>
                 </li>

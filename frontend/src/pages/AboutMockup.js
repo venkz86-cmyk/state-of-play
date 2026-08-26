@@ -23,7 +23,7 @@ const READERS = [
 export const AboutMockup = () => (
   <MockupLayout testId="mockup-about" seo={{ title: 'About', path: '/about', description: 'About The State of Play — a sports business publication out of Bengaluru. Reportage, analysis, and intelligence on the people, money, and decisions shaping Indian sport.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-      <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+      <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
         <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">About</span>
       </div>
@@ -40,7 +40,7 @@ export const AboutMockup = () => (
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-10">
       <div className="lg:col-span-3"><p className="font-editorial italic text-lg">Editor’s note</p></div>
-      <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[#334155] dark:text-[#CBD5E1] max-w-[65ch]">
+      <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[var(--text-secondary)] max-w-[65ch]">
         <p className="font-editorial font-medium text-xl lg:text-[1.5rem] leading-snug tracking-tight text-[var(--text)]">
           Sport is no longer just what happens on the field. It is a high-stakes, capital-intensive and profoundly global business with fast-evolving dynamics.
         </p>
@@ -59,7 +59,7 @@ export const AboutMockup = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-7">
           {COVERAGE.map(([t, d], i) => (
             <div key={t}>
-              <p className="font-plex text-xs tracking-[0.18em] uppercase text-[#94A3B8] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
+              <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
               <h3 className="font-editorial font-medium text-lg leading-snug mb-1.5">{t}</h3>
               <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{d}</p>
             </div>
@@ -73,14 +73,14 @@ export const AboutMockup = () => (
         <div className="lg:col-span-4">
           <p className="font-editorial italic text-lg mb-3">Our readers</p>
           <p className="font-plex text-sm text-[var(--text-muted)] max-w-[40ch] leading-relaxed">
-            Indian sport is no longer a local story. International funds, families and franchises are actively evaluating the world’s fastest-growing sports economy — and they read us.
+            Indian sport is no longer a local story. International funds, families and franchises are evaluating Indian sport as a serious asset class. They read us first.
           </p>
         </div>
         <div className="lg:col-span-8">
           <ul className="border-t border-[var(--rule)]">
             {READERS.map((r, i) => (
               <li key={r} className="flex items-baseline gap-4 py-3 border-b border-[var(--rule)]">
-                <span className="font-plex text-xs text-[#94A3B8] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-plex text-xs text-[var(--text-muted)] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                 <span className="font-plex text-base">{r}</span>
               </li>
             ))}

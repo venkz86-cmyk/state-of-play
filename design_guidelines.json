@@ -1,14 +1,14 @@
 {
   "_meta": {
     "spec_name": "The State of Play — Design System",
-    "last_updated": "2026-08-25",
+    "last_updated": "2026-08-26",
     "note": "This file mirrors the shipped code. Prior versions referenced Playfair Display / IBM Plex Sans + blue/orange accents — those are archived; the live system below is what actually ships."
   },
   "typography": {
-    "display": { "family": "Fraunces", "role": "H1/H2 on masthead + reading pages, marketing headlines", "weights": [400, 500, 600, 700], "fallback": ["Playfair Display", "Georgia", "serif"] },
-    "reading": { "family": "Newsreader", "role": "Article body copy (editorial-prose-quiet), long-form pull quotes", "weights": [400, 500, 600, 700], "fallback": ["Source Serif 4", "Georgia", "serif"] },
-    "body":    { "family": "DM Sans",  "role": "UI copy, byline, share row, labels, buttons",             "weights": [400, 500, 600, 700], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
-    "label":   { "family": "DM Sans",  "role": "Section labels, overlines (11-12px uppercase, 0.08 tracking)", "weights": [400, 500], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
+    "display": { "family": "Gloock", "role": "H1/H2 on masthead + reading pages, marketing headlines", "weights": [400], "note": "Single static weight, no italic — font-synthesis: style in index.css lets browsers fake the italic-clause headline device but never a bold.", "fallback": ["Playfair Display", "Georgia", "serif"] },
+    "reading": { "family": "Literata", "role": "Article body copy (editorial-prose-quiet), long-form pull quotes", "weights": [400, 500, 600, 700], "fallback": ["Source Serif 4", "Georgia", "serif"] },
+    "body":    { "family": "Schibsted Grotesk",  "role": "UI copy, byline, share row, labels, buttons",             "weights": [400, 500, 600, 700], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
+    "label":   { "family": "Schibsted Grotesk",  "role": "Section labels, overlines (11-12px uppercase, 0.08 tracking)", "weights": [400, 500], "fallback": ["IBM Plex Sans", "system-ui", "sans-serif"] },
     "scales": {
       "article_body": { "desktop": "19px / 1.6", "mobile": "18px / 1.65" },
       "article_body_toggle": { "small": "17px / 1.7", "default": "18-19px / 1.65-1.6", "large": "22px / 1.55" },
@@ -52,6 +52,6 @@
     "share_row": "Right of utility strip, 12px uppercase, hover to text primary; Gift icon (lucide) last for subscribers only",
     "paywall": "180px gradient fade eating last preview paragraph, then burgundy Lock badge + editorial heading + Razorpay CTA"
   },
-  "loaded_fonts": ["Fraunces", "Newsreader", "DM Sans"],
+  "loaded_fonts": ["Gloock", "Literata", "Schibsted Grotesk"],
   "dark_mode_logo": "TODO — currently uses CSS invert on the single /tsop-logo.png. Muddy on the wordmark. Replace with a proper light-on-transparent variant when time permits."
 }

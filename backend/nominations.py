@@ -684,7 +684,7 @@ EXPIRED_HTML = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   body {{
-    background:#FAF9F7;color:#1A1A1A;font-family:'DM Sans',-apple-system,sans-serif;
+    background:#FAF9F7;color:#1A1A1A;font-family:'Schibsted Grotesk',-apple-system,sans-serif;
     margin:0;padding:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
   }}
   .wrap{{max-width:480px;padding:48px 24px;text-align:center}}
@@ -749,7 +749,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     title = html.escape(post.get('title') or 'The State of Play')
     excerpt = html.escape((post.get('custom_excerpt') or post.get('excerpt') or '')[:200])
     image = html.escape(post.get('feature_image') or f'{PUBLIC_BASE_URL}/og-default.png')
-    # Dynamic, branded OG card (Fraunces masthead + headline) for socials
+    # Dynamic, branded OG card (Literata masthead + headline) for socials
     og_card = f"{PUBLIC_BASE_URL}/api/og-image/{html.escape(post.get('slug') or '')}"
     canonical_url = f"{PUBLIC_BASE_URL}/{post.get('slug') or ''}"
     body_html = post.get('html') or ''
@@ -784,7 +784,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
 <meta name="twitter:image" content="{og_card}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,600&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{{
     --bg:#FAF9F7;
@@ -793,9 +793,9 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     --label:#888;
     --rule:#E5E2DC;
     --accent:#A0291C;
-    --editorial:'Fraunces','Source Serif 4',Georgia,serif;
-    --reading:'Newsreader','Source Serif 4',Georgia,serif;
-    --ui:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --editorial:'Literata','Source Serif 4',Georgia,serif;
+    --reading:'Literata','Source Serif 4',Georgia,serif;
+    --ui:'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }}
   *{{box-sizing:border-box;}}
   html,body{{margin:0;padding:0;}}

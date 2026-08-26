@@ -44,7 +44,7 @@ export const SubscribeMockup = () => {
   return (
     <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play — India\'s sports business publication. Premium reportage, member benefits, and a private subscriber community.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+        <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">
             Subscribe
@@ -55,13 +55,13 @@ export const SubscribeMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8">
           <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[22ch]">
-            India’s premier <em className="italic font-normal">sports business intelligence.</em>
+            The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
             Deep-dive analysis, exclusive interviews, and the untold stories behind the business of Indian sport — across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
           </p>
         </div>
-        <aside className="lg:col-span-4 lg:border-l lg:border-[#0F172A]/15 dark:lg:border-[#F8FAFC]/15 lg:pl-10">
+        <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Cited by</Overline>
           <p className="font-editorial italic text-base lg:text-lg leading-snug text-[var(--text)]">
             Bloomberg · SportBusiness · ESPNCricinfo · The Athletic · SportsPro
@@ -108,7 +108,7 @@ export const SubscribeMockup = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
             {BENEFITS.map(([no, title, desc]) => (
               <div key={no}>
-                <p className="font-plex text-xs tracking-[0.18em] uppercase text-[#94A3B8] tabular-nums mb-3">{no}</p>
+                <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] tabular-nums mb-3">{no}</p>
                 <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] mb-2">{title}</h3>
                 <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{desc}</p>
               </div>

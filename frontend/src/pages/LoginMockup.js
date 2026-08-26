@@ -41,10 +41,10 @@ export const LoginMockup = () => {
     <MockupLayout testId="page-login" seo={{ title: 'Sign In', path: '/login', noindex: true }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
+          <span className="font-plex text-[14px] text-[var(--text-muted)]">
             Bengaluru · {datelineDate()}
           </span>
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">
+          <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
             Sign in
           </span>
         </div>
@@ -72,7 +72,7 @@ export const LoginMockup = () => {
               disabled={submitting}
               data-testid="login-email"
               placeholder="you@yourdomain.com"
-              className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[#94A3B8] disabled:opacity-60"
+              className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
             />
           </div>
 

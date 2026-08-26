@@ -138,29 +138,29 @@ export const PrintInterceptBlock = ({
           align-items: center;
           justify-content: center;
           text-align: center;
-          font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+          font-family: 'Literata', Georgia, 'Times New Roman', serif;
           page-break-inside: avoid;
         }
         .tsop-print-only__mast {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 11px; font-weight: 500;
           letter-spacing: 0.18em; text-transform: uppercase;
           color: #888; margin: 0 0 12px;
         }
         .tsop-print-only__quota {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 11px; font-weight: 500;
           letter-spacing: 0.08em; text-transform: uppercase;
           color: #A0291C; margin: 0 0 32px;
         }
         .tsop-print-only__hed {
-          font-family: 'Fraunces', Georgia, serif;
+          font-family: 'Literata', Georgia, serif;
           font-weight: 600; font-size: 40px; line-height: 1.1;
           letter-spacing: -0.012em;
           margin: 0 0 14px; max-width: 22ch;
         }
         .tsop-print-only__sub {
-          font-family: 'Newsreader', Georgia, serif;
+          font-family: 'Literata', Georgia, serif;
           font-style: italic; font-size: 20px; line-height: 1.45;
           color: #555; margin: 0 0 32px; max-width: 36ch;
         }
@@ -171,7 +171,7 @@ export const PrintInterceptBlock = ({
         }
         .tsop-print-only__input,
         .tsop-print-only__textarea {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 15px; padding: 12px 14px;
           border: 1px solid #1A1A1A;
           background: #ffffff; color: #1A1A1A;
@@ -180,19 +180,19 @@ export const PrintInterceptBlock = ({
         }
         .tsop-print-only__textarea {
           min-height: 76px; resize: vertical;
-          font-family: 'Newsreader', Georgia, serif;
+          font-family: 'Literata', Georgia, serif;
           font-size: 16px; line-height: 1.5;
         }
         .tsop-print-only__count {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 11px; color: #888; text-align: right; margin: -6px 0 0;
         }
         .tsop-print-only__err {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 13px; color: #A0291C; margin: 0;
         }
         .tsop-print-only__cta {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 13px; font-weight: 500;
           letter-spacing: 0.06em; text-transform: uppercase;
           background: #A0291C; color: #fff; border: 0;
@@ -201,7 +201,7 @@ export const PrintInterceptBlock = ({
         }
         .tsop-print-only__cta:disabled { opacity: .55; cursor: not-allowed; }
         .tsop-print-only__footnote {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 13px; line-height: 1.55;
           color: #444; margin: 20px 0 0; max-width: 36ch;
         }
@@ -215,7 +215,7 @@ export const PrintInterceptBlock = ({
           width: 100%; max-width: 460px;
         }
         .tsop-print-only__fallback-label {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 10px; font-weight: 500;
           letter-spacing: 0.14em; text-transform: uppercase;
           color: #999;
@@ -225,7 +225,7 @@ export const PrintInterceptBlock = ({
           border: 1px solid #E5E2DC;
         }
         .tsop-print-only__printurl {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 13px; color: #1A1A1A;
           word-break: break-all;
           max-width: 40ch;
@@ -236,7 +236,7 @@ export const PrintInterceptBlock = ({
         }
 
         .tsop-print-only__url {
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
           font-size: 12px; letter-spacing: 0.08em;
           text-transform: uppercase; color: #888;
           margin: 40px 0 0;

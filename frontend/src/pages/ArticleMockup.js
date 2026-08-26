@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
+import { CopyQuote } from '../components/CopyQuote';
+import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
@@ -17,6 +19,9 @@ import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+const VENKAT_LINKEDIN_URL = 'https://www.linkedin.com/in/venkat-ananth/';
+const VENKAT_X_URL = 'https://x.com/venkatananth';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -74,6 +79,7 @@ export const ArticleMockup = () => {
         }
         if (!active) return;
         setArticle(post);
+        addToReadingHistory(post);
         const rel = await ghostAPI.getRelatedPosts(post, 3);
         if (!active) return;
         setRelated(rel);
@@ -127,6 +133,7 @@ export const ArticleMockup = () => {
     ? previewParagraphs(article.content, 3)
     : (article.content || article.preview_content || '');
   const beat = article.theme || 'Long Read';
+  const isVenkatByline = !article.author || article.author === 'Venkat Ananth';
 
   return (
     <div
@@ -142,19 +149,20 @@ export const ArticleMockup = () => {
         article={article}
       />
       <ReadingProgress />
+      <CopyQuote />
       <MockupHeader />
 
       {/* DATELINE STRIP */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
+          <span className="font-plex text-[14px] text-[var(--text-muted)]">
             <Link to="/" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
               ← The State of Play
             </Link>
             <span className="mx-2 text-[var(--text-label)]">·</span>
             {datelineDate(new Date(article.created_at))}
           </span>
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">
+          <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
             Year Two
           </span>
         </div>
@@ -170,13 +178,37 @@ export const ArticleMockup = () => {
             {article.title}
           </h1>
           {article.subtitle && (
-            <p className="font-reading italic text-[20px] leading-[1.6] text-[var(--text-muted)] mb-6 max-w-[55ch]">
+            <p className="font-reading italic text-[19px] md:text-[22px] leading-[1.5] text-[var(--text)] mb-6 max-w-[55ch]">
               {article.subtitle}
             </p>
           )}
-          <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
+          <p className="font-plex text-[14px] text-[var(--text)] mb-6">
             By {article.author || 'Venkat Ananth'}
-            {article.read_time ? <span> · {article.read_time} min read</span> : null}
+            {article.read_time ? <span className="text-[var(--text-label)]"> · {article.read_time} min read</span> : null}
+            {isVenkatByline && (
+              <>
+                <span className="text-[var(--text-label)]"> · </span>
+                <a
+                  href={VENKAT_LINKEDIN_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="byline-linkedin"
+                  className="text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200"
+                >
+                  LinkedIn
+                </a>
+                <span className="text-[var(--text-label)]"> · </span>
+                <a
+                  href={VENKAT_X_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="byline-x"
+                  className="text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200"
+                >
+                  X
+                </a>
+              </>
+            )}
           </p>
 
           <ColdLinkAdminButton

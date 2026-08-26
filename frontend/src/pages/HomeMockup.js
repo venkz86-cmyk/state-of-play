@@ -164,10 +164,10 @@ export const HomeMockup = () => {
       {/* DATELINE — Geist, #444, weight 400, "No. X · Year Two" */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
-          <span className="font-plex text-[14px] font-normal text-[#444444] dark:text-[#888888]">
+          <span className="font-plex text-[14px] font-normal text-[var(--text-muted)]">
             Bengaluru · {datelineDate()}
           </span>
-          <span className="font-plex text-[14px] font-normal text-[#444444] dark:text-[#888888] tabular-nums">
+          <span className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums">
             {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A047'} · Year Two
           </span>
         </div>
@@ -196,7 +196,7 @@ export const HomeMockup = () => {
                 {lead.title}
               </h1>
               {lead.subtitle && (
-                <p className="font-plex text-lg lg:text-xl leading-[1.45] text-[#334155] dark:text-[#CBD5E1] max-w-[55ch] mb-5">
+                <p className="font-plex text-lg lg:text-xl leading-[1.45] text-[var(--text-secondary)] max-w-[55ch] mb-5">
                   {lead.subtitle}
                 </p>
               )}
@@ -208,7 +208,7 @@ export const HomeMockup = () => {
 
             {/* BRIEFING RAIL — Fix 12 final: "The Briefing" italic left,
                  "THE LEFT FIELD · FREE" (FREE in burgundy) right.
-                 Each brief = date label + Fraunces 18px headline only. */}
+                 Each brief = date label + Literata 18px headline only. */}
             <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)] lg:pl-12">
               <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-[var(--rule)]">
                 <p className="font-editorial italic text-[18px] text-[var(--text)]">
@@ -231,7 +231,7 @@ export const HomeMockup = () => {
                       className="group block"
                       data-testid={`home-brief-${i}`}
                     >
-                      <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[#999999] mb-1.5">
+                      <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-1.5">
                         {shortDate(b.created_at) || 'Brief'}
                       </p>
                       <h3 className="headline-lock font-editorial font-semibold text-[18px] leading-snug">

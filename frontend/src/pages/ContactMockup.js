@@ -19,7 +19,7 @@ export const ContactMockup = () => (
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Contact</Overline>
-        <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">Bengaluru · Mon–Fri</span>
+        <span className="font-plex text-[14px] text-[var(--text-muted)]">Bengaluru · Mon–Fri</span>
       </div>
     </div>
 
