@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Lock } from 'lucide-react';
 import { RazorpayButton } from './RazorpayButton';
+import { useAuth } from '../contexts/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -10,9 +11,15 @@ const API = process.env.REACT_APP_BACKEND_URL;
    Gradient fade eats the last preview paragraph so readers can *see* the
    text end mid-thought. Below that: a solid, high-contrast block with a
    lock icon, unmissable heading, and a primary CTA (Razorpay). Pricing
-   is geo-IP-aware — India (₹2,499 + GST) vs International ($120). */
+   is geo-IP-aware — India (₹2,499 + GST) vs International ($120).
+
+   Readers whose complimentary Sandbox-event access has lapsed (Ghost's
+   sandbox-event-comp label, now downgraded to free) get a heading and
+   lede that acknowledge that directly, instead of the generic first-time
+   pitch — same gate, same price, same CTA underneath. */
 export const Paywall = () => {
   const [isIndia, setIsIndia] = useState(true);
+  const { hasExpiredTrial, isLoggedIn } = useAuth();
 
   useEffect(() => {
     let active = true;
@@ -75,18 +82,20 @@ export const Paywall = () => {
           className="font-editorial font-semibold text-[30px] md:text-[34px] leading-[1.1] tracking-tight text-[var(--text)] mb-3 max-w-[22ch]"
           data-testid="paywall-heading"
         >
-          You’re reading a preview.
+          {hasExpiredTrial ? 'Your trial has ended.' : 'You’re reading a preview.'}
         </h2>
 
         <p
           className="font-editorial text-[22px] md:text-[24px] italic font-normal leading-[1.3] text-[var(--text-muted)] mb-8 max-w-[26ch]"
           data-testid="paywall-subheading"
         >
-          Subscribers get the full story.
+          {hasExpiredTrial ? 'Subscribe to keep reading with us.' : 'Subscribers get the full story.'}
         </p>
 
         <p className="font-plex text-[15px] leading-[1.65] text-[var(--text-muted)] mb-2 max-w-[58ch]">
-          The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them.
+          {hasExpiredTrial
+            ? 'You had a preview of what we cover each week: franchise valuations, broadcast rights, ownership deals, and the people driving them. A subscription gets you the rest.'
+            : 'The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them.'}
         </p>
 
         <p className="font-plex text-[15px] leading-[1.65] text-[var(--text)] font-medium mb-1 tabular-nums">
@@ -106,15 +115,18 @@ export const Paywall = () => {
         </p>
         <RazorpayButton dataTestId="paywall-subscribe" />
 
-        <div className="mt-5">
-          <Link
-            to="/login"
-            data-testid="paywall-login"
-            className="font-plex text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] hover:underline underline-offset-[5px] decoration-1 transition-all"
-          >
-            Already a member? Sign in →
-          </Link>
-        </div>
+        {/* Already signed in — the "sign in" link would be confusing, not helpful */}
+        {!isLoggedIn && (
+          <div className="mt-5">
+            <Link
+              to="/login"
+              data-testid="paywall-login"
+              className="font-plex text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] hover:underline underline-offset-[5px] decoration-1 transition-all"
+            >
+              Already a member? Sign in →
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

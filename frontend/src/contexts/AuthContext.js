@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
           is_paid: data.is_paid,
           is_free: data.is_member && !data.is_paid,
           status: data.status,
+          trial_expired: !!data.trial_expired,
           verified_at: new Date().toISOString()
         };
 
@@ -102,16 +103,18 @@ export const AuthProvider = ({ children }) => {
   const canAccessPremium = user?.is_paid || false;
   const isFreeMember = user?.is_free || false;
   const isLoggedIn = !!user;
+  const hasExpiredTrial = user?.trial_expired || false;
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      verifyMember, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      verifyMember,
       logout,
       canAccessPremium,
       isFreeMember,
-      isLoggedIn
+      isLoggedIn,
+      hasExpiredTrial
     }}>
       {children}
     </AuthContext.Provider>

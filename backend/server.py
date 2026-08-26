@@ -172,6 +172,12 @@ class MemberVerifyResponse(BaseModel):
     # /api/nominations/submit so we can attribute nominations to the
     # authenticated subscriber even if their email later changes.
     id: Optional[str] = None
+    # True when the member carries the "sandbox-event-comp" Ghost label
+    # (complimentary access granted at an Outfield Sandbox event) but is
+    # no longer paid, i.e. their comp window has lapsed and Ghost has
+    # already downgraded them to a free member. Lets the paywall show a
+    # targeted "your trial has ended" message instead of the generic one.
+    trial_expired: bool = False
 
 @api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
 async def verify_ghost_member(request: MemberVerifyRequest):
@@ -222,6 +228,8 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                                 has_paid_label
                             )
                             
+                            has_sandbox_trial_label = 'sandbox-event-comp' in label_names
+
                             return MemberVerifyResponse(
                                 is_member=True,
                                 is_paid=is_paid,
@@ -229,6 +237,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                                 name=member.get('name'),
                                 status=status if not has_paid_label else 'paid',
                                 id=member.get('id'),
+                                trial_expired=has_sandbox_trial_label and not is_paid,
                             )
                         else:
                             return MemberVerifyResponse(
