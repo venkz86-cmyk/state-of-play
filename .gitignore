@@ -4,6 +4,9 @@
 .idea/
 .vscode/
 
+# Claude Code local session/agent state (worktrees, etc.) — not project content
+.claude/
+
 # Dependencies
 node_modules/
 /node_modules
