@@ -52,7 +52,7 @@ export const TeamsMockup = () => {
   return (
     <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Corporate access to The State of Play. Multi-seat plans for federations, leagues, agencies, and newsrooms.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+        <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Corporate plans</span>
         </div>
@@ -81,7 +81,7 @@ export const TeamsMockup = () => {
                   <span className="font-editorial font-semibold text-[2.75rem] lg:text-[3.5rem] leading-[0.9]">{p.base}</span>
                   <span className="font-plex text-sm text-[var(--text-muted)] pb-2">+ 18% GST / year</span>
                 </div>
-                <p className="font-plex text-[13px] text-[#666666] mb-4">{p.total} / year total</p>
+                <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">{p.total} / year total</p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-1">{p.perSeat}</p>
                 <p className="font-plex text-xs text-[var(--accent-burgundy)] mb-5">{p.save}</p>
                 <a
@@ -116,7 +116,7 @@ export const TeamsMockup = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8">
             {AUDIENCES.map(([t, d], i) => (
               <div key={t}>
-                <p className="font-plex text-xs text-[#94A3B8] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
+                <p className="font-plex text-xs text-[var(--text-muted)] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
                 <h3 className="font-editorial font-medium text-lg mb-2">{t}</h3>
                 <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{d}</p>
               </div>
@@ -132,7 +132,7 @@ export const TeamsMockup = () => {
           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3 border-y border-[var(--rule)] py-6">
             {FEATURES.map((f, i) => (
               <li key={f} className="flex items-baseline gap-3">
-                <span className="font-plex text-xs text-[#94A3B8] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-plex text-xs text-[var(--text-muted)] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                 <span className="font-editorial text-base">{f}</span>
               </li>
             ))}

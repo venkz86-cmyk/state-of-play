@@ -32,18 +32,18 @@ const EmailFrame = ({ children, meta }) => (
     {/* Mail-client header strip */}
     <div className="border-b border-[var(--rule)] px-6 py-4 text-[12px] font-plex text-[var(--text-muted)] space-y-1">
       <div className="flex flex-wrap gap-x-3">
-        <span className="uppercase tracking-[0.06em] text-[#999999]">From</span>
+        <span className="uppercase tracking-[0.06em] text-[var(--text-muted)]">From</span>
         <span className="text-[var(--text)]">{meta.from}</span>
       </div>
       <div className="flex flex-wrap gap-x-3">
-        <span className="uppercase tracking-[0.06em] text-[#999999]">To</span>
+        <span className="uppercase tracking-[0.06em] text-[var(--text-muted)]">To</span>
         <span className="text-[var(--text)]">{meta.to}</span>
       </div>
       <div className="flex flex-wrap gap-x-3">
-        <span className="uppercase tracking-[0.06em] text-[#999999]">Subject</span>
+        <span className="uppercase tracking-[0.06em] text-[var(--text-muted)]">Subject</span>
         <span className="text-[var(--text)] font-medium">{meta.subject}</span>
       </div>
-      <p className="pt-1 italic text-[#999999]">{meta.preheader}</p>
+      <p className="pt-1 italic text-[var(--text-muted)]">{meta.preheader}</p>
     </div>
 
     {/* Email body */}
@@ -76,7 +76,7 @@ const Body = ({ children }) => (
 // ─── Admin onboarding ────────────────────────────────────────────────────────
 const AdminEmail = () => (
   <EmailFrame meta={ADMIN_EMAIL}>
-    <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[#999999] mb-3">
+    <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-3">
       — The State of Play —
     </p>
     <h1 className="font-editorial font-semibold text-[2rem] leading-[1.15] mb-6">
@@ -145,7 +145,7 @@ const AdminEmail = () => (
 // ─── Member invitation ───────────────────────────────────────────────────────
 const MemberEmail = () => (
   <EmailFrame meta={MEMBER_EMAIL}>
-    <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[#999999] mb-3">
+    <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-3">
       — The State of Play —
     </p>
     <h1 className="font-editorial font-semibold text-[2rem] leading-[1.15] mb-6">
@@ -259,7 +259,7 @@ export const TeamsEmailsMockup = () => {
 
         <div className="mt-12">{active === 'member' ? <MemberEmail /> : <AdminEmail />}</div>
 
-        <p className="font-plex text-[12px] text-[#999999] mt-10 text-center max-w-[55ch] mx-auto">
+        <p className="font-plex text-[12px] text-[var(--text-muted)] mt-10 text-center max-w-[55ch] mx-auto">
           These are templates for Zapier (or wherever you trigger the send). The dashboard token
           shown here is mock — Apps Script generates a real UUID per account.
         </p>

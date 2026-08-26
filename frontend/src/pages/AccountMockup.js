@@ -67,8 +67,8 @@ export const AccountMockup = () => {
     <MockupLayout testId="page-account" seo={{ title: 'Your Account', path: '/account', noindex: true }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">{memberEmail}</span>
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">Member Lounge</span>
+          <span className="font-plex text-[14px] text-[var(--text-muted)]">{memberEmail}</span>
+          <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">Member Lounge</span>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export const AccountMockup = () => {
         </div>
       </section>
 
-      {/* Stat strip — Fix 22: solid 1px #E5E2DC dividers */}
+      {/* Stat strip — Fix 22: solid 1px var(--rule) dividers */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
         <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4">
           {[

@@ -119,6 +119,7 @@ body {
   --rule: #E5E2DC;
   --text: #1A1A1A;
   --text-muted: #555555;
+  --text-secondary: #334155;
   --text-label: #666666;
   --nav-bg: #FFFFFF;
   --footer-bg: #111111;
@@ -137,6 +138,7 @@ body {
   --rule: #2A2A2A;
   --text: #F0EDE8;
   --text-muted: #888888;
+  --text-secondary: #CBD5E1;
   --text-label: #666666;
   --nav-bg: #0F0F0F;
   --footer-bg: #0A0A0A;

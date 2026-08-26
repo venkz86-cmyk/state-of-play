@@ -149,7 +149,7 @@ export const Archive = () => {
                   className="font-plex text-[11px] uppercase tracking-[0.1em] text-[var(--text-muted)] pb-3 mb-1 border-b border-[var(--text)]"
                 >
                   {g.label}
-                  <span className="ml-3 text-[#999999] tabular-nums normal-case tracking-normal">
+                  <span className="ml-3 text-[var(--text-muted)] tabular-nums normal-case tracking-normal">
                     {g.items.length}
                   </span>
                 </h2>

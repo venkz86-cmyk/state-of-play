@@ -400,7 +400,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                   {submitting ? 'Adding…' : 'Add →'}
                 </button>
               </form>
-              <p className="font-plex text-[13px] text-[#999999] mt-3">
+              <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3">
                 Once added, your colleague can sign in at stateofplay.club using their work email.
               </p>
               {emailError && (
@@ -409,7 +409,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 </p>
               )}
               {successMessage && (
-                <p className="font-plex text-[13px] mt-3" style={{ color: '#2B5DAC' }} data-testid="teams-add-success">
+                <p className="font-plex text-[13px] mt-3" style={{ color: 'var(--accent-burgundy)' }} data-testid="teams-add-success">
                   ✓ {successMessage}
                 </p>
               )}
@@ -436,7 +436,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
           <Overline className="block mb-4">Current members</Overline>
 
           {members.length === 0 ? (
-            <p className="font-plex text-[14px] text-[#999999]">
+            <p className="font-plex text-[14px] text-[var(--text-muted)]">
               No members added yet. Add your first team member above.
             </p>
           ) : (
@@ -445,7 +445,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 const isPending = pendingRemove === m.member_id;
                 const status = memberStatus(m.last_seen_at);
                 const statusColor =
-                  status.tone === 'accent' ? 'var(--accent-burgundy)' : '#999999';
+                  status.tone === 'accent' ? 'var(--accent-burgundy)' : 'var(--text-muted)';
                 return (
                   <li
                     key={m.member_id}
@@ -458,7 +458,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                           <p className="font-plex text-[15px] text-[var(--text)] truncate">{m.email}</p>
                         </div>
                         <div className="col-span-7 md:col-span-3 self-center">
-                          <p className="font-plex text-[12px] text-[#999999]">
+                          <p className="font-plex text-[12px] text-[var(--text-muted)]">
                             Added {shortDate(m.added_at)}
                           </p>
                         </div>
@@ -472,7 +472,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                             type="button"
                             onClick={() => { setRemoveError(''); setPendingRemove(m.member_id); }}
                             data-testid={`teams-remove-${m.member_id}`}
-                            className="font-plex text-[12px] text-[#999999] hover:text-[var(--accent-burgundy)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
+                            className="font-plex text-[12px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
                           >
                             Remove
                           </button>
@@ -546,7 +546,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
               </button>
             </div>
           </div>
-          <p className="font-plex text-[12px] text-[#999999] mt-6 max-w-[55ch]">
+          <p className="font-plex text-[12px] text-[var(--text-muted)] mt-6 max-w-[55ch]">
             Founding-partner rate locked. Team-5 plan ₹11,800 / year · Team-10 plan ₹23,600 / year (inclusive of 18% GST).
           </p>
         </section>

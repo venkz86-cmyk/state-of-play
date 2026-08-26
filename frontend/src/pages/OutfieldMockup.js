@@ -26,7 +26,7 @@ const Sched = ({ rows }) => (
       <li key={`${r.period}-${r.city}`} className="grid grid-cols-12 gap-3 items-baseline py-3 border-b border-[var(--rule)]">
         <span className="col-span-4 font-plex text-sm tabular-nums text-[var(--text-muted)]">{r.period}</span>
         <div className="col-span-6 flex items-center gap-2 flex-wrap">
-          <span className={`font-plex text-sm ${r.done ? 'text-[var(--text-muted)] line-through decoration-[#94A3B8]/40' : (r.confirmed ? 'font-medium text-[var(--text)]' : 'text-[var(--text-muted)]')}`}>
+          <span className={`font-plex text-sm ${r.done ? 'text-[var(--text-muted)] line-through decoration-[var(--text-muted)]/40' : (r.confirmed ? 'font-medium text-[var(--text)]' : 'text-[var(--text-muted)]')}`}>
             {r.city}
           </span>
           {r.name && (
@@ -34,8 +34,8 @@ const Sched = ({ rows }) => (
               · {r.name}
             </span>
           )}
-          {r.done && <span className="font-plex text-xs text-[#94A3B8]">held · {r.heldDate || r.period}</span>}
-          {r.tentative && <span className="font-plex text-xs text-[#94A3B8]">tentative</span>}
+          {r.done && <span className="font-plex text-xs text-[var(--text-muted)]">held · {r.heldDate || r.period}</span>}
+          {r.tentative && <span className="font-plex text-xs text-[var(--text-muted)]">tentative</span>}
         </div>
         <div className="col-span-2 flex justify-end">
           {r.registerUrl ? (
@@ -43,7 +43,7 @@ const Sched = ({ rows }) => (
               Register →
             </a>
           ) : (
-            <span className="font-plex text-xs text-[#94A3B8]">{r.done ? '' : 'soon'}</span>
+            <span className="font-plex text-xs text-[var(--text-muted)]">{r.done ? '' : 'soon'}</span>
           )}
         </div>
       </li>
@@ -54,7 +54,7 @@ const Sched = ({ rows }) => (
 export const OutfieldMockup = () => (
   <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'Outfield — a weekly read on the lateral edges of sport. Culture, identity, and the stories beyond the scoreboard.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-      <div className="flex items-baseline justify-between border-b border-[#0F172A]/15 dark:border-[#F8FAFC]/15 pb-3">
+      <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>
         <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Events · 2026</span>
       </div>
@@ -78,32 +78,32 @@ export const OutfieldMockup = () => (
             Closed-door. Ninety minutes. We take a Friday story and go deeper with the protagonist. What couldn’t fit in 1,500 words. What has developed since.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
-            <li><span className="text-[#94A3B8]">Size · </span>25–30 people</li>
-            <li><span className="text-[#94A3B8]">In 2026 · </span>4 events</li>
-            <li><span className="text-[#94A3B8]">Setting · </span>Boardroom or café</li>
-            <li><span className="text-[#94A3B8]">Cost · </span>Free for subscribers</li>
+            <li><span className="text-[var(--text-muted)]">Size · </span>25–30 people</li>
+            <li><span className="text-[var(--text-muted)]">In 2026 · </span>4 events</li>
+            <li><span className="text-[var(--text-muted)]">Setting · </span>Boardroom or café</li>
+            <li><span className="text-[var(--text-muted)]">Cost · </span>Free for subscribers</li>
           </ul>
           <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={ROUNDTABLES} />
         </div>
 
-        <div data-testid="outfield-speakeasies" className="lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
+        <div data-testid="outfield-speakeasies" className="lg:border-l lg:border-[var(--rule)]/15 lg:pl-12">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">02 — Premium off-record gatherings</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Speakeasy.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-6 max-w-[50ch]">
             Each speaker gets 20–30 minutes for a fireside chat. Forward-looking topics. After the chats, Q&A, a short pub quiz, then networking. One drink on the house.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
-            <li><span className="text-[#94A3B8]">Size · </span>30 people, 3 CXOs</li>
-            <li><span className="text-[#94A3B8]">In 2026 · </span>2 events</li>
-            <li><span className="text-[#94A3B8]">Setting · </span>Cocktail bar</li>
-            <li><span className="text-[#94A3B8]">Cost · </span>Ticketed</li>
+            <li><span className="text-[var(--text-muted)]">Size · </span>30 people, 3 CXOs</li>
+            <li><span className="text-[var(--text-muted)]">In 2026 · </span>2 events</li>
+            <li><span className="text-[var(--text-muted)]">Setting · </span>Cocktail bar</li>
+            <li><span className="text-[var(--text-muted)]">Cost · </span>Ticketed</li>
           </ul>
           <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={SPEAKEASIES} />
         </div>
 
-        <div data-testid="outfield-sandbox" className="lg:border-l lg:border-[#0F172A]/15 lg:dark:border-[#F8FAFC]/15 lg:pl-12">
+        <div data-testid="outfield-sandbox" className="lg:border-l lg:border-[var(--rule)]/15 lg:pl-12">
           <Overline className="!normal-case !tracking-normal !text-sm block mb-3">03 — Weekend experiential first-contact</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Sandbox.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-4 max-w-[50ch]">
@@ -113,10 +113,10 @@ export const OutfieldMockup = () => (
             Sports business is easier to argue about than to feel. Sandbox is where you feel it.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
-            <li><span className="text-[#94A3B8]">Size · </span>20–30 people</li>
-            <li><span className="text-[#94A3B8]">In 2026 · </span>1 event so far</li>
-            <li><span className="text-[#94A3B8]">Setting · </span>Weekend, hands-on</li>
-            <li><span className="text-[#94A3B8]">Cost · </span>Low-cost</li>
+            <li><span className="text-[var(--text-muted)]">Size · </span>20–30 people</li>
+            <li><span className="text-[var(--text-muted)]">In 2026 · </span>1 event so far</li>
+            <li><span className="text-[var(--text-muted)]">Setting · </span>Weekend, hands-on</li>
+            <li><span className="text-[var(--text-muted)]">Cost · </span>Low-cost</li>
           </ul>
           <p className="font-editorial italic text-sm text-[var(--text)] mb-3">2026 schedule</p>
           <Sched rows={SANDBOXES} />
@@ -154,7 +154,7 @@ export const OutfieldMockup = () => (
                   “{q.quote}”
                 </p>
                 <p className="font-plex text-[13px] font-bold text-[var(--text)]">{q.name}</p>
-                <p className="font-plex text-[13px] text-[#666666]">{q.title}</p>
+                <p className="font-plex text-[13px] text-[var(--text-label)]">{q.title}</p>
               </blockquote>
             ))}
           </div>
@@ -168,7 +168,7 @@ export const OutfieldMockup = () => (
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 border-t border-[var(--rule)]">
           {AUDIENCE.map((a, i) => (
             <li key={a} className="flex items-baseline gap-4 py-3 border-b border-[var(--rule)]">
-              <span className="font-plex text-xs text-[#94A3B8] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-plex text-xs text-[var(--text-muted)] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
               <span className="font-plex text-base">{a}</span>
             </li>
           ))}

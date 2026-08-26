@@ -126,7 +126,7 @@ export const LeftFieldMockup = () => {
               Subscribe on Substack
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </a>
-            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[#475569]">
+            <span className="font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[var(--text-muted)]">
               No paywall · Unsubscribe any time
             </span>
           </div>
@@ -134,7 +134,7 @@ export const LeftFieldMockup = () => {
       </section>
 
       {/* Editor's pitch — italic strip */}
-      <section className="border-b border-[var(--rule)] bg-[#F1F1EE] dark:bg-[#0F172A]">
+      <section className="border-b border-[var(--rule)] bg-[var(--surface)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
             <Overline className="text-[var(--accent)]">— What it is —</Overline>
@@ -144,7 +144,7 @@ export const LeftFieldMockup = () => {
               “Six minutes, twice a week. The deals worth knowing about, the small stories that turn into big ones, and the curated pointers we’d send a friend who works in the industry.”
             </p>
             <footer className="mt-8 flex items-center gap-3">
-              <span className="h-px w-12 bg-[#0F172A] dark:bg-[#F8FAFC]" />
+              <span className="h-px w-12 bg-[var(--text)]" />
               <Overline>The Left Field · Editorial</Overline>
             </footer>
           </div>
@@ -178,7 +178,7 @@ export const LeftFieldMockup = () => {
                     {lead.title}
                   </h2>
                   {lead.subtitle && (
-                    <p className="font-reading italic text-xl lg:text-[1.5rem] text-[#334155] dark:text-[#CBD5E1] max-w-[60ch] leading-[1.5] mb-6">
+                    <p className="font-reading italic text-xl lg:text-[1.5rem] text-[var(--text-secondary)] max-w-[60ch] leading-[1.5] mb-6">
                       {lead.subtitle}
                     </p>
                   )}
@@ -214,7 +214,7 @@ export const LeftFieldMockup = () => {
                 )}
               </div>
 
-                <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] dark:lg:border-[#1E293B]">
+                <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[var(--rule)]">
                   <Overline className="text-[var(--accent)] mb-8 block">— Recent briefs —</Overline>
                   <ul>
                     {grid.map((p, i) => (
@@ -268,9 +268,9 @@ export const LeftFieldMockup = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         data-testid={`leftfield-list-${p.id}`}
-                        className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                        className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[var(--surface)] -mx-3 px-3 transition-colors duration-200"
                       >
-                        <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                        <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[var(--text-muted)] tabular-nums">
                           {String(i + 1).padStart(2, '0')}
                         </span>
                         <div className="col-span-12 md:col-span-2">
@@ -281,7 +281,7 @@ export const LeftFieldMockup = () => {
                         </h3>
                         <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
                           <Overline>{fmtDate(p.created_at)}</Overline>
-                          <ArrowUpRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[var(--accent)] transition-colors duration-200" strokeWidth={1.5} />
+                          <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors duration-200" strokeWidth={1.5} />
                         </div>
                       </a>
                     </li>
@@ -294,7 +294,7 @@ export const LeftFieldMockup = () => {
       )}
 
       {/* Upgrade ladder — Free → Paid */}
-      <section className="bg-[#0F172A] text-white">
+      <section className="bg-[var(--footer-bg)] text-white">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-7">
             <Overline className="text-[var(--accent)] mb-5 block">— Want the full desk? —</Overline>

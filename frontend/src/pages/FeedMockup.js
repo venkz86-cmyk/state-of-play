@@ -67,7 +67,7 @@ export const FeedMockup = () => {
               className="group lg:col-span-7"
             >
               {lead.image_url && (
-                <div className="aspect-[16/10] overflow-hidden bg-[#F1F1EE] mb-6">
+                <div className="aspect-[16/10] overflow-hidden bg-[var(--surface)] mb-6">
                   <img
                     src={lead.image_url}
                     alt={lead.title}
@@ -91,7 +91,7 @@ export const FeedMockup = () => {
               )}
             </Link>
 
-            <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[#E2E8F0] lg:dark:border-[#1E293B]">
+            <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[var(--rule)]">
               <Overline className="text-[var(--accent)] mb-8 block">Also in this edition</Overline>
               <ul>
                 {grid.map((p, i) => (
@@ -135,9 +135,9 @@ export const FeedMockup = () => {
                   <Link
                     to={`/${p.id}`}
                     data-testid={`feed-row-${p.id}`}
-                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[#F1F1EE] dark:hover:bg-[#0F172A] -mx-3 px-3 transition-colors duration-200"
+                    className="group grid grid-cols-12 gap-6 lg:gap-10 items-baseline py-7 border-b border-[var(--rule)] hover:bg-[var(--surface)] -mx-3 px-3 transition-colors duration-200"
                   >
-                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[#94A3B8] tabular-nums">
+                    <span className="hidden md:block col-span-1 font-plex tabular-nums text-[11px] tracking-[0.22em] text-[var(--text-muted)] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
@@ -148,7 +148,7 @@ export const FeedMockup = () => {
                     </h3>
                     <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
                       <Overline>{fmtDate(p.created_at)}</Overline>
-                      <ArrowUpRight className="h-4 w-4 text-[#94A3B8] group-hover:text-[var(--accent)] transition-colors duration-200" strokeWidth={1.5} />
+                      <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors duration-200" strokeWidth={1.5} />
                     </div>
                   </Link>
                 </li>

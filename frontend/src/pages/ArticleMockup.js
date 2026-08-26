@@ -147,14 +147,14 @@ export const ArticleMockup = () => {
       {/* DATELINE STRIP */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888]">
+          <span className="font-plex text-[14px] text-[var(--text-muted)]">
             <Link to="/" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
               ← The State of Play
             </Link>
             <span className="mx-2 text-[var(--text-label)]">·</span>
             {datelineDate(new Date(article.created_at))}
           </span>
-          <span className="font-plex text-[14px] text-[#444444] dark:text-[#888888] tabular-nums">
+          <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
             Year Two
           </span>
         </div>
