@@ -86,9 +86,9 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
 
       {/* Index */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
+        <div className="flex flex-col md:flex-row md:items-start gap-10 lg:gap-20">
           {/* Brand — Fix 15: Geist body copy, not italic */}
-          <div className="md:col-span-2">
+          <div className="md:max-w-sm shrink-0">
             <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-4">
               The Publication
             </span>
@@ -100,13 +100,13 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
             </div>
           </div>
 
-          {/* Links — one plain list, no section grid */}
-          <ul className="flex flex-wrap gap-x-6 gap-y-3 md:block md:space-y-3">
+          {/* Links — one plain list, two compact columns instead of one long list */}
+          <ul className="columns-2 gap-x-10 font-plex text-[14px]">
             {FOOTER_LINKS.map((item) => (
-              <li key={item.to}>
+              <li key={item.to} className="mb-3 break-inside-avoid">
                 <Link
                   to={item.to}
-                  className="font-plex text-[14px] text-white/80 hover:text-white transition-colors duration-200"
+                  className="text-white/80 hover:text-white transition-colors duration-200"
                 >
                   {item.label}
                 </Link>
