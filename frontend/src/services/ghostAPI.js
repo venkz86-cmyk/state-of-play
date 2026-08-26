@@ -12,6 +12,10 @@ const fixImageUrl = (url) => {
             .replace('https://stateofplay.club/content/', `${GHOST_URL}/content/`);
 };
 
+// Publication-routing tags — used internally to sort posts into The State
+// of Play vs The Left Field, not meaningful to a reader as a topic.
+const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'public']);
+
 class GhostAPI {
   constructor() {
     this.contentURL = `${GHOST_URL}/ghost/api/content`;
@@ -170,6 +174,11 @@ class GhostAPI {
       theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Reportage',
       primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
       tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),
+      // Reader-facing topic tags for "Filed under" chips and tag browsing —
+      // publication-routing tags excluded, they're plumbing, not a topic.
+      tags: (post.tags || [])
+        .filter(t => t.slug && t.name && !INTERNAL_TAGS.has(t.slug))
+        .map(t => ({ name: t.name, slug: t.slug })),
       image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
       read_time: post.reading_time || 5,
@@ -211,9 +220,8 @@ class GhostAPI {
    */
   async getRelatedPosts(post, limit = 3) {
     if (!post) return [];
-    const skipTags = new Set(['state-of-play', 'left-field', 'leftfield', 'public']);
-    const meaningfulTags = (post.tag_slugs || []).filter((s) => s && !skipTags.has(s));
-    const primary = post.primary_tag_slug && !skipTags.has(post.primary_tag_slug)
+    const meaningfulTags = (post.tag_slugs || []).filter((s) => s && !INTERNAL_TAGS.has(s));
+    const primary = post.primary_tag_slug && !INTERNAL_TAGS.has(post.primary_tag_slug)
       ? post.primary_tag_slug
       : meaningfulTags[0] || null;
 

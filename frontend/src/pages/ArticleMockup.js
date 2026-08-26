@@ -132,6 +132,9 @@ export const ArticleMockup = () => {
     ? previewParagraphs(article.content)
     : (article.content || article.preview_content || '');
   const beat = article.theme;
+  const articleTags = article.tags?.length > 0
+    ? article.tags
+    : [{ name: beat, slug: article.primary_tag_slug }];
   const isVenkatByline = !article.author || article.author === 'Venkat Ananth';
 
   return (
@@ -252,9 +255,25 @@ export const ArticleMockup = () => {
         {isPaywalled && <Paywall />}
 
         {!isPaywalled && (
-          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex items-baseline justify-between">
-            <p className="font-plex text-[13px] text-[var(--text-label)]">
-              Filed under {beat}
+          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            <p className="font-plex text-[13px] text-[var(--text-label)] flex flex-wrap items-baseline gap-x-2">
+              <span>Filed under</span>
+              {articleTags.map((t, i) => (
+                <span key={t.slug || t.name}>
+                  {t.slug ? (
+                    <Link
+                      to={`/archive?tag=${t.slug}`}
+                      data-testid={`article-tag-${t.slug}`}
+                      className="text-[var(--text-label)] underline underline-offset-[4px] decoration-1 hover:text-[var(--accent-burgundy)] transition-colors"
+                    >
+                      {t.name}
+                    </Link>
+                  ) : (
+                    <span>{t.name}</span>
+                  )}
+                  {i < articleTags.length - 1 ? ',' : ''}
+                </span>
+              ))}
             </p>
             <p className="font-plex text-[13px] text-[var(--text-label)] tabular-nums">
               {longDate(article.created_at)}

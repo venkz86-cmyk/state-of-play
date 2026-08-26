@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
@@ -44,6 +44,8 @@ export const Archive = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all | state-of-play | left-field
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tagSlug = searchParams.get('tag') || '';
 
   useEffect(() => {
     let active = true;
@@ -60,12 +62,21 @@ export const Archive = () => {
     };
   }, []);
 
+  const tagName = useMemo(() => {
+    if (!tagSlug) return '';
+    const match = posts.flatMap((p) => p.tags || []).find((t) => t.slug === tagSlug);
+    return match?.name || tagSlug;
+  }, [posts, tagSlug]);
+
   const filtered = useMemo(() => {
-    if (filter === 'all') return posts;
+    let list = posts;
     if (filter === 'left-field')
-      return posts.filter((p) => (p.publication || '').toLowerCase().includes('left field'));
-    return posts.filter((p) => (p.publication || '').toLowerCase().includes('state of play'));
-  }, [posts, filter]);
+      list = list.filter((p) => (p.publication || '').toLowerCase().includes('left field'));
+    else if (filter !== 'all')
+      list = list.filter((p) => (p.publication || '').toLowerCase().includes('state of play'));
+    if (tagSlug) list = list.filter((p) => (p.tag_slugs || []).includes(tagSlug));
+    return list;
+  }, [posts, filter, tagSlug]);
 
   const grouped = useMemo(() => {
     const out = [];
@@ -84,7 +95,18 @@ export const Archive = () => {
   }, [filtered]);
 
   return (
-    <MockupLayout testId="page-archive" seo={{ title: 'Archive', path: '/archive', description: 'Browse every dispatch from The State of Play, chronologically: by month, by year.' }}>
+    <MockupLayout
+      testId="page-archive"
+      seo={
+        tagSlug
+          ? {
+              title: `${tagName} — Archive`,
+              path: `/archive?tag=${tagSlug}`,
+              description: `Every State of Play and Left Field story filed under ${tagName}.`,
+            }
+          : { title: 'Archive', path: '/archive', description: 'Browse every dispatch from The State of Play, chronologically: by month, by year.' }
+      }
+    >
       {/* Header */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1100px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
@@ -100,6 +122,23 @@ export const Archive = () => {
           <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
             Indexed by date. The full back catalogue of long-reads and the weekly briefing.
           </p>
+
+          {/* Tag filter indicator — only shown when arriving via a tag link */}
+          {tagSlug && (
+            <div className="mt-8 flex items-center gap-3" data-testid="archive-tag-filter">
+              <span className="font-plex text-[13px] text-[var(--text-muted)]">
+                Filtered by <span className="text-[var(--text)] font-medium">{tagName}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchParams((p) => { const n = new URLSearchParams(p); n.delete('tag'); return n; })}
+                data-testid="archive-tag-clear"
+                className="font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 hover:decoration-2 transition-all"
+              >
+                Clear
+              </button>
+            </div>
+          )}
 
           {/* Filter tabs */}
           <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-[var(--rule)] pt-6">
