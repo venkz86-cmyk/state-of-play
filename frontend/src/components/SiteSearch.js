@@ -124,7 +124,8 @@ export const SiteSearchTrigger = ({ className = '' }) => {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search stories, companies, people…"
                 data-testid="site-search-input"
-                className="flex-1 h-14 bg-transparent font-plex text-[15px] text-[var(--text)] outline-none placeholder:text-[var(--text-label)]"
+                style={{ outline: 'none' }}
+                className="flex-1 h-14 bg-transparent font-plex text-[15px] text-[var(--text)] placeholder:text-[var(--text-label)]"
               />
               <button
                 type="button"
