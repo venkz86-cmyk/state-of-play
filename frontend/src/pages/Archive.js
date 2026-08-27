@@ -9,6 +9,19 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
    renders a dense, link-only directory. No covers, no excerpts.
    ============================================================================= */
 
+// Curated broad-beat tags, in the order they should appear as topic pills.
+// A pill only renders once its tag has actually been used on a published
+// post — no point offering a filter that returns nothing. Update this list
+// as new beats enter the taxonomy; there's no way to distinguish a "beat"
+// tag from an entity tag (person/company) in Ghost's own data model, so
+// the curation has to live here.
+const BEAT_TAGS = [
+  'Cricket Markets', 'IPL', 'Franchise Valuations', 'Football', 'Media Rights',
+  'Governance', 'Sponsorship', 'Infrastructure', 'Private Equity in Sport',
+  'Sportswear & Apparel', 'Fitness & Wellness', 'Sports-Tech & Booking Platforms',
+  'Fantasy Sports & Gaming', 'Sporting Goods & Equipment',
+];
+
 const monthLabel = (iso) =>
   new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
@@ -67,6 +80,16 @@ export const Archive = () => {
     const match = posts.flatMap((p) => p.tags || []).find((t) => t.slug === tagSlug);
     return match?.name || tagSlug;
   }, [posts, tagSlug]);
+
+  // Resolve each curated beat name to its real Ghost slug from whatever's
+  // actually been tagged so far — only show pills for beats in live use.
+  const topicPills = useMemo(() => {
+    const allTags = posts.flatMap((p) => p.tags || []);
+    return BEAT_TAGS
+      .map((name) => allTags.find((t) => t.name === name))
+      .filter(Boolean)
+      .filter((t, i, arr) => arr.findIndex((x) => x.slug === t.slug) === i);
+  }, [posts]);
 
   const filtered = useMemo(() => {
     let list = posts;
@@ -167,6 +190,30 @@ export const Archive = () => {
               );
             })}
           </div>
+
+          {/* Topic pills — broad beats only, resolved to real tags already
+              in use. Empty until stories are tagged in Ghost. */}
+          {topicPills.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2" data-testid="archive-topic-pills">
+              {topicPills.map((t) => {
+                const active = tagSlug === t.slug;
+                return (
+                  <Link
+                    key={t.slug}
+                    to={`/archive?tag=${t.slug}`}
+                    data-testid={`archive-topic-${t.slug}`}
+                    className="font-plex text-[12px] uppercase tracking-[0.04em] px-3 py-1.5 border transition-colors"
+                    style={{
+                      borderColor: active ? 'var(--accent-burgundy)' : 'var(--rule)',
+                      color: active ? 'var(--accent-burgundy)' : 'var(--text-muted)',
+                    }}
+                  >
+                    {t.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
