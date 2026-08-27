@@ -27,6 +27,7 @@ const matches = (post, q) => {
   if (!q) return false;
   const hay = [
     post.title,
+    post.subtitle,
     post.author,
     ...(post.tags || []).map((t) => t.name),
   ]
