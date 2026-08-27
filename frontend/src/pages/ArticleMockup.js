@@ -92,12 +92,21 @@ export const ArticleMockup = () => {
   }, [id]);
 
   // For paid members reading a premium article, fetch the full HTML
-  // from the Admin API. The Content API truncates body at the paywall.
+  // from the Admin API. The Content API truncates body at the paywall,
+  // so until this resolves, article.content is still the truncated
+  // preview even for a paying member — fullContentReady gates the page
+  // render so they never see that flash of cut-off text before the
+  // real content pops in.
+  const [fullContentReady, setFullContentReady] = useState(false);
   useEffect(() => {
     let active = true;
-    if (!article?.is_premium) return;
-    if (!user?.is_paid || !user?.email || !API) return;
-
+    if (!article) return;
+    const needsFullContent = !!(article.is_premium && user?.is_paid && user?.email && API);
+    if (!needsFullContent) {
+      setFullContentReady(true);
+      return;
+    }
+    setFullContentReady(false);
     (async () => {
       try {
         const r = await axios.post(
@@ -111,12 +120,14 @@ export const ArticleMockup = () => {
         }
       } catch (e) {
         console.error('Failed to load full article content:', e);
+      } finally {
+        if (active) setFullContentReady(true);
       }
     })();
     return () => { active = false; };
   }, [article?.is_premium, article?.id, user?.is_paid, user?.email]);
 
-  if (loading) {
+  if (loading || (article?.is_premium && isMember && !fullContentReady)) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <span className="font-plex text-sm text-[var(--text-muted)]">Loading…</span>
