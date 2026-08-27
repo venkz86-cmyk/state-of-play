@@ -252,7 +252,7 @@ export const HomeMockup = () => {
                 rel="noopener noreferrer"
                 className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
               >
-                Subscribe to The Left Field →
+                Subscribe, it's free →
               </a>
             </aside>
           </div>
