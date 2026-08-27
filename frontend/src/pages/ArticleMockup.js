@@ -14,6 +14,7 @@ import { GiftArticleModal } from '../components/GiftArticleModal';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
+import { ContinueReading } from '../components/ContinueReading';
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 
@@ -245,6 +246,8 @@ export const ArticleMockup = () => {
             />
           </div>
         </header>
+
+        {!isPaywalled && !bodyStillLoading && <ContinueReading articleId={article.id} />}
 
         {article.image_url && (
           <figure className="mb-10 lg:mb-12 -mx-6 lg:mx-0 overflow-hidden">
