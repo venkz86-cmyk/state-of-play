@@ -127,7 +127,7 @@ export const ArticleMockup = () => {
     return () => { active = false; };
   }, [article?.is_premium, article?.id, user?.is_paid, user?.email]);
 
-  if (loading || (article?.is_premium && isMember && !fullContentReady)) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <span className="font-plex text-sm text-[var(--text-muted)]">Loading…</span>
@@ -137,6 +137,12 @@ export const ArticleMockup = () => {
   if (!article) {
     return <NotFoundMockup />;
   }
+
+  // Headline, dek, byline and hero image are already in hand from the
+  // first fetch — no reason to blank the whole page while the full body
+  // text is still loading for a paying member. Only the body area itself
+  // gets a placeholder.
+  const bodyStillLoading = article.is_premium && isMember && !fullContentReady;
 
   const isPaywalled = article.is_premium && !isMember;
   const bodyHtml = isPaywalled
@@ -256,12 +262,29 @@ export const ArticleMockup = () => {
           </figure>
         )}
 
-        <div
-          className="editorial-prose-quiet"
-          data-testid="article-body"
-          data-size={size}
-          dangerouslySetInnerHTML={{ __html: bodyHtml }}
-        />
+        {bodyStillLoading ? (
+          <div className="editorial-prose-quiet" data-testid="article-body-loading" data-size={size}>
+            {[100, 92, 96, 60, 0, 88, 100, 94, 72].map((w, i) =>
+              w === 0 ? (
+                <div key={i} className="h-6" aria-hidden="true" />
+              ) : (
+                <div
+                  key={i}
+                  className="h-4 mb-3 bg-[var(--rule)] animate-pulse"
+                  style={{ width: `${w}%` }}
+                  aria-hidden="true"
+                />
+              )
+            )}
+          </div>
+        ) : (
+          <div
+            className="editorial-prose-quiet"
+            data-testid="article-body"
+            data-size={size}
+            dangerouslySetInnerHTML={{ __html: bodyHtml }}
+          />
+        )}
 
         {isPaywalled && <Paywall />}
 
