@@ -3,6 +3,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Sun, Moon } from 'lucide-react';
+import { useGhostSearchScript, GhostSearchTrigger } from './GhostSearch';
 
 // Single asset. The logo is a flat single-color PNG (brand blue on
 // transparent), so a plain CSS `invert` produced a muddy khaki tone
@@ -35,6 +36,8 @@ export const MockupHeader = () => {
     (previewMember ? 'Venkatesh' : null);
 
   const isActive = (p) => location.pathname === p;
+
+  useGhostSearchScript();
 
   return (
     <header
@@ -76,6 +79,8 @@ export const MockupHeader = () => {
 
           {/* Right rail */}
           <div className="flex items-center gap-4 lg:gap-5 shrink-0">
+            <GhostSearchTrigger />
+
             {/* Dark mode toggle */}
             <button
               type="button"

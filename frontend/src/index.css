@@ -72,6 +72,11 @@ body {
   --accent: var(--accent-burgundy);
   --accent-hover: var(--accent-burgundy-hover);
 
+  /* Ghost's own native widgets (search, and Portal/Comments if ever
+     revisited) look for this exact variable name to theme themselves —
+     without it they default to Ghost's own generic accent color. */
+  --ghost-accent-color: #A0291C;
+
   /* Shared corner radius for real interactive controls (buttons, inputs).
      Deliberately restrained — a hint of ease, not a rounded-lg SaaS pill.
      Structural surfaces (modal panels, document previews, progress
