@@ -28,17 +28,12 @@ const SectionLabel = ({ children, className = '' }) => (
   <p className={`section-label ${className}`}>{children}</p>
 );
 
-/* ============ Testimonial block (Fix 12) ============ */
+/* ============ Testimonial block ============ */
 const TESTIMONIALS = [
   {
-    quote: 'The only publication that treats Indian sports business as a serious beat.',
-    name: '—',
-    title: 'Awaiting reader attribution',
-  },
-  {
-    quote: 'I read every edition. The RCB coverage alone was worth the subscription.',
-    name: '—',
-    title: 'Awaiting reader attribution',
+    quote: 'As a lawyer who leads a practice that advises on fundraising, business, sport, and everything in between, reading TSOP certainly makes me feel better prepared for every meeting or discussion that I have about the business of sport. TSOP fills a void that I did not even know existed until I came across Venkat’s work. The depth and clarity that come through in every piece fully justify the cost of the subscription.',
+    name: 'Chirag Narasimhiah',
+    title: 'Founder, Deep Cover Law',
   },
 ];
 
@@ -72,24 +67,26 @@ const TestimonialBlock = () => {
               {t.title}
             </p>
           </div>
-          <div className="lg:col-span-2 flex lg:justify-end items-center gap-4 mt-2 lg:mt-0">
-            <button
-              type="button"
-              onClick={() => setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)}
-              data-testid="testimonial-prev"
-              className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
-            >
-              ← Prev
-            </button>
-            <button
-              type="button"
-              onClick={() => setI((i + 1) % TESTIMONIALS.length)}
-              data-testid="testimonial-next"
-              className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
-            >
-              Next →
-            </button>
-          </div>
+          {TESTIMONIALS.length > 1 && (
+            <div className="lg:col-span-2 flex lg:justify-end items-center gap-4 mt-2 lg:mt-0">
+              <button
+                type="button"
+                onClick={() => setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)}
+                data-testid="testimonial-prev"
+                className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+              >
+                ← Prev
+              </button>
+              <button
+                type="button"
+                onClick={() => setI((i + 1) % TESTIMONIALS.length)}
+                data-testid="testimonial-next"
+                className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -378,6 +375,8 @@ export const HomeMockup = () => {
           </div>
         </section>
       )}
+
+      <TestimonialBlock />
 
       <PartnersBlock />
 
