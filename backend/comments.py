@@ -67,6 +67,7 @@ async def ensure_indexes():
             [('post_slug', 1), ('status', 1), ('created_at', 1)]
         )
         await _db.comments.create_index([('status', 1), ('created_at', -1)])
+        await _db.comments.create_index([('author_email', 1), ('created_at', -1)])
     except Exception as e:
         logger.warning(f'comments index ensure failed (non-fatal): {e!r}')
 
@@ -214,6 +215,24 @@ async def submit_comment(req: CommentSubmit):
     }
     await _db.comments.insert_one(doc)
     return {'success': True, 'id': comment_id, 'status': 'pending'}
+
+
+@router.get('/api/comments/my-title')
+async def get_my_title(email: str):
+    """The commenter's own title/affiliation, so the field can be
+    pre-filled on any device rather than only remembered per-browser.
+    Derived from their most recent comment that set one — no separate
+    profile store needed. Public data (it's shown on every comment they
+    post anyway), so no auth beyond knowing the email.
+    Registered before /api/comments/{slug} for the same route-ordering
+    reason as /pending and /approved above."""
+    if _db is None:
+        return {'title': ''}
+    doc = await _db.comments.find_one(
+        {'author_email': email.lower().strip(), 'author_title': {'$nin': [None, '']}},
+        sort=[('created_at', -1)],
+    )
+    return {'title': (doc or {}).get('author_title', '')}
 
 
 @router.get('/api/comments/pending')

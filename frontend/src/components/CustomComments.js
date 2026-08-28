@@ -28,6 +28,31 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
+  // Pull the server-side value (from their most recent comment) so the
+  // title follows them across devices, not just this browser. localStorage
+  // above is just the instant-paint fallback while this is in flight; only
+  // the visible top-level form needs to fetch it — reply forms stay on
+  // whatever's already cached locally.
+  useEffect(() => {
+    if (compact || !user?.email || !API) return;
+    let active = true;
+    fetch(`${API}/api/comments/my-title?email=${encodeURIComponent(user.email)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (active && data.title) {
+          setTitle(data.title);
+          try {
+            window.localStorage.setItem(TITLE_STORAGE_KEY, data.title);
+          } catch (e) { /* ignore */ }
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compact, user?.email]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!body.trim() || !user?.email) return;
