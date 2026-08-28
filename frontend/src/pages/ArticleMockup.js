@@ -15,6 +15,7 @@ import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSi
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { ContinueReading } from '../components/ContinueReading';
+import { GhostComments } from '../components/GhostComments';
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 
@@ -360,24 +361,30 @@ export const ArticleMockup = () => {
         </section>
       )}
 
-      {/* Comments stub (Ghost integration deferred per user) */}
-      {!isMember && (
-        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
-          <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
-            <SectionLabel className="mb-3 block">Comments</SectionLabel>
-            <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
-              Comments are for members. Subscribe to join the conversation.
-            </p>
-            <Link
-              to="/signup"
-              data-testid="comments-subscribe"
-              className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-            >
-              Subscribe →
-            </Link>
-          </div>
-        </section>
-      )}
+      {/* Comments — real Ghost member threads for subscribers; a subscribe
+          nudge for everyone else. Gated the same as the rest of the page:
+          members only, matching Ghost's own comments setting. */}
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
+        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
+          <SectionLabel className="mb-3 block">Comments</SectionLabel>
+          {isMember ? (
+            <GhostComments key={article.ghost_id} postId={article.ghost_id} />
+          ) : (
+            <>
+              <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
+                Comments are for members. Subscribe to join the conversation.
+              </p>
+              <Link
+                to="/signup"
+                data-testid="comments-subscribe"
+                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+              >
+                Subscribe →
+              </Link>
+            </>
+          )}
+        </div>
+      </section>
 
       <MockupFooter />
 
