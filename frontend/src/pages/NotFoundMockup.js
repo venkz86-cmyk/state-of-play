@@ -8,7 +8,7 @@ export const NotFoundMockup = () => (
         This URL didn’t survive the edit.
       </h1>
       <p className="font-plex text-[18px] lg:text-[20px] text-[var(--text-muted)] mb-10 max-w-[42ch]">
-        Nothing’s filed under this address — the reporting lives elsewhere on the site.
+        Nothing’s filed under this address. The reporting lives elsewhere on the site.
       </p>
       <Link
         to="/"
