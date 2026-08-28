@@ -32,7 +32,7 @@ const SectionLabel = ({ children, className = '' }) => (
 const TESTIMONIALS = [
   {
     quote: 'As a lawyer who leads a practice that advises on fundraising, business, sport, and everything in between, reading TSOP certainly makes me feel better prepared for every meeting or discussion that I have about the business of sport. TSOP fills a void that I did not even know existed until I came across Venkat’s work. The depth and clarity that come through in every piece fully justify the cost of the subscription.',
-    name: 'Chirag Narasimhiah',
+    name: 'Chirag Narasimiah',
     title: 'Founder, Deep Cover Law',
   },
 ];
