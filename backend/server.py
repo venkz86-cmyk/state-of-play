@@ -2040,6 +2040,14 @@ try:
 except Exception as _e:
     logging.warning(f"nominations module not mounted: {_e!r}")
 
+# Mount self-hosted article comments (replaces Ghost's native Comments widget)
+try:
+    from comments import router as comments_router, init as comments_init
+    comments_init(db)
+    app.include_router(comments_router)
+except Exception as _e:
+    logging.warning(f"comments module not mounted: {_e!r}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

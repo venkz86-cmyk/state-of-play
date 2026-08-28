@@ -26,6 +26,7 @@ import { MockupIndex } from "./pages/MockupIndex";
 import { TeamsManage } from "./pages/TeamsManage";
 import { TeamsLogin } from "./pages/TeamsLogin";
 import { TeamsEmailsMockup } from "./pages/TeamsEmailsMockup";
+import { CommentsModerationMockup } from "./pages/CommentsModerationMockup";
 import { Toaster } from "./components/ui/sonner";
 
 function Shell() {
@@ -53,6 +54,7 @@ function Shell() {
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
+          <Route path="/admin/comments" element={<CommentsModerationMockup />} />
 
           {/* Mockup review index — kept for future design previews */}
           <Route path="/mockup" element={<MockupIndex />} />

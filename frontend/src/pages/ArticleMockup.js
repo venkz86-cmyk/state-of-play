@@ -15,7 +15,7 @@ import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSi
 import { Paywall } from '../components/Paywall';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { ContinueReading } from '../components/ContinueReading';
-import { GhostComments } from '../components/GhostComments';
+import { CustomComments } from '../components/CustomComments';
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 
@@ -368,7 +368,10 @@ export const ArticleMockup = () => {
         <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
           <SectionLabel className="mb-3 block">Comments</SectionLabel>
           {isMember ? (
-            <GhostComments key={article.ghost_id} postId={article.ghost_id} />
+            <CustomComments
+              postSlug={article.id}
+              user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
+            />
           ) : (
             <>
               <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
