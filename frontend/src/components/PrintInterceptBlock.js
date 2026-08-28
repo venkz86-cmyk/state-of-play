@@ -281,7 +281,7 @@ export const PrintInterceptBlock = ({
               <a
                 href={
                   process.env.REACT_APP_GIFT_URL ||
-                  'mailto:hello@venkatananth.me?subject=Gift a subscription&body=I%27d like to gift a subscription to a reader%20—%20how do I do that%3F'
+                  'mailto:hello@venkatananth.me?subject=Gift a subscription&body=I%27d like to gift a subscription to a reader. How do I do that%3F'
                 }
                 target={process.env.REACT_APP_GIFT_URL ? '_blank' : '_self'}
                 rel="noopener noreferrer"

@@ -25,7 +25,7 @@ const FALLBACK = [
   },
   {
     id: 'lf-2',
-    title: 'Why ISL clubs are quietly hiring data leads — and what they’re asked to prove',
+    title: 'Why ISL clubs are quietly hiring data leads, and what they’re asked to prove',
     subtitle: 'A short read on the new headcount appearing in Indian football front offices.',
     author: 'The Left Field',
     created_at: '2026-04-18T09:00:00Z',
@@ -34,7 +34,7 @@ const FALLBACK = [
   {
     id: 'lf-3',
     title: 'Inside the franchise sale process: a quick primer for first-time bidders',
-    subtitle: 'How financial advisers structure information asymmetry — and why the second offer almost always wins.',
+    subtitle: 'How financial advisers structure information asymmetry, and why the second offer almost always wins.',
     author: 'The Left Field',
     created_at: '2026-04-11T09:00:00Z',
     external_url: 'https://theleftfield.substack.com',
@@ -49,7 +49,7 @@ const FALLBACK = [
   },
   {
     id: 'lf-5',
-    title: 'A short note on the BCCI’s commercial committee — and what it actually decides',
+    title: 'A short note on the BCCI’s commercial committee, and what it actually decides',
     subtitle: 'Briefly, on the room where the cricket business gets reshaped each quarter.',
     author: 'The Left Field',
     created_at: '2026-03-28T09:00:00Z',
