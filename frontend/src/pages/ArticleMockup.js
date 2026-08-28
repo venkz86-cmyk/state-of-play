@@ -326,7 +326,7 @@ export const ArticleMockup = () => {
           after the article since it's a direct continuation of it, ahead
           of the separate Nominate-a-reader action below. */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
-        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
+        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
           <SectionLabel className="mb-2 block">The Room</SectionLabel>
           {isMember && (
             <p className="font-plex text-[12px] text-[var(--text-label)] mb-5">
