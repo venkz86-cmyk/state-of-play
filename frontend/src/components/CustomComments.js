@@ -113,8 +113,8 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
             onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE_LENGTH))}
             data-testid="comment-title-input"
             disabled={submitting}
-            placeholder="Title or affiliation (optional) — Portfolio Manager, XYZ Capital"
-            className="w-full px-4 py-2.5 bg-transparent border border-[var(--rule)] font-plex text-[13px] focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+            placeholder="Title or affiliation, optional. Portfolio Manager, XYZ Capital"
+            className="w-full px-4 py-2.5 bg-transparent border border-[var(--rule)] font-reading text-[14px] focus:border-[var(--accent-burgundy)] disabled:opacity-60"
             style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
           />
         </div>
