@@ -73,8 +73,8 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         data-testid={parentId ? `reply-body-input-${parentId}` : 'comment-body-input'}
         disabled={submitting}
         placeholder={parentId ? 'Write a reply…' : 'Add to the conversation…'}
-        className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
-        style={{ borderRadius: 'var(--control-radius)' }}
+        className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-reading text-[15px] focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
+        style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
       />
       <div className="flex items-center justify-between mt-3">
         <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
@@ -154,7 +154,7 @@ export const CustomComments = ({ postSlug, user }) => {
                 {' · '}
                 {relativeDate(c.created_at)}
               </p>
-              <p className="font-plex text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+              <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
                 {c.body}
               </p>
 
@@ -169,7 +169,7 @@ export const CustomComments = ({ postSlug, user }) => {
                     {' · '}
                     {relativeDate(r.created_at)}
                   </p>
-                  <p className="font-plex text-[14px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                  <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
                     {r.body}
                   </p>
                 </div>

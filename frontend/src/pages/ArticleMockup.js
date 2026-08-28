@@ -355,7 +355,21 @@ export const ArticleMockup = () => {
         </div>
       </section>
 
-      {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks */}
+      {isMember && (
+        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
+          <NominateReaderBlock
+            variant="story"
+            subscriberName={effectiveSubscriberName}
+            subscriberEmail={effectiveSubscriberEmail}
+            subscriberGhostId={effectiveSubscriberGhostId}
+            postSlug={article?.slug || article?.id || ''}
+          />
+        </section>
+      )}
+
+      {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks. Sits after
+          Nominate deliberately: an exit link to another article shouldn't
+          come before the on-page ask. */}
       {related.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20 lg:pb-24">
           <div className="border-t border-[var(--rule)] pt-8">
@@ -381,18 +395,6 @@ export const ArticleMockup = () => {
               ))}
             </ul>
           </div>
-        </section>
-      )}
-
-      {isMember && (
-        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
-          <NominateReaderBlock
-            variant="story"
-            subscriberName={effectiveSubscriberName}
-            subscriberEmail={effectiveSubscriberEmail}
-            subscriberGhostId={effectiveSubscriberGhostId}
-            postSlug={article?.slug || article?.id || ''}
-          />
         </section>
       )}
 
