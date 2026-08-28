@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const MAX_BODY_LENGTH = 2000;
+const MAX_TITLE_LENGTH = 50;
 const REPLIES_SHOWN_BY_DEFAULT = 2;
+const TITLE_STORAGE_KEY = 'tsop_comment_author_title';
 
 const relativeDate = (iso) => {
   if (!iso) return '';
@@ -15,6 +17,13 @@ const relativeDate = (iso) => {
    call, pending-approval confirmation) is identical. */
 const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
   const [body, setBody] = useState('');
+  const [title, setTitle] = useState(() => {
+    try {
+      return window.localStorage.getItem(TITLE_STORAGE_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +42,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
           parent_id: parentId || undefined,
           author_email: user.email,
           author_name: user.name || '',
+          author_title: title.trim(),
           body: body.trim(),
         }),
       });
@@ -42,6 +52,9 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
       }
       setBody('');
       setSubmitted(true);
+      try {
+        window.localStorage.setItem(TITLE_STORAGE_KEY, title.trim());
+      } catch (e) { /* ignore */ }
       if (onSubmitted) onSubmitted();
     } catch (err) {
       setError(err.message || 'Something went wrong. Try again.');
@@ -67,6 +80,20 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
 
   return (
     <form onSubmit={handleSubmit}>
+      {!compact && (
+        <div className="mb-3">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE_LENGTH))}
+            data-testid="comment-title-input"
+            disabled={submitting}
+            placeholder="Title or affiliation (optional) — Portfolio Manager, XYZ Capital"
+            className="w-full px-4 py-2.5 bg-transparent border border-[var(--rule)] font-plex text-[13px] focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+            style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
+          />
+        </div>
+      )}
       <textarea
         rows={compact ? 2 : 3}
         value={body}
@@ -159,6 +186,7 @@ export const CustomComments = ({ postSlug, user }) => {
               >
                 <p className="font-plex text-[12px] text-[var(--text-label)] mb-2">
                   <span className="font-bold text-[var(--text)]">{c.author_name}</span>
+                  {c.author_title && <span>, {c.author_title}</span>}
                   {' · '}
                   {relativeDate(c.created_at)}
                 </p>
@@ -172,6 +200,7 @@ export const CustomComments = ({ postSlug, user }) => {
                       <div key={r.id} data-testid={`comment-${r.id}`}>
                         <p className="font-plex text-[12px] text-[var(--text-label)] mb-1">
                           <span className="font-bold text-[var(--text)]">{r.author_name}</span>
+                          {r.author_title && <span>, {r.author_title}</span>}
                           {' · '}
                           {relativeDate(r.created_at)}
                         </p>

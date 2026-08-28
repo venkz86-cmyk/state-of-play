@@ -32,7 +32,6 @@ from __future__ import annotations
 import os
 import logging
 import uuid
-import html as html_lib
 from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import quote
@@ -140,6 +139,7 @@ def _serialize(doc: dict) -> dict:
         'post_slug': doc.get('post_slug'),
         'parent_id': doc.get('parent_id'),
         'author_name': doc.get('author_name'),
+        'author_title': doc.get('author_title'),
         'author_email': doc.get('author_email'),
         'body': doc.get('body'),
         'status': doc.get('status'),
@@ -152,6 +152,9 @@ class CommentSubmit(BaseModel):
     post_slug: str = Field(..., min_length=1, max_length=300)
     author_email: EmailStr
     author_name: str = Field('', max_length=200)
+    # Optional context line — "Portfolio Manager, XYZ Capital" — shown next
+    # to the name. Same 50-char cap as Ghost's own version of this field.
+    author_title: str = Field('', max_length=50)
     body: str = Field(..., min_length=1, max_length=MAX_BODY_LENGTH)
     # Set only for a reply. Must reference an approved, top-level comment
     # on the same post — one level of threading, no replies-to-replies.
@@ -176,7 +179,11 @@ async def submit_comment(req: CommentSubmit):
     if not await _is_paid_ghost_member(email_norm):
         raise HTTPException(status_code=403, detail='Comments are for subscribers')
 
-    body_clean = html_lib.escape(req.body.strip())
+    # Store as plain text, not HTML-escaped — the frontend renders this via
+    # plain JSX text interpolation, which already escapes on display. Storing
+    # pre-escaped text here would double-escape (an apostrophe would render
+    # as the literal string "&#x27;" instead of "'").
+    body_clean = req.body.strip()
     if not body_clean:
         raise HTTPException(status_code=400, detail='Comment cannot be empty')
 
@@ -199,6 +206,7 @@ async def submit_comment(req: CommentSubmit):
         'parent_id': parent_id,
         'author_email': email_norm,
         'author_name': (req.author_name or '').strip() or email_norm.split('@')[0],
+        'author_title': (req.author_title or '').strip(),
         'body': body_clean,
         'status': 'pending',
         'created_at': datetime.now(timezone.utc),

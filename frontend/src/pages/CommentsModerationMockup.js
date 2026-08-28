@@ -139,6 +139,7 @@ export const CommentsModerationMockup = () => {
                   >
                     <p className="font-plex text-[12px] text-[var(--text-label)] mb-2">
                       <span className="font-bold text-[var(--text)]">{c.author_name}</span>
+                      {c.author_title && <span>, {c.author_title}</span>}
                       {' · '}
                       {c.author_email}
                       {' · '}
@@ -207,6 +208,7 @@ export const CommentsModerationMockup = () => {
                   >
                     <p className="font-plex text-[12px] text-[var(--text-label)] mb-2">
                       <span className="font-bold text-[var(--text)]">{c.author_name}</span>
+                      {c.author_title && <span>, {c.author_title}</span>}
                       {' · '}
                       {c.author_email}
                       {' · '}
