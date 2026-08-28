@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const MAX_BODY_LENGTH = 2000;
+const REPLIES_SHOWN_BY_DEFAULT = 2;
 
 const relativeDate = (iso) => {
   if (!iso) return '';
@@ -109,6 +110,7 @@ export const CustomComments = ({ postSlug, user }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [expandedThreads, setExpandedThreads] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -143,62 +145,90 @@ export const CustomComments = ({ postSlug, user }) => {
     <div data-testid="custom-comments">
       {!loading && topLevel.length > 0 && (
         <ul className="mb-8">
-          {topLevel.map((c) => (
-            <li
-              key={c.id}
-              data-testid={`comment-${c.id}`}
-              className="py-4 border-b border-[var(--rule)] first:border-t"
-            >
-              <p className="font-plex text-[12px] text-[var(--text-label)] mb-2">
-                <span className="font-bold text-[var(--text)]">{c.author_name}</span>
-                {' · '}
-                {relativeDate(c.created_at)}
-              </p>
-              <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
-                {c.body}
-              </p>
+          {topLevel.map((c) => {
+            const replies = repliesByParent[c.id] || [];
+            const expanded = !!expandedThreads[c.id];
+            const visibleReplies = expanded ? replies : replies.slice(0, REPLIES_SHOWN_BY_DEFAULT);
+            const hiddenCount = replies.length - visibleReplies.length;
 
-              {(repliesByParent[c.id] || []).map((r) => (
-                <div
-                  key={r.id}
-                  data-testid={`comment-${r.id}`}
-                  className="mt-4 pl-4 ml-1 border-l border-[var(--rule)]"
-                >
-                  <p className="font-plex text-[12px] text-[var(--text-label)] mb-1">
-                    <span className="font-bold text-[var(--text)]">{r.author_name}</span>
-                    {' · '}
-                    {relativeDate(r.created_at)}
-                  </p>
-                  <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
-                    {r.body}
-                  </p>
-                </div>
-              ))}
+            return (
+              <li
+                key={c.id}
+                data-testid={`comment-${c.id}`}
+                className="py-4 border-b border-[var(--rule)] first:border-t"
+              >
+                <p className="font-plex text-[12px] text-[var(--text-label)] mb-2">
+                  <span className="font-bold text-[var(--text)]">{c.author_name}</span>
+                  {' · '}
+                  {relativeDate(c.created_at)}
+                </p>
+                <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                  {c.body}
+                </p>
 
-              {user?.email && (
-                replyingTo === c.id ? (
-                  <div className="mt-4 pl-4 ml-1">
-                    <CommentForm
-                      postSlug={postSlug}
-                      parentId={c.id}
-                      user={user}
-                      compact
-                      onSubmitted={() => {}}
-                    />
+                {visibleReplies.length > 0 && (
+                  <div className="mt-4 pl-4 ml-1 border-l border-[var(--rule)] space-y-4">
+                    {visibleReplies.map((r) => (
+                      <div key={r.id} data-testid={`comment-${r.id}`}>
+                        <p className="font-plex text-[12px] text-[var(--text-label)] mb-1">
+                          <span className="font-bold text-[var(--text)]">{r.author_name}</span>
+                          {' · '}
+                          {relativeDate(r.created_at)}
+                        </p>
+                        <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                          {r.body}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ) : (
+                )}
+
+                {hiddenCount > 0 && (
                   <button
                     type="button"
-                    onClick={() => setReplyingTo(c.id)}
-                    data-testid={`reply-toggle-${c.id}`}
-                    className="mt-3 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                    onClick={() => setExpandedThreads((prev) => ({ ...prev, [c.id]: true }))}
+                    data-testid={`expand-replies-${c.id}`}
+                    className="mt-3 ml-5 font-plex text-[12px] text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 hover:decoration-2"
                   >
-                    Reply
+                    Show {hiddenCount} more {hiddenCount === 1 ? 'reply' : 'replies'}
                   </button>
-                )
-              )}
-            </li>
-          ))}
+                )}
+                {expanded && replies.length > REPLIES_SHOWN_BY_DEFAULT && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedThreads((prev) => ({ ...prev, [c.id]: false }))}
+                    data-testid={`collapse-replies-${c.id}`}
+                    className="mt-3 ml-5 font-plex text-[12px] text-[var(--text-label)] underline underline-offset-[4px] decoration-1 hover:decoration-2"
+                  >
+                    Hide replies
+                  </button>
+                )}
+
+                {user?.email && (
+                  replyingTo === c.id ? (
+                    <div className="mt-4 pl-4 ml-1">
+                      <CommentForm
+                        postSlug={postSlug}
+                        parentId={c.id}
+                        user={user}
+                        compact
+                        onSubmitted={() => {}}
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setReplyingTo(c.id)}
+                      data-testid={`reply-toggle-${c.id}`}
+                      className="mt-3 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                    >
+                      Reply
+                    </button>
+                  )
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
