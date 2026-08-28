@@ -327,7 +327,12 @@ export const ArticleMockup = () => {
           of the separate Nominate-a-reader action below. */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
         <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
-          <SectionLabel className="mb-3 block">Comments</SectionLabel>
+          <SectionLabel className="mb-2 block">The Room</SectionLabel>
+          {isMember && (
+            <p className="font-plex text-[12px] text-[var(--text-label)] mb-5">
+              Every post is reviewed before it's public.
+            </p>
+          )}
           {isMember ? (
             <CustomComments
               postSlug={article.id}

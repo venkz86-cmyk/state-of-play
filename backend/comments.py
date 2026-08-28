@@ -138,6 +138,7 @@ def _serialize(doc: dict) -> dict:
     return {
         'id': doc.get('comment_id'),
         'post_slug': doc.get('post_slug'),
+        'parent_id': doc.get('parent_id'),
         'author_name': doc.get('author_name'),
         'author_email': doc.get('author_email'),
         'body': doc.get('body'),
@@ -152,6 +153,9 @@ class CommentSubmit(BaseModel):
     author_email: EmailStr
     author_name: str = Field('', max_length=200)
     body: str = Field(..., min_length=1, max_length=MAX_BODY_LENGTH)
+    # Set only for a reply. Must reference an approved, top-level comment
+    # on the same post — one level of threading, no replies-to-replies.
+    parent_id: Optional[str] = None
 
 
 class CommentModerate(BaseModel):
@@ -176,10 +180,23 @@ async def submit_comment(req: CommentSubmit):
     if not body_clean:
         raise HTTPException(status_code=400, detail='Comment cannot be empty')
 
+    post_slug = req.post_slug.strip()
+    parent_id = (req.parent_id or '').strip() or None
+    if parent_id:
+        parent = await _db.comments.find_one({
+            'comment_id': parent_id,
+            'post_slug': post_slug,
+            'status': 'approved',
+            'parent_id': None,
+        })
+        if not parent:
+            raise HTTPException(status_code=400, detail='Cannot reply to that comment')
+
     comment_id = str(uuid.uuid4())
     doc = {
         'comment_id': comment_id,
-        'post_slug': req.post_slug.strip(),
+        'post_slug': post_slug,
+        'parent_id': parent_id,
         'author_email': email_norm,
         'author_name': (req.author_name or '').strip() or email_norm.split('@')[0],
         'body': body_clean,
@@ -204,7 +221,22 @@ async def get_pending_comments(
         return []
     cursor = _db.comments.find({'status': 'pending'}).sort('created_at', -1)
     docs = await cursor.to_list(length=500)
-    return [_serialize(d) for d in docs]
+    out = [_serialize(d) for d in docs]
+
+    # Attach a snippet of the parent comment to replies, so a moderator has
+    # context without a second lookup.
+    parent_ids = {c['parent_id'] for c in out if c.get('parent_id')}
+    if parent_ids:
+        parents = await _db.comments.find({'comment_id': {'$in': list(parent_ids)}}).to_list(length=len(parent_ids))
+        parent_by_id = {p['comment_id']: p for p in parents}
+        for c in out:
+            if c.get('parent_id') and c['parent_id'] in parent_by_id:
+                p = parent_by_id[c['parent_id']]
+                c['parent_preview'] = {
+                    'author_name': p.get('author_name'),
+                    'body': (p.get('body') or '')[:140],
+                }
+    return out
 
 
 @router.get('/api/comments/{slug}')

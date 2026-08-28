@@ -120,7 +120,19 @@ export const CommentsModerationMockup = () => {
                 </Link>
                 {' · '}
                 {longDate(c.created_at)}
+                {c.parent_id && (
+                  <>
+                    {' · '}
+                    <span className="uppercase tracking-[0.05em]">reply</span>
+                  </>
+                )}
               </p>
+              {c.parent_preview && (
+                <p className="font-plex text-[12px] text-[var(--text-label)] mb-2 pl-3 border-l border-[var(--rule)]">
+                  Replying to <span className="font-bold">{c.parent_preview.author_name}</span>:{' '}
+                  &ldquo;{c.parent_preview.body}{c.parent_preview.body?.length >= 140 ? '…' : ''}&rdquo;
+                </p>
+              )}
               <p className="font-plex text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap mb-4">
                 {c.body}
               </p>
