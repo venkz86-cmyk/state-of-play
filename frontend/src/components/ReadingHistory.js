@@ -4,6 +4,7 @@ const MAX_HISTORY = 10;
 // Per-browser reading history, keyed to nothing about the logged-in
 // account. Used by the "Recently read" section on the Account page.
 export const addToReadingHistory = (article) => {
+  if (!article || !article.id) return;
   const history = getReadingHistory();
 
   // Remove if already exists
