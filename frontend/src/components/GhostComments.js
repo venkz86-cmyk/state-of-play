@@ -32,6 +32,12 @@ const COMMENTS_SCRIPT_ID = 'ghost-comments-script';
    the <script> tags themselves. */
 export const GhostComments = ({ postId }) => {
   useEffect(() => {
+    // TEMPORARY diagnostic — remove once Comments is confirmed working.
+    console.log('[GhostComments diagnostic]', {
+      GHOST_URL,
+      GHOST_CONTENT_KEY_present: !!GHOST_CONTENT_KEY,
+      postId,
+    });
     if (!GHOST_URL || !GHOST_CONTENT_KEY || !postId) return;
 
     if (!document.getElementById(PORTAL_SCRIPT_ID)) {
