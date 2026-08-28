@@ -57,7 +57,7 @@ const TestimonialBlock = () => {
             “
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
-            <blockquote className="font-editorial italic text-[22px] leading-snug text-[var(--text)]">
+            <blockquote className="font-reading italic text-[22px] leading-relaxed text-[var(--text)]">
               “{t.quote}”
             </blockquote>
             <p className="mt-5 font-plex text-[13px] font-bold text-[var(--text)]">
