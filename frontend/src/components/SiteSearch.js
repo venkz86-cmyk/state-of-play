@@ -78,6 +78,20 @@ export const SiteSearchTrigger = ({ className = '' }) => {
     };
   }, [open]);
 
+  // Global ⌘K / Ctrl+K shortcut — works from anywhere on the site, not
+  // just when the search icon is visible.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openSearch();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posts]);
+
   const q = query.trim().toLowerCase();
   const results = q && posts ? posts.filter((p) => matches(p, q)).slice(0, 12) : [];
 
@@ -93,9 +107,12 @@ export const SiteSearchTrigger = ({ className = '' }) => {
         onClick={openSearch}
         data-testid="mockup-header-search"
         aria-label="Search"
-        className={`h-9 w-9 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200 ${className}`}
+        className={`h-9 inline-flex items-center gap-1.5 px-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200 ${className}`}
       >
-        <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        <Search className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+        <kbd className="hidden lg:inline-block font-plex text-[11px] leading-none text-[var(--text-label)] border border-[var(--rule)] rounded-[3px] px-1.5 py-1">
+          ⌘K
+        </kbd>
       </button>
 
       {open && (
