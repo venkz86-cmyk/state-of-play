@@ -327,9 +327,11 @@ export const ArticleMockup = () => {
           of the separate Nominate-a-reader action below. */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
         <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
-          <SectionLabel className="mb-2 block">The Room</SectionLabel>
+          <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
+            The Room
+          </h2>
           {isMember && (
-            <p className="font-plex text-[12px] text-[var(--text-label)] mb-5">
+            <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
               Every post is reviewed before it's public.
             </p>
           )}
