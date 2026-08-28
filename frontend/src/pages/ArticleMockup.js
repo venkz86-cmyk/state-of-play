@@ -328,7 +328,7 @@ export const ArticleMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
         <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
-            The Room
+            On the Record
           </h2>
           {isMember && (
             <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
