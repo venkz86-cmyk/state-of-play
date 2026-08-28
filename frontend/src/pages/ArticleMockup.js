@@ -320,17 +320,35 @@ export const ArticleMockup = () => {
         )}
       </article>
 
-      {isMember && (
-        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
-          <NominateReaderBlock
-            variant="story"
-            subscriberName={effectiveSubscriberName}
-            subscriberEmail={effectiveSubscriberEmail}
-            subscriberGhostId={effectiveSubscriberGhostId}
-            postSlug={article?.slug || article?.id || ''}
-          />
-        </section>
-      )}
+      {/* Comments — real Ghost member threads for subscribers; a subscribe
+          nudge for everyone else. Gated the same as the rest of the page:
+          members only, matching Ghost's own comments setting. Sits right
+          after the article since it's a direct continuation of it, ahead
+          of the separate Nominate-a-reader action below. */}
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
+        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
+          <SectionLabel className="mb-3 block">Comments</SectionLabel>
+          {isMember ? (
+            <CustomComments
+              postSlug={article.id}
+              user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
+            />
+          ) : (
+            <>
+              <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
+                Comments are for members. Subscribe to join the conversation.
+              </p>
+              <Link
+                to="/signup"
+                data-testid="comments-subscribe"
+                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+              >
+                Subscribe →
+              </Link>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks */}
       {related.length > 0 && (
@@ -361,33 +379,17 @@ export const ArticleMockup = () => {
         </section>
       )}
 
-      {/* Comments — real Ghost member threads for subscribers; a subscribe
-          nudge for everyone else. Gated the same as the rest of the page:
-          members only, matching Ghost's own comments setting. */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
-        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px]">
-          <SectionLabel className="mb-3 block">Comments</SectionLabel>
-          {isMember ? (
-            <CustomComments
-              postSlug={article.id}
-              user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
-            />
-          ) : (
-            <>
-              <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
-                Comments are for members. Subscribe to join the conversation.
-              </p>
-              <Link
-                to="/signup"
-                data-testid="comments-subscribe"
-                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-              >
-                Subscribe →
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+      {isMember && (
+        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
+          <NominateReaderBlock
+            variant="story"
+            subscriberName={effectiveSubscriberName}
+            subscriberEmail={effectiveSubscriberEmail}
+            subscriberGhostId={effectiveSubscriberGhostId}
+            postSlug={article?.slug || article?.id || ''}
+          />
+        </section>
+      )}
 
       <MockupFooter />
 
