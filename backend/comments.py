@@ -239,6 +239,23 @@ async def get_pending_comments(
     return out
 
 
+@router.get('/api/comments/approved')
+async def get_approved_comments(
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    """Admin-only. Every live (approved) comment across all posts, newest
+    first — the only way to find something to delete after the fact, since
+    the public /{slug} endpoint is scoped to one post. Also registered
+    before /api/comments/{slug} for the same route-ordering reason as
+    /pending above."""
+    _require_admin(x_admin_key)
+    if _db is None:
+        return []
+    cursor = _db.comments.find({'status': 'approved'}).sort('created_at', -1)
+    docs = await cursor.to_list(length=500)
+    return [_serialize(d) for d in docs]
+
+
 @router.get('/api/comments/{slug}')
 async def get_comments(slug: str):
     """Public. Approved comments only, oldest first."""
