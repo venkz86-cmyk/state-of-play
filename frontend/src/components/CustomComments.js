@@ -203,7 +203,7 @@ export const CustomComments = ({ postSlug, user }) => {
       )}
 
       {!loading && topLevel.length === 0 && (
-        <p className="font-plex text-[14px] text-[var(--text-label)] mb-8">
+        <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-8">
           No comments yet. Be the first to weigh in.
         </p>
       )}
