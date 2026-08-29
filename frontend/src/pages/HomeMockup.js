@@ -29,11 +29,26 @@ const SectionLabel = ({ children, className = '' }) => (
 );
 
 /* ============ Testimonial block ============ */
+// quote is an array of paragraphs — most testimonials are one paragraph,
+// but a longer note (like Pratik's) runs as several, rendered as real <p>
+// breaks rather than one run-on block.
 const TESTIMONIALS = [
   {
-    quote: 'As a lawyer who leads a practice that advises on fundraising, business, sport, and everything in between, reading TSOP certainly makes me feel better prepared for every meeting or discussion that I have about the business of sport. TSOP fills a void that I did not even know existed until I came across Venkat’s work. The depth and clarity that come through in every piece fully justify the cost of the subscription.',
+    quote: [
+      'As a lawyer who leads a practice that advises on fundraising, business, sport, and everything in between, reading TSOP certainly makes me feel better prepared for every meeting or discussion that I have about the business of sport. TSOP fills a void that I did not even know existed until I came across Venkat’s work. The depth and clarity that come through in every piece fully justify the cost of the subscription.',
+    ],
     name: 'Chirag Narasimiah',
     title: 'Founder, Deep Cover Law',
+  },
+  {
+    quote: [
+      'I’ve always enjoyed reading and watching sports, but finding truly in-depth perspectives on India’s sports ecosystem, and the business behind it, has been difficult. The State of Play fills that gap brilliantly.',
+      'What stands out is the depth of analysis, the use of numbers and the focus on getting to the root of the problem rather than simply reporting what happened. Equally impressive is your willingness to keep evolving and listening to your readers, whether it’s something as simple as changing a font or being transparent when a story isn’t delivered within the promised timeframe.',
+      'If sports beyond cricket are to get the attention and ecosystem they deserve in India, platforms like The State of Play will be critical to building that foundation.',
+      'Keep up the good work and continue pushing the boundaries. You’re onto something special.',
+    ],
+    name: 'Pratik Sanghavi',
+    title: '',
   },
 ];
 
@@ -58,14 +73,22 @@ const TestimonialBlock = () => {
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
             <blockquote className="font-reading italic text-[22px] leading-relaxed text-[var(--text)]">
-              “{t.quote}”
+              {t.quote.map((para, idx) => (
+                <p key={idx} className={idx < t.quote.length - 1 ? 'mb-4' : ''}>
+                  {idx === 0 ? '“' : ''}
+                  {para}
+                  {idx === t.quote.length - 1 ? '”' : ''}
+                </p>
+              ))}
             </blockquote>
             <p className="mt-5 font-plex text-[13px] font-bold text-[var(--text)]">
               {t.name}
             </p>
-            <p className="font-plex text-[13px] text-[var(--text-label)]">
-              {t.title}
-            </p>
+            {t.title && (
+              <p className="font-plex text-[13px] text-[var(--text-label)]">
+                {t.title}
+              </p>
+            )}
           </div>
           {TESTIMONIALS.length > 1 && (
             <div className="lg:col-span-2 flex lg:justify-end items-center gap-4 mt-2 lg:mt-0">
