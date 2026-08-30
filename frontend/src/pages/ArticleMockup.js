@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { ShareRow } from '../components/ShareRow';
+import { BookmarkButton } from '../components/BookmarkButton';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
@@ -238,13 +239,16 @@ export const ArticleMockup = () => {
           />
 
           {/* Utility strip: Text-size toggle (leftmost, prioritised for
-              discoverability per audit) + Share row */}
+              discoverability per audit) + Save + Share row */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
             <MockupFontSizeToggle value={size} onChange={setSize} />
-            <ShareRow
-              title={article.title}
-              onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
-            />
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              {isMember && <BookmarkButton article={article} />}
+              <ShareRow
+                title={article.title}
+                onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
+              />
+            </div>
           </div>
         </header>
 

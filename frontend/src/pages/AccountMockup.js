@@ -6,6 +6,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
+import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -15,16 +16,28 @@ const longDate = (iso) =>
 export const AccountMockup = () => {
   const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
   const [recent, setRecent] = useState([]);
+  const [saved, setSaved] = useState([]);
   const [details, setDetails] = useState(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   useEffect(() => {
     setRecent(getReadingHistory().slice(0, 5));
+    setSaved(getBookmarks());
   }, []);
 
   const handleClearRecent = () => {
     clearReadingHistory();
     setRecent([]);
+  };
+
+  const handleRemoveSaved = (id) => {
+    removeBookmark(id);
+    setSaved((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleClearSaved = () => {
+    clearBookmarks();
+    setSaved([]);
   };
 
   // Fetch real subscription dates from Ghost Admin API
@@ -116,6 +129,54 @@ export const AccountMockup = () => {
         </div>
       </section>
 
+      {/* Saved — deliberate bookmarks, distinct from passive reading history */}
+      {saved.length > 0 && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+          <div className="border-t border-[var(--text)] pt-8">
+            <div className="flex items-baseline justify-between mb-6">
+              <p className="font-editorial italic text-lg">Saved</p>
+              <button
+                type="button"
+                onClick={handleClearSaved}
+                data-testid="account-clear-saved"
+                className="font-plex text-xs text-[var(--text-muted)] hover:text-[var(--text)] underline underline-offset-[4px] decoration-1 transition-colors duration-200"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="border-t border-[var(--rule)]">
+              {saved.map((p) => (
+                <div
+                  key={p.id}
+                  className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
+                >
+                  <Link to={`/${p.id}`} className="flex-1 min-w-0">
+                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Reportage'}</Overline>
+                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">
+                      {p.title}
+                    </h3>
+                  </Link>
+                  <div className="flex items-center gap-4 shrink-0">
+                    {p.read_time ? (
+                      <p className="font-plex text-xs text-[var(--text-muted)] tabular-nums">{p.read_time} min read</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSaved(p.id)}
+                      data-testid={`account-unsave-${p.id}`}
+                      aria-label={`Remove ${p.title} from saved`}
+                      className="font-plex text-xs text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 transition-colors duration-200"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Recently read — real per-browser history, not a placeholder feed */}
       {recent.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
@@ -161,12 +222,6 @@ export const AccountMockup = () => {
           <p className="font-editorial italic text-lg mb-6">Membership tools</p>
           <ul className="border-t border-[var(--rule)]">
             {[
-              {
-                title: 'Reading list',
-                desc: 'Saved articles, synced across devices.',
-                cta: 'View →',
-                href: '#',
-              },
               {
                 title: 'Notifications',
                 desc: 'Weekly TSOP · Left Field briefs · New editions.',
