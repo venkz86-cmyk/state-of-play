@@ -50,6 +50,15 @@ const TESTIMONIALS = [
     name: 'Pratik Sanghavi',
     title: '',
   },
+  {
+    quote: [
+      'The State of Play is Venkat’s digital stamp on a changed sports journalism landscape. Every week, The State of Play gives fresh perspective into India’s rapidly-changing sports universe, with meticulous detail and denial-proof reporting. It helps us understand patterns and to use an expression, ‘read the tea leaves,’ before developments either happen or ground to a halt.',
+      'In a news environment, where narrative-control is a profession, where gatekeepers insist access means stenography, State of Play speaks clearly, plainly and with facts and figures on its side.',
+      'TSOP is invaluable for anyone who wants to understand what is really happening in Indian sport, be it business, tech, media, policy, or governance, both the how and the why. A better spend of your money than those over-priced cocktails.',
+    ],
+    name: 'Sharda Ugra',
+    title: 'Senior Sports Journalist',
+  },
 ];
 
 const TestimonialBlock = () => {
