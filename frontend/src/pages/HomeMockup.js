@@ -18,6 +18,17 @@ const shortDate = (iso) => {
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 };
 
+// 50 published stories = one "season". Computed from the real edition
+// count so it rolls over on its own — never a hand-maintained number.
+const STORIES_PER_SEASON = 50;
+const SEASON_WORDS = [
+  'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+];
+const seasonLabel = (editionNo) => {
+  const n = Math.max(1, Math.ceil((editionNo || 1) / STORIES_PER_SEASON));
+  return SEASON_WORDS[n - 1] || String(n);
+};
+
 const longDate = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -196,7 +207,7 @@ export const HomeMockup = () => {
             Bengaluru · {datelineDate()}
           </span>
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums">
-            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season One
+            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season {seasonLabel(editionNo)}
           </span>
         </div>
       </div>
