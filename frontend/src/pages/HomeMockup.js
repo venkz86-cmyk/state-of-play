@@ -196,7 +196,7 @@ export const HomeMockup = () => {
             Bengaluru · {datelineDate()}
           </span>
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums">
-            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A047'} · Season One
+            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season One
           </span>
         </div>
       </div>
