@@ -45,7 +45,6 @@ const TESTIMONIALS = [
       'I’ve always enjoyed reading and watching sports, but finding truly in-depth perspectives on India’s sports ecosystem, and the business behind it, has been difficult. The State of Play fills that gap brilliantly.',
       'What stands out is the depth of analysis, the use of numbers and the focus on getting to the root of the problem rather than simply reporting what happened. Equally impressive is your willingness to keep evolving and listening to your readers, whether it’s something as simple as changing a font or being transparent when a story isn’t delivered within the promised timeframe.',
       'If sports beyond cricket are to get the attention and ecosystem they deserve in India, platforms like The State of Play will be critical to building that foundation.',
-      'Keep up the good work and continue pushing the boundaries. You’re onto something special.',
     ],
     name: 'Pratik Sanghavi',
     title: '',
