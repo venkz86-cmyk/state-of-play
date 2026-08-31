@@ -189,14 +189,14 @@ export const HomeMockup = () => {
       />
       <MockupHeader />
 
-      {/* DATELINE — Geist, #444, weight 400, "No. X · Year Two" */}
+      {/* DATELINE — Geist, #444, weight 400, "No. X · Season One" */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)]">
             Bengaluru · {datelineDate()}
           </span>
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums">
-            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A047'} · Year Two
+            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A047'} · Season One
           </span>
         </div>
       </div>
