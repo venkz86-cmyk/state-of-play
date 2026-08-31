@@ -80,7 +80,7 @@ const TestimonialBlock = () => {
             “
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
-            <blockquote className="font-reading italic text-[22px] leading-relaxed text-[var(--text)]">
+            <blockquote className="font-reading italic text-[19px] leading-relaxed text-[var(--text)]">
               {t.quote.map((para, idx) => (
                 <p key={idx} className={idx < t.quote.length - 1 ? 'mb-4' : ''}>
                   {idx === 0 ? '“' : ''}
