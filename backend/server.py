@@ -1062,6 +1062,8 @@ async def razorpay_webhook(request: Request):
                             member = await ensure_member_labeled(email, name, wanted_labels, token)
                             if member:
                                 logger.info(f"Ghost member ensured for {email}: labels={wanted_labels}")
+                                if plan == 'trial' and start_trial:
+                                    await start_trial(email, member.get('id', ''))
                             else:
                                 logger.warning(f"Ghost member ensure/label failed for {email}")
                     except Exception as e:
@@ -2132,6 +2134,15 @@ try:
 except Exception as _e:
     logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
     handle_subscription_webhook_event = None
+
+# Mount Trial ("The Ten") expiry tracking — 30-day window + story snapshot
+try:
+    from trial_tracking import router as trial_router, init as trial_init, start_trial
+    trial_init(db)
+    app.include_router(trial_router)
+except Exception as _e:
+    logging.warning(f"trial_tracking module not mounted: {_e!r}")
+    start_trial = None
 
 app.add_middleware(
     CORSMiddleware,
