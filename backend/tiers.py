@@ -56,6 +56,25 @@ TIER_LABELS = {
     'tier-trial': 'trial',
 }
 
+# Every label that confers real paid access. Single source of truth — was
+# previously duplicated inline in server.py's verify_ghost_member and
+# get_member_details (and would have been a third copy in nudge.py), which
+# is exactly how a label gets added in one place and silently missed in
+# another. 'tier-trial' is deliberately absent: trial access is a 10-story
+# snapshot, not the full archive.
+PAID_LABELS = [
+    'paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber',
+    'paid', 'premium', 'corporate-member', 'tier-student',
+]
+
+
+def is_paid_from_labels(label_names: list[str]) -> bool:
+    """label_names must already be lowercased."""
+    return (
+        any(label in label_names for label in PAID_LABELS)
+        or any(name.startswith('team-') for name in label_names)
+    )
+
 router = APIRouter()
 
 

@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier
+from tiers import resolve_tier, is_paid_from_labels
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -220,11 +220,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             # so bespoke clients can be onboarded by Ghost label alone, no backend redeploy.
                             labels = member.get('labels', [])
                             label_names = [lbl.get('name', '').lower() for lbl in labels]
-                            has_paid_label = (
-                                any(label in label_names
-                                    for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member', 'tier-student'])
-                                or any(name.startswith('team-') for name in label_names)
-                            )
+                            has_paid_label = is_paid_from_labels(label_names)
                             
                             # User is paid if: status is paid/comped, OR has subscriptions, OR has paid labels
                             is_paid = (
@@ -319,12 +315,7 @@ async def get_member_details(request: MemberVerifyRequest):
                     labels = member.get('labels', []) or []
                     label_names = [(lbl.get('name') or '').lower() for lbl in labels]
                     has_razorpay_label = 'paid-via-razorpay' in label_names
-                    has_paid_label = (
-                        has_razorpay_label
-                        or any(name in label_names for name in
-                               ['paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member', 'tier-student'])
-                        or any(name.startswith('team-') for name in label_names)
-                    )
+                    has_paid_label = has_razorpay_label or is_paid_from_labels(label_names)
 
                     # 2. Ghost-native subscriptions
                     subscriptions = member.get('subscriptions', []) or []
@@ -2083,6 +2074,13 @@ try:
     app.include_router(razorpay_orders_router)
 except Exception as _e:
     logging.warning(f"razorpay_orders module not mounted: {_e!r}")
+
+# Mount the quarterly free-to-paid nudge label sync
+try:
+    from nudge import router as nudge_router
+    app.include_router(nudge_router)
+except Exception as _e:
+    logging.warning(f"nudge module not mounted: {_e!r}")
 
 app.add_middleware(
     CORSMiddleware,
