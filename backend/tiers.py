@@ -174,7 +174,15 @@ async def add_member_label(member_id: str, existing_labels: list[str], label: st
 async def create_ghost_member(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
     """Create a brand-new Ghost member with the given labels. Mirrors
     nominations.py's _ghost_create_free_member, generalized to accept any
-    label set instead of one hardcoded label."""
+    label set instead of one hardcoded label.
+
+    Handles Ghost's 422 the same way nominations.py's original does: it
+    means the member already exists, most likely because something else
+    (the still-live "Razorpay Payment Capture" Zap, another payment path)
+    created them in the same window this call was racing against. Falls
+    back to a lookup instead of failing outright, so a benign race doesn't
+    surface as "payment succeeded but member setup failed" to the reader.
+    """
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.post(
             f'{GHOST_URL}/ghost/api/admin/members/?send_email=false',
@@ -187,6 +195,9 @@ async def create_ghost_member(email: str, name: str, labels: list[str], token: s
         )
     if r.status_code in (200, 201):
         return r.json()['members'][0]
+    if r.status_code == 422:
+        logger.info(f'Ghost member create 422 (likely already exists) for {email}, looking up instead')
+        return await find_ghost_member(email, token)
     logger.warning(f'Ghost member create HTTP {r.status_code}: {r.text[:200]}')
     return None
 
@@ -195,16 +206,28 @@ async def ensure_member_labeled(email: str, name: str, labels: list[str], token:
     """Find-or-create a Ghost member and make sure they carry every label in
     `labels`, adding whatever's missing. The one place every payment-success
     path (Orders, Subscriptions, and server.py's generic webhook) does this,
-    so the logic exists exactly once rather than duplicated per caller."""
+    so the logic exists exactly once rather than duplicated per caller.
+
+    Applies `labels` AFTER settling on a member, not just on the
+    already-existed branch — create_ghost_member's own 422 fallback can
+    also return a member that something else (the still-live Zap, another
+    payment path) just created, carrying none of our labels yet. Skipping
+    the apply step on that path was the actual bug behind an earlier
+    "payment verified but member setup failed" error: the create attempt
+    hit a race, fell back to a lookup, and returned without ever adding the
+    plan's labels."""
     member = await find_ghost_member(email, token)
-    if member:
-        existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
-        for label in labels:
-            if label not in existing_labels:
-                if await add_member_label(member['id'], existing_labels, label):
-                    existing_labels.append(label)
-        return member
-    return await create_ghost_member(email, name, labels, token)
+    if not member:
+        member = await create_ghost_member(email, name, labels, token)
+        if not member:
+            return None
+
+    existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
+    for label in labels:
+        if label not in existing_labels:
+            if await add_member_label(member['id'], existing_labels, label):
+                existing_labels.append(label)
+    return member
 
 
 class GrantTierRequest(BaseModel):
