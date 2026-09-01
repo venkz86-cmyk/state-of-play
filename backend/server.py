@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS
+from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -132,6 +132,19 @@ async def get_geo_location(request: Request):
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 GHOST_CONTENT_API_KEY = os.environ.get('GHOST_CONTENT_API_KEY', '')
+SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', '')
+
+
+async def _slack_post(text: str) -> None:
+    """Fire-and-forget Slack webhook ping — same pattern nominations.py uses."""
+    if not SLACK_WEBHOOK_URL:
+        return
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            await client.post(SLACK_WEBHOOK_URL, json={'text': text})
+    except Exception as e:
+        logger.warning(f'Slack ping failed: {e!r}')
 
 def create_ghost_admin_token():
     """Create JWT token for Ghost Admin API authentication"""
@@ -1058,15 +1071,45 @@ async def razorpay_webhook(request: Request):
                                 or payment_link_entity.get('notes', {}).get('name')
                                 or ''
                             )
+                            contact = payment_entity.get('contact') or ''
+                            payment_id = payment_entity.get('id') or ''
+                            amount = payment_entity.get('amount')
+
+                            # Whether this is a brand-new member or an
+                            # upgrade, checked before ensure_member_labeled
+                            # touches anything — matches the Zap's own
+                            # New Member / Existing User distinction, used
+                            # below for both the Ghost note and the Slack
+                            # message wording.
+                            was_new = (await find_ghost_member(email, token)) is None
+
+                            note = (
+                                f"{'New member created' if was_new else 'Member upgraded'} from payment. "
+                                f"Payment ID: {payment_id} | Contact: {contact} | Amount: {amount}"
+                            )
+
                             wanted_labels = PLAN_LABELS.get(plan, PLAN_LABELS['standard'])
                             member = await ensure_member_labeled(
                                 email, name, wanted_labels, token,
                                 strip_unintended_paid_labels=(plan == 'trial'),
+                                note=note,
                             )
                             if member:
                                 logger.info(f"Ghost member ensured for {email}: labels={wanted_labels}")
                                 if plan == 'trial' and start_trial:
                                     await start_trial(email, member.get('id', ''))
+
+                                badge = ':new: ' if was_new else ''
+                                slack_text = (
+                                    f"{badge}{'New' if was_new else 'Upgraded'} TSOP Subscriber\n"
+                                    f"*Name*: {name or '—'}\n"
+                                    f"*Contact*: {contact or '—'}\n"
+                                    f"*Email*: {email}\n"
+                                    f"*Amount*: {amount}\n"
+                                    f"*Payment ID*: {payment_id}\n"
+                                    f"*Time*: {payment_entity.get('created_at') or int(datetime.now(timezone.utc).timestamp())}"
+                                )
+                                await _slack_post(slack_text)
                             else:
                                 logger.warning(f"Ghost member ensure/label failed for {email}")
                     except Exception as e:

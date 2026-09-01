@@ -95,9 +95,12 @@ def is_paid_from_labels(label_names: list[str]) -> bool:
 # 'trial' is deliberately NOT paid-conferring — see PAID_LABELS above.
 # Falls back to 'standard' for any payment that carries no plan/tier note at
 # all — i.e. the two original static Payment Buttons, which predate the
-# plan system and never set one.
+# plan system and never set one. 'standard' carries both paid-via-razorpay
+# and premium-subscriber to match exactly what the "Razorpay Payment
+# Capture" Zap has always applied to an annual signup — confirmed against a
+# real member's labels, not assumed.
 PLAN_LABELS = {
-    'standard': ['paid-via-razorpay'],
+    'standard': ['paid-via-razorpay', 'premium-subscriber'],
     'student': ['paid-via-razorpay', 'tier-student'],
     'trial': ['tier-trial'],
 }
@@ -195,7 +198,7 @@ async def remove_member_label(member_id: str, existing_labels: list[str], label:
     return False
 
 
-async def create_ghost_member(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
+async def create_ghost_member(email: str, name: str, labels: list[str], token: str, note: str = '') -> Optional[dict]:
     """Create a brand-new Ghost member with the given labels. Mirrors
     nominations.py's _ghost_create_free_member, generalized to accept any
     label set instead of one hardcoded label.
@@ -207,14 +210,13 @@ async def create_ghost_member(email: str, name: str, labels: list[str], token: s
     back to a lookup instead of failing outright, so a benign race doesn't
     surface as "payment succeeded but member setup failed" to the reader.
     """
+    payload = {'email': email, 'name': name or '', 'labels': [{'name': l} for l in labels]}
+    if note:
+        payload['note'] = note
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.post(
             f'{GHOST_URL}/ghost/api/admin/members/?send_email=false',
-            json={'members': [{
-                'email': email,
-                'name': name or '',
-                'labels': [{'name': l} for l in labels],
-            }]},
+            json={'members': [payload]},
             headers={'Authorization': f'Ghost {token}'},
         )
     if r.status_code in (200, 201):
@@ -226,9 +228,30 @@ async def create_ghost_member(email: str, name: str, labels: list[str], token: s
     return None
 
 
+async def set_member_note(member_id: str, note: str, token: str) -> bool:
+    """Overwrite an existing Ghost member's note field — used for the
+    payment-details note the "Razorpay Payment Capture" Zap has always
+    written (Payment ID / Contact / Amount), so a member's Ghost profile
+    carries that lookup trail regardless of which system, this backend or
+    the Zap kept as a backup, actually processed the payment."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.put(
+                f'{GHOST_URL}/ghost/api/admin/members/{member_id}/',
+                json={'members': [{'note': note}]},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code == 200:
+            return True
+        logger.warning(f'Ghost note update HTTP {r.status_code}: {r.text[:200]}')
+    except Exception as e:
+        logger.warning(f'Ghost note update failed: {e!r}')
+    return False
+
+
 async def ensure_member_labeled(
     email: str, name: str, labels: list[str], token: str,
-    strip_unintended_paid_labels: bool = False,
+    strip_unintended_paid_labels: bool = False, note: str = '',
 ) -> Optional[dict]:
     """Find-or-create a Ghost member and make sure they carry every label in
     `labels`, adding whatever's missing. The one place every payment-success
@@ -259,9 +282,17 @@ async def ensure_member_labeled(
     member = await find_ghost_member(email, token)
     is_new_signup = member is None
     if not member:
-        member = await create_ghost_member(email, name, labels, token)
+        member = await create_ghost_member(email, name, labels, token, note=note)
         if not member:
             return None
+    if note and member.get('id'):
+        # Always set it explicitly, even right after create — don't rely on
+        # Ghost's create response echoing back the note we just sent (never
+        # confirmed it does), and if create_ghost_member fell back to a
+        # lookup after a 422 (someone else, most likely the Zap, created
+        # this member first with none of our note text on it), this is the
+        # only place that note ever actually gets written.
+        await set_member_note(member['id'], note, token)
 
     existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
     for label in labels:
