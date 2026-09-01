@@ -1039,6 +1039,11 @@ async def razorpay_webhook(request: Request):
             else:
                 logger.warning("No email found in webhook payload")
                 logger.debug(f"Payment entity: {payment_entity}")
+        elif event.startswith('subscription.') and handle_subscription_webhook_event:
+            # subscription.activated is already covered above (recent_payments);
+            # the rest of the lifecycle (authenticated, charged, halted,
+            # cancelled) is handled in razorpay_subscriptions.py.
+            handle_subscription_webhook_event(event, payload)
         else:
             logger.info(f"Ignoring event type: {event}")
         
@@ -2081,6 +2086,19 @@ try:
     app.include_router(nudge_router)
 except Exception as _e:
     logging.warning(f"nudge module not mounted: {_e!r}")
+
+# Mount real auto-renewing membership subscriptions (Nov 1 pricing transition)
+try:
+    from razorpay_subscriptions import (
+        router as razorpay_subscriptions_router,
+        init as razorpay_subscriptions_init,
+        handle_subscription_webhook_event,
+    )
+    razorpay_subscriptions_init(razorpay_client, recent_payments)
+    app.include_router(razorpay_subscriptions_router)
+except Exception as _e:
+    logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
+    handle_subscription_webhook_event = None
 
 app.add_middleware(
     CORSMiddleware,
