@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier, is_paid_from_labels
+from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1028,14 +1028,47 @@ async def razorpay_webhook(request: Request):
                 email = email.lower().strip()
                 recent_payments[email] = datetime.now(timezone.utc)
                 logger.info(f"Payment recorded successfully for: {email}")
-                
+
                 # Clean up old entries (older than 30 mins)
                 cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
                 to_remove = [e for e, t in recent_payments.items() if t < cutoff]
                 for e in to_remove:
                     del recent_payments[e]
-                
+
                 logger.info(f"Current recent_payments count: {len(recent_payments)}")
+
+                # Find-or-create the Ghost member and apply the right labels.
+                # This is the piece that used to live entirely in the
+                # "Razorpay Payment Capture" Zap (a raw webhook -> Ghost
+                # Find/Create/Update Member flow). A payment with no `plan`
+                # note is one of the two original static Payment Buttons —
+                # exactly what that Zap was built for — so it falls back to
+                # the standard label set, matching the Zap's behavior.
+                # razorpay_orders.py and razorpay_subscriptions.py's own
+                # verify-payment/verify-subscription endpoints already do
+                # this for payments that go through them; this covers the
+                # remaining case where nothing else does.
+                if GHOST_ADMIN_API_KEY:
+                    try:
+                        token = create_ghost_admin_token()
+                        if token:
+                            name = (
+                                payment_entity.get('notes', {}).get('name')
+                                or subscription_entity.get('notes', {}).get('name')
+                                or payment_link_entity.get('notes', {}).get('name')
+                                or ''
+                            )
+                            wanted_labels = PLAN_LABELS.get(plan, PLAN_LABELS['standard'])
+                            member = await ensure_member_labeled(email, name, wanted_labels, token)
+                            if member:
+                                logger.info(f"Ghost member ensured for {email}: labels={wanted_labels}")
+                            else:
+                                logger.warning(f"Ghost member ensure/label failed for {email}")
+                    except Exception as e:
+                        # Non-fatal — the payment itself succeeded and is
+                        # recorded above; a Ghost hiccup here shouldn't turn
+                        # into a webhook failure Razorpay would retry.
+                        logger.error(f"Ghost member ensure/label error for {email}: {e!r}")
             else:
                 logger.warning("No email found in webhook payload")
                 logger.debug(f"Payment entity: {payment_entity}")

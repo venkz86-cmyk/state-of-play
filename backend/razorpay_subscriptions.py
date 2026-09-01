@@ -61,16 +61,14 @@ from __future__ import annotations
 import os
 import logging
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote
 
-import httpx
 import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import add_member_label
+from tiers import PLAN_LABELS, ensure_member_labeled
 
 logger = logging.getLogger(__name__)
 
@@ -123,9 +121,6 @@ SUBSCRIPTION_PLANS = {
 # 100 yearly cycles reads as effectively indefinite for a publication.
 TOTAL_COUNT_YEARS = 100
 
-# Every real paid membership carries this label, same as the existing
-# one-shot Orders flow (razorpay_orders.py's PLAN_LABELS['standard']).
-MEMBERSHIP_LABEL = 'paid-via-razorpay'
 
 
 def _resolve_plan_config(tier: str, country: str) -> Optional[dict]:
@@ -193,37 +188,6 @@ class VerifySubscriptionRequest(BaseModel):
     name: Optional[str] = ''
 
 
-async def _ghost_find_member(email: str, token: str) -> Optional[dict]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.get(
-            f'{GHOST_URL}/ghost/api/admin/members/',
-            params={'filter': f"email:'{quote(email, safe='')}'", 'include': 'labels'},
-            headers={'Authorization': f'Ghost {token}'},
-        )
-    if r.status_code == 200:
-        members = r.json().get('members', [])
-        return members[0] if members else None
-    logger.warning(f'Ghost member lookup HTTP {r.status_code} for {email}')
-    return None
-
-
-async def _ghost_create_member(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.post(
-            f'{GHOST_URL}/ghost/api/admin/members/?send_email=false',
-            json={'members': [{
-                'email': email,
-                'name': name or '',
-                'labels': [{'name': l} for l in labels],
-            }]},
-            headers={'Authorization': f'Ghost {token}'},
-        )
-    if r.status_code in (200, 201):
-        return r.json()['members'][0]
-    logger.warning(f'Ghost member create HTTP {r.status_code}: {r.text[:200]}')
-    return None
-
-
 @router.post('/api/razorpay/verify-subscription')
 async def verify_subscription(req: VerifySubscriptionRequest):
     if not _razorpay_client:
@@ -248,17 +212,15 @@ async def verify_subscription(req: VerifySubscriptionRequest):
 
     email = req.email.lower().strip()
 
-    member = await _ghost_find_member(email, token)
-    if member:
-        existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
-        await add_member_label(member['id'], existing_labels, MEMBERSHIP_LABEL)
-    else:
-        member = await _ghost_create_member(email, req.name or '', [MEMBERSHIP_LABEL], token)
-        if not member:
-            raise HTTPException(
-                status_code=502,
-                detail='Payment verified but member setup failed, contact support',
-            )
+    # Every subscription tier (existing/grandfathered or new) is a full paid
+    # membership product-wise, just at a different price point — same label
+    # set as the one-shot standard plan.
+    member = await ensure_member_labeled(email, req.name or '', PLAN_LABELS['standard'], token)
+    if not member:
+        raise HTTPException(
+            status_code=502,
+            detail='Payment verified but member setup failed, contact support',
+        )
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
