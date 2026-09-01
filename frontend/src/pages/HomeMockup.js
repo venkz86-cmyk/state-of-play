@@ -69,6 +69,13 @@ const TESTIMONIALS = [
     name: 'Sharda Ugra',
     title: 'Senior Sports Journalist',
   },
+  {
+    quote: [
+      'Indian sport is a complex maze of federations, athletes, sponsors and state that is extremely difficult to navigate. TSOP cuts through those layers to give a more nuanced understanding of happenings and decisions that on the face of it seem hard to justify or understand. I read it.',
+    ],
+    name: 'Joy Bhattacharjya',
+    title: 'CEO, Prime Volleyball League',
+  },
 ];
 
 const TestimonialBlock = () => {
