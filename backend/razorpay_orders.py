@@ -189,7 +189,10 @@ async def verify_payment(req: VerifyPaymentRequest):
     email = req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
-    member = await ensure_member_labeled(email, req.name or '', wanted_labels, token)
+    member = await ensure_member_labeled(
+        email, req.name or '', wanted_labels, token,
+        strip_unintended_paid_labels=(req.plan == 'trial'),
+    )
     if not member:
         raise HTTPException(
             status_code=502,

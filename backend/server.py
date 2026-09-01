@@ -1059,7 +1059,10 @@ async def razorpay_webhook(request: Request):
                                 or ''
                             )
                             wanted_labels = PLAN_LABELS.get(plan, PLAN_LABELS['standard'])
-                            member = await ensure_member_labeled(email, name, wanted_labels, token)
+                            member = await ensure_member_labeled(
+                                email, name, wanted_labels, token,
+                                strip_unintended_paid_labels=(plan == 'trial'),
+                            )
                             if member:
                                 logger.info(f"Ghost member ensured for {email}: labels={wanted_labels}")
                                 if plan == 'trial' and start_trial:

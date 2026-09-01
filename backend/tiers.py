@@ -171,6 +171,30 @@ async def add_member_label(member_id: str, existing_labels: list[str], label: st
     return False
 
 
+async def remove_member_label(member_id: str, existing_labels: list[str], label: str, token: str) -> bool:
+    """PATCH `label` off an existing Ghost member, preserving every other
+    label they carry. Mirrors add_member_label's shape, opposite direction.
+    Used to correct a paid label something else (the still-not-plan-aware
+    Zap, in practice) added to a member it shouldn't have — see
+    ensure_member_labeled's strip_unintended_paid_labels."""
+    if label not in existing_labels:
+        return True
+    new_labels = [l for l in existing_labels if l != label]
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.put(
+                f'{GHOST_URL}/ghost/api/admin/members/{member_id}/',
+                json={'members': [{'labels': new_labels}]},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code == 200:
+            return True
+        logger.warning(f'Ghost label removal HTTP {r.status_code}: {r.text[:200]}')
+    except Exception as e:
+        logger.warning(f'Ghost label removal failed: {e!r}')
+    return False
+
+
 async def create_ghost_member(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
     """Create a brand-new Ghost member with the given labels. Mirrors
     nominations.py's _ghost_create_free_member, generalized to accept any
@@ -202,7 +226,10 @@ async def create_ghost_member(email: str, name: str, labels: list[str], token: s
     return None
 
 
-async def ensure_member_labeled(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
+async def ensure_member_labeled(
+    email: str, name: str, labels: list[str], token: str,
+    strip_unintended_paid_labels: bool = False,
+) -> Optional[dict]:
     """Find-or-create a Ghost member and make sure they carry every label in
     `labels`, adding whatever's missing. The one place every payment-success
     path (Orders, Subscriptions, and server.py's generic webhook) does this,
@@ -215,8 +242,22 @@ async def ensure_member_labeled(email: str, name: str, labels: list[str], token:
     the apply step on that path was the actual bug behind an earlier
     "payment verified but member setup failed" error: the create attempt
     hit a race, fell back to a lookup, and returned without ever adding the
-    plan's labels."""
+    plan's labels.
+
+    strip_unintended_paid_labels: for Trial specifically. The "Razorpay
+    Payment Capture" Zap is not yet plan-aware — it applies its generic
+    paid labels to ANY successful payment, ₹590 Trial included, which
+    would silently grant full access the moment a real trial payment
+    lands, regardless of whether/when the Zap gets fixed. When set, and
+    only for a member who did NOT exist a moment ago (never touches an
+    existing member's prior history — a genuine paying member separately
+    buying a trial keeps their real access), any label in PAID_LABELS
+    that isn't part of the intended `labels` is stripped. On a brand-new
+    signup, such a label can only have come from something else racing
+    this same payment — there is no legitimate prior state it could be
+    honoring."""
     member = await find_ghost_member(email, token)
+    is_new_signup = member is None
     if not member:
         member = await create_ghost_member(email, name, labels, token)
         if not member:
@@ -227,6 +268,14 @@ async def ensure_member_labeled(email: str, name: str, labels: list[str], token:
         if label not in existing_labels:
             if await add_member_label(member['id'], existing_labels, label):
                 existing_labels.append(label)
+
+    if strip_unintended_paid_labels and is_new_signup:
+        stray = [l for l in existing_labels if l in PAID_LABELS and l not in labels]
+        for label in stray:
+            if await remove_member_label(member['id'], existing_labels, label, token):
+                existing_labels.remove(label)
+                logger.info(f'Stripped unintended paid label {label!r} from new trial signup {email}')
+
     return member
 
 
