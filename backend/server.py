@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
+from tiers import resolve_tier
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -178,6 +180,9 @@ class MemberVerifyResponse(BaseModel):
     # already downgraded them to a free member. Lets the paywall show a
     # targeted "your trial has ended" message instead of the generic one.
     trial_expired: bool = False
+    # Which plan this member is on: 'student' | 'trial' | 'standard' | 'free'.
+    # See tiers.py — a specialization of is_paid, not a replacement for it.
+    tier: str = 'free'
 
 @api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
 async def verify_ghost_member(request: MemberVerifyRequest):
@@ -238,6 +243,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                                 status=status if not has_paid_label else 'paid',
                                 id=member.get('id'),
                                 trial_expired=has_sandbox_trial_label and not is_paid,
+                                tier=resolve_tier(label_names, is_paid),
                             )
                         else:
                             return MemberVerifyResponse(
@@ -269,6 +275,7 @@ class MemberDetailsResponse(BaseModel):
     subscription_status: Optional[str] = None
     avatar_image: Optional[str] = None
     note: Optional[str] = None
+    tier: str = 'free'
 
 @api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
 async def get_member_details(request: MemberVerifyRequest):
@@ -374,7 +381,8 @@ async def get_member_details(request: MemberVerifyRequest):
                         subscription_end=subscription_end,
                         subscription_status=subscription_status,
                         avatar_image=member.get('avatar_image'),
-                        note=member.get('note')
+                        note=member.get('note'),
+                        tier=resolve_tier(label_names, is_paid),
                     )
                 else:
                     return MemberDetailsResponse(
@@ -1004,15 +1012,27 @@ async def razorpay_webhook(request: Request):
             
             # Try to get email from various places
             email = (
-                payment_entity.get('email') or 
+                payment_entity.get('email') or
                 payment_entity.get('notes', {}).get('email') or
                 subscription_entity.get('notes', {}).get('email') or
                 payment_link_entity.get('notes', {}).get('email') or
                 payload.get('payload', {}).get('payment', {}).get('entity', {}).get('customer', {}).get('email')
             )
-            
-            logger.info(f"Extracted email from webhook: {email}")
-            
+
+            # Which plan this payment was for — read from the Payment Button's
+            # configured notes (each button, e.g. standard/student/trial, can
+            # carry its own static notes in the Razorpay dashboard). Not yet
+            # acted on here; captured so it's visible in Render logs ahead of
+            # the student/trial buttons existing and the tier-grant flow
+            # (tiers.py) being wired to this webhook in a later phase.
+            plan = (
+                payment_entity.get('notes', {}).get('plan') or
+                subscription_entity.get('notes', {}).get('plan') or
+                payment_link_entity.get('notes', {}).get('plan')
+            )
+
+            logger.info(f"Extracted email from webhook: {email} (plan: {plan or 'unspecified'})")
+
             if email:
                 email = email.lower().strip()
                 recent_payments[email] = datetime.now(timezone.utc)
@@ -2047,6 +2067,13 @@ try:
     app.include_router(comments_router)
 except Exception as _e:
     logging.warning(f"comments module not mounted: {_e!r}")
+
+# Mount plan/tier infrastructure (September roadmap, P0)
+try:
+    from tiers import router as tiers_router
+    app.include_router(tiers_router)
+except Exception as _e:
+    logging.warning(f"tiers module not mounted: {_e!r}")
 
 app.add_middleware(
     CORSMiddleware,
