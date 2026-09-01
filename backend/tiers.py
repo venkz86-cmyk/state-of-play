@@ -99,16 +99,17 @@ async def _ghost_find_member(email: str, token: str) -> Optional[dict]:
     return None
 
 
-async def add_member_tier_label(member_id: str, existing_labels: list[str], tier_label: str) -> bool:
-    """PATCH `tier_label` onto an existing Ghost member, preserving whatever
+async def add_member_label(member_id: str, existing_labels: list[str], label: str) -> bool:
+    """PATCH `label` onto an existing Ghost member, preserving whatever
     labels they already carry. Returns True on success (including the
-    already-has-it no-op case)."""
-    if tier_label in existing_labels:
+    already-has-it no-op case). Generic — used for tier labels here and for
+    plan-conferred labels (e.g. paid-via-razorpay) by razorpay_orders.py."""
+    if label in existing_labels:
         return True
     token = _create_ghost_admin_token()
     if not token:
         return False
-    new_labels = [*existing_labels, tier_label]
+    new_labels = [*existing_labels, label]
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             r = await client.put(
@@ -155,7 +156,7 @@ async def grant_tier(req: GrantTierRequest, x_admin_key: str = Header(default=''
         raise HTTPException(status_code=404, detail='No matching Ghost member found')
 
     existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
-    ok = await add_member_tier_label(member['id'], existing_labels, tier_label)
+    ok = await add_member_label(member['id'], existing_labels, tier_label)
     if not ok:
         raise HTTPException(status_code=502, detail='Ghost label update failed')
 

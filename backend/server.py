@@ -222,7 +222,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             label_names = [lbl.get('name', '').lower() for lbl in labels]
                             has_paid_label = (
                                 any(label in label_names
-                                    for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
+                                    for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member', 'tier-student'])
                                 or any(name.startswith('team-') for name in label_names)
                             )
                             
@@ -322,7 +322,7 @@ async def get_member_details(request: MemberVerifyRequest):
                     has_paid_label = (
                         has_razorpay_label
                         or any(name in label_names for name in
-                               ['paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
+                               ['paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member', 'tier-student'])
                         or any(name.startswith('team-') for name in label_names)
                     )
 
@@ -2074,6 +2074,15 @@ try:
     app.include_router(tiers_router)
 except Exception as _e:
     logging.warning(f"tiers module not mounted: {_e!r}")
+
+# Mount dynamic Razorpay Orders checkout (replaces static Payment Buttons
+# for plan/add-on combinations ahead of the Oct 1 launch)
+try:
+    from razorpay_orders import router as razorpay_orders_router, init as razorpay_orders_init
+    razorpay_orders_init(razorpay_client, recent_payments)
+    app.include_router(razorpay_orders_router)
+except Exception as _e:
+    logging.warning(f"razorpay_orders module not mounted: {_e!r}")
 
 app.add_middleware(
     CORSMiddleware,
