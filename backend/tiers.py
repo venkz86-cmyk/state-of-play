@@ -103,6 +103,23 @@ PLAN_LABELS = {
     'standard': ['paid-via-razorpay', 'premium-subscriber'],
     'student': ['paid-via-razorpay', 'tier-student'],
     'trial': ['tier-trial'],
+    # Community offers: a Razorpay Payment Link shared directly outside the
+    # website (a Slack/WhatsApp/email link, not a checkout the site itself
+    # offers), so there's no notes.plan to read the way the site's own
+    # checkout flow sets one. Full paid access, same as Standard, plus one
+    # extra label so Venkat can filter/report how many signups came through
+    # this specific link.
+    'community-ftwtsop': ['paid-via-razorpay', 'premium-subscriber', 'community-ftwtsop'],
+}
+
+# Payment amount (paise) -> plan, for payments that carry no notes.plan at
+# all — i.e. a Payment Link/Button created directly in the Razorpay
+# dashboard for something outside the site's own checkout, recognized by
+# its price alone rather than any note we'd have to remember to set by hand
+# in Razorpay's UI (which the two original static buttons never did either,
+# and still don't need to).
+AMOUNT_TO_PLAN = {
+    235900: 'community-ftwtsop',  # ₹1,999 + 18% GST = ₹2,359 — FTWTSOP
 }
 
 router = APIRouter()

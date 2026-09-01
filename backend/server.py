@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member
+from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1025,14 +1025,16 @@ async def razorpay_webhook(request: Request):
 
             # Which plan this payment was for — read from the Payment Button's
             # configured notes (each button, e.g. standard/student/trial, can
-            # carry its own static notes in the Razorpay dashboard). Not yet
-            # acted on here; captured so it's visible in Render logs ahead of
-            # the student/trial buttons existing and the tier-grant flow
-            # (tiers.py) being wired to this webhook in a later phase.
+            # carry its own static notes in the Razorpay dashboard). If no
+            # note is set at all, fall back to recognizing the plan by its
+            # amount — covers a Payment Link created directly in Razorpay
+            # for something the site itself never offers (e.g. a community
+            # discount link shared outside the website).
             plan = (
                 payment_entity.get('notes', {}).get('plan') or
                 subscription_entity.get('notes', {}).get('plan') or
-                payment_link_entity.get('notes', {}).get('plan')
+                payment_link_entity.get('notes', {}).get('plan') or
+                AMOUNT_TO_PLAN.get(payment_entity.get('amount'))
             )
 
             logger.info(f"Extracted email from webhook: {email} (plan: {plan or 'unspecified'})")
