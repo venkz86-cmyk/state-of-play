@@ -229,20 +229,15 @@ async def verify_subscription(req: VerifySubscriptionRequest):
 
 
 def handle_subscription_webhook_event(event: str, payload: dict) -> None:
-    """Called from server.py's razorpay_webhook for subscription.* events.
-    Deliberately conservative: only .charged is acted on (keeps the member's
-    recorded payment fresh for seamless login, same as a one-time payment).
-    .halted is logged, not acted on — see the module docstring for why."""
+    """Called from server.py's razorpay_webhook for subscription.* events
+    other than .activated and .charged — those two now get the same Ghost
+    labeling + Slack treatment as payment.captured, handled directly in
+    server.py's primary webhook branch. .halted is logged, not acted on —
+    see the module docstring for why."""
     subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
     sub_id = subscription_entity.get('id', 'unknown')
 
-    if event == 'subscription.charged':
-        payment_entity = payload.get('payload', {}).get('payment', {}).get('entity', {})
-        email = payment_entity.get('email') or payment_entity.get('notes', {}).get('email')
-        if email and _recent_payments is not None:
-            _recent_payments[email.lower().strip()] = datetime.now(timezone.utc)
-        logger.info(f'Subscription charged: {sub_id} email={email}')
-    elif event == 'subscription.halted':
+    if event == 'subscription.halted':
         logger.warning(
             f'Subscription halted (renewal charge failed): {sub_id} — '
             f'no automatic action taken, grace-period policy not yet decided'

@@ -1009,7 +1009,7 @@ async def razorpay_webhook(request: Request):
         logger.info(f"Razorpay webhook event type: {event}")
         
         # Handle payment success events
-        if event in ['payment.captured', 'payment.authorized', 'subscription.activated', 'payment_link.paid']:
+        if event in ['payment.captured', 'payment.authorized', 'subscription.activated', 'subscription.charged', 'payment_link.paid']:
             payment_entity = payload.get('payload', {}).get('payment', {}).get('entity', {})
             subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
             payment_link_entity = payload.get('payload', {}).get('payment_link', {}).get('entity', {})
@@ -1123,9 +1123,10 @@ async def razorpay_webhook(request: Request):
                 logger.warning("No email found in webhook payload")
                 logger.debug(f"Payment entity: {payment_entity}")
         elif event.startswith('subscription.') and handle_subscription_webhook_event:
-            # subscription.activated is already covered above (recent_payments);
-            # the rest of the lifecycle (authenticated, charged, halted,
-            # cancelled) is handled in razorpay_subscriptions.py.
+            # subscription.activated and subscription.charged are already
+            # covered above (Ghost labeling + Slack, same as payment.captured);
+            # the remaining lifecycle (authenticated, halted, cancelled) is
+            # handled in razorpay_subscriptions.py.
             handle_subscription_webhook_event(event, payload)
         else:
             logger.info(f"Ignoring event type: {event}")
