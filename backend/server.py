@@ -1112,6 +1112,17 @@ async def razorpay_webhook(request: Request):
                                     f"*Time*: {payment_entity.get('created_at') or int(datetime.now(timezone.utc).timestamp())}"
                                 )
                                 await _slack_post(slack_text)
+
+                                # Referral earn: only for a genuinely new
+                                # standard signup that carried a referral
+                                # code (razorpay_orders.py's create_order
+                                # is the only place that sets one).
+                                referral_code = payment_entity.get('notes', {}).get('referral_code')
+                                if was_new and referral_code and record_referral_earn:
+                                    await record_referral_earn(
+                                        referral_code, email, payment_id,
+                                        payment_entity.get('created_at'),
+                                    )
                             else:
                                 logger.warning(f"Ghost member ensure/label failed for {email}")
                     except Exception as e:
@@ -2154,6 +2165,17 @@ try:
     app.include_router(tiers_router)
 except Exception as _e:
     logging.warning(f"tiers module not mounted: {_e!r}")
+
+# Mount the referral programme (flat Rs 500 both ways, Sept 2026 design —
+# see plan file / HANDOVER.md). razorpay_orders.py imports from this
+# module, so it must be importable before that mount below.
+try:
+    from referrals import router as referrals_router, init as referrals_init, record_referral_earn
+    referrals_init(db)
+    app.include_router(referrals_router)
+except Exception as _e:
+    logging.warning(f"referrals module not mounted: {_e!r}")
+    record_referral_earn = None
 
 # Mount dynamic Razorpay Orders checkout (replaces static Payment Buttons
 # for plan/add-on combinations ahead of the Oct 1 launch)

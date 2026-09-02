@@ -42,11 +42,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled
 from trial_tracking import start_trial
+from referrals import resolve_referral_code, REFERRED_SIGNUP_AMOUNT_PAISE, REFERRED_SIGNUP_LABEL
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ class CreateOrderRequest(BaseModel):
 
 
 @router.post('/api/razorpay/create-order')
-async def create_order(req: CreateOrderRequest):
+async def create_order(req: CreateOrderRequest, request: Request):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
@@ -126,12 +127,25 @@ async def create_order(req: CreateOrderRequest):
             detail=f"No pricing configured for plan='{req.plan}' country='{req.country}'",
         )
 
+    # A referred new-India-signup pays the existing/renewal rate instead
+    # of the standard new-signup rate — no third price point, matching
+    # Venkat's call. Only applies to plain 'standard' signups; trial,
+    # student, and community-offer amounts are untouched.
+    amount = config['amount']
+    label = config['label']
+    notes = {'plan': req.plan}
+    referral_code = resolve_referral_code(request) if req.plan == 'standard' and req.country == 'IN' else None
+    if referral_code:
+        amount = REFERRED_SIGNUP_AMOUNT_PAISE
+        label = REFERRED_SIGNUP_LABEL
+        notes['referral_code'] = referral_code
+
     try:
         order = _razorpay_client.order.create({
-            'amount': config['amount'],
+            'amount': amount,
             'currency': config['currency'],
             'payment_capture': 1,
-            'notes': {'plan': req.plan},
+            'notes': notes,
         })
     except Exception as e:
         logger.error(f'Razorpay order creation failed: {e!r}')
@@ -139,11 +153,11 @@ async def create_order(req: CreateOrderRequest):
 
     return {
         'order_id': order['id'],
-        'amount': config['amount'],
+        'amount': amount,
         'currency': config['currency'],
         'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
         'plan': req.plan,
-        'label': config['label'],
+        'label': label,
     }
 
 
