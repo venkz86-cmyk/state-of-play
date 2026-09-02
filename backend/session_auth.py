@@ -169,6 +169,11 @@ async def get_current_member(request: Request) -> Optional[dict]:
         'ghost_member_id': member.get('id', ''),
         'name': member.get('name', ''),
         'is_paid': is_paid,
+        'is_free': not is_paid,
+        # Matches server.py's /ghost/verify-member exactly: a member whose
+        # sandbox-event comp lapsed and is no longer paid -- lets the
+        # paywall show a targeted "your trial has ended" message.
+        'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
         'status': member.get('status', 'free'),
         'label_names': label_names,
     }
@@ -327,7 +332,10 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         'ghost_member_id': member.get('id', ''),
         'name': member.get('name', ''),
         'is_paid': is_paid,
+        'is_free': not is_paid,
+        'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
         'status': member.get('status', 'free'),
+        'label_names': label_names,
     }
 
 
