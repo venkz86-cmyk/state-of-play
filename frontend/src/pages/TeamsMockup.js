@@ -41,17 +41,17 @@ const USES = [
 const INCLUDED = [
   ['The weekly State of Play deep dive', 'One reported story each week on the business of Indian sport. The focus is on how money moves, who controls the asset, what changed and what it means beyond the immediate news cycle.'],
   ['The Left Field briefings', 'Shorter briefings to keep the desk current between the deeper reported stories. Published twice a week.'],
-  ['Full, searchable archive access', 'Every seat can search and read the archive. It becomes a working evidence base for past deals, valuations, rights cycles, ownership changes, policy decisions and market developments.'],
+  ['Full, searchable archive access', 'Every seat can search and read the archive. It becomes a working evidence base for past deals, valuations, rights cycles, ownership changes and policy decisions.'],
   ['Individual access for every colleague', 'Each team member gets a private login. Your administrator can add or remove members from the team dashboard.'],
-  ['One account, one annual invoice', 'Centralised billing, self-serve team management and a GST-compliant invoice for the full subscription.'],
+  ['One account, one annual invoice', 'Centralised billing and self-serve team management, with a GST-compliant invoice for the full subscription.'],
 ];
 
 const FAQS = [
   ['How does team access work?', 'Choose a plan and pay once for the year. Use the team dashboard to add colleagues by email. Each person gets their own private login and access.'],
-  ['Can we change team members?', 'Yes. Your administrator can add or remove members within the number of seats on the plan, from the team dashboard.'],
+  ['Can we change team members?', 'Yes. Your administrator can add or remove members from the team dashboard, within the plan’s seat limit.'],
   ['Will we receive a GST invoice?', 'Yes. Team subscriptions include centralised billing and a GST-compliant invoice.'],
   ['Can we pay directly online?', 'Yes. Use the purchase link for Team-5 or Team-10 above.'],
-  ['Can we speak before buying?', 'Yes. Email Venkat to discuss how the publication would fit your firm, desk or practice.'],
+  ['Can we speak before buying?', 'Yes. Email Venkat to discuss how the publication would fit your team.'],
   ['What if we need more than 10 seats?', 'Ask about custom pricing for teams of 15 or more.'],
 ];
 
@@ -75,7 +75,7 @@ export const TeamsMockup = () => {
           Give your team <em className="italic font-normal">a working view</em> of Indian sport.
         </h1>
         <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed mb-8">
-          The State of Play is a weekly reported publication on the business of Indian sport. Give up to ten colleagues the reporting, context and archive they need to follow deals, rights, ownership, policy and the people making the decisions.
+          The State of Play is a weekly reported publication on the business of Indian sport. Give up to ten colleagues the reporting they need, with full context and archive access, to follow deals, rights, ownership, policy and the people making the decisions.
         </p>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <a
@@ -109,7 +109,7 @@ export const TeamsMockup = () => {
               The State of Play reports on these shifts as they happen and keeps them in context. Coverage includes {COVERAGE.slice(0, -1).join(', ').toLowerCase()} and {COVERAGE[COVERAGE.length - 1].toLowerCase()}.
             </p>
             <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] max-w-[65ch]">
-              It is written and reported by me, Venkat Ananth, from an India lens. Around 360 individual subscribers currently pay to read it. The reporting has been cited by Bloomberg, SportBusiness, ESPNcricinfo, The Athletic and SportsPro.
+              It is written and reported by me, Venkat Ananth, with an India-based newsroom's view. 360 individual subscribers pay to read it. The reporting has been cited by Bloomberg, SportBusiness, ESPNcricinfo, The Athletic and SportsPro.
             </p>
             <p className="font-plex text-base leading-relaxed text-[var(--text)] max-w-[65ch]">
               A team plan puts that work in the hands of everyone who needs it, under one account and one invoice.
@@ -154,7 +154,7 @@ export const TeamsMockup = () => {
                 </div>
                 <div>
                   <Overline className="!normal-case !tracking-normal !text-xs block mb-2">The working material</Overline>
-                  <p className="font-editorial text-base leading-snug">Weekly reported stories, shorter briefings and the full archive.</p>
+                  <p className="font-editorial text-base leading-snug">Weekly reported stories and shorter briefings, backed by the full archive.</p>
                 </div>
                 <div>
                   <Overline className="!normal-case !tracking-normal !text-xs block mb-2">The result</Overline>
