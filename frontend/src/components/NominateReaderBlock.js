@@ -214,10 +214,10 @@ export const NominateReaderBlock = ({
       ) : (
         <div data-testid="nominate-confirmation" className="max-w-[55ch]">
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4">
-            Thanks. Venkat reviews every <em className="italic font-normal">nomination personally.</em>
+            Thanks. We’ll reach out to your nominee <em className="italic font-normal">within a few days.</em>
           </h2>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-3">
-            If your nominee fits the desk, you’ll see a quiet outreach go out within a few days.
+            No further action needed on your end — we’ll take it from here.
           </p>
           <p className="font-plex text-[13px] text-[var(--text-muted)]">
             Want to nominate someone else?{' '}
