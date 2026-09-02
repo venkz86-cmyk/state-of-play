@@ -108,7 +108,7 @@ def _create_ghost_admin_token() -> Optional[str]:
 # plan_id is filled in once Venkat creates these in the Razorpay dashboard.
 SUBSCRIPTION_PLANS = {
     'existing': {
-        'IN': {'plan_id': '', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
+        'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
         'INTL': {'plan_id': '', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
     },
     'new': {
