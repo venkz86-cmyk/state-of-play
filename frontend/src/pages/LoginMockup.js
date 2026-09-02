@@ -20,8 +20,7 @@ export const LoginMockup = () => {
     if (!loading && isLoggedIn) navigate('/account', { replace: true });
   }, [loading, isLoggedIn, navigate]);
 
-  const onRequestCode = async (e) => {
-    e.preventDefault();
+  const sendCode = async () => {
     if (!email.trim()) return;
     setSubmitting(true);
     setError(null);
@@ -37,6 +36,17 @@ export const LoginMockup = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onRequestCode = (e) => {
+    e.preventDefault();
+    sendCode();
+  };
+
+  const onResendCode = () => {
+    setCode('');
+    setError(null);
+    sendCode();
   };
 
   const onVerifyCode = async (e) => {
@@ -78,6 +88,9 @@ export const LoginMockup = () => {
 
         {!codeSent ? (
           <>
+            <p className="font-plex text-sm text-[var(--text-muted)] mb-3">
+              Password-free sign-in for subscribers — nothing to remember.
+            </p>
             <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
               Enter the email associated with your subscription. We'll send a sign-in code to your inbox.
             </p>
@@ -164,16 +177,35 @@ export const LoginMockup = () => {
               >
                 {submitting ? 'Verifying…' : 'Sign in →'}
               </button>
-              <p className="font-plex text-sm text-[var(--text-muted)]">
-                Didn't get a code?{' '}
-                <button
-                  type="button"
-                  onClick={() => { setCodeSent(false); setCode(''); setError(null); }}
-                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
-                >
-                  Send a new one
-                </button>.
-              </p>
+
+              <div className="space-y-2">
+                <p className="font-plex text-sm text-[var(--text-muted)]">
+                  Check promotions or spam — codes usually arrive in under a minute.
+                </p>
+                <p className="font-plex text-sm text-[var(--text-muted)]">
+                  Didn't get it?{' '}
+                  <button
+                    type="button"
+                    onClick={onResendCode}
+                    disabled={submitting}
+                    data-testid="login-resend"
+                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors disabled:opacity-60"
+                  >
+                    Send a new code
+                  </button>.
+                </p>
+                <p className="font-plex text-sm text-[var(--text-muted)]">
+                  Subscribed under a different email?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setCodeSent(false); setCode(''); setError(null); }}
+                    data-testid="login-different-email"
+                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+                  >
+                    Use a different email
+                  </button>.
+                </p>
+              </div>
             </form>
           </>
         )}
