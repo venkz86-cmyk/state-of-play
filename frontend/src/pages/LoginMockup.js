@@ -8,8 +8,10 @@ const datelineDate = (d = new Date()) =>
 
 export const LoginMockup = () => {
   const navigate = useNavigate();
-  const { verifyMember, isLoggedIn, loading } = useAuth();
+  const { requestCode, verifyCode, isLoggedIn, loading } = useAuth();
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -18,17 +20,36 @@ export const LoginMockup = () => {
     if (!loading && isLoggedIn) navigate('/account', { replace: true });
   }, [loading, isLoggedIn, navigate]);
 
-  const onSubmit = async (e) => {
+  const onRequestCode = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
-      const result = await verifyMember(email.trim());
+      const result = await requestCode(email.trim());
+      if (result.success) {
+        setCodeSent(true);
+      } else {
+        setError(result.error || 'Could not send a sign-in code. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send a code. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onVerifyCode = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await verifyCode(email.trim(), code.trim());
       if (result.success) {
         navigate('/account', { replace: true });
       } else {
-        setError(result.error || 'Email not found. Please subscribe first.');
+        setError(result.error || 'Incorrect code. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'Failed to sign in. Please try again.');
@@ -54,49 +75,108 @@ export const LoginMockup = () => {
         <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] mb-5">
           Welcome back.
         </h1>
-        <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
-          Enter the email associated with your subscription. Paid members are signed in instantly. No OTP required.
-        </p>
 
-        <form onSubmit={onSubmit} className="space-y-7">
-          <div>
-            <label htmlFor="email" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              data-testid="login-email"
-              placeholder="you@yourdomain.com"
-              className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
-            />
-          </div>
-
-          {error && (
-            <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="login-error">
-              {error}
+        {!codeSent ? (
+          <>
+            <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
+              Enter the email associated with your subscription. We'll send a sign-in code to your inbox.
             </p>
-          )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            data-testid="login-submit"
-            className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
-          >
-            {submitting ? 'Verifying…' : 'Sign in →'}
-          </button>
-          <p className="font-plex text-sm text-[var(--text-muted)]">
-            Not a member yet?{' '}
-            <Link to="/signup" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
-              Subscribe
-            </Link>.
-          </p>
-        </form>
+            <form onSubmit={onRequestCode} className="space-y-7">
+              <div>
+                <label htmlFor="email" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
+                  data-testid="login-email"
+                  placeholder="you@yourdomain.com"
+                  className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
+                />
+              </div>
+
+              {error && (
+                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="login-error">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                data-testid="login-submit"
+                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+              >
+                {submitting ? 'Sending…' : 'Send code →'}
+              </button>
+              <p className="font-plex text-sm text-[var(--text-muted)]">
+                Not a member yet?{' '}
+                <Link to="/signup" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
+                  Subscribe
+                </Link>.
+              </p>
+            </form>
+          </>
+        ) : (
+          <>
+            <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
+              If {email.trim()} has an account, a sign-in code is on its way. Enter it below — it expires in 10 minutes.
+            </p>
+
+            <form onSubmit={onVerifyCode} className="space-y-7">
+              <div>
+                <label htmlFor="code" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">
+                  Code
+                </label>
+                <input
+                  id="code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                  disabled={submitting}
+                  data-testid="login-code"
+                  placeholder="000000"
+                  className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 tracking-[0.3em] focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
+                />
+              </div>
+
+              {error && (
+                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="login-error">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                data-testid="login-submit"
+                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+              >
+                {submitting ? 'Verifying…' : 'Sign in →'}
+              </button>
+              <p className="font-plex text-sm text-[var(--text-muted)]">
+                Didn't get a code?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setCodeSent(false); setCode(''); setError(null); }}
+                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+                >
+                  Send a new one
+                </button>.
+              </p>
+            </form>
+          </>
+        )}
 
         <div className="mt-16 pt-6 border-t border-[var(--rule)]">
           <p className="font-plex text-sm text-[var(--text-muted)]">
