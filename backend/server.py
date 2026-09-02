@@ -2166,6 +2166,16 @@ try:
 except Exception as _e:
     logging.warning(f"tiers module not mounted: {_e!r}")
 
+# Mount the Resend transactional email helper (Sept 2026 — replaces Apps
+# Script/MailApp for anything new that needs reliable, visible delivery;
+# corporate subs' Sheets/Slack/Gmail-draft machinery stays on Apps Script,
+# untouched — this is scoped to email-sending only).
+try:
+    from resend_email import router as resend_email_router
+    app.include_router(resend_email_router)
+except Exception as _e:
+    logging.warning(f"resend_email module not mounted: {_e!r}")
+
 # Mount the referral programme (flat Rs 500 both ways, Sept 2026 design —
 # see plan file / HANDOVER.md). razorpay_orders.py imports from this
 # module, so it must be importable before that mount below.
