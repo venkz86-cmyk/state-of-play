@@ -203,6 +203,21 @@ Always prefer `text-[var(--text)]`, `text-[var(--text-muted)]`, `text-[var(--tex
 
 ## 11. Known bugs / open backlog
 
+### Time-sensitive
+- **Retire the ₹2,499 pre-Nov-1 Subscription Button by Oct 31, 11:59pm IST.**
+  `frontend/src/components/RazorpayButton.js`'s `IN_BUTTON` currently
+  points at `pl_TX1mf8ClQojsek` (Razorpay Subscription Button, ₹2,949
+  incl. GST/year — a lock-in rate for anyone who subscribes before Nov 1,
+  per Sept 2 2026 conversation). On/around Nov 1, create a new
+  Subscription Button + Plan for the post-Nov-1 new-subscriber rate
+  (₹3,499 + GST) in the Razorpay dashboard, then swap `IN_BUTTON.id` to
+  the new button ID. Existing ₹2,499 subscribers keep renewing at that
+  rate regardless (it's their Plan, unaffected by swapping the button on
+  the site). Also still needed: a separate, not-publicly-embedded renewal
+  Subscription Button for existing pre-Nov-1 subscribers at the
+  grandfathered ₹2,999 + GST rate (₹3,539 incl. GST) — shared directly
+  with them, not linked from the site.
+
 ### P1 — real gaps
 - **Dark-mode logo**: `MockupHeader.js` uses CSS `invert` filter on the light logo. Muddy on the wordmark. Needs a proper white-on-transparent asset, then reintroduce a `LOGO_DARK` distinction.
 - **`/apple-touch-icon.png`** missing.
