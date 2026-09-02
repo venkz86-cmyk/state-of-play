@@ -210,6 +210,7 @@ async def request_code(req: RequestCodeBody):
         raise HTTPException(status_code=503, detail='Not configured')
 
     email = req.email.lower().strip()
+    logger.info(f'request-code: received email repr={email!r} (raw req.email repr={req.email!r})')
     generic_response = {'success': True, 'message': 'If that email has an account, a sign-in code is on its way.'}
 
     admin_token = _create_ghost_admin_token()

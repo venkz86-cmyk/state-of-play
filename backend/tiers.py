@@ -152,16 +152,19 @@ def resolve_tier(label_names: list[str], is_paid: bool) -> str:
 
 
 async def find_ghost_member(email: str, token: str) -> Optional[dict]:
+    filter_str = f"email:'{quote(email, safe='')}'"
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.get(
             f'{GHOST_URL}/ghost/api/admin/members/',
-            params={'filter': f"email:'{quote(email, safe='')}'", 'include': 'labels'},
+            params={'filter': filter_str, 'include': 'labels'},
             headers={'Authorization': f'Ghost {token}'},
         )
     if r.status_code == 200:
         members = r.json().get('members', [])
+        if not members:
+            logger.info(f'Ghost member lookup: 0 matches for filter={filter_str!r} (email repr={email!r})')
         return members[0] if members else None
-    logger.warning(f'Ghost member lookup HTTP {r.status_code} for {email}')
+    logger.warning(f'Ghost member lookup HTTP {r.status_code} for {email!r}: {r.text[:300]!r}')
     return None
 
 
