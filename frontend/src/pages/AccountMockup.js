@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -14,6 +14,7 @@ const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
 export const AccountMockup = () => {
+  const navigate = useNavigate();
   const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
   const [recent, setRecent] = useState([]);
   const [saved, setSaved] = useState([]);
@@ -59,9 +60,16 @@ export const AccountMockup = () => {
     return () => { active = false; };
   }, [user?.email]);
 
-  // Gate: visitors who aren't signed in are bounced to /login
-  if (!loading && !isLoggedIn) {
-    return <Navigate to="/login" replace />;
+  // Gate: visitors who aren't signed in are bounced to /login. Runs in an
+  // effect, not inline during render -- a render-time redirect here would
+  // depend on exact state-batching order between the auth bootstrap's
+  // setUser/setLoading calls to avoid a false "signed out" flash.
+  useEffect(() => {
+    if (!loading && !isLoggedIn) navigate('/login', { replace: true });
+  }, [loading, isLoggedIn, navigate]);
+
+  if (loading || !isLoggedIn) {
+    return null;
   }
 
   const memberName = (user?.name?.split(' ')[0]) || 'Reader';
