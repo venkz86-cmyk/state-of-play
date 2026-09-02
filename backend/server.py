@@ -2236,13 +2236,32 @@ except Exception as _e:
     logging.warning(f"trial_tracking module not mounted: {_e!r}")
     start_trial = None
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+_cors_origins_env = os.environ.get('CORS_ORIGINS', '*').strip()
+if _cors_origins_env == '*':
+    # allow_origins=['*'] combined with allow_credentials=True is broken for
+    # any credentialed request (fetch(..., {credentials: 'include'}), e.g.
+    # session_auth.py's verify-code/me/logout): Starlette's actual (non-
+    # preflight) response echoes the literal '*' rather than the real
+    # origin, which browsers reject outright per the CORS spec whenever
+    # credentials are involved -- surfaces as a generic "Failed to fetch"
+    # with no server-side error to debug. allow_origin_regex matches any
+    # origin the same way the wildcard does, but always echoes the actual
+    # origin back, which is valid alongside Allow-Credentials: true.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origin_regex='.*',
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_credentials=True,
+        allow_origins=_cors_origins_env.split(','),
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
