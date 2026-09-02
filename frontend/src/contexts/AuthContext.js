@@ -23,6 +23,34 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
 
+    // Real session check (Sept 2026) — background upgrade, doesn't block
+    // the render above. If a signed session cookie exists (set after
+    // clicking a login-link email — see session_auth.py), it's the
+    // authoritative source, since it's cryptographically proven rather
+    // than merely claimed the way the localStorage flow above is.
+    // Must be a relative path, not `${API}/...`: the cookie was set via
+    // the Vercel /api/* rewrite, same-origin from the browser's point of
+    // view, so it's only ever sent back on same-origin requests too —
+    // calling the Render URL directly here would silently never see it.
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const member = {
+          id: data.ghost_member_id || '',
+          email: data.email,
+          name: data.name,
+          is_paid: data.is_paid,
+          is_free: !data.is_paid,
+          status: data.status,
+          trial_expired: false,
+          verified_at: new Date().toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(member));
+        setUser(member);
+      })
+      .catch(() => { /* no real session yet — localStorage state, if any, stands */ });
+
     // Sticky shared-story attribution: once we land with ?ref=shared-story,
     // remember it for this session so a signup later still credits the nominator.
     try {
@@ -93,10 +121,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Logout - clear saved member
+  // Logout - clear saved member (and the real session cookie, if any —
+  // otherwise it'd silently repopulate `user` on the next page load).
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setUser(null);
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
   }, []);
 
   // Check if user can access premium content
