@@ -30,9 +30,11 @@ Flow:
   2. POST /api/auth/verify-code {email, code} — checks the code (right
      email, unexpired, unused, under the attempt limit), re-checks Ghost
      fresh (never trusts anything cached), mints a signed session cookie
-     (httponly/secure/samesite=lax), returns the member as JSON (no
-     redirect — the frontend navigates itself, since everything happens
-     on one page now).
+     (httponly/secure/samesite=none -- the frontend calls this API
+     cross-origin, same as every other endpoint here, so the cookie has
+     to survive a cross-site fetch; samesite=lax would silently never be
+     sent back), returns the member as JSON (no redirect — the frontend
+     navigates itself, since everything happens on one page now).
   3. GET /api/auth/me — reads and verifies the session cookie (proves
      *identity*), then does a live Ghost lookup for current is_paid/tier
      (proves *current entitlement* — deliberately not cached in the
@@ -313,7 +315,7 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         max_age=SESSION_TTL_DAYS * 24 * 60 * 60,
         httponly=True,
         secure=True,
-        samesite='lax',
+        samesite='none',
         path='/',
     )
 
@@ -340,5 +342,8 @@ async def auth_me(request: Request):
 @router.post('/api/auth/logout')
 async def logout():
     response = Response(status_code=200, content='{"success": true}', media_type='application/json')
-    response.delete_cookie(SESSION_COOKIE_NAME, path='/')
+    # Must match set_cookie's attributes exactly -- this Starlette version's
+    # delete_cookie defaults to secure=False, samesite='lax' regardless of
+    # how the cookie was originally set.
+    response.delete_cookie(SESSION_COOKIE_NAME, path='/', secure=True, samesite='none')
     return response
