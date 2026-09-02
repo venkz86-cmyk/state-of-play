@@ -3,15 +3,24 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 
 /* Razorpay Payment/Subscription Button — native Razorpay rendering.
 
+   PAUSED (Sept 2 2026): India briefly pointed at a native Razorpay
+   Subscription Button (pl_TX1mf8ClQojsek) for the pre-Nov-1 ₹2,499+GST
+   rate, but that button bills a flat amount forever — it can't express
+   "₹2,499 now, ₹2,999 from year 2," which is the actual intended pricing
+   (the "X" case in razorpay_subscriptions.py's docstring: one-time order
+   now + a deferred Subscription that only starts auto-charging at the
+   grandfathered rate next year). Reverted to the plain one-time Payment
+   Button here until that custom flow is built and verified in test mode
+   — see memory/HANDOVER.md. Do not re-point IN_BUTTON at a native
+   Subscription Button without re-confirming the pricing model first.
+
    We let Razorpay's own script render the button exactly as their
    dashboard configured it (no style/click overrides), and route by geo.
-   India now uses a true auto-renewing Subscription Button (locks in the
-   pre-Nov-1 ₹2,499 + GST ≈ ₹2,949 rate for whoever signs up before then —
-   retire this one Oct 31, see memory/HANDOVER.md); International is
-   still the older one-time Payment Button ($120), unchanged so far.
-   The two button types use different embed scripts/attributes —
-   Razorpay doesn't treat them interchangeably. */
-const IN_BUTTON = { id: 'pl_TX1mf8ClQojsek', type: 'subscription' };
+   The two button types (payment vs. subscription) use different embed
+   scripts/attributes — Razorpay doesn't treat them interchangeably,
+   which is why this still branches on `type` even though both geos are
+   `payment` again for now. */
+const IN_BUTTON = { id: 'pl_ROAFZZjAvjHhfQ', type: 'payment' };
 const INTL_BUTTON = { id: 'pl_ROAIM0inFWbpC2', type: 'payment' };
 
 const BUTTON_SCRIPT_SRC = {
