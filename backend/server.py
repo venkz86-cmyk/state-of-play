@@ -2176,6 +2176,17 @@ try:
 except Exception as _e:
     logging.warning(f"resend_email module not mounted: {_e!r}")
 
+# Mount the real backend-owned session — second attempt (Sept 2026), this
+# time on Resend (proven working) with a typed code instead of a magic
+# link (see session_auth.py's docstring for why). Built and tested in
+# isolation; not yet wired into AuthContext.js's localStorage flow.
+try:
+    from session_auth import router as session_auth_router, init as session_auth_init
+    session_auth_init(db)
+    app.include_router(session_auth_router)
+except Exception as _e:
+    logging.warning(f"session_auth module not mounted: {_e!r}")
+
 # Mount the referral programme (flat Rs 500 both ways, Sept 2026 design —
 # see plan file / HANDOVER.md). razorpay_orders.py imports from this
 # module, so it must be importable before that mount below.
