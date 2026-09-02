@@ -204,19 +204,39 @@ Always prefer `text-[var(--text)]`, `text-[var(--text-muted)]`, `text-[var(--tex
 ## 11. Known bugs / open backlog
 
 ### Time-sensitive
-- **Retire the ₹2,499 pre-Nov-1 Subscription Button by Oct 31, 11:59pm IST.**
-  `frontend/src/components/RazorpayButton.js`'s `IN_BUTTON` currently
-  points at `pl_TX1mf8ClQojsek` (Razorpay Subscription Button, ₹2,949
-  incl. GST/year — a lock-in rate for anyone who subscribes before Nov 1,
-  per Sept 2 2026 conversation). On/around Nov 1, create a new
-  Subscription Button + Plan for the post-Nov-1 new-subscriber rate
-  (₹3,499 + GST) in the Razorpay dashboard, then swap `IN_BUTTON.id` to
-  the new button ID. Existing ₹2,499 subscribers keep renewing at that
-  rate regardless (it's their Plan, unaffected by swapping the button on
-  the site). Also still needed: a separate, not-publicly-embedded renewal
-  Subscription Button for existing pre-Nov-1 subscribers at the
-  grandfathered ₹2,999 + GST rate (₹3,539 incl. GST) — shared directly
-  with them, not linked from the site.
+- **Build the real pre-Nov-1 signup flow (deadline Oct 31, 11:59pm IST).**
+  Correct pricing, confirmed Sept 2 2026: anyone who signs up before Nov 1
+  pays ₹2,499+GST (₹2,949) now, then ₹2,999+GST (₹3,539) from their year-2
+  renewal onward — NOT a flat rate forever. A native Razorpay Subscription
+  Button can't express that (one fixed amount per Plan), so a briefly-live
+  attempt using one (`pl_TX1mf8ClQojsek`, flat ₹2,949/yr forever) was
+  reverted the same day — `RazorpayButton.js`'s `IN_BUTTON` is back to the
+  original one-time Payment Button (`pl_ROAFZZjAvjHhfQ`) as a stopgap.
+  The correct mechanism is the "X" case already built in
+  `razorpay_subscriptions.py` (see its module docstring): a one-time Order
+  now via the existing `create-order`/`verify-payment` flow (unchanged,
+  294900 paise) **plus** a companion Subscription created via
+  `create-subscription` with `deferred=True` on the `existing` Plan
+  (353900 paise / ₹3,539), `start_at` ~1 year out — mandate authorized
+  today, first auto-charge at the higher rate next year. Still needed:
+  (1) the real `plan_id` for `SUBSCRIPTION_PLANS['existing']['IN']`
+  (Venkat to find in Razorpay dashboard → Subscriptions → Plans), (2) a
+  custom-styled frontend trigger (replacing the plain button) that calls
+  both endpoints in sequence, (3) the two live-test-mode verifications the
+  module docstring already flags as unresolved — deferred mandate
+  behavior, and confirming `verify_subscription_payment_signature` is the
+  right SDK method — before this goes live. Do not re-point `IN_BUTTON`
+  at a flat-rate native Subscription Button again.
+  On/around Nov 1: same custom flow, but the "Z" case (`create-subscription`
+  with `tier='new'`, `deferred=False` — immediate ₹3,499+GST billing, no
+  bridge order) once `SUBSCRIPTION_PLANS['new']['IN']['plan_id']` is filled
+  in too.
+  Also still needed: a separate, not-publicly-embedded renewal option for
+  existing pre-Nov-1 subscribers renewing now at the grandfathered
+  ₹2,999+GST rate ("Y" case — same `existing` Plan, `deferred=False`) —
+  shared directly with them, not linked from the site. Venkat wants this
+  as an automated renewal-reminder email (not manual sending) — not yet
+  scoped.
 
 ### P1 — real gaps
 - **Dark-mode logo**: `MockupHeader.js` uses CSS `invert` filter on the light logo. Muddy on the wordmark. Needs a proper white-on-transparent asset, then reintroduce a `LOGO_DARK` distinction.
