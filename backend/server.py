@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier, is_paid_from_labels
+from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -132,6 +132,19 @@ async def get_geo_location(request: Request):
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 GHOST_CONTENT_API_KEY = os.environ.get('GHOST_CONTENT_API_KEY', '')
+SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', '')
+
+
+async def _slack_post(text: str) -> None:
+    """Fire-and-forget Slack webhook ping — same pattern nominations.py uses."""
+    if not SLACK_WEBHOOK_URL:
+        return
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            await client.post(SLACK_WEBHOOK_URL, json={'text': text})
+    except Exception as e:
+        logger.warning(f'Slack ping failed: {e!r}')
 
 def create_ghost_admin_token():
     """Create JWT token for Ghost Admin API authentication"""
@@ -996,7 +1009,7 @@ async def razorpay_webhook(request: Request):
         logger.info(f"Razorpay webhook event type: {event}")
         
         # Handle payment success events
-        if event in ['payment.captured', 'payment.authorized', 'subscription.activated', 'payment_link.paid']:
+        if event in ['payment.captured', 'payment.authorized', 'subscription.activated', 'subscription.charged', 'payment_link.paid']:
             payment_entity = payload.get('payload', {}).get('payment', {}).get('entity', {})
             subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
             payment_link_entity = payload.get('payload', {}).get('payment_link', {}).get('entity', {})
@@ -1012,14 +1025,16 @@ async def razorpay_webhook(request: Request):
 
             # Which plan this payment was for — read from the Payment Button's
             # configured notes (each button, e.g. standard/student/trial, can
-            # carry its own static notes in the Razorpay dashboard). Not yet
-            # acted on here; captured so it's visible in Render logs ahead of
-            # the student/trial buttons existing and the tier-grant flow
-            # (tiers.py) being wired to this webhook in a later phase.
+            # carry its own static notes in the Razorpay dashboard). If no
+            # note is set at all, fall back to recognizing the plan by its
+            # amount — covers a Payment Link created directly in Razorpay
+            # for something the site itself never offers (e.g. a community
+            # discount link shared outside the website).
             plan = (
                 payment_entity.get('notes', {}).get('plan') or
                 subscription_entity.get('notes', {}).get('plan') or
-                payment_link_entity.get('notes', {}).get('plan')
+                payment_link_entity.get('notes', {}).get('plan') or
+                AMOUNT_TO_PLAN.get(payment_entity.get('amount'))
             )
 
             logger.info(f"Extracted email from webhook: {email} (plan: {plan or 'unspecified'})")
@@ -1028,17 +1043,91 @@ async def razorpay_webhook(request: Request):
                 email = email.lower().strip()
                 recent_payments[email] = datetime.now(timezone.utc)
                 logger.info(f"Payment recorded successfully for: {email}")
-                
+
                 # Clean up old entries (older than 30 mins)
                 cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
                 to_remove = [e for e, t in recent_payments.items() if t < cutoff]
                 for e in to_remove:
                     del recent_payments[e]
-                
+
                 logger.info(f"Current recent_payments count: {len(recent_payments)}")
+
+                # Find-or-create the Ghost member and apply the right labels.
+                # This is the piece that used to live entirely in the
+                # "Razorpay Payment Capture" Zap (a raw webhook -> Ghost
+                # Find/Create/Update Member flow). A payment with no `plan`
+                # note is one of the two original static Payment Buttons —
+                # exactly what that Zap was built for — so it falls back to
+                # the standard label set, matching the Zap's behavior.
+                # razorpay_orders.py and razorpay_subscriptions.py's own
+                # verify-payment/verify-subscription endpoints already do
+                # this for payments that go through them; this covers the
+                # remaining case where nothing else does.
+                if GHOST_ADMIN_API_KEY:
+                    try:
+                        token = create_ghost_admin_token()
+                        if token:
+                            name = (
+                                payment_entity.get('notes', {}).get('name')
+                                or subscription_entity.get('notes', {}).get('name')
+                                or payment_link_entity.get('notes', {}).get('name')
+                                or ''
+                            )
+                            contact = payment_entity.get('contact') or ''
+                            payment_id = payment_entity.get('id') or ''
+                            amount = payment_entity.get('amount')
+
+                            # Whether this is a brand-new member or an
+                            # upgrade, checked before ensure_member_labeled
+                            # touches anything — matches the Zap's own
+                            # New Member / Existing User distinction, used
+                            # below for both the Ghost note and the Slack
+                            # message wording.
+                            was_new = (await find_ghost_member(email, token)) is None
+
+                            note = (
+                                f"{'New member created' if was_new else 'Member upgraded'} from payment. "
+                                f"Payment ID: {payment_id} | Contact: {contact} | Amount: {amount}"
+                            )
+
+                            wanted_labels = PLAN_LABELS.get(plan, PLAN_LABELS['standard'])
+                            member = await ensure_member_labeled(
+                                email, name, wanted_labels, token,
+                                strip_unintended_paid_labels=(plan == 'trial'),
+                                note=note,
+                            )
+                            if member:
+                                logger.info(f"Ghost member ensured for {email}: labels={wanted_labels}")
+                                if plan == 'trial' and start_trial:
+                                    await start_trial(email, member.get('id', ''))
+
+                                badge = ':new: ' if was_new else ''
+                                slack_text = (
+                                    f"{badge}{'New' if was_new else 'Upgraded'} TSOP Subscriber\n"
+                                    f"*Name*: {name or '—'}\n"
+                                    f"*Contact*: {contact or '—'}\n"
+                                    f"*Email*: {email}\n"
+                                    f"*Amount*: {amount}\n"
+                                    f"*Payment ID*: {payment_id}\n"
+                                    f"*Time*: {payment_entity.get('created_at') or int(datetime.now(timezone.utc).timestamp())}"
+                                )
+                                await _slack_post(slack_text)
+                            else:
+                                logger.warning(f"Ghost member ensure/label failed for {email}")
+                    except Exception as e:
+                        # Non-fatal — the payment itself succeeded and is
+                        # recorded above; a Ghost hiccup here shouldn't turn
+                        # into a webhook failure Razorpay would retry.
+                        logger.error(f"Ghost member ensure/label error for {email}: {e!r}")
             else:
                 logger.warning("No email found in webhook payload")
                 logger.debug(f"Payment entity: {payment_entity}")
+        elif event.startswith('subscription.') and handle_subscription_webhook_event:
+            # subscription.activated and subscription.charged are already
+            # covered above (Ghost labeling + Slack, same as payment.captured);
+            # the remaining lifecycle (authenticated, halted, cancelled) is
+            # handled in razorpay_subscriptions.py.
+            handle_subscription_webhook_event(event, payload)
         else:
             logger.info(f"Ignoring event type: {event}")
         
@@ -2081,6 +2170,28 @@ try:
     app.include_router(nudge_router)
 except Exception as _e:
     logging.warning(f"nudge module not mounted: {_e!r}")
+
+# Mount real auto-renewing membership subscriptions (Nov 1 pricing transition)
+try:
+    from razorpay_subscriptions import (
+        router as razorpay_subscriptions_router,
+        init as razorpay_subscriptions_init,
+        handle_subscription_webhook_event,
+    )
+    razorpay_subscriptions_init(razorpay_client, recent_payments)
+    app.include_router(razorpay_subscriptions_router)
+except Exception as _e:
+    logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
+    handle_subscription_webhook_event = None
+
+# Mount Trial ("The Ten") expiry tracking — 30-day window + story snapshot
+try:
+    from trial_tracking import router as trial_router, init as trial_init, start_trial
+    trial_init(db)
+    app.include_router(trial_router)
+except Exception as _e:
+    logging.warning(f"trial_tracking module not mounted: {_e!r}")
+    start_trial = None
 
 app.add_middleware(
     CORSMiddleware,

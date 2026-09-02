@@ -40,14 +40,13 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote
 
-import httpx
 import jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import add_member_label
+from tiers import PLAN_LABELS, ensure_member_labeled
+from trial_tracking import start_trial
 
 logger = logging.getLogger(__name__)
 
@@ -101,21 +100,6 @@ PLAN_PRICING = {
         'IN': {'amount': 177000, 'currency': 'INR', 'label': 'Student Membership'},  # ₹1,500 + 18% GST = ₹1,770
     },
 }
-
-# plan -> Ghost labels applied on successful payment.
-# Trial is deliberately NOT given a paid-conferring label: P1 restricts a
-# trial member to a 10-story snapshot, not the full paid archive, so
-# 'tier-trial' alone must not trip the paid-label checks in server.py's
-# verify_ghost_member/get_member_details. Student DOES get full access at a
-# discounted price, so it carries 'paid-via-razorpay' alongside 'tier-student'
-# (server.py's paid-label list also needs 'tier-student' as a belt-and-braces
-# signal — see the server.py edit alongside this module).
-PLAN_LABELS = {
-    'standard': ['paid-via-razorpay'],
-    'student': ['paid-via-razorpay', 'tier-student'],
-    'trial': ['tier-trial'],
-}
-
 
 def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
     plans = PLAN_PRICING.get(plan)
@@ -172,37 +156,6 @@ class VerifyPaymentRequest(BaseModel):
     plan: str
 
 
-async def _ghost_find_member(email: str, token: str) -> Optional[dict]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.get(
-            f'{GHOST_URL}/ghost/api/admin/members/',
-            params={'filter': f"email:'{quote(email, safe='')}'", 'include': 'labels'},
-            headers={'Authorization': f'Ghost {token}'},
-        )
-    if r.status_code == 200:
-        members = r.json().get('members', [])
-        return members[0] if members else None
-    logger.warning(f'Ghost member lookup HTTP {r.status_code} for {email}')
-    return None
-
-
-async def _ghost_create_member(email: str, name: str, labels: list[str], token: str) -> Optional[dict]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.post(
-            f'{GHOST_URL}/ghost/api/admin/members/?send_email=false',
-            json={'members': [{
-                'email': email,
-                'name': name or '',
-                'labels': [{'name': l} for l in labels],
-            }]},
-            headers={'Authorization': f'Ghost {token}'},
-        )
-    if r.status_code in (200, 201):
-        return r.json()['members'][0]
-    logger.warning(f'Ghost member create HTTP {r.status_code}: {r.text[:200]}')
-    return None
-
-
 @router.post('/api/razorpay/verify-payment')
 async def verify_payment(req: VerifyPaymentRequest):
     """Called from Razorpay Checkout's success handler, immediately after
@@ -236,19 +189,18 @@ async def verify_payment(req: VerifyPaymentRequest):
     email = req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
-    member = await _ghost_find_member(email, token)
-    if member:
-        existing_labels = [(lbl.get('name') or '') for lbl in (member.get('labels') or [])]
-        for label in wanted_labels:
-            if await add_member_label(member['id'], existing_labels, label) and label not in existing_labels:
-                existing_labels.append(label)
-    else:
-        member = await _ghost_create_member(email, req.name or '', wanted_labels, token)
-        if not member:
-            raise HTTPException(
-                status_code=502,
-                detail='Payment verified but member setup failed, contact support',
-            )
+    member = await ensure_member_labeled(
+        email, req.name or '', wanted_labels, token,
+        strip_unintended_paid_labels=(req.plan == 'trial'),
+    )
+    if not member:
+        raise HTTPException(
+            status_code=502,
+            detail='Payment verified but member setup failed, contact support',
+        )
+
+    if req.plan == 'trial':
+        await start_trial(email, member.get('id', ''))
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
