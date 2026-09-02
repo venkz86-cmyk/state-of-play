@@ -206,7 +206,10 @@ async def request_login(req: RequestLoginBody):
         'used': False,
     })
 
-    login_url = f'{PUBLIC_BASE_URL}/login/verify?token={token}'
+    # Goes through the existing /api/* -> Render catch-all Vercel rewrite —
+    # no new routing needed. (Not /login/verify: that's not a real page,
+    # nothing serves it, and it would 404.)
+    login_url = f'{PUBLIC_BASE_URL}/api/auth/verify?token={token}'
     await _post_to_apps_script({
         'action': 'send_login_link',
         'email': email,
