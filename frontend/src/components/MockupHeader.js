@@ -57,7 +57,7 @@ export const MockupHeader = () => {
             />
           </Link>
 
-          {/* Desktop nav — Geist 15px */}
+          {/* Desktop nav — Schibsted Grotesk 15px */}
           <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center">
             {NAV.map((item) => (
               <Link

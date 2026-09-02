@@ -15,7 +15,7 @@ const hrefFor = (k, { url, title }) => {
   return null;
 };
 
-// Flat, no icons, Geist 12px uppercase. Hover: text → primary.
+// Flat, no icons, Schibsted Grotesk 12px uppercase. Hover: text → primary.
 // The Gift icon is the one deliberate exception — it's the only affordance
 // that opens a modal (not a share URL), so we lean on iconography +
 // tooltip to signal a different interaction class.

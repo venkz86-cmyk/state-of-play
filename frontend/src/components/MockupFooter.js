@@ -49,7 +49,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
       {/* Index */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
         <div className="flex flex-col md:flex-row md:items-start gap-10 lg:gap-20">
-          {/* Brand — Fix 15: Geist body copy, not italic */}
+          {/* Brand — Fix 15: Schibsted Grotesk body copy, not italic */}
           <div className="md:max-w-sm shrink-0">
             <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-4">
               The Publication

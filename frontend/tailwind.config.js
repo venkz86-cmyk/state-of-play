@@ -13,9 +13,16 @@ module.exports = {
       },
     },
     extend: {
+      // The locked stack (Gloock / Literata / Schibsted Grotesk, see
+      // design_guidelines.json and index.css's --display-font/--reading-font/
+      // --body-font) is applied via `!important` in index.css's .font-editorial/
+      // .font-plex rules, which is what actually wins over these Tailwind
+      // utilities today. These are left as the correct fallback chains rather
+      // than deleted, so nothing regresses if that CSS ever changes — but
+      // don't read this block as "what font actually renders."
       fontFamily: {
-        editorial: ['"Playfair Display"', 'Georgia', 'serif'],
-        plex: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        editorial: ['Gloock', '"Playfair Display"', 'Georgia', 'serif'],
+        plex: ['"Schibsted Grotesk"', '"IBM Plex Sans"', 'system-ui', 'sans-serif'],
         'plex-mono': ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {

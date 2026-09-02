@@ -34,7 +34,7 @@ const longDate = (iso) => {
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 
-// Section label — Geist uppercase 11px, tracked
+// Section label — Schibsted Grotesk uppercase 11px, tracked
 const SectionLabel = ({ children, className = '' }) => (
   <p className={`section-label ${className}`}>{children}</p>
 );
@@ -207,7 +207,7 @@ export const HomeMockup = () => {
       />
       <MockupHeader />
 
-      {/* DATELINE — Geist, #444, weight 400, "No. X · Season One" */}
+      {/* DATELINE — Schibsted Grotesk, #444, weight 400, "No. X · Season One" */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)]">
