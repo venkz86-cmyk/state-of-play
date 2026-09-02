@@ -214,13 +214,18 @@ async def request_code(req: RequestCodeBody):
 
     admin_token = _create_ghost_admin_token()
     if not admin_token:
+        logger.warning('request-code: could not mint Ghost admin token, skipping send')
         return generic_response
 
     member = await find_ghost_member(email, admin_token)
     if not member:
-        # Same response whether or not the email matched — no enumeration.
+        # Same response whether or not the email matched — no enumeration
+        # in what the CLIENT sees. Server-side log is fine — it's the only
+        # way to tell this apart from a delivery failure when debugging.
+        logger.info(f'request-code: no Ghost member found for {email!r}, not sending')
         return generic_response
 
+    logger.info(f'request-code: found Ghost member {member.get("id")!r} for {email!r}, generating code')
     await ensure_indexes()
 
     # Invalidate any previous unused code for this email so only the
@@ -243,11 +248,12 @@ async def request_code(req: RequestCodeBody):
         'used': False,
     })
 
-    await send_email(
+    sent = await send_email(
         to=email,
         subject=f'{code} is your State of Play sign-in code',
         html=_code_email_html(code),
     )
+    logger.info(f'request-code: send_email for {email!r} returned {sent}')
 
     return generic_response
 
