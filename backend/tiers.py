@@ -52,7 +52,6 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote
 
 import httpx
 import jwt
@@ -152,7 +151,7 @@ def resolve_tier(label_names: list[str], is_paid: bool) -> str:
 
 
 async def find_ghost_member(email: str, token: str) -> Optional[dict]:
-    filter_str = f"email:'{quote(email, safe='')}'"
+    filter_str = f"email:'{email}'"
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.get(
             f'{GHOST_URL}/ghost/api/admin/members/',
