@@ -117,10 +117,8 @@ export function useNominate({
       const res = await fetch(`${API}/api/nominations/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          subscriber_ghost_id: subscriberGhostId || '',
-          subscriber_name: subscriberName || '',
-          subscriber_email: subscriberEmail || '',
           nominee_name: nName,
           nominee_email: nEmail,
           nominee_context: nCtx,
@@ -134,8 +132,14 @@ export function useNominate({
         /* non-JSON response */
       }
       if (!res.ok) {
-        // 4xx / 5xx from server (e.g. validation on empty subscriber_email).
-        setError('Something went wrong. Try again in a moment.');
+        // 4xx / 5xx from server -- who the subscriber is now comes from
+        // the session cookie, not this body, so a 401 here means the
+        // session lapsed rather than a validation error.
+        setError(
+          res.status === 401
+            ? 'Please sign in again to nominate a reader.'
+            : 'Something went wrong. Try again in a moment.',
+        );
         setSubmitting(false);
         return;
       }

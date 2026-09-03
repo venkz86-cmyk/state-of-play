@@ -335,9 +335,6 @@ async def _count_gift_links_30d(subscriber_email: str) -> int:
 
 # ─── Pydantic models ─────────────────────────────────────────────────────────
 class NominationSubmit(BaseModel):
-    subscriber_ghost_id: Optional[str] = ''
-    subscriber_name: str = Field('', max_length=200)
-    subscriber_email: EmailStr
     nominee_name: str = Field(..., min_length=1, max_length=200)
     nominee_email: EmailStr
     post_slug: Optional[str] = None      # optional curator pick
@@ -369,19 +366,37 @@ class NominationRefund(BaseModel):
 
 # ─── Routes ──────────────────────────────────────────────────────────────────
 @router.post('/api/nominations/submit')
-async def nominations_submit(req: NominationSubmit):
+async def nominations_submit(req: NominationSubmit, request: Request):
     """One-shot nomination handler.
+
+    Auth is the real session cookie, never client-supplied fields -- same
+    fix applied to /api/gifts/create. Previously this endpoint trusted
+    whatever subscriber_ghost_id/name/email the client sent, so anyone who
+    knew (or guessed) a subscriber's email could spend their nomination
+    quota and send Ghost/Apps-Script side effects in their name, with no
+    paid-membership check at all.
 
     Order (session 8): abuse checks → Ghost member → token row → hand-off.
     The two checks must run before any external side effect so a rejected
     submission never creates orphan Ghost accounts or leaks nominee emails
     to Apps Script.
     """
+    member = await get_current_member(request)
+    if not member:
+        raise HTTPException(status_code=401, detail='Sign in to nominate a reader.')
+    if not member.get('is_paid'):
+        raise HTTPException(status_code=403, detail='Nominating a reader is a subscriber perk.')
+
     await _ensure_token_indexes()
 
     nominee_email_norm = req.nominee_email.lower().strip()
     nominee_name = (req.nominee_name or '').strip()
-    subscriber_email_norm = (req.subscriber_email or '').lower().strip()
+    subscriber_email_norm = (member.get('email') or '').lower().strip()
+    subscriber_ghost_id = member.get('ghost_member_id') or ''
+    subscriber_name = member.get('name') or ''
+
+    if nominee_email_norm == subscriber_email_norm:
+        raise HTTPException(status_code=400, detail='You can’t nominate yourself.')
 
     # 0a) Monthly quota
     used_this_month = await _count_monthly_nominations(subscriber_email_norm)
@@ -414,9 +429,9 @@ async def nominations_submit(req: NominationSubmit):
         'token_id': token_id,
         'post_slug': req.post_slug or '',
         'token_type': 'nomination',
-        'created_by': req.subscriber_email,
-        'subscriber_ghost_id': req.subscriber_ghost_id or '',
-        'subscriber_name': req.subscriber_name or '',
+        'created_by': subscriber_email_norm,
+        'subscriber_ghost_id': subscriber_ghost_id,
+        'subscriber_name': subscriber_name,
         'subscriber_email': subscriber_email_norm,
         'nominee_name': nominee_name,
         'nominee_email': nominee_email_norm,
@@ -438,9 +453,9 @@ async def nominations_submit(req: NominationSubmit):
     # 3) Hand-off to Apps Script — Sheet log + Slack + nominee email
     await _post_to_apps_script({
         'action': 'nomination_submitted',
-        'subscriber_ghost_id': req.subscriber_ghost_id or '',
-        'subscriber_name': req.subscriber_name or '',
-        'subscriber_email': req.subscriber_email,
+        'subscriber_ghost_id': subscriber_ghost_id,
+        'subscriber_name': subscriber_name,
+        'subscriber_email': subscriber_email_norm,
         'nominee_name': nominee_name,
         'nominee_email': nominee_email_norm,
         'nominee_context': req.nominee_context or req.personal_note or '',
