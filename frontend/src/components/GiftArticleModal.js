@@ -130,7 +130,7 @@ export const GiftArticleModal = ({
           <div className="flex items-center gap-2 mb-4">
             <Gift className="w-4 h-4 text-[var(--accent-burgundy)]" strokeWidth={1.5} />
             <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
-              Gift · reader to reader
+              {view === 'link' ? 'Gift · reader to reader' : 'Nominate a reader'}
             </span>
           </div>
           {view === 'link' ? (
@@ -151,16 +151,16 @@ export const GiftArticleModal = ({
           ) : (
             <>
               <DialogTitle
-                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[26ch]"
+                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[28ch]"
                 data-testid="gift-modal-title"
               >
-                Send this article <em className="italic font-normal">directly.</em>
+                Some people shouldn’t <em className="italic font-normal">just read this one.</em>
               </DialogTitle>
               <DialogDescription
                 className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
                 data-testid="gift-modal-subheading"
               >
-                They get a private link by email. No paywall. No sign-up needed on their end.
+                Put someone’s name forward and I’ll give them two weeks of full access - every story, no paywall. They’ll know it came from you.
               </DialogDescription>
             </>
           )}
@@ -251,7 +251,7 @@ export const GiftArticleModal = ({
               {blocked === 'quota' ? (
                 <div data-testid="gift-modal-blocked-quota" className="max-w-[46ch]">
                   <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                    You’ve used all 5 gifts <em className="italic font-normal">this month.</em>
+                    You’ve used all 5 nominations <em className="italic font-normal">this month.</em>
                   </p>
                   <p className="font-plex text-[14px] text-[var(--text-muted)]">
                     Your quota resets on {resetsOn || 'the 1st of next month'}.
@@ -260,7 +260,7 @@ export const GiftArticleModal = ({
               ) : blocked === 'duplicate' ? (
                 <div data-testid="gift-modal-blocked-duplicate" className="max-w-[46ch]">
                   <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                    You’ve already gifted this to them <em className="italic font-normal">twice.</em>
+                    You’ve already put their name forward <em className="italic font-normal">twice.</em>
                   </p>
                   <p className="font-plex text-[14px] text-[var(--text-muted)] mb-4">
                     Time to let them decide.
@@ -271,7 +271,7 @@ export const GiftArticleModal = ({
                     data-testid="gift-modal-blocked-duplicate-try-another"
                     className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
-                    Gift to someone else →
+                    Nominate someone else →
                   </button>
                 </div>
               ) : !submitted ? (
@@ -312,7 +312,7 @@ export const GiftArticleModal = ({
                   <div>
                     <div className="flex items-baseline justify-between mb-2">
                       <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                        A short note (optional)
+                        Why should they be reading TSOP? (optional)
                       </label>
                       <span className="font-plex text-[11px] text-[#999999] tabular-nums">
                         {context.length} / {CONTEXT_MAX}
@@ -323,11 +323,14 @@ export const GiftArticleModal = ({
                       value={context}
                       onChange={(e) => setContext(e.target.value)}
                       disabled={submitting}
-                      placeholder="Thought you’d find this interesting."
+                      placeholder="Works in franchise strategy. We were on a panel together last year."
                       data-testid="gift-modal-context"
                       className="w-full px-3 py-2 bg-transparent border border-[var(--rule)] font-plex text-[14px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     />
+                    <p className="font-plex text-[12px] text-[var(--text-muted)] mt-1.5">
+                      What do they do, and how do you know them?
+                    </p>
                   </div>
 
                   {error && (
@@ -339,7 +342,7 @@ export const GiftArticleModal = ({
                     </p>
                   )}
 
-                  <div className="flex items-center gap-4 pt-2">
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={submitting}
@@ -347,15 +350,18 @@ export const GiftArticleModal = ({
                       className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
-                      {submitting ? 'Sending…' : 'Send gift →'}
+                      {submitting ? 'Sending…' : 'Nominate →'}
                     </button>
+                    <p className="font-plex text-[12px] text-[var(--text-muted)] mt-3">
+                      One note from me, nothing else. No marketing, ever.
+                    </p>
                     {quota && typeof quota.remaining === 'number' && (
-                      <span
-                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)]"
+                      <p
+                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)] mt-1.5"
                         data-testid="gift-modal-quota-label"
                       >
-                        {quota.remaining} of {quota.quota} gifts left this month
-                      </span>
+                        {quota.remaining} of {quota.quota} nominations left this month
+                      </p>
                     )}
                   </div>
                 </form>
@@ -364,14 +370,14 @@ export const GiftArticleModal = ({
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-[var(--accent-burgundy)]" strokeWidth={1.5} />
                     <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)]">
-                      Gift sent
+                      Name put forward
                     </span>
                   </div>
                   <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                    {`${(name || 'Your friend').trim().split(' ')[0]} will get this${articleTitle ? ' shortly' : ''}.`}
+                    {`${(name || 'Your friend').trim().split(' ')[0]} will hear from us shortly.`}
                   </p>
                   <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
-                    We’ve sent them a private link. They read it in full: no paywall, no sign-up.
+                    One note, saying you put their name forward. Two weeks of full access, every story, no sign-up needed on their end.
                   </p>
                   <button
                     type="button"
@@ -379,7 +385,7 @@ export const GiftArticleModal = ({
                     data-testid="gift-modal-again"
                     className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
-                    Gift to someone else →
+                    Nominate someone else →
                   </button>
                 </div>
               )}

@@ -481,19 +481,18 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
             
             member = members[0]
             # Member is paid if: Ghost status is paid/comped, OR has a Ghost subscription,
-            # OR carries a recognised paid label (covers Razorpay individual subscribers,
-            # corporate-team seats provisioned via Apps Script, bespoke invoice-billed
-            # accounts, AND any team-* identifier label for bespoke client cohorts).
+            # OR carries a recognised paid label. Was a second, hardcoded copy of
+            # tiers.PAID_LABELS here (predating its consolidation into tiers.py) --
+            # meant this endpoint silently missed every label added there since
+            # (tier-student, community-ftwtsop, nomination-access): the frontend
+            # would show an article as unlocked while this endpoint still 403'd
+            # the actual full-text fetch behind the scenes. Now reads the same
+            # single source of truth session_auth.py's paywall gate already uses.
             labels = [(lbl.get('name') or '').lower() for lbl in member.get('labels', []) or []]
-            has_paid_label = (
-                any(l in labels for l in
-                    ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
-                or any(l.startswith('team-') for l in labels)
-            )
             is_paid = (
                 member.get('status') in ('paid', 'comped')
                 or len(member.get('subscriptions', []) or []) > 0
-                or has_paid_label
+                or is_paid_from_labels(labels)
             )
 
             if not is_paid:

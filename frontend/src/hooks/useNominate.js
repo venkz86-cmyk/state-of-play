@@ -96,7 +96,6 @@ export function useNominate({
     if (!nName) return setError('Please enter the nominee’s name.');
     if (!EMAIL_RE.test(nEmail))
       return setError('Please enter a valid email address.');
-    if (!nCtx) return setError('A line of context helps us reach out well.');
     if (nEmail === (subscriberEmail || '').toLowerCase()) {
       return setError('You’re already a reader. Try nominating someone else.');
     }
