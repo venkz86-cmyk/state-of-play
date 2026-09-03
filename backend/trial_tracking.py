@@ -32,7 +32,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +123,20 @@ async def start_trial(email: str, ghost_member_id: str = '') -> Optional[dict]:
     return record
 
 
+def _aware(dt: Optional[datetime]) -> Optional[datetime]:
+    """Motor/MongoDB returns naive datetimes by default (a UTC value with
+    no tzinfo) unless the client is created with tz_aware=True -- this
+    codebase's isn't. A bare .isoformat() on a naive value silently drops
+    the UTC-ness (a frontend `new Date(iso)` then misreads it as local
+    time), and comparing it against an aware datetime.now(timezone.utc)
+    elsewhere raises TypeError -- confirmed live in admin_dashboard.py's
+    /api/admin/subscribers once a real payment's date flowed through an
+    equivalent unguarded path. Always coerce to aware before using."""
+    if not isinstance(dt, datetime):
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
 @router.get('/api/trial/status')
 async def trial_status(email: str):
     if _db is None:
@@ -130,16 +146,42 @@ async def trial_status(email: str):
         raise HTTPException(status_code=404, detail='No trial found for this email')
 
     now = datetime.now(timezone.utc)
-    expires_at = record['expires_at']
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    expires_at = _aware(record['expires_at'])
+    started_at = _aware(record.get('started_at'))
     days_left = max(0, (expires_at - now).days)
 
     return {
         'email': record['email'],
         'slugs': record.get('snapshot_slugs', []),
-        'started_at': record['started_at'].isoformat(),
+        'started_at': started_at.isoformat() if started_at else None,
         'expires_at': expires_at.isoformat(),
         'days_left': days_left,
         'expired': now >= expires_at,
     }
+
+
+@router.get('/api/admin/trials')
+async def list_trials(_admin: None = Depends(require_admin_key_or_session)):
+    """Every Trial ("The Ten") member, admin-only -- trial_status above
+    is a single-email lookup, this is the bulk listing the dashboard
+    needs. Same days_left/expired computation as trial_status, just
+    looped over every record instead of one."""
+    if _db is None:
+        return {'trials': []}
+    now = datetime.now(timezone.utc)
+    trials = []
+    async for record in _db.trial_members.find({}).sort('expires_at', 1):
+        expires_at = _aware(record.get('expires_at'))
+        started_at = _aware(record.get('started_at'))
+        trials.append({
+            'email': record.get('email'),
+            'ghost_member_id': record.get('ghost_member_id') or '',
+            'snapshot_slugs': record.get('snapshot_slugs', []),
+            'started_at': started_at.isoformat() if started_at else None,
+            'expires_at': expires_at.isoformat() if expires_at else None,
+            'days_left': max(0, (expires_at - now).days) if expires_at else None,
+            'expired': (now >= expires_at) if expires_at else None,
+            'reminder_5day_sent': record.get('reminder_5day_sent', False),
+            'reminder_winback_sent': record.get('reminder_winback_sent', False),
+        })
+    return {'trials': trials, 'count': len(trials)}

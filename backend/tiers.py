@@ -188,7 +188,11 @@ async def list_all_ghost_members(token: str) -> list[dict]:
         while True:
             r = await client.get(
                 f'{GHOST_URL}/ghost/api/admin/members/',
-                params={'limit': 100, 'page': page, 'include': 'labels'},
+                # subscriptions alongside labels -- a Ghost-native comp
+                # (e.g. sandbox-event-comp) carries its own real end date
+                # there, same field server.py's get_member_details already
+                # reads for the account page's single-member case.
+                params={'limit': 100, 'page': page, 'include': 'labels,subscriptions'},
                 headers={'Authorization': f'Ghost {token}'},
             )
             if r.status_code != 200:

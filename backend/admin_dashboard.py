@@ -99,16 +99,41 @@ async def _load_trial_and_nomination_maps() -> tuple[dict, dict]:
     return trial_map, nomination_map
 
 
+def _ghost_subscription_end(subscriptions: Optional[list]) -> Optional[datetime]:
+    """A Ghost-native complimentary subscription (granted by hand in Ghost
+    Admin, e.g. the pre-existing 'sandbox-event-comp' label some members
+    carry -- a narrow comp mechanism that predates and is unrelated to
+    this session's own Trial ("The Ten") product) carries its own real
+    end date here. Distinct from is_paid's own status/label check --
+    this is only about finding a genuine expiry to show, when one exists."""
+    if not subscriptions:
+        return None
+    sub = subscriptions[0]
+    end = sub.get('current_period_end')
+    if not end:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(end).replace('Z', '+00:00'))
+        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+    except ValueError:
+        return None
+
+
 def _compute_expiry(
     label_names: list[str], last_payment: Optional[dict],
     trial_expires: Optional[datetime], nomination_expires: Optional[datetime],
+    ghost_subscription_expires: Optional[datetime] = None,
 ) -> tuple[Optional[str], str]:
     """Returns (computed_expiry_iso, source). Priority: a corp-* label
     (Phase 4 fills this in; for now it's left unresolved rather than
-    guessed at), then a Trial window, then a nomination-access window,
-    then a real payment's synthetic 12-month cycle, then nothing (free)."""
+    guessed at), then a genuine Ghost-native subscription/comp end date
+    (real data, outranks every synthetic guess below), then a Trial
+    window, then a nomination-access window, then a real payment's
+    synthetic 12-month cycle, then nothing (free)."""
     if any(l.startswith('corp-') for l in label_names):
         return None, 'corporate'
+    if ghost_subscription_expires:
+        return ghost_subscription_expires.isoformat(), 'ghost_subscription'
     if 'tier-trial' in label_names and trial_expires:
         exp = trial_expires
         if exp.tzinfo is None:
@@ -161,11 +186,22 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
         label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
         paid = is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped')
         tier = resolve_tier(label_names, paid)
+        # Display-only override, scoped to this endpoint alone -- NOT
+        # added to tiers.TIER_LABELS, which nudge.py's own nudge-eligible
+        # sweep also reads (that's real access/business logic this
+        # dashboard fix has no business changing). A member who falls
+        # through to the generic 'standard' bucket but carries the
+        # pre-existing sandbox-event-comp label is a comp, not a real
+        # annual subscriber -- shown as such here only.
+        if tier == 'standard' and 'sandbox-event-comp' in label_names:
+            tier = 'comped'
         summary = payment_summaries.get(email)
         last_payment = summary.get('last_payment') if summary else None
+        ghost_subscription_expires = _ghost_subscription_end(member.get('subscriptions'))
 
         computed_expiry, expiry_source = _compute_expiry(
             label_names, last_payment, trial_map.get(email), nomination_map.get(email),
+            ghost_subscription_expires,
         )
 
         expired_but_still_paid = False

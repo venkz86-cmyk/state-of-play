@@ -59,10 +59,11 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 
 from razorpay_subscriptions import SUBSCRIPTION_PLANS
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
@@ -255,6 +256,74 @@ async def referrals_me(email: str):
         'cleared_paise': max(0, cleared_paise),
         'pending_paise': pending_paise,
     }
+
+
+def _iso(dt) -> Optional[str]:
+    """Motor/MongoDB returns naive datetimes by default unless the client
+    is created with tz_aware=True -- this codebase's isn't. Always attach
+    UTC before serializing; see admin_dashboard.py's own copy of this
+    comment for the live bug this guards against."""
+    if not isinstance(dt, datetime):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
+@router.get('/api/admin/referrals')
+async def list_referrals(_admin: None = Depends(require_admin_key_or_session)):
+    """Every referral account + a recent ledger slice, admin-only --
+    referrals_me above is a single-member lookup, this is the bulk view.
+    Balances and referred-counts are pre-aggregated in one pass each
+    (same reasoning as admin_dashboard.py's payment summaries) rather
+    than a query per account."""
+    if _db is None:
+        return {'accounts': [], 'ledger': []}
+
+    balances: dict = {}
+    async for entry in _db.credit_ledger.find({}):
+        owner = entry.get('owner_ghost_member_id')
+        if not owner:
+            continue
+        b = balances.setdefault(owner, {'cleared_paise': 0, 'pending_paise': 0})
+        if entry.get('entry_type') == 'earn' and entry.get('status') == 'cleared':
+            b['cleared_paise'] += entry.get('amount_paise') or 0
+        elif entry.get('entry_type') == 'earn' and entry.get('status') == 'pending':
+            b['pending_paise'] += entry.get('amount_paise') or 0
+        elif entry.get('entry_type') in ('consumption', 'reversal', 'expiry'):
+            b['cleared_paise'] += entry.get('amount_paise') or 0  # stored negative
+
+    referred_counts: dict = {}
+    async for ref in _db.referrals.find({}):
+        owner = ref.get('referrer_ghost_member_id')
+        if owner:
+            referred_counts[owner] = referred_counts.get(owner, 0) + 1
+
+    accounts = []
+    async for account in _db.referral_accounts.find({}):
+        owner = account.get('ghost_member_id')
+        balance = balances.get(owner, {'cleared_paise': 0, 'pending_paise': 0})
+        accounts.append({
+            'email': account.get('email'),
+            'ghost_member_id': owner,
+            'referral_code': account.get('referral_code'),
+            'status': account.get('status'),
+            'cleared_paise': max(0, balance['cleared_paise']),
+            'pending_paise': balance['pending_paise'],
+            'referred_count': referred_counts.get(owner, 0),
+        })
+
+    ledger_docs = await _db.credit_ledger.find({}).sort('created_at', -1).to_list(length=500)
+    ledger = [{
+        'owner_ghost_member_id': d.get('owner_ghost_member_id'),
+        'entry_type': d.get('entry_type'),
+        'amount_paise': d.get('amount_paise'),
+        'status': d.get('status'),
+        'reason': d.get('reason'),
+        'created_at': _iso(d.get('created_at')),
+    } for d in ledger_docs]
+
+    return {'accounts': accounts, 'ledger': ledger}
 
 
 @router.get('/r/{code}')

@@ -6,7 +6,7 @@ import { formatCurrency, formatDate, daysUntil } from '../../lib/format';
 
 const TIER_LABEL = {
   standard: 'Annual', student: 'Student', trial: 'Trial',
-  nomination: 'Nominated', free: 'Free',
+  nomination: 'Nominated', comped: 'Comped', free: 'Free',
 };
 
 const expiryTone = (row) => {
@@ -101,6 +101,16 @@ export const SubscribersPanel = ({ onAuthError }) => {
 
       {expanded && (
         <div className="mt-6 pt-6 border-t border-[var(--rule)]">
+          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
+            Ghost labels — {expanded}
+          </p>
+          <p className="font-plex text-[13px] text-[var(--text-muted)] mb-6">
+            {(() => {
+              const row = subscribers.find((s) => s.email === expanded);
+              const labels = row?.label_names || [];
+              return labels.length > 0 ? labels.join(', ') : 'No labels on this member.';
+            })()}
+          </p>
           <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
             Payment history — {expanded}
           </p>
