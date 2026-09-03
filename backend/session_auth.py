@@ -136,7 +136,20 @@ def _mint_session(email: str, ghost_member_id: str) -> Optional[str]:
 
 
 def _read_session(request: Request) -> Optional[dict]:
-    token = request.cookies.get(SESSION_COOKIE_NAME, '')
+    """Bearer token (Authorization header) is the primary mechanism -- it
+    doesn't depend on any cookie policy at all (SameSite, a browser's
+    third-party-cookie rules, or whether a proxying layer between the
+    browser and this backend forwards Set-Cookie faithfully), so it
+    behaves identically in every browser and every deployment topology.
+    The cookie is still read as a fallback so an existing session set
+    before this changed keeps working, but nothing in the frontend relies
+    on the cookie being sent any more."""
+    auth_header = request.headers.get('authorization', '')
+    token = ''
+    if auth_header.lower().startswith('bearer '):
+        token = auth_header[7:].strip()
+    if not token:
+        token = request.cookies.get(SESSION_COOKIE_NAME, '')
     if not token or not JWT_SECRET:
         return None
     try:
@@ -336,6 +349,11 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
         'status': member.get('status', 'free'),
         'label_names': label_names,
+        # The frontend stores this and sends it back as
+        # `Authorization: Bearer <token>` on every request from here on --
+        # see _read_session's docstring for why that's now the mechanism
+        # this actually depends on, not the cookie set above.
+        'session_token': session_token,
     }
 
 

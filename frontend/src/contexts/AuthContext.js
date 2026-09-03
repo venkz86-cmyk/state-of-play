@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getSessionToken, setSessionToken, authHeader } from '../lib/sessionToken';
 
 const AuthContext = createContext();
 
@@ -23,26 +24,30 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount: ask the backend who (if anyone) the session cookie belongs
-  // to. Replaces the old synchronous localStorage read — there's no local
-  // cache of "signed in" any more, the cookie is the only source of truth.
-  //
-  // This call (and every other session-cookie call in this file) uses a
-  // *relative* path, not `${API}/...`. The cookie is set by
-  // stateofplay-backend.onrender.com; calling it directly from
-  // stateofplay.club makes it a cross-site cookie, which Safari on iOS
-  // blocks outright regardless of SameSite/Secure. vercel.json already
-  // proxies `/api/:path*` to the backend server-side, so a relative path
-  // is same-origin from the browser's point of view -- no cross-site
-  // cookie, nothing for Safari's tracking prevention to block.
+  // On mount: ask the backend who (if anyone) the stored session token
+  // belongs to. No token stored -> definitely not signed in, skip the
+  // round-trip entirely. See lib/sessionToken.js for why a bearer token
+  // is the mechanism here, not a cookie -- it doesn't depend on any
+  // browser's cookie policy or on a proxying layer forwarding Set-Cookie
+  // faithfully, both of which turned out to be real, live failure modes
+  // (iPhone Safari's third-party-cookie block; a desktop Chrome session
+  // that didn't survive a refresh for reasons that never fully pinned
+  // down to one specific hop).
   useEffect(() => {
     const checkSession = async () => {
+      if (!getSessionToken()) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const res = await fetch('/api/auth/me', { headers: { ...authHeader() } });
         if (res.ok) {
           const data = await res.json();
           setUser(shapeMember(data));
         } else {
+          // Token rejected (expired/invalid) -- stop sending it.
+          setSessionToken('');
           setUser(null);
         }
       } catch (_e) {
@@ -92,7 +97,6 @@ export const AuthProvider = ({ children }) => {
       const res = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ email, code }),
       });
       data = await res.json().catch(() => ({}));
@@ -102,6 +106,10 @@ export const AuthProvider = ({ children }) => {
     } catch (_e) {
       throw new Error('Could not reach the server. Please try again.');
     }
+
+    // This token, not the cookie the backend also sets, is what every
+    // subsequent authenticated request actually depends on now.
+    setSessionToken(data.session_token || '');
 
     const member = shapeMember(data);
     setUser(member);
@@ -130,9 +138,11 @@ export const AuthProvider = ({ children }) => {
     return { success: true, member };
   }, []);
 
-  // Logout - clear the session cookie server-side, then the local state.
+  // Logout - forget the token locally (that's what actually signs the
+  // reader out now) and tell the backend for good measure.
   const logout = useCallback(async () => {
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => { /* non-fatal */ });
+    fetch('/api/auth/logout', { method: 'POST', headers: { ...authHeader() } }).catch(() => { /* non-fatal */ });
+    setSessionToken('');
     setUser(null);
   }, []);
 

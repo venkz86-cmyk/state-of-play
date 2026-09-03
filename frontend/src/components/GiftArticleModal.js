@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Gift, Sparkles } from 'lucide-react';
 import { useNominate } from '../hooks/useNominate';
+import { authHeader } from '../lib/sessionToken';
 
 /**
  * GiftArticleModal — subscriber-only "gift this story" surface.
@@ -42,10 +43,10 @@ export const GiftArticleModal = ({
 
   // Create (or fetch the still-active) gift link as soon as the modal
   // opens in link view -- no extra click needed to get something to copy.
-  // Relative path, not an absolute cross-origin URL: this call needs the
-  // session cookie, and going cross-site with it is what let Safari's
-  // iOS tracking prevention block it outright. A 20s cap means a real
-  // failure surfaces as a message instead of an endless spinner.
+  // Auth is the Authorization header (see lib/sessionToken.js), not a
+  // cookie -- doesn't depend on any browser's cookie policy or on a
+  // proxying layer forwarding Set-Cookie faithfully. A 20s cap means a
+  // real failure surfaces as a message instead of an endless spinner.
   useEffect(() => {
     if (!open || view !== 'link' || !isPaidSubscriber || !postSlug) return;
     if (linkUrl || linkLoading) return;
@@ -56,8 +57,7 @@ export const GiftArticleModal = ({
     const timeout = setTimeout(() => controller.abort(), 20000);
     fetch('/api/gifts/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify({ story_slug: postSlug }),
       signal: controller.signal,
     })

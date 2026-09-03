@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { authHeader } from '../lib/sessionToken';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -102,16 +103,12 @@ export function useNominate({
 
     setSubmitting(true);
     try {
-      // Relative path, not `${API}/...`: this call needs the session
-      // cookie now, and a cross-site cookie to stateofplay-backend.onrender.com
-      // is exactly what Safari on iOS blocks outright. vercel.json proxies
-      // /api/:path* to the backend server-side, so this stays same-origin
-      // from the browser's point of view -- the leading slash makes it
-      // root-relative regardless of what page the reader is on.
+      // Auth is the Authorization header (see lib/sessionToken.js), not a
+      // cookie -- doesn't depend on any browser's cookie policy or on a
+      // proxying layer forwarding Set-Cookie faithfully.
       const res = await fetch('/api/nominations/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({
           nominee_name: nName,
           nominee_email: nEmail,

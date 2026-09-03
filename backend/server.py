@@ -2262,6 +2262,22 @@ else:
         allow_headers=["*"],
     )
 
+# Auth responses must never be cached by anything sitting between the
+# browser and this backend -- a browser, extension, or intermediate proxy
+# serving a stale cached /api/auth/me (e.g. an earlier anonymous 401, from
+# before a reader signed in) would make sign-in look broken on refresh even
+# though the real, current request would have succeeded. Applies to every
+# response under /api/auth/*, success or error alike, regardless of which
+# router or exception handler produced it.
+@app.middleware("http")
+async def no_store_for_auth(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith('/api/auth/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+    return response
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     if client:
