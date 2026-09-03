@@ -280,6 +280,20 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _iso(dt) -> Optional[str]:
+    """Motor/MongoDB returns naive datetimes by default unless the client
+    is created with tz_aware=True -- this codebase's isn't. Always attach
+    UTC before serializing to a string (a bare .isoformat() on a naive
+    value silently drops its UTC-ness, which is what crashed
+    GET /api/admin/subscribers once a real payment's date flowed through
+    an equivalent unguarded path -- see admin_dashboard.py)."""
+    if not isinstance(dt, datetime):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
 # ─── Abuse-prevention constants ──────────────────────────────────────────────
 MONTHLY_NOMINATION_QUOTA = 5      # per calendar month per subscriber
 DUPLICATE_NOMINEE_LIMIT = 2       # all-time per (subscriber, nominee) pair
@@ -1001,8 +1015,21 @@ async def list_nomination_access(
     grants = []
     cursor = _db.nomination_access.find(query).sort('expires_at', 1)
     async for record in cursor:
-        expires_at = record.get('expires_at')
-        started_at = record.get('started_at')
+        # "Did they read it?" -- joined from the story_tokens row the
+        # welcome-email link points at, by token_id. One extra lookup per
+        # grant; dataset size here is nominations, not the full subscriber
+        # base, so this stays cheap (same reasoning as elsewhere in this
+        # dashboard: correctness over pre-optimizing for a scale this
+        # tool doesn't have).
+        open_count = None
+        last_opened_at = None
+        token_id = record.get('token_id')
+        if token_id:
+            token_doc = await _db.story_tokens.find_one({'token_id': token_id})
+            if token_doc:
+                open_count = token_doc.get('open_count', 0)
+                last_opened_at = _iso(token_doc.get('last_opened_at'))
+
         grants.append({
             'nominee_email': record.get('nominee_email'),
             'nominee_name': record.get('nominee_name'),
@@ -1010,10 +1037,13 @@ async def list_nomination_access(
             'nominator_name': record.get('nominator_name'),
             'post_slug': record.get('post_slug'),
             'status': record.get('status'),
-            'started_at': started_at.isoformat() if isinstance(started_at, datetime) else started_at,
-            'expires_at': expires_at.isoformat() if isinstance(expires_at, datetime) else expires_at,
+            'started_at': _iso(record.get('started_at')),
+            'expires_at': _iso(record.get('expires_at')),
             'welcome_email_sent': record.get('welcome_email_sent', False),
             'expiry_email_sent': record.get('expiry_email_sent', False),
+            'open_count': open_count,
+            'last_opened_at': last_opened_at,
+            'has_read': bool(open_count),
         })
     return {'grants': grants, 'count': len(grants)}
 

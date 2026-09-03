@@ -6,6 +6,10 @@ import { AdminNav } from '../components/admin/AdminNav';
 import { SubscribersPanel } from '../components/admin/SubscribersPanel';
 import { RenewalsPanel } from '../components/admin/RenewalsPanel';
 import { BackfillPanel } from '../components/admin/BackfillPanel';
+import { CommentsPanel } from '../components/admin/CommentsPanel';
+import { NominatedReadersPanel } from '../components/admin/NominatedReadersPanel';
+import { TrialsPanel } from '../components/admin/TrialsPanel';
+import { ReferralsPanel } from '../components/admin/ReferralsPanel';
 
 // Phase 1 shipped the shell + nav; Phase 2 (Subscribers/Renewals/the
 // payments ledger) is real below. Each remaining panel is real once its
@@ -101,11 +105,11 @@ export const AdminDashboard = () => {
           <Route index element={<OverviewPanel onAuthError={onAuthError} />} />
           <Route path="subscribers" element={<SubscribersPanel onAuthError={onAuthError} />} />
           <Route path="renewals" element={<RenewalsPanel onAuthError={onAuthError} />} />
-          <Route path="comments" element={<ComingSoonPanel title="Comments" phase="Phase 3" />} />
-          <Route path="nominated" element={<ComingSoonPanel title="Nominated readers" phase="Phase 3" />} />
+          <Route path="comments" element={<CommentsPanel onAuthError={onAuthError} />} />
+          <Route path="nominated" element={<NominatedReadersPanel onAuthError={onAuthError} />} />
           <Route path="corporate" element={<ComingSoonPanel title="Corporate accounts" phase="Phase 4" />} />
-          <Route path="trials" element={<ComingSoonPanel title="Trials" phase="Phase 3" />} />
-          <Route path="referrals" element={<ComingSoonPanel title="Referrals" phase="Phase 3" />} />
+          <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
+          <Route path="referrals" element={<ReferralsPanel onAuthError={onAuthError} />} />
           <Route path="links" element={<ComingSoonPanel title="Links" phase="Phase 5" />} />
         </Routes>
       </main>
