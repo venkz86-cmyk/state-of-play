@@ -1001,6 +1001,82 @@ async def cold_link_expire_check(
     return {'expired_count': result.modified_count}
 
 
+@router.get('/api/admin/nominations/access')
+async def list_nomination_access(
+    status_filter: str = 'active',
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    """Admin-only visibility into who currently has a real, time-boxed
+    nomination access grant -- the one thing about this feature that had
+    no dashboard at all. `status_filter` accepts 'active' (default),
+    'expired', or 'all'."""
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=503, detail='Admin key not configured on server')
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail='Invalid admin key')
+    if _db is None:
+        return {'grants': []}
+
+    query = {} if status_filter == 'all' else {'status': status_filter}
+    grants = []
+    cursor = _db.nomination_access.find(query).sort('expires_at', 1)
+    async for record in cursor:
+        expires_at = record.get('expires_at')
+        started_at = record.get('started_at')
+        grants.append({
+            'nominee_email': record.get('nominee_email'),
+            'nominee_name': record.get('nominee_name'),
+            'nominator_email': record.get('nominator_email'),
+            'nominator_name': record.get('nominator_name'),
+            'post_slug': record.get('post_slug'),
+            'status': record.get('status'),
+            'started_at': started_at.isoformat() if isinstance(started_at, datetime) else started_at,
+            'expires_at': expires_at.isoformat() if isinstance(expires_at, datetime) else expires_at,
+            'welcome_email_sent': record.get('welcome_email_sent', False),
+            'expiry_email_sent': record.get('expiry_email_sent', False),
+        })
+    return {'grants': grants, 'count': len(grants)}
+
+
+@router.post('/api/admin/nominations/access/{nominee_email}/revoke')
+async def revoke_nomination_access(
+    nominee_email: str,
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    """Admin-only early revoke -- strips NOMINATION_ACCESS_LABEL and marks
+    the grant 'expired' immediately, without waiting for the sweep.
+    Deliberately does NOT send the "your two weeks are up" conversion
+    email: an early manual revoke (abuse, a mistake, a duplicate) isn't
+    the same funnel moment as a grant running its natural course, and
+    shouldn't be pitched a subscription on that basis."""
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=503, detail='Admin key not configured on server')
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail='Invalid admin key')
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Token store unavailable')
+
+    nominee_email = nominee_email.lower().strip()
+    record = await _db.nomination_access.find_one({'nominee_email': nominee_email})
+    if not record:
+        raise HTTPException(status_code=404, detail='No access grant found for this email')
+
+    admin_token = _create_ghost_admin_token()
+    if admin_token:
+        member = await _tiers_find_ghost_member(nominee_email, admin_token)
+        if member:
+            existing_labels = [(l.get('name') or '') for l in (member.get('labels') or [])]
+            await _tiers_remove_member_label(
+                member['id'], existing_labels, NOMINATION_ACCESS_LABEL, admin_token,
+            )
+
+    await _db.nomination_access.update_one(
+        {'nominee_email': nominee_email},
+        {'$set': {'status': 'expired', 'revoked_early': True}},
+    )
+    return {'revoked': True, 'nominee_email': nominee_email}
+
+
 @router.post('/api/nominations/access/expire-check')
 async def nomination_access_expire_check(
     x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
