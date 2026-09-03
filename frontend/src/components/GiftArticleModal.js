@@ -1,17 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { Gift, Sparkles } from 'lucide-react';
 import { useNominate } from '../hooks/useNominate';
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
 /**
- * GiftArticleModal — subscriber-only "gift this article" surface.
+ * GiftArticleModal — subscriber-only "gift this story" surface.
  *
- * Reuses the same backend as NominateReaderBlock (POST /api/nominations/submit
- * → Apps Script → Sheet + Slack + nominee email). Only the reader-facing
- * copy changes. Backend / Sheet / Slack terminology intentionally kept as
- * "nomination" so ops workflow doesn't fork.
+ * Two views:
+ *  - 'link' (default, primary): a self-serve, anonymous share link via
+ *    POST /api/gifts/create (auth is the real session cookie, not
+ *    anything in the body). Copy link / Share on WhatsApp. v0: flat
+ *    72-hour access window from creation, no per-browser grant limit.
+ *  - 'email' (secondary, reached via "Nominate a reader instead"): the
+ *    original nomination flow, unchanged underneath -- same backend
+ *    (POST /api/nominations/submit -> Apps Script -> Sheet + Slack +
+ *    nominee email), same quota/duplicate rules.
  *
- * Non-subscribers see a gentle prompt to subscribe instead — gifting is a
- * subscriber perk (backend enforces this via quota + Ghost membership).
+ * Non-subscribers see a gentle prompt to subscribe instead.
  */
 export const GiftArticleModal = ({
   open,
@@ -23,20 +30,68 @@ export const GiftArticleModal = ({
   postSlug,
   articleTitle,
 }) => {
+  const [view, setView] = useState('link');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkError, setLinkError] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const {
     name, email, context, submitting, submitted, error,
     setName, setEmail, setContext, handleSubmit, reset, clearBlock,
     quota, blocked, resetsOn, CONTEXT_MAX,
   } = useNominate({ subscriberName, subscriberEmail, subscriberGhostId, postSlug });
 
+  // Create (or fetch the still-active) gift link as soon as the modal
+  // opens in link view -- no extra click needed to get something to copy.
+  useEffect(() => {
+    if (!open || view !== 'link' || !isPaidSubscriber || !postSlug || !API) return;
+    if (linkUrl || linkLoading) return;
+    setLinkLoading(true);
+    setLinkError('');
+    fetch(`${API}/api/gifts/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ story_slug: postSlug }),
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'Could not create a link. Please try again.');
+        setLinkUrl(data.url);
+      })
+      .catch((err) => setLinkError(err.message || 'Could not create a link. Please try again.'))
+      .finally(() => setLinkLoading(false));
+  }, [open, view, isPaidSubscriber, postSlug, linkUrl, linkLoading]);
+
   const handleClose = (nextOpen) => {
     if (!nextOpen) {
       // Reset form state on close so re-opening feels fresh.
       // Preserve `blocked` — subscribers who hit quota shouldn't reset it.
       reset();
+      setView('link');
+      setLinkUrl('');
+      setLinkError('');
+      setLinkCopied(false);
     }
     onOpenChange(nextOpen);
   };
+
+  const onCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(linkUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1600);
+    } catch {
+      /* clipboard blocked — silent */
+    }
+  };
+
+  const whatsappHref = linkUrl
+    ? `https://wa.me/?text=${encodeURIComponent(
+        `I thought you'd find this State of Play story useful: ${articleTitle || ''}. This link unlocks the full story for a short time: ${linkUrl}`,
+      )}`
+    : '#';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -53,18 +108,37 @@ export const GiftArticleModal = ({
               Gift · reader to reader
             </span>
           </div>
-          <DialogTitle
-            className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[26ch]"
-            data-testid="gift-modal-title"
-          >
-            Gift this article to <em className="italic font-normal">someone.</em>
-          </DialogTitle>
-          <DialogDescription
-            className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
-            data-testid="gift-modal-subheading"
-          >
-            They read it in full. No paywall. No sign-up needed on their end.
-          </DialogDescription>
+          {view === 'link' ? (
+            <>
+              <DialogTitle
+                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[26ch]"
+                data-testid="gift-modal-title"
+              >
+                Gift this story to <em className="italic font-normal">anyone.</em>
+              </DialogTitle>
+              <DialogDescription
+                className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
+                data-testid="gift-modal-subheading"
+              >
+                Copy the link or send it on WhatsApp. Anyone can read the full story free for the next 72 hours — no sign-up needed on their end.
+              </DialogDescription>
+            </>
+          ) : (
+            <>
+              <DialogTitle
+                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[26ch]"
+                data-testid="gift-modal-title"
+              >
+                Send this article <em className="italic font-normal">directly.</em>
+              </DialogTitle>
+              <DialogDescription
+                className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
+                data-testid="gift-modal-subheading"
+              >
+                They get a private link by email. No paywall. No sign-up needed on their end.
+              </DialogDescription>
+            </>
+          )}
         </div>
 
         {/* Body */}
@@ -83,139 +157,207 @@ export const GiftArticleModal = ({
                 Subscribe to gift articles →
               </a>
             </div>
-          ) : blocked === 'quota' ? (
-            <div data-testid="gift-modal-blocked-quota" className="max-w-[46ch]">
-              <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                You’ve used all 5 gifts <em className="italic font-normal">this month.</em>
-              </p>
-              <p className="font-plex text-[14px] text-[var(--text-muted)]">
-                Your quota resets on {resetsOn || 'the 1st of next month'}.
-              </p>
-            </div>
-          ) : blocked === 'duplicate' ? (
-            <div data-testid="gift-modal-blocked-duplicate" className="max-w-[46ch]">
-              <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                You’ve already gifted this to them <em className="italic font-normal">twice.</em>
-              </p>
-              <p className="font-plex text-[14px] text-[var(--text-muted)] mb-4">
-                Time to let them decide.
-              </p>
-              <button
-                type="button"
-                onClick={clearBlock}
-                data-testid="gift-modal-blocked-duplicate-try-another"
-                className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
-              >
-                Gift to someone else →
-              </button>
-            </div>
-          ) : !submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-5" data-testid="gift-modal-form">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-2">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={submitting}
-                    placeholder="Jane Doe"
-                    data-testid="gift-modal-name"
-                    className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                    style={{ borderRadius: 'var(--control-radius)' }}
-                  />
-                </div>
-                <div>
-                  <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={submitting}
-                    placeholder="jane@company.com"
-                    data-testid="gift-modal-email"
-                    className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-                    style={{ borderRadius: 'var(--control-radius)' }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-baseline justify-between mb-2">
-                  <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    A short note (optional)
-                  </label>
-                  <span className="font-plex text-[11px] text-[#999999] tabular-nums">
-                    {context.length} / {CONTEXT_MAX}
-                  </span>
-                </div>
-                <textarea
-                  rows={2}
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  disabled={submitting}
-                  placeholder="Thought you’d find this interesting."
-                  data-testid="gift-modal-context"
-                  className="w-full px-3 py-2 bg-transparent border border-[var(--rule)] font-plex text-[14px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
-                  style={{ borderRadius: 'var(--control-radius)' }}
-                />
-              </div>
-
-              {error && (
-                <p
-                  className="font-plex text-[13px] text-[var(--accent-burgundy)]"
-                  data-testid="gift-modal-error"
-                >
-                  {error}
+          ) : view === 'link' ? (
+            <div data-testid="gift-modal-link-view">
+              {linkLoading && !linkUrl && (
+                <p className="font-plex text-[14px] text-[var(--text-muted)]">Creating your link…</p>
+              )}
+              {linkError && (
+                <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-4" data-testid="gift-link-error">
+                  {linkError}
                 </p>
               )}
-
-              <div className="flex items-center gap-4 pt-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  data-testid="gift-modal-submit"
-                  className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
-                  style={{ borderRadius: 'var(--control-radius)' }}
-                >
-                  {submitting ? 'Sending…' : 'Send gift →'}
-                </button>
-                {quota && typeof quota.remaining === 'number' && (
-                  <span
-                    className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)]"
-                    data-testid="gift-modal-quota-label"
+              {linkUrl && (
+                <>
+                  <div
+                    className="flex items-center gap-2 border border-[var(--rule)] px-4 py-3 mb-5"
+                    style={{ borderRadius: 'var(--control-radius)' }}
                   >
-                    {quota.remaining} of {quota.quota} gifts left this month
-                  </span>
-                )}
-              </div>
-            </form>
+                    <span className="font-plex text-[13px] text-[var(--text)] truncate flex-1" data-testid="gift-link-url">
+                      {linkUrl}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={onCopyLink}
+                      data-testid="gift-link-copy"
+                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors"
+                      style={{ borderRadius: 'var(--control-radius)' }}
+                    >
+                      {linkCopied ? 'Copied' : 'Copy link'}
+                    </button>
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="gift-link-whatsapp"
+                      className="h-11 px-6 border border-[var(--rule)] text-[var(--text)] font-plex font-medium text-[13px] uppercase tracking-[0.05em] inline-flex items-center hover:border-[var(--text)] transition-colors"
+                      style={{ borderRadius: 'var(--control-radius)' }}
+                    >
+                      Share on WhatsApp
+                    </a>
+                  </div>
+                </>
+              )}
+              <p className="font-plex text-[13px] text-[var(--text-muted)] mt-6">
+                Want to introduce them directly?{' '}
+                <button
+                  type="button"
+                  onClick={() => setView('email')}
+                  data-testid="gift-modal-switch-email"
+                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+                >
+                  Nominate a reader instead
+                </button>.
+              </p>
+            </div>
           ) : (
-            <div data-testid="gift-modal-confirmation" className="max-w-[46ch]">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-[var(--accent-burgundy)]" strokeWidth={1.5} />
-                <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)]">
-                  Gift sent
-                </span>
-              </div>
-              <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                {`${(name || 'Your friend').trim().split(' ')[0]} will get this${articleTitle ? ' shortly' : ''}.`}
-              </p>
-              <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
-                We’ve sent them a private link. They read it in full: no paywall, no sign-up.
-              </p>
+            <div data-testid="gift-modal-email-view">
               <button
                 type="button"
-                onClick={reset}
-                data-testid="gift-modal-again"
-                className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                onClick={() => setView('link')}
+                data-testid="gift-modal-switch-link"
+                className="font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors mb-6"
               >
-                Gift to someone else →
+                ← Get a shareable link instead
               </button>
+
+              {blocked === 'quota' ? (
+                <div data-testid="gift-modal-blocked-quota" className="max-w-[46ch]">
+                  <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
+                    You’ve used all 5 gifts <em className="italic font-normal">this month.</em>
+                  </p>
+                  <p className="font-plex text-[14px] text-[var(--text-muted)]">
+                    Your quota resets on {resetsOn || 'the 1st of next month'}.
+                  </p>
+                </div>
+              ) : blocked === 'duplicate' ? (
+                <div data-testid="gift-modal-blocked-duplicate" className="max-w-[46ch]">
+                  <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
+                    You’ve already gifted this to them <em className="italic font-normal">twice.</em>
+                  </p>
+                  <p className="font-plex text-[14px] text-[var(--text-muted)] mb-4">
+                    Time to let them decide.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={clearBlock}
+                    data-testid="gift-modal-blocked-duplicate-try-another"
+                    className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                  >
+                    Gift to someone else →
+                  </button>
+                </div>
+              ) : !submitted ? (
+                <form onSubmit={handleSubmit} className="space-y-5" data-testid="gift-modal-form">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        disabled={submitting}
+                        placeholder="Jane Doe"
+                        data-testid="gift-modal-name"
+                        className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+                        style={{ borderRadius: 'var(--control-radius)' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)] mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={submitting}
+                        placeholder="jane@company.com"
+                        data-testid="gift-modal-email"
+                        className="w-full h-11 px-3 bg-transparent border border-[var(--rule)] font-plex text-[14px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+                        style={{ borderRadius: 'var(--control-radius)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-baseline justify-between mb-2">
+                      <label className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                        A short note (optional)
+                      </label>
+                      <span className="font-plex text-[11px] text-[#999999] tabular-nums">
+                        {context.length} / {CONTEXT_MAX}
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={context}
+                      onChange={(e) => setContext(e.target.value)}
+                      disabled={submitting}
+                      placeholder="Thought you’d find this interesting."
+                      data-testid="gift-modal-context"
+                      className="w-full px-3 py-2 bg-transparent border border-[var(--rule)] font-plex text-[14px] leading-relaxed focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
+                      style={{ borderRadius: 'var(--control-radius)' }}
+                    />
+                  </div>
+
+                  {error && (
+                    <p
+                      className="font-plex text-[13px] text-[var(--accent-burgundy)]"
+                      data-testid="gift-modal-error"
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-4 pt-2">
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      data-testid="gift-modal-submit"
+                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
+                      style={{ borderRadius: 'var(--control-radius)' }}
+                    >
+                      {submitting ? 'Sending…' : 'Send gift →'}
+                    </button>
+                    {quota && typeof quota.remaining === 'number' && (
+                      <span
+                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)]"
+                        data-testid="gift-modal-quota-label"
+                      >
+                        {quota.remaining} of {quota.quota} gifts left this month
+                      </span>
+                    )}
+                  </div>
+                </form>
+              ) : (
+                <div data-testid="gift-modal-confirmation" className="max-w-[46ch]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-[var(--accent-burgundy)]" strokeWidth={1.5} />
+                    <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)]">
+                      Gift sent
+                    </span>
+                  </div>
+                  <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
+                    {`${(name || 'Your friend').trim().split(' ')[0]} will get this${articleTitle ? ' shortly' : ''}.`}
+                  </p>
+                  <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
+                    We’ve sent them a private link. They read it in full: no paywall, no sign-up.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={reset}
+                    data-testid="gift-modal-again"
+                    className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                  >
+                    Gift to someone else →
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
