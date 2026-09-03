@@ -14,7 +14,7 @@ Provides:
   * POST   /api/comments/submit           — member-only, creates a comment
                                              with status=pending
   * GET    /api/comments/{slug}           — public, approved comments only
-  * GET    /api/comments/pending          — admin-only (ADMIN_KEY)
+  * GET    /api/comments/pending          — admin-only
   * POST   /api/comments/{id}/moderate    — admin-only, approve or reject
   * DELETE /api/comments/{id}             — admin-only, remove a comment
 
@@ -25,7 +25,8 @@ Datastore:
 
 Dependencies:
   - GHOST_URL, GHOST_ADMIN_API_KEY   (existing)
-  - ADMIN_KEY                        (existing)
+  - Admin gate is admin_auth.require_admin_key_or_session (X-Admin-Key or
+    an admin dashboard session -- see admin_auth.py)
 """
 from __future__ import annotations
 
@@ -38,15 +39,16 @@ from urllib.parse import quote
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Depends
 from pydantic import BaseModel, Field, EmailStr
+
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
-ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 MAX_BODY_LENGTH = 2000
 
@@ -125,13 +127,6 @@ async def _is_paid_ghost_member(email: str) -> bool:
     except Exception as e:
         logger.warning(f'comments membership check failed: {e!r}')
         return False
-
-
-def _require_admin(x_admin_key: Optional[str]):
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
 
 
 def _serialize(doc: dict) -> dict:
@@ -237,13 +232,12 @@ async def get_my_title(email: str):
 
 @router.get('/api/comments/pending')
 async def get_pending_comments(
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Admin-only moderation queue. Newest first.
     Registered before /api/comments/{slug} — FastAPI matches routes in
     registration order, and a literal path must come before a same-shape
     parameterized one or "pending" would be swallowed as a slug value."""
-    _require_admin(x_admin_key)
     if _db is None:
         return []
     cursor = _db.comments.find({'status': 'pending'}).sort('created_at', -1)
@@ -268,14 +262,13 @@ async def get_pending_comments(
 
 @router.get('/api/comments/approved')
 async def get_approved_comments(
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Admin-only. Every live (approved) comment across all posts, newest
     first — the only way to find something to delete after the fact, since
     the public /{slug} endpoint is scoped to one post. Also registered
     before /api/comments/{slug} for the same route-ordering reason as
     /pending above."""
-    _require_admin(x_admin_key)
     if _db is None:
         return []
     cursor = _db.comments.find({'status': 'approved'}).sort('created_at', -1)
@@ -299,9 +292,8 @@ async def get_comments(slug: str):
 async def moderate_comment(
     comment_id: str,
     req: CommentModerate,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
-    _require_admin(x_admin_key)
     if req.action not in ('approve', 'reject'):
         raise HTTPException(status_code=400, detail="action must be 'approve' or 'reject'")
     if _db is None:
@@ -320,9 +312,8 @@ async def moderate_comment(
 @router.delete('/api/comments/{comment_id}')
 async def delete_comment(
     comment_id: str,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
-    _require_admin(x_admin_key)
     if _db is None:
         raise HTTPException(status_code=503, detail='Comment store unavailable')
     result = await _db.comments.delete_one({'comment_id': comment_id})

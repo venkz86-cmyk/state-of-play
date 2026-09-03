@@ -27,7 +27,27 @@ import { TeamsManage } from "./pages/TeamsManage";
 import { TeamsLogin } from "./pages/TeamsLogin";
 import { TeamsEmailsMockup } from "./pages/TeamsEmailsMockup";
 import { CommentsModerationMockup } from "./pages/CommentsModerationMockup";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import { AdminLogin } from "./pages/AdminLogin";
+import { AdminDashboard } from "./pages/AdminDashboard";
 import { Toaster } from "./components/ui/sonner";
+
+// One AdminAuthProvider instance shared by /admin/login and
+// /admin/dashboard/* -- mounting a separate provider per route would lose
+// the just-verified session in memory on navigation from login to
+// dashboard, forcing an unnecessary extra /api/admin/auth/me round-trip
+// and a loading flash. Nested here (not wrapping the whole app) so a
+// normal reader's page load never touches this context at all.
+function AdminArea() {
+  return (
+    <AdminAuthProvider>
+      <Routes>
+        <Route path="login" element={<AdminLogin />} />
+        <Route path="dashboard/*" element={<AdminDashboard />} />
+      </Routes>
+    </AdminAuthProvider>
+  );
+}
 
 function Shell() {
   return (
@@ -55,6 +75,7 @@ function Shell() {
           <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
           <Route path="/admin/comments" element={<CommentsModerationMockup />} />
+          <Route path="/admin/*" element={<AdminArea />} />
 
           {/* Mockup review index — kept for future design previews */}
           <Route path="/mockup" element={<MockupIndex />} />

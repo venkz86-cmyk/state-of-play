@@ -2163,6 +2163,22 @@ async def robots_txt():
 
 app.include_router(api_router)
 
+# Mount the admin dashboard's own session (Sept 2026) -- separate from the
+# reader session (session_auth.py), separate secret, separate JWT audience.
+# Every other module's admin-key-gated endpoint imports
+# require_admin_key_or_session from here, so this must be mounted (i.e.
+# init(db) called) before any request needing it arrives -- import order
+# among the try/except blocks below doesn't matter for that (Python
+# resolves the `from admin_auth import ...` in each of those modules at
+# import time regardless), only that init(db) runs during startup, which
+# it does here.
+try:
+    from admin_auth import router as admin_auth_router, init as admin_auth_init
+    admin_auth_init(db)
+    app.include_router(admin_auth_router)
+except Exception as _e:
+    logging.warning(f"admin_auth module not mounted: {_e!r}")
+
 # Mount Session 2 nominations / story-token / cold-link routes
 try:
     from nominations import router as nominations_router, init as nominations_init
@@ -2288,12 +2304,15 @@ else:
 # serving a stale cached /api/auth/me (e.g. an earlier anonymous 401, from
 # before a reader signed in) would make sign-in look broken on refresh even
 # though the real, current request would have succeeded. Applies to every
-# response under /api/auth/*, success or error alike, regardless of which
-# router or exception handler produced it.
+# response under /api/auth/* (reader session) and /api/admin/* (admin
+# session + every dashboard data endpoint -- subscriber/payment data is
+# exactly the kind of response that must never be served stale), success
+# or error alike, regardless of which router or exception handler produced
+# it.
 @app.middleware("http")
 async def no_store_for_auth(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith('/api/auth/'):
+    if request.url.path.startswith('/api/auth/') or request.url.path.startswith('/api/admin/'):
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
     return response

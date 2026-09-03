@@ -36,15 +36,16 @@ Provides:
                                      Shared by razorpay_orders.py and
                                      server.py's webhook so a plan's labels
                                      are defined once, not per caller.
-  * POST /api/tiers/grant         — admin-only (ADMIN_KEY), grants a tier to
+  * POST /api/tiers/grant         — admin-only, grants a tier to
                                      a member by email. This is the same
                                      action P2's student-verification
                                      "Approve" button will call once that
                                      moderation UI exists; exposed now so it
                                      can be exercised by hand ahead of it.
 
-Dependencies: GHOST_URL, GHOST_ADMIN_API_KEY, ADMIN_KEY (all existing, no new
-env vars).
+Dependencies: GHOST_URL, GHOST_ADMIN_API_KEY (existing, no new env vars).
+Admin gate is admin_auth.require_admin_key_or_session (X-Admin-Key or an
+admin dashboard session -- see admin_auth.py).
 """
 from __future__ import annotations
 
@@ -55,14 +56,15 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
+
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
-ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 # Ghost label -> tier name.
 TIER_LABELS = {
@@ -171,6 +173,34 @@ async def find_ghost_member(email: str, token: str) -> Optional[dict]:
         return members[0] if members else None
     logger.warning(f'Ghost member lookup HTTP {r.status_code} for {email!r}: {r.text[:300]!r}')
     return None
+
+
+async def list_all_ghost_members(token: str) -> list[dict]:
+    """Every Ghost member with their labels, paginated. Promoted here from
+    nudge.py (Sept 2026) -- it was the only paginated "list every member"
+    implementation in the codebase (every other lookup in this file is a
+    single-email filter), and the admin dashboard's subscriber view needs
+    the same capability. nudge.py's refresh_eligibility now imports this
+    instead of keeping its own copy."""
+    members: list[dict] = []
+    page = 1
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        while True:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/admin/members/',
+                params={'limit': 100, 'page': page, 'include': 'labels'},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+            if r.status_code != 200:
+                logger.warning(f'Ghost member list HTTP {r.status_code} on page {page}')
+                break
+            payload = r.json()
+            members.extend(payload.get('members', []))
+            pages = (payload.get('meta', {}).get('pagination') or {}).get('pages') or 1
+            if page >= pages:
+                break
+            page += 1
+    return members
 
 
 async def add_member_label(member_id: str, existing_labels: list[str], label: str) -> bool:
@@ -341,11 +371,8 @@ class GrantTierRequest(BaseModel):
 
 
 @router.post('/api/tiers/grant')
-async def grant_tier(req: GrantTierRequest, x_admin_key: str = Header(default='')):
+async def grant_tier(req: GrantTierRequest, _admin: None = Depends(require_admin_key_or_session)):
     """Admin-only. Grants a tier label to an existing Ghost member by email."""
-    if not ADMIN_KEY or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Forbidden')
-
     label_by_tier = {v: k for k, v in TIER_LABELS.items()}
     tier_label = label_by_tier.get(req.tier)
     if not tier_label:

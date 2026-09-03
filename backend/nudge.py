@@ -18,7 +18,7 @@ publishes it in Ghost), on purpose: the ask was fresh copy each time, not
 one resent template.
 
 Provides:
-  * POST /api/nudge/refresh-eligibility   — admin-only (ADMIN_KEY). Sweeps
+  * POST /api/nudge/refresh-eligibility   — admin-only. Sweeps
     every Ghost member, adds 'nudge-eligible' to anyone whose tier is
     'free' or 'trial', removes it from anyone who has since become
     'standard'/'student'/comped. Safe to re-run any time — each run leaves
@@ -26,7 +26,9 @@ Provides:
     Called by the quarterly reminder before drafting, so the segment is
     never stale by the time the email actually goes out.
 
-Dependencies: GHOST_URL, GHOST_ADMIN_API_KEY, ADMIN_KEY (all existing).
+Dependencies: GHOST_URL, GHOST_ADMIN_API_KEY (existing). Admin gate is
+admin_auth.require_admin_key_or_session (X-Admin-Key or an admin
+dashboard session -- see admin_auth.py).
 """
 from __future__ import annotations
 
@@ -37,15 +39,15 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Depends
 
-from tiers import resolve_tier, is_paid_from_labels
+from tiers import resolve_tier, is_paid_from_labels, list_all_ghost_members
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
-ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 NUDGE_LABEL = 'nudge-eligible'
 
@@ -65,30 +67,6 @@ def _create_ghost_admin_token() -> Optional[str]:
     except Exception as e:
         logger.warning(f'Ghost JWT mint failed: {e!r}')
         return None
-
-
-async def _ghost_list_all_members(token: str) -> list[dict]:
-    """Every Ghost member with their labels, paginated (mirrors server.py's
-    _ghost_seq_for_member listing loop)."""
-    members: list[dict] = []
-    page = 1
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        while True:
-            r = await client.get(
-                f'{GHOST_URL}/ghost/api/admin/members/',
-                params={'limit': 100, 'page': page, 'include': 'labels'},
-                headers={'Authorization': f'Ghost {token}'},
-            )
-            if r.status_code != 200:
-                logger.warning(f'Ghost member list HTTP {r.status_code} on page {page}')
-                break
-            payload = r.json()
-            members.extend(payload.get('members', []))
-            pages = (payload.get('meta', {}).get('pagination') or {}).get('pages') or 1
-            if page >= pages:
-                break
-            page += 1
-    return members
 
 
 async def _set_member_label_state(member_id: str, existing_labels: list[str], label: str, should_have: bool) -> bool:
@@ -118,9 +96,7 @@ async def _set_member_label_state(member_id: str, existing_labels: list[str], la
 
 
 @router.post('/api/nudge/refresh-eligibility')
-async def refresh_eligibility(x_admin_key: str = Header(default='')):
-    if not ADMIN_KEY or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Forbidden')
+async def refresh_eligibility(_admin: None = Depends(require_admin_key_or_session)):
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
@@ -128,7 +104,7 @@ async def refresh_eligibility(x_admin_key: str = Header(default='')):
     if not token:
         raise HTTPException(status_code=503, detail='Failed to create Ghost admin token')
 
-    members = await _ghost_list_all_members(token)
+    members = await list_all_ghost_members(token)
 
     checked = added = removed = failed = 0
     for member in members:

@@ -4,7 +4,7 @@ nominations.py — Session 2 build for TSOP.
 Provides:
   * POST /api/nominations/submit          — create Ghost free member + token + hand off
   * GET  /api/story-token/validate/{token} — token lookup + open counter
-  * POST /api/cold-link/generate          — admin-only cold link mint (ADMIN_KEY)
+  * POST /api/cold-link/generate          — admin-only cold link mint
   * POST /api/cold-link/event             — log signup events, fire Slack
   * POST /api/cold-link/expire-check      — cron sweep, marks expired
   * GET  /s/{token}                       — server-rendered article page
@@ -16,8 +16,9 @@ Datastore:
 Dependencies:
   - GHOST_URL, GHOST_ADMIN_API_KEY     (existing)
   - APPS_SCRIPT_URL                    (existing; falls back to hardcoded)
-  - ADMIN_KEY                          (new — generated and stored in Render env)
   - SLACK_WEBHOOK_URL                  (optional; Slack pings are non-fatal)
+  - Admin gate is admin_auth.require_admin_key_or_session (X-Admin-Key or
+    an admin dashboard session -- see admin_auth.py)
 """
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, EmailStr
 
@@ -41,6 +42,7 @@ from tiers import (
     remove_member_label as _tiers_remove_member_label,
 )
 from resend_email import send_email as _send_email
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,6 @@ APPS_SCRIPT_URL = os.environ.get(
     'https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec',
 )
 
-ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', '')
 
 TOKEN_LIFETIME_DAYS = 14
@@ -679,7 +680,7 @@ async def nominations_quota(subscriber_email: str):
 @router.post('/api/nominations/refund')
 async def nominations_refund(
     req: NominationRefund,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Admin-only. Refund one nomination back to a subscriber's monthly quota
     by deleting the underlying `story_tokens` row.
@@ -699,10 +700,6 @@ async def nominations_refund(
         resets_on: str,
       }
     """
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     if _db is None:
         raise HTTPException(status_code=503, detail='Token store unavailable')
 
@@ -833,12 +830,8 @@ async def gifts_create(req: GiftLinkCreate, request: Request):
 @router.post('/api/admin/gifts/{token_id}/revoke')
 async def gifts_revoke(
     token_id: str,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     if _db is None:
         raise HTTPException(status_code=503, detail='Token store unavailable')
     result = await _db.story_tokens.update_one(
@@ -889,12 +882,8 @@ async def story_token_validate(token: str):
 @router.post('/api/cold-link/generate')
 async def cold_link_generate(
     req: ColdLinkGenerate,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     await _ensure_token_indexes()
 
     token_id = str(uuid.uuid4())
@@ -986,12 +975,8 @@ async def cold_link_event(req: ColdLinkEvent):
 
 @router.post('/api/cold-link/expire-check')
 async def cold_link_expire_check(
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     if _db is None:
         return {'expired_count': 0}
     result = await _db.story_tokens.update_many(
@@ -1004,16 +989,11 @@ async def cold_link_expire_check(
 @router.get('/api/admin/nominations/access')
 async def list_nomination_access(
     status_filter: str = 'active',
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Admin-only visibility into who currently has a real, time-boxed
-    nomination access grant -- the one thing about this feature that had
-    no dashboard at all. `status_filter` accepts 'active' (default),
+    nomination access grant. `status_filter` accepts 'active' (default),
     'expired', or 'all'."""
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     if _db is None:
         return {'grants': []}
 
@@ -1041,7 +1021,7 @@ async def list_nomination_access(
 @router.post('/api/admin/nominations/access/{nominee_email}/revoke')
 async def revoke_nomination_access(
     nominee_email: str,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Admin-only early revoke -- strips NOMINATION_ACCESS_LABEL and marks
     the grant 'expired' immediately, without waiting for the sweep.
@@ -1049,10 +1029,6 @@ async def revoke_nomination_access(
     email: an early manual revoke (abuse, a mistake, a duplicate) isn't
     the same funnel moment as a grant running its natural course, and
     shouldn't be pitched a subscription on that basis."""
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
     if _db is None:
         raise HTTPException(status_code=503, detail='Token store unavailable')
 
@@ -1079,19 +1055,13 @@ async def revoke_nomination_access(
 
 @router.post('/api/nominations/access/expire-check')
 async def nomination_access_expire_check(
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+    _admin: None = Depends(require_admin_key_or_session),
 ):
     """Cron sweep (admin-triggered, same pattern as /api/cold-link/expire-check):
     for every nomination_access grant past its expires_at, strip
     NOMINATION_ACCESS_LABEL from the nominee's Ghost member and send the
-    expiry/conversion email, once. Nothing in this codebase calls this on
-    a schedule yet -- needs a periodic trigger wired up outside this
-    session's reach (a Render Cron Job hitting this endpoint, same as any
-    other admin-key-gated sweep here)."""
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
+    expiry/conversion email, once. Wired to run daily via the Apps
+    Script's own time-driven trigger (runNominationAccessExpiryCheck)."""
     if _db is None:
         return {'expired_count': 0}
 
