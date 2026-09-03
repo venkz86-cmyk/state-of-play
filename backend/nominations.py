@@ -34,6 +34,8 @@ from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, EmailStr
 
+from session_auth import get_current_member
+
 logger = logging.getLogger(__name__)
 
 # ─── Configuration ───────────────────────────────────────────────────────────
@@ -51,6 +53,14 @@ SLACK_WEBHOOK_URL = os.environ.get('SLACK_WEBHOOK_URL', '')
 
 TOKEN_LIFETIME_DAYS = 14
 PUBLIC_BASE_URL = 'https://www.stateofplay.club'
+
+# Gift-a-story v0 (Sept 2 2026): a subscriber-generated link, WhatsApp-first.
+# Flat 72h expiry from creation (not a graduated grant system — see the plan
+# file for the fuller brief this trims down from) and 10 new links per
+# subscriber per rolling 30 days.
+GIFT_LINK_TTL_HOURS = 72
+GIFT_LINK_CREATE_LIMIT_30D = 10
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # ─── Module state injected by server.py at boot ──────────────────────────────
 _db = None  # Motor Mongo client
@@ -305,6 +315,24 @@ def _month_reset_label() -> str:
     return nxt.strftime('%-d %B') if hasattr(nxt, 'strftime') else '1st of next month'
 
 
+async def _count_gift_links_30d(subscriber_email: str) -> int:
+    """Count this subscriber's gift-link creations in the trailing 30 days.
+    Reuses the same (subscriber_email, token_type, created_at) index the
+    nomination quota already relies on -- no new index needed."""
+    if _db is None or not subscriber_email:
+        return 0
+    since = _utcnow() - timedelta(days=30)
+    try:
+        return await _db.story_tokens.count_documents({
+            'subscriber_email': subscriber_email.lower().strip(),
+            'token_type': 'gift',
+            'created_at': {'$gte': since},
+        })
+    except Exception as e:
+        logger.warning(f'gift-link 30d count failed: {e!r}')
+        return 0
+
+
 # ─── Pydantic models ─────────────────────────────────────────────────────────
 class NominationSubmit(BaseModel):
     subscriber_ghost_id: Optional[str] = ''
@@ -325,6 +353,10 @@ class ColdLinkEvent(BaseModel):
     token_id: str
     event_type: str = Field(..., description='signup_free | signup_paid | open')
     nominee_email: Optional[EmailStr] = None
+
+
+class GiftLinkCreate(BaseModel):
+    story_slug: str = Field(..., min_length=1)
 
 
 class NominationRefund(BaseModel):
@@ -523,6 +555,99 @@ async def nominations_refund(
     }
 
 
+@router.post('/api/gifts/create')
+async def gifts_create(req: GiftLinkCreate, request: Request):
+    """Gift-a-story v0. Auth comes from the real session cookie, never the
+    request body -- this is the fix for the brief's "ship blocker": a
+    client can't spoof its way to a gift link by claiming an email or paid
+    status. One active link per (subscriber, story); repeated calls return
+    the same link without touching the 30-day creation quota."""
+    member = await get_current_member(request)
+    if not member:
+        raise HTTPException(status_code=401, detail='Sign in to gift a story.')
+    if not member.get('is_paid'):
+        raise HTTPException(status_code=403, detail='Gifting is a subscriber perk.')
+
+    await _ensure_token_indexes()
+
+    ghost_id = member.get('ghost_member_id') or ''
+    email = (member.get('email') or '').lower().strip()
+    slug = req.story_slug.strip()
+    now = _utcnow()
+
+    existing = None
+    if _db is not None:
+        existing = await _db.story_tokens.find_one({
+            'subscriber_ghost_id': ghost_id,
+            'post_slug': slug,
+            'token_type': 'gift',
+            'status': 'active',
+            'expires_at': {'$gt': now},
+        })
+    if existing:
+        return {
+            'url': f'{PUBLIC_BASE_URL}/s/{existing["token_id"]}',
+            'expires_at': existing['expires_at'].isoformat(),
+            'reused': True,
+        }
+
+    used = await _count_gift_links_30d(email)
+    if used >= GIFT_LINK_CREATE_LIMIT_30D:
+        raise HTTPException(
+            status_code=429,
+            detail=f'You have used all {GIFT_LINK_CREATE_LIMIT_30D} gift links for this 30-day period.',
+        )
+
+    token_id = str(uuid.uuid4())
+    expires = now + timedelta(hours=GIFT_LINK_TTL_HOURS)
+    doc = {
+        'token_id': token_id,
+        'post_slug': slug,
+        'token_type': 'gift',
+        'created_by': email,
+        'subscriber_ghost_id': ghost_id,
+        'subscriber_name': member.get('name') or '',
+        'subscriber_email': email,
+        'nominee_name': '',
+        'nominee_email': '',
+        'personal_note': '',
+        'created_at': now,
+        'expires_at': expires,
+        'open_count': 0,
+        'status': 'active',
+    }
+    if _db is not None:
+        try:
+            await _db.story_tokens.insert_one(doc)
+        except Exception as e:
+            logger.warning(f'gift token insert failed: {e!r}')
+            raise HTTPException(status_code=503, detail='Could not create the link. Please try again.')
+
+    return {
+        'url': f'{PUBLIC_BASE_URL}/s/{token_id}',
+        'expires_at': expires.isoformat(),
+        'reused': False,
+    }
+
+
+@router.post('/api/admin/gifts/{token_id}/revoke')
+async def gifts_revoke(
+    token_id: str,
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=503, detail='Admin key not configured on server')
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail='Invalid admin key')
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Token store unavailable')
+    result = await _db.story_tokens.update_one(
+        {'token_id': token_id, 'token_type': 'gift'},
+        {'$set': {'status': 'revoked'}},
+    )
+    return {'revoked': result.modified_count == 1}
+
+
 @router.get('/api/story-token/validate/{token}')
 async def story_token_validate(token: str):
     if _db is None:
@@ -704,15 +829,33 @@ EXPIRED_HTML = """<!doctype html>
 
 
 def _attribution_block(token_doc: dict) -> str:
+    token_type = token_doc.get('token_type')
     subscriber_first = (token_doc.get('subscriber_name') or '').split(' ')[0]
-    is_nom = token_doc.get('token_type') == 'nomination' and subscriber_first
     cta = f'{PUBLIC_BASE_URL}?ref=shared-story'
-    if is_nom:
+    if token_type == 'nomination' and subscriber_first:
         return f"""
         <aside class="tsop-attribution" data-kind="nomination">
           <p class="tsop-attribution__hed">{html.escape(subscriber_first)} thought you should read this.</p>
           <p>Reported intelligence on the business of Indian sport. No noise. No aggregation. Just reporting.</p>
           <a class="tsop-attribution__cta" href="{cta}">Start reading free &rarr;</a>
+        </aside>
+        """
+    if token_type == 'gift':
+        expires_at = token_doc.get('expires_at')
+        if isinstance(expires_at, datetime):
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            expiry_str = expires_at.astimezone(IST).strftime('%d %B, %I:%M %p IST')
+        else:
+            expiry_str = 'soon'
+        tlf_cta = f'{PUBLIC_BASE_URL}/left-field?ref=shared-story'
+        signin_cta = f'{PUBLIC_BASE_URL}/login?ref=shared-story'
+        return f"""
+        <aside class="tsop-attribution" data-kind="gift">
+          <p class="tsop-attribution__hed">A State of Play subscriber unlocked this story for you.</p>
+          <p>Access on this browser ends {html.escape(expiry_str)}. Reported intelligence on the business of Indian sport &mdash; no noise, no aggregation, just reporting.</p>
+          <a class="tsop-attribution__cta" href="{cta}">Read The State of Play every week &rarr;</a>
+          <p class="tsop-attribution__links"><a href="{tlf_cta}">Get The Left Field free</a> &middot; <a href="{signin_cta}">Already a member? Sign in</a></p>
         </aside>
         """
     return f"""
@@ -746,8 +889,17 @@ def _related_card(post: dict) -> str:
 
 
 def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str) -> str:
+    is_gift = token_doc.get('token_type') == 'gift'
     title = html.escape(post.get('title') or 'The State of Play')
+    # `page_title`/`meta_description` are what crawlers, browser tabs and
+    # WhatsApp previews see -- gift-specific for gift links, per the
+    # brief's WhatsApp-friendly-metadata section. `title`/`excerpt` stay
+    # the real article title/standfirst shown on the page itself.
+    page_title = f'{title} — gifted by a State of Play reader' if is_gift else f'{title} — The State of Play'
     excerpt = html.escape((post.get('custom_excerpt') or post.get('excerpt') or '')[:200])
+    meta_description = html.escape(
+        'A State of Play subscriber has unlocked this story for you. Read it free for a limited time.'
+    ) if is_gift else excerpt
     image = html.escape(post.get('feature_image') or f'{PUBLIC_BASE_URL}/og-default.png')
     # Dynamic, branded OG card (Gloock masthead + headline) for socials
     og_card = f"{PUBLIC_BASE_URL}/api/og-image/{html.escape(post.get('slug') or '')}"
@@ -766,21 +918,21 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
-<title>{title} — The State of Play</title>
+<title>{page_title}</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="{excerpt}">
+<meta name="description" content="{meta_description}">
 <meta name="robots" content="noindex">
 <link rel="canonical" href="{canonical_url}">
 <meta property="og:type" content="article">
-<meta property="og:title" content="{title}">
-<meta property="og:description" content="{excerpt}">
+<meta property="og:title" content="{page_title}">
+<meta property="og:description" content="{meta_description}">
 <meta property="og:image" content="{og_card}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="{PUBLIC_BASE_URL}/s/{html.escape(token_id)}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{title}">
-<meta name="twitter:description" content="{excerpt}">
+<meta name="twitter:title" content="{page_title}">
+<meta name="twitter:description" content="{meta_description}">
 <meta name="twitter:image" content="{og_card}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -960,6 +1112,12 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     transition:opacity .15s ease;
   }}
   .tsop-attribution__cta:hover{{opacity:.88;}}
+  .tsop-attribution__links{{
+    font-family:var(--ui);font-size:13px;
+    color:#999;margin:16px 0 0;
+  }}
+  .tsop-attribution__links a{{color:#ccc;text-decoration:underline;text-underline-offset:2px;}}
+  .tsop-attribution__links a:hover{{color:#fff;}}
 
   /* ─── Related ─── */
   .tsop-related{{
