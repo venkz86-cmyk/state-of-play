@@ -69,6 +69,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled
+from payments import fetch_and_record
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +225,11 @@ async def verify_subscription(req: VerifySubscriptionRequest):
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
+
+    await fetch_and_record(
+        _razorpay_client, req.razorpay_payment_id, source='subscription_verify',
+        fallback_email=email, fallback_plan='',
+    )
 
     return {'verified': True, 'email': email}
 

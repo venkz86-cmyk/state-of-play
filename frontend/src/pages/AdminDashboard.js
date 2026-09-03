@@ -3,12 +3,16 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { Overline } from '../components/MockupLayout';
 import { AdminNav } from '../components/admin/AdminNav';
+import { SubscribersPanel } from '../components/admin/SubscribersPanel';
+import { RenewalsPanel } from '../components/admin/RenewalsPanel';
+import { BackfillPanel } from '../components/admin/BackfillPanel';
 
-// Phase 1 ships the shell + nav; each panel below is real once its own
-// phase lands (Phase 2: Subscribers/Renewals; Phase 3: Comments/Nominated
-// readers/Trials/Referrals; Phase 4: Corporate accounts; Phase 5: Links).
-// Placeholder, not fake data -- says plainly what's coming rather than
-// showing invented numbers.
+// Phase 1 shipped the shell + nav; Phase 2 (Subscribers/Renewals/the
+// payments ledger) is real below. Each remaining panel is real once its
+// own phase lands (Phase 3: Comments/Nominated readers/Trials/Referrals;
+// Phase 4: Corporate accounts; Phase 5: Links). Placeholder, not fake
+// data -- says plainly what's coming rather than showing invented
+// numbers.
 const ComingSoonPanel = ({ title, phase }) => (
   <div className="max-w-[560px]">
     <h2 className="font-editorial font-semibold text-[22px] leading-tight mb-3">{title}</h2>
@@ -18,15 +22,16 @@ const ComingSoonPanel = ({ title, phase }) => (
   </div>
 );
 
-const OverviewPanel = () => (
-  <div className="max-w-[560px]">
+const OverviewPanel = ({ onAuthError }) => (
+  <div>
     <h2 className="font-editorial font-semibold text-[22px] leading-tight mb-3">
       Signed in.
     </h2>
-    <p className="font-plex text-[14px] text-[var(--text-muted)] leading-relaxed">
-      The shell and sign-in are live. Subscriber data, payments, and
-      everything else land in the phases that follow.
+    <p className="font-plex text-[14px] text-[var(--text-muted)] leading-relaxed mb-8 max-w-[560px]">
+      Subscribers and Renewals are live. Everything else lands in the
+      phases that follow.
     </p>
+    <BackfillPanel onAuthError={onAuthError} />
   </div>
 );
 
@@ -81,15 +86,21 @@ export const AdminDashboard = () => {
     return null;
   }
 
+  // Every panel's data hook calls this on a 401/403 from adminFetch --
+  // the stale token is already cleared by adminFetch itself, this just
+  // sends the reader back to sign in again instead of showing a
+  // confusing empty table.
+  const onAuthError = () => navigate('/admin/login', { replace: true });
+
   return (
     <div data-testid="page-admin-dashboard" className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <DashboardHeader />
       <AdminNav />
       <main className="max-w-[1280px] mx-auto px-6 lg:px-12 py-10">
         <Routes>
-          <Route index element={<OverviewPanel />} />
-          <Route path="subscribers" element={<ComingSoonPanel title="Subscribers" phase="Phase 2" />} />
-          <Route path="renewals" element={<ComingSoonPanel title="Renewals" phase="Phase 2" />} />
+          <Route index element={<OverviewPanel onAuthError={onAuthError} />} />
+          <Route path="subscribers" element={<SubscribersPanel onAuthError={onAuthError} />} />
+          <Route path="renewals" element={<RenewalsPanel onAuthError={onAuthError} />} />
           <Route path="comments" element={<ComingSoonPanel title="Comments" phase="Phase 3" />} />
           <Route path="nominated" element={<ComingSoonPanel title="Nominated readers" phase="Phase 3" />} />
           <Route path="corporate" element={<ComingSoonPanel title="Corporate accounts" phase="Phase 4" />} />

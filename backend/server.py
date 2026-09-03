@@ -1121,6 +1121,26 @@ async def razorpay_webhook(request: Request):
                                 if plan == 'trial' and start_trial:
                                     await start_trial(email, member.get('id', ''))
 
+                                # payments.py's ledger -- the one place any
+                                # of this becomes queryable later, instead
+                                # of only living in this Ghost note (which
+                                # gets overwritten by the next payment) and
+                                # the Slack message below.
+                                if record_payment:
+                                    await record_payment(
+                                        payment_id=payment_id,
+                                        order_id=payment_entity.get('order_id') or '',
+                                        subscription_id=subscription_entity.get('id') or '',
+                                        email=email,
+                                        name=name,
+                                        amount=amount,
+                                        currency=payment_entity.get('currency') or 'INR',
+                                        plan=plan or 'standard',
+                                        source='webhook',
+                                        razorpay_created_at_unix=payment_entity.get('created_at'),
+                                        raw_notes=payment_entity.get('notes') or {},
+                                    )
+
                                 badge = ':new: ' if was_new else ''
                                 slack_text = (
                                     f"{badge}{'New' if was_new else 'Upgraded'} TSOP Subscriber\n"
@@ -2234,6 +2254,17 @@ except Exception as _e:
     logging.warning(f"referrals module not mounted: {_e!r}")
     record_referral_earn = None
 
+# Mount the payments ledger (Sept 2026) -- must mount before
+# razorpay_orders/razorpay_subscriptions below, which both call its
+# fetch_and_record() from their own verify-* endpoints.
+try:
+    from payments import router as payments_router, init as payments_init, record_payment
+    payments_init(db, razorpay_client)
+    app.include_router(payments_router)
+except Exception as _e:
+    logging.warning(f"payments module not mounted: {_e!r}")
+    record_payment = None
+
 # Mount dynamic Razorpay Orders checkout (replaces static Payment Buttons
 # for plan/add-on combinations ahead of the Oct 1 launch)
 try:
@@ -2242,6 +2273,15 @@ try:
     app.include_router(razorpay_orders_router)
 except Exception as _e:
     logging.warning(f"razorpay_orders module not mounted: {_e!r}")
+
+# Mount the admin dashboard's subscriber-aggregation endpoint (Phase 2) --
+# after payments (above), which it imports from.
+try:
+    from admin_dashboard import router as admin_dashboard_router, init as admin_dashboard_init
+    admin_dashboard_init(db, razorpay_client)
+    app.include_router(admin_dashboard_router)
+except Exception as _e:
+    logging.warning(f"admin_dashboard module not mounted: {_e!r}")
 
 # Mount the quarterly free-to-paid nudge label sync
 try:

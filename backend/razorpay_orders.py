@@ -48,6 +48,7 @@ from pydantic import BaseModel, EmailStr
 from tiers import PLAN_LABELS, ensure_member_labeled
 from trial_tracking import start_trial
 from referrals import resolve_referral_code, REFERRED_SIGNUP_AMOUNT_PAISE, REFERRED_SIGNUP_LABEL
+from payments import fetch_and_record
 
 logger = logging.getLogger(__name__)
 
@@ -218,5 +219,13 @@ async def verify_payment(req: VerifyPaymentRequest):
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
+
+    # Record what Razorpay itself says was charged -- not PLAN_PRICING,
+    # which can drift from the actual amount (a referral discount, a
+    # community offer already applied at create-order time).
+    await fetch_and_record(
+        _razorpay_client, req.razorpay_payment_id, source='order_verify',
+        fallback_email=email, fallback_plan=req.plan,
+    )
 
     return {'verified': True, 'email': email, 'plan': req.plan}
