@@ -3,8 +3,6 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dial
 import { Gift, Sparkles } from 'lucide-react';
 import { useNominate } from '../hooks/useNominate';
 
-const API = process.env.REACT_APP_BACKEND_URL;
-
 /**
  * GiftArticleModal — subscriber-only "gift this story" surface.
  *
@@ -44,25 +42,52 @@ export const GiftArticleModal = ({
 
   // Create (or fetch the still-active) gift link as soon as the modal
   // opens in link view -- no extra click needed to get something to copy.
+  // Relative path, not an absolute cross-origin URL: this call needs the
+  // session cookie, and going cross-site with it is what let Safari's
+  // iOS tracking prevention block it outright. A 20s cap means a real
+  // failure surfaces as a message instead of an endless spinner.
   useEffect(() => {
-    if (!open || view !== 'link' || !isPaidSubscriber || !postSlug || !API) return;
+    if (!open || view !== 'link' || !isPaidSubscriber || !postSlug) return;
     if (linkUrl || linkLoading) return;
+    let cancelled = false;
     setLinkLoading(true);
     setLinkError('');
-    fetch(`${API}/api/gifts/create`, {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    fetch('/api/gifts/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ story_slug: postSlug }),
+      signal: controller.signal,
     })
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data.detail || 'Could not create a link. Please try again.');
-        setLinkUrl(data.url);
+        if (!cancelled) setLinkUrl(data.url);
       })
-      .catch((err) => setLinkError(err.message || 'Could not create a link. Please try again.'))
-      .finally(() => setLinkLoading(false));
-  }, [open, view, isPaidSubscriber, postSlug, linkUrl, linkLoading]);
+      .catch((err) => {
+        if (cancelled) return;
+        setLinkError(
+          err.name === 'AbortError'
+            ? 'Taking longer than expected. Please try again.'
+            : err.message || 'Could not create a link. Please try again.',
+        );
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        if (!cancelled) setLinkLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+    // linkUrl/linkLoading are read (as a guard) but intentionally not in
+    // the deps below -- setLinkLoading(true) above would otherwise
+    // re-trigger this effect and abort the request it just started.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, view, isPaidSubscriber, postSlug]);
 
   const handleClose = (nextOpen) => {
     if (!nextOpen) {
