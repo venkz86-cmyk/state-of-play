@@ -122,6 +122,15 @@ def _compute_expiry(
     if last_payment and last_payment.get('razorpay_created_at'):
         try:
             paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
+            # payments._iso() already attaches UTC before this string is
+            # built, so this should always be aware -- guarded anyway,
+            # matching the trial/nomination branches above, since a naive
+            # datetime here is exactly what crashed this endpoint once a
+            # real payment's date flowed through it (real MongoDB returns
+            # naive datetimes by default; the fake-Mongo test harness this
+            # was verified against didn't, which is why it wasn't caught).
+            if paid_at.tzinfo is None:
+                paid_at = paid_at.replace(tzinfo=timezone.utc)
             return (paid_at + timedelta(days=SYNTHETIC_CYCLE_DAYS)).isoformat(), 'payment_estimate'
         except (ValueError, TypeError):
             pass
@@ -163,8 +172,10 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
         if paid and computed_expiry:
             try:
                 exp_dt = datetime.fromisoformat(computed_expiry)
+                if exp_dt.tzinfo is None:
+                    exp_dt = exp_dt.replace(tzinfo=timezone.utc)
                 expired_but_still_paid = exp_dt < datetime.now(timezone.utc)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         rows.append({

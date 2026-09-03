@@ -75,11 +75,32 @@ async def _ensure_indexes():
         logger.warning(f'payments index ensure failed (non-fatal): {e!r}')
 
 
+def _iso(dt) -> Optional[str]:
+    """Motor/MongoDB returns naive datetimes by default (a UTC value with
+    no tzinfo attached) unless the client was created with tz_aware=True
+    -- this codebase's isn't. A bare .isoformat() on that silently drops
+    the UTC-ness: the resulting string carries no offset, so (a) a JS
+    `new Date(iso)` reading it on the frontend interprets it as LOCAL
+    time rather than UTC, and (b) parsing it back into a datetime and
+    comparing it against an aware `datetime.now(timezone.utc)` elsewhere
+    raises TypeError (confirmed live -- this is exactly what crashed
+    GET /api/admin/subscribers the first time a real payment's date flowed
+    through this path; the fake-Mongo test harness never caught it
+    because it happened to only ever store already-aware datetimes).
+    Always attach UTC explicitly before turning a Mongo datetime into a
+    string -- every serialization site in this module goes through here."""
+    if not isinstance(dt, datetime):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
 def _serialize(doc: dict) -> dict:
     out = {k: v for k, v in doc.items() if k != '_id'}
     for key in ('razorpay_created_at', 'created_at'):
-        if isinstance(out.get(key), datetime):
-            out[key] = out[key].isoformat()
+        if key in out:
+            out[key] = _iso(out[key])
     return out
 
 
@@ -203,10 +224,7 @@ async def get_subscriber_payment_summaries() -> dict:
                     'amount': doc.get('amount'),
                     'currency': doc.get('currency'),
                     'plan': doc.get('plan'),
-                    'razorpay_created_at': (
-                        doc['razorpay_created_at'].isoformat()
-                        if isinstance(doc.get('razorpay_created_at'), datetime) else None
-                    ),
+                    'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
                 },
                 'total_paid': {'INR': 0, 'USD': 0},
                 'payment_count': 0,
@@ -341,9 +359,8 @@ async def backfill_status(_admin: None = Depends(require_admin_key_or_session)):
     doc = await _db.payments_meta.find_one({'_id': 'backfill'})
     if not doc:
         return {'last_run_at': None}
-    last_run_at = doc.get('last_run_at')
     return {
-        'last_run_at': last_run_at.isoformat() if isinstance(last_run_at, datetime) else None,
+        'last_run_at': _iso(doc.get('last_run_at')),
         'scanned': doc.get('scanned'),
         'recorded': doc.get('recorded'),
         'skipped_existing': doc.get('skipped_existing'),
