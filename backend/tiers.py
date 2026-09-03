@@ -68,6 +68,7 @@ ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 TIER_LABELS = {
     'tier-student': 'student',
     'tier-trial': 'trial',
+    'nomination-access': 'nomination',
 }
 
 # Every label that confers real paid access. Single source of truth — was

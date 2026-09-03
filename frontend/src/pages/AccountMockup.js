@@ -75,7 +75,9 @@ export const AccountMockup = () => {
   const memberName = (user?.name?.split(' ')[0]) || 'Reader';
   const memberEmail = user?.email || '';
   const planLabel = canAccessPremium
-    ? (details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
+    ? (details?.subscription_status === 'nomination'
+        ? 'Trial'
+        : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
     : 'Free';
 
   // Razorpay annual subscriptions are one-shot — they expire, not auto-renew.

@@ -367,6 +367,27 @@ async def get_member_details(request: MemberVerifyRequest):
                                     f"email={request.email} created_at={created_at!r} err={e!r}"
                                 )
                                 subscription_end = None
+                    elif 'nomination-access' in label_names:
+                        # Real, time-boxed access from being nominated by a
+                        # subscriber (nominations.py) -- neither a Ghost-native
+                        # subscription nor a Razorpay label, so it hit none of
+                        # the branches above and the account page showed a
+                        # blank expiry. `db` is the same Mongo handle
+                        # nominations_init(db) already wires up elsewhere in
+                        # this file -- no import from nominations.py needed.
+                        nomination_doc = None
+                        if db is not None:
+                            nomination_doc = await db.nomination_access.find_one(
+                                {'nominee_email': (member.get('email') or request.email).lower().strip()}
+                            )
+                        subscription_status = 'nomination'
+                        if nomination_doc:
+                            started_at = nomination_doc.get('started_at')
+                            expires_at = nomination_doc.get('expires_at')
+                            subscription_start = started_at.isoformat() if started_at else member.get('created_at')
+                            subscription_end = expires_at.isoformat() if expires_at else None
+                        else:
+                            subscription_start = member.get('created_at')
                     elif status == 'comped':
                         subscription_start = member.get('created_at')
                         subscription_status = 'comped'
