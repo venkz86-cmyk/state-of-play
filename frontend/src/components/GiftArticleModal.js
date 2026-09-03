@@ -151,16 +151,16 @@ export const GiftArticleModal = ({
           ) : (
             <>
               <DialogTitle
-                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[26ch]"
+                className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[28ch]"
                 data-testid="gift-modal-title"
               >
-                Send this article <em className="italic font-normal">directly.</em>
+                Some people shouldn’t <em className="italic font-normal">just read this one.</em>
               </DialogTitle>
               <DialogDescription
                 className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
                 data-testid="gift-modal-subheading"
               >
-                They get a private link by email. No paywall. No sign-up needed on their end.
+                Put their name forward. They’ll know it’s from you, one note and two weeks of full access.
               </DialogDescription>
             </>
           )}
@@ -339,7 +339,7 @@ export const GiftArticleModal = ({
                     </p>
                   )}
 
-                  <div className="flex items-center gap-4 pt-2">
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={submitting}
@@ -347,15 +347,15 @@ export const GiftArticleModal = ({
                       className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
-                      {submitting ? 'Sending…' : 'Send gift →'}
+                      {submitting ? 'Sending…' : 'Put their name forward →'}
                     </button>
                     {quota && typeof quota.remaining === 'number' && (
-                      <span
-                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)]"
+                      <p
+                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)] mt-3"
                         data-testid="gift-modal-quota-label"
                       >
-                        {quota.remaining} of {quota.quota} gifts left this month
-                      </span>
+                        {quota.remaining} of {quota.quota} left this month
+                      </p>
                     )}
                   </div>
                 </form>
@@ -364,14 +364,14 @@ export const GiftArticleModal = ({
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-[var(--accent-burgundy)]" strokeWidth={1.5} />
                     <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)]">
-                      Gift sent
+                      Name put forward
                     </span>
                   </div>
                   <p className="font-editorial font-semibold text-[20px] leading-[1.2] text-[var(--text)] mb-3">
-                    {`${(name || 'Your friend').trim().split(' ')[0]} will get this${articleTitle ? ' shortly' : ''}.`}
+                    {`${(name || 'Your friend').trim().split(' ')[0]} will hear from us shortly.`}
                   </p>
                   <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
-                    We’ve sent them a private link. They read it in full: no paywall, no sign-up.
+                    One note, saying you put their name forward. Two weeks of full access to this story, no sign-up, no paywall on their end.
                   </p>
                   <button
                     type="button"
@@ -379,7 +379,7 @@ export const GiftArticleModal = ({
                     data-testid="gift-modal-again"
                     className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
-                    Gift to someone else →
+                    Put another name forward →
                   </button>
                 </div>
               )}
