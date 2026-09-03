@@ -26,14 +26,19 @@ export const AuthProvider = ({ children }) => {
   // On mount: ask the backend who (if anyone) the session cookie belongs
   // to. Replaces the old synchronous localStorage read — there's no local
   // cache of "signed in" any more, the cookie is the only source of truth.
+  //
+  // This call (and every other session-cookie call in this file) uses a
+  // *relative* path, not `${API}/...`. The cookie is set by
+  // stateofplay-backend.onrender.com; calling it directly from
+  // stateofplay.club makes it a cross-site cookie, which Safari on iOS
+  // blocks outright regardless of SameSite/Secure. vercel.json already
+  // proxies `/api/:path*` to the backend server-side, so a relative path
+  // is same-origin from the browser's point of view -- no cross-site
+  // cookie, nothing for Safari's tracking prevention to block.
   useEffect(() => {
     const checkSession = async () => {
-      if (!API) {
-        setLoading(false);
-        return;
-      }
       try {
-        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setUser(shapeMember(data));
@@ -62,11 +67,8 @@ export const AuthProvider = ({ children }) => {
   // whether the email matched anything -- no enumeration signal to read
   // from the response.
   const requestCode = useCallback(async (email) => {
-    if (!API) {
-      throw new Error('Backend not available');
-    }
     try {
-      const res = await fetch(`${API}/api/auth/request-code`, {
+      const res = await fetch('/api/auth/request-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -85,13 +87,9 @@ export const AuthProvider = ({ children }) => {
   // set by the backend). This is what used to be verifyMember(email) --
   // now backed by a proven identity instead of a claimed email string.
   const verifyCode = useCallback(async (email, code) => {
-    if (!API) {
-      throw new Error('Backend not available');
-    }
-
     let data;
     try {
-      const res = await fetch(`${API}/api/auth/verify-code`, {
+      const res = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -134,9 +132,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout - clear the session cookie server-side, then the local state.
   const logout = useCallback(async () => {
-    if (API) {
-      fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => { /* non-fatal */ });
-    }
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => { /* non-fatal */ });
     setUser(null);
   }, []);
 

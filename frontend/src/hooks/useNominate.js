@@ -101,20 +101,15 @@ export function useNominate({
       return setError('You’re already a reader. Try nominating someone else.');
     }
 
-    // Guard: without a configured backend URL the fetch would silently
-    // resolve to a relative path (e.g. /account/api/nominations/submit)
-    // and 404 on Vercel — the exact "no server log, quota untouched"
-    // symptom we've seen in production.
-    if (!API) {
-      console.error('nominate: REACT_APP_BACKEND_URL is not set at build time');
-      setError('Could not reach the server. Please refresh and try again.');
-      setSubmitting(false);
-      return;
-    }
-
     setSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/nominations/submit`, {
+      // Relative path, not `${API}/...`: this call needs the session
+      // cookie now, and a cross-site cookie to stateofplay-backend.onrender.com
+      // is exactly what Safari on iOS blocks outright. vercel.json proxies
+      // /api/:path* to the backend server-side, so this stays same-origin
+      // from the browser's point of view -- the leading slash makes it
+      // root-relative regardless of what page the reader is on.
+      const res = await fetch('/api/nominations/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
