@@ -35,6 +35,12 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, EmailStr
 
 from session_auth import get_current_member
+from tiers import (
+    find_ghost_member as _tiers_find_ghost_member,
+    add_member_label as _tiers_add_member_label,
+    remove_member_label as _tiers_remove_member_label,
+)
+from resend_email import send_email as _send_email
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +67,19 @@ PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 GIFT_LINK_TTL_HOURS = 72
 GIFT_LINK_CREATE_LIMIT_30D = 10
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# Real, time-boxed full-site access for a nomination (Sept 3 2026): the
+# nomination copy now promises "two weeks of full access, every story" --
+# not just the one story linked in the email. NOMINATION_ACCESS_DAYS
+# matches TOKEN_LIFETIME_DAYS by construction (both are "two weeks"), but
+# they're two separate mechanisms: the story_tokens row still gates the
+# one linked /s/{token} page with no sign-in required; NOMINATION_ACCESS_LABEL
+# is what makes tiers.is_paid_from_labels (and therefore session_auth's
+# live entitlement check, and the article paywall) say yes to EVERY story,
+# once the nominee signs in with their email (no password, no signup --
+# just proving it's them, the same code-based flow every reader uses).
+NOMINATION_ACCESS_LABEL = 'nomination-access'
+NOMINATION_ACCESS_DAYS = 14
 
 # ─── Module state injected by server.py at boot ──────────────────────────────
 _db = None  # Motor Mongo client
@@ -333,6 +352,141 @@ async def _count_gift_links_30d(subscriber_email: str) -> int:
         return 0
 
 
+async def _ensure_nomination_access_indexes() -> None:
+    if _db is None:
+        return
+    try:
+        await _db.nomination_access.create_index('nominee_email', unique=True)
+        await _db.nomination_access.create_index('expires_at')
+    except Exception as e:
+        logger.warning(f'nomination_access index ensure failed (non-fatal): {e!r}')
+
+
+async def _grant_nomination_access(
+    nominee_email: str, nominee_name: str, nominator_email: str,
+    nominator_name: str, token_id: str, post_slug: str,
+) -> Optional[dict]:
+    """Add NOMINATION_ACCESS_LABEL to the nominee's Ghost member (real,
+    site-wide paid access per tiers.PAID_LABELS) and record the window in
+    Mongo so /api/nominations/access/expire-check can take it away again
+    on schedule. Idempotent per nominee_email, same rule as
+    trial_tracking.start_trial: an already-active grant is left alone
+    rather than having its clock reset, so re-nominating someone (by
+    anyone) can't be used to keep extending free access indefinitely. A
+    lapsed grant is re-armed with a fresh window on the next nomination.
+    """
+    if _db is None:
+        return None
+    await _ensure_nomination_access_indexes()
+
+    nominee_email = nominee_email.lower().strip()
+    now = _utcnow()
+    existing = await _db.nomination_access.find_one({'nominee_email': nominee_email})
+    if existing:
+        expires_at = existing.get('expires_at')
+        if isinstance(expires_at, datetime):
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at > now:
+                return existing
+
+    admin_token = _create_ghost_admin_token()
+    ghost_member_id = ''
+    if admin_token:
+        member = await _tiers_find_ghost_member(nominee_email, admin_token)
+        if member:
+            ghost_member_id = member.get('id', '')
+            existing_labels = [(l.get('name') or '') for l in (member.get('labels') or [])]
+            await _tiers_add_member_label(ghost_member_id, existing_labels, NOMINATION_ACCESS_LABEL)
+        else:
+            logger.warning(f'nomination access grant: no Ghost member found for {nominee_email!r} yet')
+
+    record = {
+        'nominee_email': nominee_email,
+        'nominee_name': nominee_name,
+        'nominator_email': nominator_email,
+        'nominator_name': nominator_name,
+        'token_id': token_id,
+        'post_slug': post_slug,
+        'ghost_member_id': ghost_member_id,
+        'started_at': now,
+        'expires_at': now + timedelta(days=NOMINATION_ACCESS_DAYS),
+        'status': 'active',
+        'welcome_email_sent': False,
+        'expiry_email_sent': False,
+        'created_at': now,
+    }
+    try:
+        if existing:
+            await _db.nomination_access.update_one({'nominee_email': nominee_email}, {'$set': record})
+        else:
+            await _db.nomination_access.insert_one(record)
+    except Exception as e:
+        logger.warning(f'nomination_access write failed (non-fatal): {e!r}')
+    return record
+
+
+def _nomination_welcome_email_html(nominator_name: str, story_url: str, nominee_context: str) -> str:
+    reason_block = ''
+    if nominee_context:
+        reason_block = (
+            '<p style="margin: 24px 0; padding: 16px 20px; background: #F4F2EE; '
+            'border-left: 2px solid #A0291C; font-style: italic; color: #333;">'
+            f'They said: “{html.escape(nominee_context)}”'
+            '</p>'
+        )
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        f'{html.escape(nominator_name)} put your name <em style="font-style: italic;">forward.</em>'
+        '</h1>'
+        '<p>Dear reader,</p>'
+        f'<p>{html.escape(nominator_name)} thought you should be reading The State of Play, so they put your name forward.</p>'
+        '<p>The State of Play is a weekly reported publication on the business of Indian sport &mdash; franchise valuations, broadcast rights, ownership deals, and the people making the decisions. One properly reported story a week. It’s normally for paying readers.</p>'
+        '<p>You have full access for the next two weeks. Nothing to sign up for, nothing to cancel.</p>'
+        f'<p style="margin: 32px 0;"><a href="{story_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start with this story &rarr;</a></p>'
+        f'{reason_block}'
+        '<p style="color: #555555;">Once you’re in, sign in anytime with just your email (no password) to read anything else on the site &mdash; it’s covered too.</p>'
+        '<p style="margin-top: 32px;">As always, thanks for reading!</p>'
+        '<p>Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
+        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
+        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
+        '</p>'
+        '</div>'
+    )
+
+
+def _nomination_expiry_email_html(nominator_name: str) -> str:
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        'Your two weeks <em style="font-style: italic;">are up.</em>'
+        '</h1>'
+        '<p>Dear reader,</p>'
+        f'<p>Your fortnight of The State of Play, courtesy of {html.escape(nominator_name)}, has ended.</p>'
+        '<p>An annual subscription is Rs 2,499 + GST &mdash; one reported story a week on the business of Indian sport, plus the full archive.</p>'
+        f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
+        '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
+        '<p style="margin-top: 32px;">Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
+        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
+        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
+        '</p>'
+        '</div>'
+    )
+
+
 # ─── Pydantic models ─────────────────────────────────────────────────────────
 class NominationSubmit(BaseModel):
     nominee_name: str = Field(..., min_length=1, max_length=200)
@@ -425,6 +579,39 @@ async def nominations_submit(req: NominationSubmit, request: Request):
     token_id = str(uuid.uuid4())
     now = _utcnow()
     expires = now + timedelta(days=TOKEN_LIFETIME_DAYS)
+
+    # 2a) Real, time-boxed full-site access (see NOMINATION_ACCESS_LABEL's
+    # comment above) + the welcome email. This email is sent via Resend,
+    # not the Apps Script hand-off below -- its copy isn't something this
+    # session can edit inside that script.
+    story_url = f'{PUBLIC_BASE_URL}/s/{token_id}'
+    access_record = await _grant_nomination_access(
+        nominee_email=nominee_email_norm,
+        nominee_name=nominee_name,
+        nominator_email=subscriber_email_norm,
+        nominator_name=subscriber_name,
+        token_id=token_id,
+        post_slug=req.post_slug or '',
+    )
+    if access_record:
+        welcome_sent = await _send_email(
+            to=nominee_email_norm,
+            subject=f'{subscriber_name or "A State of Play reader"} put your name forward',
+            html=_nomination_welcome_email_html(
+                nominator_name=subscriber_name or 'A State of Play reader',
+                story_url=story_url,
+                nominee_context=(req.nominee_context or req.personal_note or '').strip(),
+            ),
+        )
+        if _db is not None:
+            try:
+                await _db.nomination_access.update_one(
+                    {'nominee_email': nominee_email_norm},
+                    {'$set': {'welcome_email_sent': bool(welcome_sent)}},
+                )
+            except Exception as e:
+                logger.warning(f'welcome_email_sent flag update failed (non-fatal): {e!r}')
+
     token_doc = {
         'token_id': token_id,
         'post_slug': req.post_slug or '',
@@ -447,8 +634,6 @@ async def nominations_submit(req: NominationSubmit, request: Request):
             await _db.story_tokens.insert_one(token_doc)
         except Exception as e:
             logger.warning(f'Token insert failed (non-fatal): {e!r}')
-
-    story_url = f'{PUBLIC_BASE_URL}/s/{token_id}'
 
     # 3) Hand-off to Apps Script — Sheet log + Slack + nominee email
     await _post_to_apps_script({
@@ -814,6 +999,59 @@ async def cold_link_expire_check(
         {'$set': {'status': 'expired'}},
     )
     return {'expired_count': result.modified_count}
+
+
+@router.post('/api/nominations/access/expire-check')
+async def nomination_access_expire_check(
+    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
+):
+    """Cron sweep (admin-triggered, same pattern as /api/cold-link/expire-check):
+    for every nomination_access grant past its expires_at, strip
+    NOMINATION_ACCESS_LABEL from the nominee's Ghost member and send the
+    expiry/conversion email, once. Nothing in this codebase calls this on
+    a schedule yet -- needs a periodic trigger wired up outside this
+    session's reach (a Render Cron Job hitting this endpoint, same as any
+    other admin-key-gated sweep here)."""
+    if not ADMIN_KEY:
+        raise HTTPException(status_code=503, detail='Admin key not configured on server')
+    if not x_admin_key or x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail='Invalid admin key')
+    if _db is None:
+        return {'expired_count': 0}
+
+    await _ensure_nomination_access_indexes()
+    admin_token = _create_ghost_admin_token()
+    now = _utcnow()
+    expired_count = 0
+
+    cursor = _db.nomination_access.find({'status': 'active', 'expires_at': {'$lt': now}})
+    async for record in cursor:
+        nominee_email = record.get('nominee_email') or ''
+        if admin_token and nominee_email:
+            member = await _tiers_find_ghost_member(nominee_email, admin_token)
+            if member:
+                existing_labels = [(l.get('name') or '') for l in (member.get('labels') or [])]
+                await _tiers_remove_member_label(
+                    member['id'], existing_labels, NOMINATION_ACCESS_LABEL, admin_token,
+                )
+
+        email_sent = record.get('expiry_email_sent', False)
+        if not email_sent and nominee_email:
+            email_sent = await _send_email(
+                to=nominee_email,
+                subject='Your two weeks are up',
+                html=_nomination_expiry_email_html(
+                    nominator_name=record.get('nominator_name') or 'a State of Play reader',
+                ),
+            )
+
+        await _db.nomination_access.update_one(
+            {'_id': record['_id']},
+            {'$set': {'status': 'expired', 'expiry_email_sent': bool(email_sent)}},
+        )
+        expired_count += 1
+
+    return {'expired_count': expired_count}
 
 
 # ─── /s/{token} server-rendered article ──────────────────────────────────────

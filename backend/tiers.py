@@ -75,10 +75,15 @@ TIER_LABELS = {
 # get_member_details (and would have been a third copy in nudge.py), which
 # is exactly how a label gets added in one place and silently missed in
 # another. 'tier-trial' is deliberately absent: trial access is a 10-story
-# snapshot, not the full archive.
+# snapshot, not the full archive. 'nomination-access' IS full access,
+# deliberately time-boxed (14 days) by nominations.py's own Mongo record
+# and expiry sweep rather than by anything in this list — the same way
+# 'tier-trial'/'tier-student' are permanent labels with no expiry logic at
+# all, 'nomination-access' is the one label here whose owner (nominations.py)
+# actively removes it again once its window closes.
 PAID_LABELS = [
     'paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber',
-    'paid', 'premium', 'corporate-member', 'tier-student',
+    'paid', 'premium', 'corporate-member', 'tier-student', 'nomination-access',
 ]
 
 
