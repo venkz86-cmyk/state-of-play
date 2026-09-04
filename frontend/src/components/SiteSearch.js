@@ -107,12 +107,9 @@ export const SiteSearchTrigger = ({ className = '' }) => {
         onClick={openSearch}
         data-testid="mockup-header-search"
         aria-label="Search"
-        className={`h-9 inline-flex items-center gap-1.5 px-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200 ${className}`}
+        className={`h-9 inline-flex items-center px-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200 ${className}`}
       >
         <Search className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
-        <kbd className="hidden lg:inline-block font-plex text-[11px] leading-none text-[var(--text-label)] border border-[var(--rule)] rounded-[3px] px-1.5 py-1">
-          ⌘K
-        </kbd>
       </button>
 
       {open && (

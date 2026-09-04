@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
-import { MockupLayout, Overline, FaqMark } from '../components/MockupLayout';
+import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayButton } from '../components/RazorpayButton';
 import { TESTIMONIALS } from '../data/testimonials';
 
@@ -15,14 +15,14 @@ const longDate = (iso) =>
 const heroTestimonial = TESTIMONIALS.find((t) => t.name === 'Joy Bhattacharjya') || TESTIMONIALS[0];
 
 const BENEFITS = [
-  ['Weekly TSOP Story', 'Deep reportage and long-form analysis on Indian sports business.'],
-  ['Bi-weekly Left Field', 'News briefs covering Indian and global sports business.'],
-  ['Full Archive Access', 'Every premium story since launch, searchable and always available.'],
-  ['Breaking News Alerts', 'First to know about major deals and announcements.'],
-  ['Exclusive Interviews', 'TSOP Transcript Q&As with industry insiders.'],
-  ['Data & Analysis', 'IRR models, valuation breakdowns, market sizing.'],
-  ['Ad-Free Experience', 'No sponsored content, no ads. Just journalism.'],
-  ['Direct Access', 'Reply to any newsletter, get responses from Venkat.'],
+  ['The weekly story', 'Deep reportage and long-form analysis on Indian sports business.'],
+  ['The Left Field briefing', 'News briefs covering Indian and global sports business, twice a week.'],
+  ['The full archive', 'Every premium story since launch, searchable and always available.'],
+  ['First on the big deals', 'The desk reports major transactions and announcements before anyone else covers them properly.'],
+  ['The TSOP Transcript', 'Q&As with the people actually running the business of Indian sport.'],
+  ['The numbers behind the story', 'IRR models, valuation breakdowns, market sizing.'],
+  ['No advertising', 'No sponsored content, no ads. Just journalism.'],
+  ['A direct line to the desk', 'Reply to any newsletter, get a response from Venkat.'],
 ];
 
 const FAQS = [
@@ -35,7 +35,6 @@ const FAQS = [
 export const SubscribeMockup = () => {
   const pricing = useGeoPricing();
   const [premium, setPremium] = useState([]);
-  const [open, setOpen] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -160,19 +159,10 @@ export const SubscribeMockup = () => {
           </div>
           <div className="lg:col-span-8">
             <ul>
-              {FAQS.map(([q, a], i) => (
-                <li key={q} className="border-b border-[var(--rule)]">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(open === i ? -1 : i)}
-                    className="w-full py-5 flex items-start justify-between gap-6 text-left hover:text-[var(--accent)] transition-colors duration-200"
-                  >
-                    <span className="font-editorial font-medium text-lg lg:text-xl leading-snug">{q}</span>
-                    <FaqMark open={open === i} />
-                  </button>
-                  {open === i && (
-                    <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>
-                  )}
+              {FAQS.map(([q, a]) => (
+                <li key={q} className="py-6 border-b border-[var(--rule)]">
+                  <p className="font-editorial font-medium text-lg lg:text-xl leading-snug mb-2">{q}</p>
+                  <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed max-w-[60ch]">{a}</p>
                 </li>
               ))}
             </ul>

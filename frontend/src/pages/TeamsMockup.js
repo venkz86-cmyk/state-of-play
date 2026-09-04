@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { MockupLayout, Overline, FaqMark } from '../components/MockupLayout';
+import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const PLANS = [
   {
@@ -57,8 +56,6 @@ const FAQS = [
 const TALK_TO_VENKAT_HREF = 'mailto:venkat@stateofplay.club?subject=Team%20plan%20%E2%80%94%20a%20quick%20question';
 
 export const TeamsMockup = () => {
-  const [open, setOpen] = useState(0);
-
   return (
     <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
@@ -170,9 +167,8 @@ export const TeamsMockup = () => {
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">What your team gets</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 border-y border-[var(--rule)] py-8">
-            {INCLUDED.map(([t, d], i) => (
+            {INCLUDED.map(([t, d]) => (
               <div key={t}>
-                <p className="font-plex text-xs text-[var(--text-muted)] tabular-nums mb-2">{String(i + 1).padStart(2, '0')}</p>
                 <h3 className="font-editorial font-medium text-lg mb-2">{t}</h3>
                 <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)] max-w-[48ch]">{d}</p>
               </div>
@@ -257,13 +253,10 @@ export const TeamsMockup = () => {
           <div className="lg:col-span-4"><p className="font-editorial italic text-lg">FAQ</p></div>
           <div className="lg:col-span-8">
             <ul>
-              {FAQS.map(([q, a], i) => (
-                <li key={q} className="border-b border-[var(--rule)]">
-                  <button type="button" onClick={() => setOpen(open === i ? -1 : i)} className="w-full py-5 flex items-start justify-between gap-6 text-left hover:text-[var(--accent)] transition-colors duration-200">
-                    <span className="font-editorial font-medium text-lg leading-snug">{q}</span>
-                    <FaqMark open={open === i} />
-                  </button>
-                  {open === i && <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>}
+              {FAQS.map(([q, a]) => (
+                <li key={q} className="py-6 border-b border-[var(--rule)]">
+                  <p className="font-editorial font-medium text-lg leading-snug mb-2">{q}</p>
+                  <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed max-w-[60ch]">{a}</p>
                 </li>
               ))}
             </ul>

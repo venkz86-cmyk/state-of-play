@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
 import { PartnersBlock } from '../components/PartnersBlock';
@@ -53,20 +54,11 @@ const TestimonialBlock = () => {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12 lg:py-16">
         <SectionLabel className="mb-6 block">What readers say</SectionLabel>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-          <div
-            aria-hidden="true"
-            className="hidden lg:block lg:col-span-1 font-editorial font-semibold leading-none text-[var(--rule)]"
-            style={{ fontSize: '120px' }}
-          >
-            “
-          </div>
-          <div className="lg:col-span-9 max-w-[60ch]">
+          <div className="lg:col-span-10 max-w-[60ch] border-l-2 border-[var(--accent-burgundy)] pl-6 lg:pl-8">
             <blockquote className="font-reading italic text-[19px] leading-relaxed text-[var(--text)]">
               {t.quote.map((para, idx) => (
                 <p key={idx} className={idx < t.quote.length - 1 ? 'mb-4' : ''}>
-                  {idx === 0 ? '“' : ''}
                   {para}
-                  {idx === t.quote.length - 1 ? '”' : ''}
                 </p>
               ))}
             </blockquote>
@@ -113,6 +105,7 @@ export const HomeMockup = () => {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const { canAccessPremium } = useAuth();
+  const pricing = useGeoPricing();
 
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
@@ -375,7 +368,10 @@ export const HomeMockup = () => {
               The State of Play runs on subscriptions.
             </p>
             <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] mb-5">
-              Independent reporting on the business of Indian sport. ₹2,499 + GST a year (₹2,949 total).
+              Independent reporting on the business of Indian sport.{' '}
+              {pricing.country === 'IN'
+                ? '₹2,499 + GST a year (₹2,949 total).'
+                : '$120 / year.'}
             </p>
             <Link
               to="/signup"
