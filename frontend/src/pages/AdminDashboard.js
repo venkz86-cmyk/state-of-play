@@ -5,41 +5,13 @@ import { Overline } from '../components/MockupLayout';
 import { AdminNav } from '../components/admin/AdminNav';
 import { SubscribersPanel } from '../components/admin/SubscribersPanel';
 import { RenewalsPanel } from '../components/admin/RenewalsPanel';
-import { BackfillPanel } from '../components/admin/BackfillPanel';
 import { CommentsPanel } from '../components/admin/CommentsPanel';
 import { NominatedReadersPanel } from '../components/admin/NominatedReadersPanel';
 import { TrialsPanel } from '../components/admin/TrialsPanel';
 import { ReferralsPanel } from '../components/admin/ReferralsPanel';
 import { CorporateAccountsPanel } from '../components/admin/CorporateAccountsPanel';
 import { LinksPanel } from '../components/admin/LinksPanel';
-
-// Phase 1 shipped the shell + nav; Phase 2 (Subscribers/Renewals/the
-// payments ledger) is real below. Each remaining panel is real once its
-// own phase lands (Phase 3: Comments/Nominated readers/Trials/Referrals;
-// Phase 4: Corporate accounts; Phase 5: Links). Placeholder, not fake
-// data -- says plainly what's coming rather than showing invented
-// numbers.
-const ComingSoonPanel = ({ title, phase }) => (
-  <div className="max-w-[560px]">
-    <h2 className="font-editorial font-semibold text-[22px] leading-tight mb-3">{title}</h2>
-    <p className="font-plex text-[14px] text-[var(--text-muted)] leading-relaxed">
-      Not built yet — this is {phase} of the dashboard build.
-    </p>
-  </div>
-);
-
-const OverviewPanel = ({ onAuthError }) => (
-  <div>
-    <h2 className="font-editorial font-semibold text-[22px] leading-tight mb-3">
-      Signed in.
-    </h2>
-    <p className="font-plex text-[14px] text-[var(--text-muted)] leading-relaxed mb-8 max-w-[560px]">
-      Subscribers and Renewals are live. Everything else lands in the
-      phases that follow.
-    </p>
-    <BackfillPanel onAuthError={onAuthError} />
-  </div>
-);
+import { OverviewPanel } from '../components/admin/OverviewPanel';
 
 const DashboardHeader = () => {
   const { adminEmail, logout } = useAdminAuth();

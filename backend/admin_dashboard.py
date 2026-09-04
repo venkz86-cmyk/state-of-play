@@ -196,8 +196,11 @@ def _compute_expiry(
     return None, 'none'
 
 
-@router.get('/api/admin/subscribers')
-async def list_subscribers(_admin: None = Depends(require_admin_key_or_session)):
+async def _build_subscriber_rows() -> list[dict]:
+    """The full per-subscriber row set -- shared by GET /api/admin/subscribers
+    (Phase 2) and GET /api/admin/overview (Phase 6), so the overview's
+    counts are always derived from the exact same logic the Subscribers
+    table shows, not a second, potentially-drifting computation."""
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
     token = _create_ghost_admin_token()
@@ -269,7 +272,113 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
             'company_name': company_name,
         })
 
+    return rows
+
+
+@router.get('/api/admin/subscribers')
+async def list_subscribers(_admin: None = Depends(require_admin_key_or_session)):
+    rows = await _build_subscriber_rows()
     return {'subscribers': rows, 'count': len(rows)}
+
+
+def _within_days(computed_expiry: Optional[str], days: int, now: datetime) -> bool:
+    """True if computed_expiry is a real future date within `days` from
+    now -- already-expired dates don't count as 'expiring soon', they're
+    expired_but_still_paid's job."""
+    if not computed_expiry:
+        return False
+    try:
+        exp_dt = datetime.fromisoformat(computed_expiry)
+        if exp_dt.tzinfo is None:
+            exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return False
+    return now <= exp_dt <= now + timedelta(days=days)
+
+
+@router.get('/api/admin/overview')
+async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
+    """Cheap aggregate counts over data every earlier phase already built
+    -- no new collection, no new source of truth. The one thing this
+    dashboard was built to finally answer in one place: who's subscribed,
+    what did they pay, what's expiring, what needs attention today."""
+    now = datetime.now(timezone.utc)
+    rows = await _build_subscriber_rows()
+
+    paid_rows = [r for r in rows if r['is_paid']]
+    expired_but_still_paid = [r for r in paid_rows if r['expired_but_still_paid']]
+    expiring_7d = [r for r in paid_rows if _within_days(r['computed_expiry'], 7, now)]
+    expiring_30d = [r for r in paid_rows if _within_days(r['computed_expiry'], 30, now)]
+
+    revenue_30d = {'INR': 0, 'USD': 0}
+    revenue_365d = {'INR': 0, 'USD': 0}
+    if _db is not None:
+        try:
+            cutoff_365 = now - timedelta(days=365)
+            async for doc in _db.payments.find({'razorpay_created_at': {'$gte': cutoff_365}}):
+                paid_at = doc.get('razorpay_created_at')
+                if paid_at and paid_at.tzinfo is None:
+                    paid_at = paid_at.replace(tzinfo=timezone.utc)
+                currency = doc.get('currency')
+                amount = doc.get('amount') or 0
+                if currency not in revenue_365d:
+                    continue
+                revenue_365d[currency] += amount
+                if paid_at and paid_at >= now - timedelta(days=30):
+                    revenue_30d[currency] += amount
+        except Exception as e:
+            logger.warning(f'overview revenue scan failed (non-fatal): {e!r}')
+
+    pending_comments = 0
+    active_nominations = 0
+    active_trials = 0
+    if _db is not None:
+        try:
+            pending_comments = await _db.comments.count_documents({'status': 'pending'})
+        except Exception as e:
+            logger.warning(f'overview pending_comments count failed (non-fatal): {e!r}')
+        try:
+            active_nominations = await _db.nomination_access.count_documents({'status': 'active'})
+        except Exception as e:
+            logger.warning(f'overview active_nominations count failed (non-fatal): {e!r}')
+        try:
+            active_trials = await _db.trial_members.count_documents({'expires_at': {'$gt': now}})
+        except Exception as e:
+            logger.warning(f'overview active_trials count failed (non-fatal): {e!r}')
+
+    corporate_accounts = 0
+    try:
+        corporate_accounts = len(await fetch_corporate_accounts())
+    except Exception as e:
+        logger.warning(f'overview corporate_accounts fetch failed (non-fatal): {e!r}')
+
+    def _attention_row(r: dict) -> dict:
+        return {
+            'email': r['email'], 'name': r['name'], 'tier': r['tier'],
+            'computed_expiry': r['computed_expiry'], 'expiry_source': r['expiry_source'],
+        }
+
+    return {
+        'kpis': {
+            'total_subscribers': len(rows),
+            'paid': len(paid_rows),
+            'free': len(rows) - len(paid_rows),
+            'corporate_accounts': corporate_accounts,
+            'active_trials': active_trials,
+            'active_nominations': active_nominations,
+            'pending_comments': pending_comments,
+            'revenue_30d': revenue_30d,
+            'revenue_365d': revenue_365d,
+            'expiring_30d': len(expiring_30d),
+            'expiring_7d': len(expiring_7d),
+            'expired_but_still_paid': len(expired_but_still_paid),
+        },
+        'attention': {
+            'expired_but_still_paid': [_attention_row(r) for r in expired_but_still_paid[:25]],
+            'expiring_7d': [_attention_row(r) for r in expiring_7d[:25]],
+            'pending_comments': pending_comments,
+        },
+    }
 
 
 @router.get('/api/admin/subscribers/{email}/subscription-status')
