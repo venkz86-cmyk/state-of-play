@@ -8,10 +8,12 @@ that missing piece: a Mongo record per trial signup, snapshotting the 10
 most recent premium stories at that moment (a fixed set, not rolling) and
 computing the 30-day window around it.
 
-This does NOT send the two reminder emails (5 days before expiry, 7 days
-after) — that's a daily sweep + email-drafting job, a separate follow-up
-once this exists to sweep over. It also doesn't gate access yet — that's
-frontend work (Paywall.js / AuthContext), also a follow-up.
+Sends the two reminder emails on the trial's own clock (a 30-day trial:
+day 25 is 5 days before expiry, day 37 is 7 days after) via
+POST /api/trial/reminder-check, a daily admin-triggered sweep -- same
+shape as nominations.py's /api/nominations/access/expire-check, wired to
+the Apps Script's own daily time-driven trigger. Doesn't gate access yet
+-- that's frontend work (Paywall.js / AuthContext), still a follow-up.
 
 Provides:
   * start_trial(email, ghost_member_id)  — called by razorpay_orders.py's
@@ -21,8 +23,14 @@ Provides:
   * GET /api/trial/status?email=         — what a trial member is
     entitled to and how long they have left. Will back the curated trial
     homepage once that's built.
+  * POST /api/trial/reminder-check       — admin-only daily sweep. Sends
+    the 5-days-left reminder (day 25) and the 7-days-after winback
+    (day 37), once each per trial, via Resend -- matches nominations.py's
+    email pattern, not Apps Script's MailApp.
+  * GET /api/admin/trials                — bulk listing for the admin
+    dashboard.
 
-Dependencies: GHOST_URL, GHOST_CONTENT_API_KEY (existing).
+Dependencies: GHOST_URL, GHOST_CONTENT_API_KEY, RESEND_API_KEY (existing).
 """
 from __future__ import annotations
 
@@ -35,14 +43,18 @@ import httpx
 from fastapi import APIRouter, HTTPException, Depends
 
 from admin_auth import require_admin_key_or_session
+from resend_email import send_email as _send_email
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_CONTENT_API_KEY = os.environ.get('GHOST_CONTENT_API_KEY', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 TRIAL_DAYS = 30
 SNAPSHOT_SIZE = 10
+REMINDER_DAYS_BEFORE_EXPIRY = 5   # sent ~day 25 of the 30-day trial
+WINBACK_DAYS_AFTER_EXPIRY = 7     # sent ~day 37 of the 30-day trial
 
 router = APIRouter()
 
@@ -137,6 +149,61 @@ def _aware(dt: Optional[datetime]) -> Optional[datetime]:
     return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
 
 
+def _trial_reminder_email_html(days_left: int) -> str:
+    """Sent ~day 25 of the 30-day trial (5 days left). Same visual
+    template as nominations.py's welcome/expiry emails -- Gloock headline,
+    burgundy CTA, Left Field Ventures footer -- so every transactional
+    email on the site reads as one system."""
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        f'{days_left} days left on <em style="font-style: italic;">The Ten.</em>'
+        '</h1>'
+        '<p>Dear reader,</p>'
+        f'<p>Your trial &mdash; ten of our most recent stories, free to read &mdash; closes in {days_left} days.</p>'
+        '<p>An annual subscription is Rs 2,499 + GST: one properly reported story a week on the business of Indian sport, the twice-weekly Left Field briefing, and the full archive, not just ten stories.</p>'
+        f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
+        '<p style="color: #555555;">If the trial wasn’t for you, no action needed &mdash; access simply ends, nothing to cancel.</p>'
+        '<p style="margin-top: 32px;">Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
+        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
+        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
+        '</p>'
+        '</div>'
+    )
+
+
+def _trial_winback_email_html() -> str:
+    """Sent ~day 37 of the 30-day trial (7 days after it closed)."""
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        'Still thinking <em style="font-style: italic;">about it?</em>'
+        '</h1>'
+        '<p>Dear reader,</p>'
+        '<p>Your ten-story trial of The State of Play ended a week ago. If any of them were useful, the full subscription gets you a new one every week, plus the twice-weekly Left Field briefing and the entire archive.</p>'
+        '<p>Rs 2,499 + GST a year.</p>'
+        f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
+        '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
+        '<p style="margin-top: 32px;">Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
+        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
+        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
+        '</p>'
+        '</div>'
+    )
+
+
 @router.get('/api/trial/status')
 async def trial_status(email: str):
     if _db is None:
@@ -185,3 +252,71 @@ async def list_trials(_admin: None = Depends(require_admin_key_or_session)):
             'reminder_winback_sent': record.get('reminder_winback_sent', False),
         })
     return {'trials': trials, 'count': len(trials)}
+
+
+@router.post('/api/trial/reminder-check')
+async def trial_reminder_check(_admin: None = Depends(require_admin_key_or_session)):
+    """Daily cron sweep (same pattern as nominations.py's
+    /api/nominations/access/expire-check): sends the two trial emails,
+    each exactly once per trial.
+
+      * 5-days-left reminder -- expires_at within the next
+        REMINDER_DAYS_BEFORE_EXPIRY days, trial still active.
+      * 7-days-after winback -- expires_at more than
+        WINBACK_DAYS_AFTER_EXPIRY days in the past.
+
+    Access itself isn't gated by this sweep (that's separate frontend
+    work) -- this only sends email and flips the two *_sent flags so a
+    re-run of the sweep never double-sends."""
+    if _db is None:
+        return {'reminders_sent': 0, 'winbacks_sent': 0}
+
+    now = datetime.now(timezone.utc)
+    reminder_cutoff = now + timedelta(days=REMINDER_DAYS_BEFORE_EXPIRY)
+    winback_cutoff = now - timedelta(days=WINBACK_DAYS_AFTER_EXPIRY)
+
+    reminders_sent = 0
+    cursor = _db.trial_members.find({
+        'reminder_5day_sent': False,
+        'expires_at': {'$gt': now, '$lte': reminder_cutoff},
+    })
+    async for record in cursor:
+        email = record.get('email')
+        expires_at = _aware(record.get('expires_at'))
+        days_left = max(0, (expires_at - now).days) if expires_at else REMINDER_DAYS_BEFORE_EXPIRY
+        sent = False
+        if email:
+            sent = await _send_email(
+                to=email,
+                subject=f'{days_left} days left on your trial',
+                html=_trial_reminder_email_html(days_left),
+            )
+        await _db.trial_members.update_one(
+            {'_id': record['_id']},
+            {'$set': {'reminder_5day_sent': bool(sent)}},
+        )
+        if sent:
+            reminders_sent += 1
+
+    winbacks_sent = 0
+    cursor = _db.trial_members.find({
+        'reminder_winback_sent': False,
+        'expires_at': {'$lte': winback_cutoff},
+    })
+    async for record in cursor:
+        email = record.get('email')
+        sent = False
+        if email:
+            sent = await _send_email(
+                to=email,
+                subject='Still thinking about it?',
+                html=_trial_winback_email_html(),
+            )
+        await _db.trial_members.update_one(
+            {'_id': record['_id']},
+            {'$set': {'reminder_winback_sent': bool(sent)}},
+        )
+        if sent:
+            winbacks_sent += 1
+
+    return {'reminders_sent': reminders_sent, 'winbacks_sent': winbacks_sent}

@@ -1622,6 +1622,33 @@ function runNominationAccessExpiryCheck() {
 }
 
 /**
+ * Time-driven trigger target: sweeps Trial ("The Ten") members for the
+ * two reminder emails (5 days left, sent ~day 25; a winback 7 days after
+ * expiry, sent ~day 37 of the 30-day trial). Calls the backend's
+ * admin-gated sweep, which sends both emails via Resend and marks each
+ * one sent exactly once. Same shape as runNominationAccessExpiryCheck
+ * above -- one-time setup: Apps Script editor → Triggers → Add Trigger →
+ * function: runTrialReminderCheck → Time-driven → Day timer. Once a day
+ * is enough; a reminder landing a few hours late is harmless.
+ */
+function runTrialReminderCheck() {
+  try {
+    var res = UrlFetchApp.fetch(RENDER_API_URL + '/api/trial/reminder-check', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': RENDER_ADMIN_KEY },
+      muteHttpExceptions: true,
+    });
+    var code = res.getResponseCode();
+    Logger.log('trial reminder-check: HTTP ' + code + ' — ' + res.getContentText());
+    if (code !== 200) {
+      Logger.log('trial reminder-check FAILED — check Render logs too');
+    }
+  } catch (err) {
+    Logger.log('trial reminder-check error: ' + err.toString());
+  }
+}
+
+/**
  * Editorial-styled nominee email. Sent from venkat@stateofplay.club.
  * Single CTA → story_url (which is the /s/{token} link). No paywall.
  */
