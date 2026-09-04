@@ -53,7 +53,12 @@ export const ArticleMockup = () => {
   const { canAccessPremium, user } = useAuth();
 
   const previewMember = searchParams.get('preview') === 'member';
+  // isMember drives comments/bookmark/gift/nominate -- real subscriber
+  // perks a Trial ("The Ten") purchase doesn't include. Deliberately NOT
+  // widened for trial readers; see canReadArticle below for the
+  // narrower, per-story access trial members actually get.
   const isMember = canAccessPremium || previewMember;
+  const isTrialTier = user?.tier === 'trial';
 
   // Effective subscriber identity — used by the nominate quota fetch. In
   // preview-member mode there is no real user, so use a synthetic address
@@ -100,16 +105,26 @@ export const ArticleMockup = () => {
   // preview even for a paying member — fullContentReady gates the page
   // render so they never see that flash of cut-off text before the
   // real content pops in.
+  //
+  // Trial ("The Ten") members go through the exact same fetch -- the
+  // backend (/ghost/article-content) is the real, single source of
+  // truth on whether THIS story is one of their ten-plus-published-
+  // since-signup, via trial_tracking.is_trial_slug_accessible(). The
+  // frontend deliberately doesn't duplicate that eligibility logic; it
+  // just tries the fetch and reads the result. A 403 here is an
+  // expected "not in this trial" answer, not an error.
   const [fullContentReady, setFullContentReady] = useState(false);
+  const [trialAllowed, setTrialAllowed] = useState(false);
   useEffect(() => {
     let active = true;
     if (!article) return;
-    const needsFullContent = !!(article.is_premium && user?.is_paid && user?.email && API);
+    const needsFullContent = !!(article.is_premium && (user?.is_paid || isTrialTier) && user?.email && API);
     if (!needsFullContent) {
       setFullContentReady(true);
       return;
     }
     setFullContentReady(false);
+    setTrialAllowed(false);
     (async () => {
       try {
         const r = await axios.post(
@@ -120,15 +135,20 @@ export const ArticleMockup = () => {
         if (!active) return;
         if (r.data?.html) {
           setArticle((prev) => ({ ...prev, content: r.data.html }));
+          if (isTrialTier) setTrialAllowed(true);
         }
       } catch (e) {
-        console.error('Failed to load full article content:', e);
+        if (isTrialTier && e?.response?.status === 403) {
+          // Expected: this story isn't part of this reader's trial.
+        } else {
+          console.error('Failed to load full article content:', e);
+        }
       } finally {
         if (active) setFullContentReady(true);
       }
     })();
     return () => { active = false; };
-  }, [article?.is_premium, article?.id, user?.is_paid, user?.email]);
+  }, [article?.is_premium, article?.id, user?.is_paid, user?.email, isTrialTier]);
 
   if (loading) {
     return (
@@ -144,10 +164,14 @@ export const ArticleMockup = () => {
   // Headline, dek, byline and hero image are already in hand from the
   // first fetch — no reason to blank the whole page while the full body
   // text is still loading for a paying member. Only the body area itself
-  // gets a placeholder.
-  const bodyStillLoading = article.is_premium && isMember && !fullContentReady;
+  // gets a placeholder. Trial-tier readers go through the same wait --
+  // until fullContentReady resolves, we don't yet know if this story is
+  // theirs to read, so showing the skeleton beats flashing the paywall
+  // and then un-paywalling it a moment later.
+  const bodyStillLoading = article.is_premium && (isMember || isTrialTier) && !fullContentReady;
+  const canReadArticle = isMember || (isTrialTier && trialAllowed);
 
-  const isPaywalled = article.is_premium && !isMember;
+  const isPaywalled = article.is_premium && !canReadArticle;
   const bodyHtml = isPaywalled
     ? previewParagraphs(article.content)
     : (article.content || article.preview_content || '');

@@ -18,6 +18,12 @@ const shapeMember = (data) => ({
   is_free: data.is_free,
   status: data.status,
   trial_expired: !!data.trial_expired,
+  // Separate from is_paid -- WHICH paid-adjacent plan, not whether
+  // they're a full paid subscriber. tier === 'trial' means Trial ("The
+  // Ten"), which is deliberately not is_paid (see tiers.PAID_LABELS).
+  // ArticleMockup.js uses this to know when to attempt the trial-
+  // specific content check instead of just showing the paywall.
+  tier: data.tier || 'free',
 });
 
 export const AuthProvider = ({ children }) => {

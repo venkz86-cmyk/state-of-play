@@ -135,6 +135,43 @@ async def start_trial(email: str, ghost_member_id: str = '') -> Optional[dict]:
     return record
 
 
+async def is_trial_slug_accessible(email: str, slug: str, published_at: Optional[datetime] = None) -> bool:
+    """The single source of truth for "can this Trial member read this
+    specific story right now" -- called from server.py's
+    /ghost/article-content, the actual content-serving gate (not just a
+    frontend display decision).
+
+    "The Ten" is a floor, not a ceiling (Venkat's call, Sept 2026): a
+    member gets their original 10-story snapshot from signup, PLUS every
+    new premium story published after they joined, for the full 30 days.
+    Nothing is ever taken away mid-trial by a newer story bumping an
+    older one out -- the snapshot is frozen, only additions happen, and
+    only additions computed live (never written back to the record).
+    Everything -- snapshot and additions alike -- locks together the
+    moment expires_at passes.
+
+    published_at is the story's own Ghost published_at, passed in by the
+    caller (which already has it from fetching the article) rather than
+    fetched again here."""
+    if _db is None:
+        return False
+    record = await _db.trial_members.find_one({'email': email.lower().strip()})
+    if not record:
+        return False
+
+    now = datetime.now(timezone.utc)
+    expires_at = _aware(record.get('expires_at'))
+    if not expires_at or now >= expires_at:
+        return False
+
+    if slug in (record.get('snapshot_slugs') or []):
+        return True
+
+    started_at = _aware(record.get('started_at'))
+    pub = _aware(published_at)
+    return bool(started_at and pub and pub > started_at)
+
+
 def _aware(dt: Optional[datetime]) -> Optional[datetime]:
     """Motor/MongoDB returns naive datetimes by default (a UTC value with
     no tzinfo) unless the client is created with tz_aware=True -- this

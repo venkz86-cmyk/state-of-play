@@ -516,24 +516,41 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
                 or is_paid_from_labels(labels)
             )
 
-            if not is_paid:
-                raise HTTPException(status_code=403, detail="Paid membership required")
-            
-            # Now fetch the full article using Admin API
+            # Fetch the article before deciding access -- a Trial ("The
+            # Ten") member's eligibility depends on this specific story's
+            # published_at (was it in their signup-day snapshot, or
+            # published after they joined), so the article has to be in
+            # hand before that check can run. Reordered from the old
+            # is_paid-first version specifically to support this.
             article_response = await http_client.get(
                 f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
                 params={'formats': 'html'},
                 headers={'Authorization': f'Ghost {token}'}
             )
-            
+
             if article_response.status_code != 200:
                 raise HTTPException(status_code=404, detail="Article not found")
-            
+
             posts = article_response.json().get('posts', [])
             if not posts:
                 raise HTTPException(status_code=404, detail="Article not found")
-            
+
             post = posts[0]
+
+            if not is_paid:
+                trial_allowed = False
+                if 'tier-trial' in labels and is_trial_slug_accessible:
+                    published_at_raw = post.get('published_at')
+                    published_at = None
+                    if published_at_raw:
+                        try:
+                            published_at = datetime.fromisoformat(published_at_raw.replace('Z', '+00:00'))
+                        except ValueError:
+                            published_at = None
+                    trial_allowed = await is_trial_slug_accessible(request.email, request.slug, published_at)
+                if not trial_allowed:
+                    raise HTTPException(status_code=403, detail="Paid membership required")
+
             return ArticleContentResponse(
                 slug=post.get('slug'),
                 html=post.get('html', ''),
@@ -2314,12 +2331,16 @@ except Exception as _e:
 
 # Mount Trial ("The Ten") expiry tracking — 30-day window + story snapshot
 try:
-    from trial_tracking import router as trial_router, init as trial_init, start_trial
+    from trial_tracking import (
+        router as trial_router, init as trial_init, start_trial,
+        is_trial_slug_accessible,
+    )
     trial_init(db)
     app.include_router(trial_router)
 except Exception as _e:
     logging.warning(f"trial_tracking module not mounted: {_e!r}")
     start_trial = None
+    is_trial_slug_accessible = None
 
 _cors_origins_env = os.environ.get('CORS_ORIGINS', '*').strip()
 if _cors_origins_env == '*':

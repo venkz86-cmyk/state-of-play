@@ -70,7 +70,7 @@ import jwt
 from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import find_ghost_member, is_paid_from_labels
+from tiers import find_ghost_member, is_paid_from_labels, resolve_tier
 from resend_email import send_email
 
 logger = logging.getLogger(__name__)
@@ -187,6 +187,14 @@ async def get_current_member(request: Request) -> Optional[dict]:
         # sandbox-event comp lapsed and is no longer paid -- lets the
         # paywall show a targeted "your trial has ended" message.
         'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
+        # tier is separate from is_paid -- resolve_tier() distinguishes
+        # WHICH paid-adjacent plan a member is on (student/trial/
+        # nomination/standard). Trial ("The Ten") members read this as
+        # tier == 'trial' despite is_paid being False for them (deliberate
+        # -- see tiers.PAID_LABELS's own comment on why tier-trial isn't
+        # a paid label). ArticleMockup.js uses this to know when to try
+        # the trial-specific content-access check.
+        'tier': resolve_tier(label_names, is_paid),
         'status': member.get('status', 'free'),
         'label_names': label_names,
     }
@@ -347,6 +355,7 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         'is_paid': is_paid,
         'is_free': not is_paid,
         'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
+        'tier': resolve_tier(label_names, is_paid),
         'status': member.get('status', 'free'),
         'label_names': label_names,
         # The frontend stores this and sends it back as
