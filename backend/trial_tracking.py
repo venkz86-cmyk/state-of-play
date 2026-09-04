@@ -1,5 +1,5 @@
 """
-trial_tracking.py — the 30-day expiry side of Trial ("The Ten"), ₹590.
+trial_tracking.py — the access side of Trial ("The Ten"), ₹590.
 
 Nothing in the codebase tracked WHEN a trial started or ended before this
 module — tiers.py's `tier-trial` label says someone is on Trial, but not
@@ -8,12 +8,19 @@ that missing piece: a Mongo record per trial signup, snapshotting the 10
 most recent premium stories at that moment (a fixed set, not rolling) and
 computing the 30-day window around it.
 
+Two access rules (see is_trial_slug_accessible's own docstring for the
+full reasoning): the original 10-story snapshot is a PERMANENT keepsake,
+readable forever regardless of expiry or conversion. Anything published
+during the 30 days on top of that (the "floor not ceiling" growth bonus)
+only stays readable while the trial window is open. Enforced server-side
+in server.py's /ghost/article-content -- the real content-serving gate,
+not just a frontend display decision.
+
 Sends the two reminder emails on the trial's own clock (a 30-day trial:
 day 25 is 5 days before expiry, day 37 is 7 days after) via
 POST /api/trial/reminder-check, a daily admin-triggered sweep -- same
 shape as nominations.py's /api/nominations/access/expire-check, wired to
-the Apps Script's own daily time-driven trigger. Doesn't gate access yet
--- that's frontend work (Paywall.js / AuthContext), still a follow-up.
+the Apps Script's own daily time-driven trigger.
 
 Provides:
   * start_trial(email, ghost_member_id)  — called by razorpay_orders.py's
@@ -141,14 +148,24 @@ async def is_trial_slug_accessible(email: str, slug: str, published_at: Optional
     /ghost/article-content, the actual content-serving gate (not just a
     frontend display decision).
 
-    "The Ten" is a floor, not a ceiling (Venkat's call, Sept 2026): a
-    member gets their original 10-story snapshot from signup, PLUS every
-    new premium story published after they joined, for the full 30 days.
+    Two different access rules, deliberately (Venkat's call, Sept 2026):
+
+    1. The original 10-story snapshot from signup is a PERMANENT keepsake
+       -- accessible forever, trial expired or not, converted to a real
+       subscriber or not. "The Ten" always means at least ten, for
+       keeps, whatever else happens. This is what keeps the offer from
+       reading as a rental: pay once, those ten are yours.
+    2. Anything published AFTER signup (the "floor not ceiling" growth
+       bonus -- stay the full 30 days, get more than ten) only stays
+       accessible while the trial window is still open. This is what
+       still gives the 30-day deadline real teeth: the bonus stories are
+       what a reader actually loses by not converting, not the original
+       ten they already own outright.
+
     Nothing is ever taken away mid-trial by a newer story bumping an
-    older one out -- the snapshot is frozen, only additions happen, and
-    only additions computed live (never written back to the record).
-    Everything -- snapshot and additions alike -- locks together the
-    moment expires_at passes.
+    older one out of the snapshot -- the snapshot is frozen at signup,
+    only the growth-bonus check is time-boxed, and it's computed live,
+    never written back to the record.
 
     published_at is the story's own Ghost published_at, passed in by the
     caller (which already has it from fetching the article) rather than
@@ -159,13 +176,13 @@ async def is_trial_slug_accessible(email: str, slug: str, published_at: Optional
     if not record:
         return False
 
+    if slug in (record.get('snapshot_slugs') or []):
+        return True
+
     now = datetime.now(timezone.utc)
     expires_at = _aware(record.get('expires_at'))
     if not expires_at or now >= expires_at:
         return False
-
-    if slug in (record.get('snapshot_slugs') or []):
-        return True
 
     started_at = _aware(record.get('started_at'))
     pub = _aware(published_at)
@@ -200,7 +217,8 @@ def _trial_reminder_email_html(days_left: int) -> str:
         f'{days_left} days left on <em style="font-style: italic;">The Ten.</em>'
         '</h1>'
         '<p>Dear reader,</p>'
-        f'<p>Your trial &mdash; ten of our most recent stories, free to read &mdash; closes in {days_left} days.</p>'
+        f'<p>Your trial closes in {days_left} days. Everything new we\'ve published since you joined &mdash; on top of your original ten &mdash; goes with it.</p>'
+        '<p>Your original ten stories are yours to keep either way, no matter what you decide.</p>'
         '<p>An annual subscription is Rs 2,499 + GST: one properly reported story a week on the business of Indian sport, the twice-weekly Left Field briefing, and the full archive, not just ten stories.</p>'
         f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
         '<p style="color: #555555;">If the trial wasn’t for you, no action needed &mdash; access simply ends, nothing to cancel.</p>'
@@ -226,7 +244,8 @@ def _trial_winback_email_html() -> str:
         'Still thinking <em style="font-style: italic;">about it?</em>'
         '</h1>'
         '<p>Dear reader,</p>'
-        '<p>Your ten-story trial of The State of Play ended a week ago. If any of them were useful, the full subscription gets you a new one every week, plus the twice-weekly Left Field briefing and the entire archive.</p>'
+        '<p>Your State of Play trial ended a week ago &mdash; your original ten stories are still yours, for keeps. Everything published since, though, closed with the trial.</p>'
+        '<p>If any of it was useful, the full subscription gets you a new story every week, plus the twice-weekly Left Field briefing and the entire archive.</p>'
         '<p>Rs 2,499 + GST a year.</p>'
         f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
         '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
