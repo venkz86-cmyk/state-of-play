@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
-import { MockupLayout, Overline } from '../components/MockupLayout';
+import { MockupLayout, Overline, FaqMark } from '../components/MockupLayout';
 
 const PLANS = [
   {
@@ -262,7 +261,7 @@ export const TeamsMockup = () => {
                 <li key={q} className="border-b border-[var(--rule)]">
                   <button type="button" onClick={() => setOpen(open === i ? -1 : i)} className="w-full py-5 flex items-start justify-between gap-6 text-left hover:text-[var(--accent)] transition-colors duration-200">
                     <span className="font-editorial font-medium text-lg leading-snug">{q}</span>
-                    {open === i ? <Minus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} /> : <Plus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} />}
+                    <FaqMark open={open === i} />
                   </button>
                   {open === i && <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>}
                 </li>

@@ -2,22 +2,27 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
-import { Plus, Minus } from 'lucide-react';
-import { MockupLayout, Overline } from '../components/MockupLayout';
+import { MockupLayout, Overline, FaqMark } from '../components/MockupLayout';
 import { RazorpayButton } from '../components/RazorpayButton';
+import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
+// A short, specific pull-quote for the hero rail -- real and attributable,
+// unlike a logo-strip of outlet names TSOP hasn't actually been covered
+// by. Picked for length (fits a sidebar without truncation), not order.
+const heroTestimonial = TESTIMONIALS.find((t) => t.name === 'Joy Bhattacharjya') || TESTIMONIALS[0];
+
 const BENEFITS = [
-  ['01', 'Weekly TSOP Story', 'Deep reportage and long-form analysis on Indian sports business.'],
-  ['02', 'Bi-weekly Left Field', 'News briefs covering Indian and global sports business.'],
-  ['03', 'Full Archive Access', 'Every premium story since launch, searchable and always available.'],
-  ['04', 'Breaking News Alerts', 'First to know about major deals and announcements.'],
-  ['05', 'Exclusive Interviews', 'TSOP Transcript Q&As with industry insiders.'],
-  ['06', 'Data & Analysis', 'IRR models, valuation breakdowns, market sizing.'],
-  ['07', 'Ad-Free Experience', 'No sponsored content, no ads. Just journalism.'],
-  ['08', 'Direct Access', 'Reply to any newsletter, get responses from Venkat.'],
+  ['Weekly TSOP Story', 'Deep reportage and long-form analysis on Indian sports business.'],
+  ['Bi-weekly Left Field', 'News briefs covering Indian and global sports business.'],
+  ['Full Archive Access', 'Every premium story since launch, searchable and always available.'],
+  ['Breaking News Alerts', 'First to know about major deals and announcements.'],
+  ['Exclusive Interviews', 'TSOP Transcript Q&As with industry insiders.'],
+  ['Data & Analysis', 'IRR models, valuation breakdowns, market sizing.'],
+  ['Ad-Free Experience', 'No sponsored content, no ads. Just journalism.'],
+  ['Direct Access', 'Reply to any newsletter, get responses from Venkat.'],
 ];
 
 const FAQS = [
@@ -62,10 +67,16 @@ export const SubscribeMockup = () => {
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">
-          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Cited by</Overline>
-          <p className="font-editorial italic text-base lg:text-lg leading-snug text-[var(--text)]">
-            Bloomberg · SportBusiness · ESPNCricinfo · The Athletic · SportsPro
+          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">What readers say</Overline>
+          <p className="font-editorial italic text-base lg:text-lg leading-snug text-[var(--text)] mb-3">
+            “{heroTestimonial.quote[0]}”
           </p>
+          <p className="font-plex text-[13px] font-bold text-[var(--text)]">
+            {heroTestimonial.name}
+          </p>
+          {heroTestimonial.title && (
+            <p className="font-plex text-[13px] text-[var(--text-label)]">{heroTestimonial.title}</p>
+          )}
         </aside>
       </section>
 
@@ -105,10 +116,12 @@ export const SubscribeMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">What’s included</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
-            {BENEFITS.map(([no, title, desc]) => (
-              <div key={no}>
-                <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] tabular-nums mb-3">{no}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16">
+            {BENEFITS.map(([title, desc], i) => (
+              <div
+                key={title}
+                className={`py-5 ${i < BENEFITS.length - 2 ? 'border-b border-[var(--rule)]' : ''} ${i % 2 === 0 ? 'md:pr-8' : 'md:pl-8'}`}
+              >
                 <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] mb-2">{title}</h3>
                 <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{desc}</p>
               </div>
@@ -155,7 +168,7 @@ export const SubscribeMockup = () => {
                     className="w-full py-5 flex items-start justify-between gap-6 text-left hover:text-[var(--accent)] transition-colors duration-200"
                   >
                     <span className="font-editorial font-medium text-lg lg:text-xl leading-snug">{q}</span>
-                    {open === i ? <Minus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} /> : <Plus className="h-4 w-4 mt-2 shrink-0" strokeWidth={1.5} />}
+                    <FaqMark open={open === i} />
                   </button>
                   {open === i && (
                     <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed pb-6 max-w-[60ch]">{a}</p>

@@ -11,6 +11,21 @@ export const Overline = ({ children, className = '' }) => (
   </span>
 );
 
+// A bespoke FAQ-disclosure marker -- a serif "+" that rotates 45° into
+// an "×" on open. Replaces lucide-react's generic Plus/Minus icon pair,
+// which is the exact off-the-shelf component every AI-templated pricing
+// page reaches for; this ties the mark to the same Gloock/editorial
+// system as the rest of the page instead of a stock icon library.
+export const FaqMark = ({ open }) => (
+  <span
+    aria-hidden="true"
+    className="font-editorial font-normal text-2xl leading-none shrink-0 mt-0.5 inline-block transition-transform duration-300"
+    style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}
+  >
+    +
+  </span>
+);
+
 // Wrapper that gives every mockup page the editorial nav/footer + base palette
 export const MockupLayout = ({
   children,
