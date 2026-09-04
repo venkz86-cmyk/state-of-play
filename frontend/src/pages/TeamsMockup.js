@@ -206,7 +206,7 @@ export const TeamsMockup = () => {
             ))}
           </div>
           <p className="font-plex text-sm text-[var(--text-muted)] mt-10">
-            Need more than 10 seats? Ask about pricing for teams of 15 or more —{' '}
+            Need more than 10 seats? Ask about pricing for teams of 15 or more,{' '}
             <a href={TALK_TO_VENKAT_HREF} className="text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1">talk to Venkat</a>.
           </p>
           <p className="font-plex text-sm text-[var(--text-muted)] mt-3">
