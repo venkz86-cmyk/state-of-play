@@ -2274,6 +2274,15 @@ try:
 except Exception as _e:
     logging.warning(f"razorpay_orders module not mounted: {_e!r}")
 
+# Mount corporate.py (Phase 4) -- before admin_dashboard, which now imports
+# fetch_accounts from it to resolve corp-* members' real renewal dates.
+try:
+    from corporate import router as corporate_router, init as corporate_init
+    corporate_init()
+    app.include_router(corporate_router)
+except Exception as _e:
+    logging.warning(f"corporate module not mounted: {_e!r}")
+
 # Mount the admin dashboard's subscriber-aggregation endpoint (Phase 2) --
 # after payments (above), which it imports from.
 try:

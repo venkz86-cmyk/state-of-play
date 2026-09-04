@@ -21,6 +21,8 @@
  *    - Add these properties:
  *      - GHOST_ADMIN_API_KEY: Your Ghost Admin API key (format: "id:secret")
  *      - SHEET_ID: Your Google Sheet ID (from the URL)
+ *      - ADMIN_KEY: Same value as the backend's ADMIN_KEY env var (Render) --
+ *        gates the list_accounts action used by the internal admin dashboard
  * 
  * 3. Deploy as Web App:
  *    - Click "Deploy" → "New deployment"
@@ -140,6 +142,9 @@ function doPost(e) {
       case 'get_account':
         // Alternative way to get account data via POST
         return handleGetAccount(payload);
+      case 'list_accounts':
+        // Admin-only: every account row, for the internal dashboard.
+        return handleListAccounts(payload);
       default:
         return jsonResponse({ success: false, error: 'Unknown action: ' + action });
     }
@@ -460,6 +465,50 @@ function handleGetAccount(payload) {
       }))
     }
   });
+}
+
+/**
+ * List every corporate account (admin-only) for the internal TSOP admin
+ * dashboard. Unlike every other handler here, this isn't scoped by a
+ * per-company dashboard_token -- it returns every company's row -- so it
+ * checks a separate shared secret instead: an ADMIN_KEY Script Property
+ * set to the exact same value as the backend's own ADMIN_KEY env var
+ * (Render), one shared secret rather than a new one.
+ *
+ * dashboard_token is deliberately stripped from every row before
+ * returning -- it's a per-company bearer credential, not something an
+ * admin list view should ever expose. member_count is computed per
+ * account the same way doGet already does for a single company.
+ */
+function handleListAccounts(payload) {
+  const expectedKey = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
+  if (!expectedKey || payload.admin_key !== expectedKey) {
+    return jsonResponse({ success: false, error: 'Unauthorized' });
+  }
+
+  try {
+    const sheet = getAccountsSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    const accounts = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = {};
+      for (let j = 0; j < headers.length; j++) {
+        row[headers[j]] = data[i][j];
+      }
+      if (!row.account_id) continue; // skip a stray blank row
+      delete row.dashboard_token;
+      row.member_count = getMembers(row.account_id).length;
+      accounts.push(row);
+    }
+
+    return jsonResponse({ success: true, data: { accounts: accounts } });
+
+  } catch (error) {
+    Logger.log('handleListAccounts error: ' + error.toString());
+    return jsonResponse({ success: false, error: 'Failed to list accounts. Please try again.' });
+  }
 }
 
 /**

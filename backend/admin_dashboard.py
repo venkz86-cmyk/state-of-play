@@ -11,8 +11,10 @@ nothing precomputed and gone stale):
 
 "Expiry" is deliberately never a stored field -- it's computed per member
 at read time from whichever of the above actually applies (see
-_compute_expiry's docstring). Corporate accounts (Phase 4) aren't joined
-in yet; a corp-* labeled member shows no computed expiry until then.
+_compute_expiry's docstring). Corporate accounts (Phase 4) are joined in
+too, via corporate.fetch_accounts() -- a corp-* labeled member's expiry
+resolves to their company's real renewal_date from the Corporate
+Subscriptions Sheet.
 
 The single most useful thing this view can show that nothing else can:
 a member who is_paid (carries a paid label) but whose computed_expiry has
@@ -39,6 +41,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from admin_auth import require_admin_key_or_session
 from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels
 from payments import get_subscriber_payment_summaries
+from corporate import fetch_accounts as fetch_corporate_accounts
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +102,27 @@ async def _load_trial_and_nomination_maps() -> tuple[dict, dict]:
     return trial_map, nomination_map
 
 
+async def _load_corporate_maps() -> tuple[dict, dict]:
+    """{account_id: renewal_date} and {account_id: company_name}, loaded
+    once per request. Apps Script being unreachable is non-fatal here --
+    the Subscribers list still renders, corp members just keep the
+    unresolved ('corporate', None) fallback _compute_expiry already had
+    before this phase, exactly as documented on that function."""
+    renewal_map: dict = {}
+    name_map: dict = {}
+    try:
+        accounts = await fetch_corporate_accounts()
+        for acct in accounts:
+            account_id = acct.get('account_id')
+            if not account_id:
+                continue
+            renewal_map[account_id] = acct.get('renewal_date')
+            name_map[account_id] = acct.get('company_name')
+    except Exception as e:
+        logger.warning(f'corporate accounts fetch failed (non-fatal): {e!r}')
+    return renewal_map, name_map
+
+
 def _ghost_subscription_end(subscriptions: Optional[list]) -> Optional[datetime]:
     """A Ghost-native complimentary subscription (granted by hand in Ghost
     Admin, e.g. the pre-existing 'sandbox-event-comp' label some members
@@ -119,19 +143,29 @@ def _ghost_subscription_end(subscriptions: Optional[list]) -> Optional[datetime]
         return None
 
 
+def _corp_account_id(label_names: list[str]) -> Optional[str]:
+    for l in label_names:
+        if l.startswith('corp-'):
+            return l[len('corp-'):]
+    return None
+
+
 def _compute_expiry(
     label_names: list[str], last_payment: Optional[dict],
     trial_expires: Optional[datetime], nomination_expires: Optional[datetime],
     ghost_subscription_expires: Optional[datetime] = None,
+    corp_renewal: Optional[str] = None,
 ) -> tuple[Optional[str], str]:
     """Returns (computed_expiry_iso, source). Priority: a corp-* label
-    (Phase 4 fills this in; for now it's left unresolved rather than
-    guessed at), then a genuine Ghost-native subscription/comp end date
-    (real data, outranks every synthetic guess below), then a Trial
-    window, then a nomination-access window, then a real payment's
-    synthetic 12-month cycle, then nothing (free)."""
+    resolved against the Corporate Subscriptions Sheet's own renewal_date
+    (Phase 4 -- if the label exists but doesn't resolve, e.g. the Apps
+    Script is unreachable or the label is orphaned, this falls back to
+    unresolved rather than guessing), then a genuine Ghost-native
+    subscription/comp end date (real data, outranks every synthetic guess
+    below), then a Trial window, then a nomination-access window, then a
+    real payment's synthetic 12-month cycle, then nothing (free)."""
     if any(l.startswith('corp-') for l in label_names):
-        return None, 'corporate'
+        return corp_renewal, 'corporate'
     if ghost_subscription_expires:
         return ghost_subscription_expires.isoformat(), 'ghost_subscription'
     if 'tier-trial' in label_names and trial_expires:
@@ -177,6 +211,7 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
 
     payment_summaries = await get_subscriber_payment_summaries()
     trial_map, nomination_map = await _load_trial_and_nomination_maps()
+    corp_renewal_map, corp_name_map = await _load_corporate_maps()
 
     rows = []
     for member in members:
@@ -198,10 +233,13 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
         summary = payment_summaries.get(email)
         last_payment = summary.get('last_payment') if summary else None
         ghost_subscription_expires = _ghost_subscription_end(member.get('subscriptions'))
+        corp_account_id = _corp_account_id(label_names)
+        company_name = corp_name_map.get(corp_account_id) if corp_account_id else None
 
         computed_expiry, expiry_source = _compute_expiry(
             label_names, last_payment, trial_map.get(email), nomination_map.get(email),
             ghost_subscription_expires,
+            corp_renewal_map.get(corp_account_id) if corp_account_id else None,
         )
 
         expired_but_still_paid = False
@@ -228,6 +266,7 @@ async def list_subscribers(_admin: None = Depends(require_admin_key_or_session))
             'computed_expiry': computed_expiry,
             'expiry_source': expiry_source,
             'expired_but_still_paid': expired_but_still_paid,
+            'company_name': company_name,
         })
 
     return {'subscribers': rows, 'count': len(rows)}
