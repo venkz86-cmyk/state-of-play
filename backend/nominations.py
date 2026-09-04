@@ -930,6 +930,44 @@ async def cold_link_generate(
     }
 
 
+@router.get('/api/admin/links')
+async def list_links(
+    link_type: str = 'all',
+    _admin: None = Depends(require_admin_key_or_session),
+):
+    """Admin-only audit trail of every cold/gift link ever minted -- the
+    thing nothing in this codebase showed before Phase 5: what's already
+    been generated, by whom, for which story, and whether it's been
+    opened. Nomination links have their own dedicated view already
+    (GET /api/admin/nominations/access, joined against the person who was
+    nominated) so this deliberately excludes token_type='nomination' to
+    avoid showing the same rows twice in two different tabs.
+    `link_type` accepts 'all' (default), 'cold', or 'gift'."""
+    if _db is None:
+        return {'links': []}
+
+    query = {'token_type': {'$in': ['cold', 'gift']}}
+    if link_type in ('cold', 'gift'):
+        query = {'token_type': link_type}
+
+    links = []
+    cursor = _db.story_tokens.find(query).sort('created_at', -1).limit(1000)
+    async for doc in cursor:
+        links.append({
+            'token_id': doc.get('token_id'),
+            'url': f'{PUBLIC_BASE_URL}/s/{doc.get("token_id")}',
+            'token_type': doc.get('token_type'),
+            'post_slug': doc.get('post_slug'),
+            'created_by': doc.get('created_by') or doc.get('subscriber_email') or '',
+            'subscriber_name': doc.get('subscriber_name') or '',
+            'created_at': _iso(doc.get('created_at')),
+            'expires_at': _iso(doc.get('expires_at')),
+            'open_count': doc.get('open_count', 0),
+            'status': doc.get('status'),
+        })
+    return {'links': links, 'count': len(links)}
+
+
 @router.post('/api/cold-link/event')
 async def cold_link_event(req: ColdLinkEvent):
     """Conversion ping from the frontend after a Ghost signup happens

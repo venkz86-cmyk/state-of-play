@@ -11,6 +11,7 @@ import { NominatedReadersPanel } from '../components/admin/NominatedReadersPanel
 import { TrialsPanel } from '../components/admin/TrialsPanel';
 import { ReferralsPanel } from '../components/admin/ReferralsPanel';
 import { CorporateAccountsPanel } from '../components/admin/CorporateAccountsPanel';
+import { LinksPanel } from '../components/admin/LinksPanel';
 
 // Phase 1 shipped the shell + nav; Phase 2 (Subscribers/Renewals/the
 // payments ledger) is real below. Each remaining panel is real once its
@@ -111,7 +112,7 @@ export const AdminDashboard = () => {
           <Route path="corporate" element={<CorporateAccountsPanel onAuthError={onAuthError} />} />
           <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
           <Route path="referrals" element={<ReferralsPanel onAuthError={onAuthError} />} />
-          <Route path="links" element={<ComingSoonPanel title="Links" phase="Phase 5" />} />
+          <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
         </Routes>
       </main>
     </div>

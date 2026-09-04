@@ -1,12 +1,20 @@
 import { useState } from 'react';
+import { getAdminSessionToken } from '../lib/adminSessionToken';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const ADMIN_EMAIL = 'hello@venkatananth.me';
 
 /**
  * Visible only when the admin email is logged in.
- * - Paywalled story → POST /api/cold-link/generate with admin key, copy returned URL.
+ * - Paywalled story → POST /api/cold-link/generate with admin auth, copy returned URL.
  * - Free story     → copy window.location.href directly.
+ *
+ * Auth prefers the real admin dashboard session (a bearer token minted by
+ * admin_auth.py, same as every dashboard panel uses) -- falls back to the
+ * old window.prompt+localStorage X-Admin-Key flow only when no admin
+ * session exists on this browser, so this in-article shortcut doesn't
+ * force a second sign-in for someone who's already signed into the
+ * dashboard elsewhere in the same browser.
  */
 export const ColdLinkAdminButton = ({ user, postSlug, isPremium }) => {
   const [status, setStatus] = useState(''); // '', 'copying', 'copied', 'error'
@@ -14,8 +22,6 @@ export const ColdLinkAdminButton = ({ user, postSlug, isPremium }) => {
 
   const isAdmin = (user?.email || '').toLowerCase() === ADMIN_EMAIL;
   if (!isAdmin) return null;
-
-  const adminKey = window.localStorage.getItem('tsop_admin_key') || '';
 
   const handleClick = async () => {
     setStatus('copying');
@@ -25,25 +31,33 @@ export const ColdLinkAdminButton = ({ user, postSlug, isPremium }) => {
       let confirmation = 'Copied.';
 
       if (isPremium) {
-        if (!adminKey) {
-          const k = window.prompt(
-            'Paste your TSOP ADMIN_KEY. We\'ll remember it on this device.'
-          );
-          if (!k) { setStatus(''); return; }
-          window.localStorage.setItem('tsop_admin_key', k.trim());
+        const sessionToken = getAdminSessionToken();
+        let authHeaders = sessionToken ? { Authorization: `Bearer ${sessionToken}` } : null;
+
+        if (!authHeaders) {
+          let adminKey = window.localStorage.getItem('tsop_admin_key') || '';
+          if (!adminKey) {
+            const k = window.prompt(
+              'Paste your TSOP ADMIN_KEY. We\'ll remember it on this device.'
+            );
+            if (!k) { setStatus(''); return; }
+            adminKey = k.trim();
+            window.localStorage.setItem('tsop_admin_key', adminKey);
+          }
+          authHeaders = { 'X-Admin-Key': adminKey };
         }
-        const key = window.localStorage.getItem('tsop_admin_key') || '';
+
         const res = await fetch(`${API}/api/cold-link/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Admin-Key': key,
+            ...authHeaders,
           },
           body: JSON.stringify({ post_slug: postSlug }),
         });
-        if (res.status === 403) {
+        if (res.status === 403 || res.status === 401) {
           window.localStorage.removeItem('tsop_admin_key');
-          throw new Error('Admin key rejected. Try again.');
+          throw new Error('Admin auth rejected. Try again.');
         }
         if (!res.ok) {
           throw new Error(`Generation failed (${res.status})`);

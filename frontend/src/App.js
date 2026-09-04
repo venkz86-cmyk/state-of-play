@@ -1,5 +1,5 @@
 import "@/index.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MockupBackToTop } from "./components/MockupBackToTop";
@@ -26,7 +26,6 @@ import { MockupIndex } from "./pages/MockupIndex";
 import { TeamsManage } from "./pages/TeamsManage";
 import { TeamsLogin } from "./pages/TeamsLogin";
 import { TeamsEmailsMockup } from "./pages/TeamsEmailsMockup";
-import { CommentsModerationMockup } from "./pages/CommentsModerationMockup";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AdminLogin } from "./pages/AdminLogin";
 import { AdminDashboard } from "./pages/AdminDashboard";
@@ -74,7 +73,7 @@ function Shell() {
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
-          <Route path="/admin/comments" element={<CommentsModerationMockup />} />
+          <Route path="/admin/comments" element={<Navigate to="/admin/dashboard/comments" replace />} />
           <Route path="/admin/*" element={<AdminArea />} />
 
           {/* Mockup review index — kept for future design previews */}
