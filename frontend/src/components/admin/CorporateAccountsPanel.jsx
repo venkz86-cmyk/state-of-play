@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrencyMajor, formatDate } from '../../lib/format';
 
 // Read-only in v1 -- actual seat management stays on the existing
 // token-gated /teams/manage page, a deliberately different persona/flow
@@ -47,7 +47,7 @@ export const CorporateAccountsPanel = ({ onAuthError }) => {
     { key: 'seats', label: 'Seats', sortable: true, align: 'right', render: (a) => `${a.member_count ?? 0}/${a.seats ?? '—'}` },
     {
       key: 'amount_paid', label: 'Amount paid', sortable: true, align: 'right',
-      render: (a) => formatCurrency(a.amount_paid, a.currency || 'INR'),
+      render: (a) => formatCurrencyMajor(a.amount_paid, a.currency || 'INR'),
     },
     { key: 'renewal_date', label: 'Renewal', sortable: true, render: (a) => (a.renewal_date ? formatDate(a.renewal_date) : '—') },
     {

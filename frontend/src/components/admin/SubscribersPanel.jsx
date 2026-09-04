@@ -3,6 +3,7 @@ import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, daysUntil } from '../../lib/format';
+import { useCountDelta } from '../../lib/useCountDelta';
 
 const TIER_LABEL = {
   standard: 'Annual', student: 'Student', trial: 'Trial',
@@ -16,11 +17,36 @@ const expiryTone = (row) => {
   return 'var(--text)';
 };
 
+const FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'free', label: 'Free' },
+  { value: 'corporate', label: 'Corporate' },
+  { value: 'student', label: 'Student' },
+  { value: 'trial', label: 'Trial' },
+  { value: 'nomination', label: 'Nominated' },
+  { value: 'comped', label: 'Comped' },
+  { value: 'standard', label: 'Annual' },
+];
+
+const matchesFilter = (row, filter) => {
+  switch (filter) {
+    case 'all': return true;
+    case 'paid': return row.is_paid;
+    case 'free': return !row.is_paid;
+    case 'corporate': return !!row.company_name;
+    case 'standard': return row.tier === 'standard' && !row.company_name;
+    default: return row.tier === filter;
+  }
+};
+
 export const SubscribersPanel = ({ onAuthError }) => {
   const [subscribers, setSubscribers] = useState(null);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [history, setHistory] = useState({});
+  const [filter, setFilter] = useState('all');
+  const [driftOnly, setDriftOnly] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -49,6 +75,11 @@ export const SubscribersPanel = ({ onAuthError }) => {
     }
   };
 
+  // Hooks must run unconditionally on every render -- called here, above
+  // the early returns below, with `subscribers?.length` as null until it
+  // loads (useCountDelta itself no-ops on a null value).
+  const subscriberDelta = useCountDelta('tsop_admin_subscribers_count', subscribers?.length ?? null);
+
   if (error) {
     return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
   }
@@ -58,6 +89,10 @@ export const SubscribersPanel = ({ onAuthError }) => {
 
   const paidCount = subscribers.filter((s) => s.is_paid).length;
   const driftCount = subscribers.filter((s) => s.expired_but_still_paid).length;
+
+  const filteredRows = subscribers
+    .filter((r) => matchesFilter(r, filter))
+    .filter((r) => !driftOnly || r.expired_but_still_paid);
 
   const columns = [
     { key: 'name', label: 'Name', sortable: true, render: (r) => r.name || '—' },
@@ -83,19 +118,46 @@ export const SubscribersPanel = ({ onAuthError }) => {
 
   return (
     <div>
-      <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-3 mb-8">
-        <KPITile label="Total members" value={subscribers.length} />
+      <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-3 mb-6">
+        <KPITile
+          label="Total members"
+          value={subscribers.length}
+          sublabel={subscriberDelta ? `+${subscriberDelta} since last visit` : undefined}
+        />
         <KPITile label="Paid" value={paidCount} bordered />
         <KPITile label="Label/payment drift" value={driftCount} accent={driftCount > 0} bordered />
       </div>
 
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-6">
+        <div className="flex flex-wrap gap-4">
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFilter(f.value)}
+              className={`font-plex text-[13px] pb-1 border-b-2 transition-colors ${
+                filter === f.value
+                  ? 'border-[var(--accent-burgundy)] text-[var(--text)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <label className="font-plex text-[13px] text-[var(--text-muted)] flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={driftOnly} onChange={(e) => setDriftOnly(e.target.checked)} />
+          Drift only
+        </label>
+      </div>
+
       <DataTable
         columns={columns}
-        rows={subscribers}
+        rows={filteredRows}
         rowKey={(r) => r.email}
         searchKeys={['name', 'email']}
         searchPlaceholder="Search by name or email…"
-        emptyMessage="No subscribers found."
+        emptyMessage="No subscribers match this filter."
         onRowClick={onRowClick}
       />
 

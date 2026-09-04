@@ -19,6 +19,24 @@ export function formatCurrency(amountMinorUnits, currency) {
   return `${major.toLocaleString()} ${currency}`;
 }
 
+// Corporate accounts (the Google Sheet) stores amount_paid as whole
+// currency units -- ₹12,000 is entered as 12000, not 1,200,000 paise --
+// unlike everything payments.py records, which is always Razorpay's own
+// minor-unit convention. Don't run this through formatCurrency (which
+// divides by 100) or a real ₹12,000 shows as ₹120.
+export function formatCurrencyMajor(amount, currency) {
+  if (amount == null || !currency) return '—';
+  const n = Number(amount);
+  if (Number.isNaN(n)) return '—';
+  if (currency === 'INR') {
+    return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  }
+  if (currency === 'USD') {
+    return `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  }
+  return `${n.toLocaleString()} ${currency}`;
+}
+
 export function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);

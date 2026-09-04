@@ -3,6 +3,7 @@ import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatDateTime } from '../../lib/format';
+import { useCountDelta } from '../../lib/useCountDelta';
 
 // Replaces the old /admin/comments page's hand-rolled <ul>/<li> lists
 // with the same DataTable every other panel uses. Same endpoints,
@@ -58,6 +59,11 @@ export const CommentsPanel = ({ onAuthError }) => {
       setBusyId(null);
     }
   };
+
+  // Above the early returns below so this hook always runs (Rules of
+  // Hooks) -- null until `pending` loads, matching useCountDelta's own
+  // no-op-on-null handling.
+  const pendingDelta = useCountDelta('tsop_admin_comments_pending_count', pending?.length ?? null);
 
   if (error) {
     return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
@@ -121,7 +127,12 @@ export const CommentsPanel = ({ onAuthError }) => {
   return (
     <div>
       <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-8">
-        <KPITile label="Pending review" value={pending.length} accent={pending.length > 0} />
+        <KPITile
+          label="Pending review"
+          value={pending.length}
+          accent={pending.length > 0}
+          sublabel={pendingDelta ? `+${pendingDelta} since last visit` : undefined}
+        />
         <KPITile label="Live" value={approved.length} bordered />
       </div>
 
