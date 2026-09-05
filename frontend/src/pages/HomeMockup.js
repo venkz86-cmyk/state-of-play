@@ -173,6 +173,11 @@ export const HomeMockup = () => {
             {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season {seasonLabel(editionNo)}
           </span>
         </div>
+        {!isMember && (
+          <p className="font-editorial italic text-[16px] text-[var(--text)] pt-4">
+            Weekly reporting on the business of Indian sport, from Venkat Ananth.
+          </p>
+        )}
       </div>
 
       {/* HERO ROW — Lead (8 cols) + Briefing (4 cols) */}
@@ -254,7 +259,7 @@ export const HomeMockup = () => {
                 rel="noopener noreferrer"
                 className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
               >
-                Subscribe, it's free →
+                Get The Left Field free →
               </a>
             </aside>
           </div>

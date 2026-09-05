@@ -96,7 +96,7 @@ export const SubscribeMockup = () => {
               <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹2,949 / year total</p>
             )}
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
-              Billed annually. 12 months of full access. GST-compliant invoice.
+              Billed annually. 12 months of full access.{pricing.country === 'IN' ? ' GST-compliant invoice.' : ''}
             </p>
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
