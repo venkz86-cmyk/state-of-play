@@ -104,7 +104,7 @@ export const HomeMockup = () => {
   const [editionNo, setEditionNo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
-  const { canAccessPremium } = useAuth();
+  const { canAccessPremium, loading: authLoading } = useAuth();
   const pricing = useGeoPricing();
 
   const previewMember = searchParams.get('preview') === 'member';
@@ -173,7 +173,7 @@ export const HomeMockup = () => {
             {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season {seasonLabel(editionNo)}
           </span>
         </div>
-        {!isMember && (
+        {!authLoading && !isMember && (
           <p className="font-editorial italic text-[16px] text-[var(--text)] pt-4">
             Weekly reporting on the business of Indian sport, from Venkat Ananth.
           </p>
