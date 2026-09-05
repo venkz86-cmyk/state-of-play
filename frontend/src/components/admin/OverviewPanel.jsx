@@ -80,6 +80,13 @@ export const OverviewPanel = ({ onAuthError }) => {
           accent={kpis.expired_but_still_paid > 0}
         />
       </div>
+      <div className="border-b border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-8">
+        <KPITile
+          label="Free readers who converted"
+          value={kpis.free_to_paid_conversions}
+          sublabel="signed up free, later paid"
+        />
+      </div>
 
       <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
         Needs attention

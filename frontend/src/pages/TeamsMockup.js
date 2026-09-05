@@ -9,7 +9,7 @@ const PLANS = [
     base: '₹10,000',
     total: '₹11,800',
     perSeat: '₹2,000 + GST per seat',
-    compare: 'At the current individual price of ₹2,499 + GST, five separate subscriptions would cost ₹12,495 + GST. Team-5 saves ₹2,495 before GST.',
+    compare: 'Five separate subscriptions would cost ₹12,495 + GST. You save ₹2,495.',
     href: 'https://rzp.io/rzp/tsopteam5',
   },
   {
@@ -19,7 +19,7 @@ const PLANS = [
     base: '₹20,000',
     total: '₹23,600',
     perSeat: '₹2,000 + GST per seat',
-    compare: 'At the current individual price of ₹2,499 + GST, ten separate subscriptions would cost ₹24,990 + GST. Team-10 saves ₹4,990 before GST.',
+    compare: 'Ten separate subscriptions would cost ₹24,990 + GST. You save ₹4,990.',
     href: 'https://rzp.io/rzp/tsopteam10',
   },
 ];
@@ -54,7 +54,7 @@ export const TeamsMockup = () => {
           A note for the desk <em className="italic font-normal">that needs this.</em>
         </h1>
         <div className="max-w-[65ch] space-y-5">
-          <p className="font-editorial font-medium text-xl lg:text-[1.375rem] leading-snug tracking-tight text-[var(--text)]">
+          <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             A client asks what a franchise is worth, mid-pitch, with no time to reconstruct the deal history from press releases and old decks. By the time it reaches a general business publication, your team may already need a view.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
@@ -69,14 +69,17 @@ export const TeamsMockup = () => {
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             A team plan puts the weekly story, the twice-weekly Left Field briefings and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes, no re-signing and nothing lost when someone leaves.
           </p>
+          <div className="space-y-4">
+            {PLANS.map((p) => (
+              <p key={p.id} className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
+                <strong className="font-semibold text-[var(--text)]">{p.name}</strong>: {p.base} + GST a year ({p.total} total). {p.seats} seats, {p.perSeat} each.
+                <br />
+                {p.compare}
+              </p>
+            ))}
+          </div>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Team-5 is {PLANS[0].base} + GST a year ({PLANS[0].total} total), five seats at {PLANS[0].perSeat}. {PLANS[0].compare}
-          </p>
-          <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Team-10 is {PLANS[1].base} + GST a year ({PLANS[1].total} total), ten seats at {PLANS[1].perSeat}. {PLANS[1].compare}
-          </p>
-          <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Both come with a GST-compliant invoice. Need more than ten seats, or want to talk it through first? Email me at{' '}
+            Both include a GST-compliant invoice. Need more than ten seats, or want to talk it through first? Email me at{' '}
             <a href={TALK_TO_VENKAT_HREF} className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
               venkat@stateofplay.club
             </a>.

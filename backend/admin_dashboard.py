@@ -52,6 +52,7 @@ GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
 MAX_ROWS = 5000
 SYNTHETIC_CYCLE_DAYS = 365  # a real paid annual member's cheap expiry estimate
+FREE_TO_PAID_MIN_GAP_HOURS = 24  # see _is_free_to_paid_conversion
 
 _db = None
 _razorpay_client = None
@@ -141,6 +142,35 @@ def _ghost_subscription_end(subscriptions: Optional[list]) -> Optional[datetime]
         return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
     except ValueError:
         return None
+
+
+def _is_free_to_paid_conversion(signup_date, first_payment: Optional[dict]) -> bool:
+    """True only when the Ghost account demonstrably existed as a free
+    member before the first real payment, not merely "has ever paid".
+    A payment's own find-or-create step (tiers.ensure_member_labeled)
+    creates a brand-new Ghost member at the moment someone pays if they
+    didn't already have one -- so a member whose signup and first-payment
+    timestamps land in the same instant was never actually a free reader
+    first, they paid on day one. Requiring the gap to exceed
+    FREE_TO_PAID_MIN_GAP_HOURS filters that same-instant creation out
+    without needing a dedicated flag anywhere upstream. This is the
+    "sign up date vs. complimentary date" split Venkat asked for, where
+    complimentary date = the date of the first real payment."""
+    if not signup_date or not first_payment or not first_payment.get('razorpay_created_at'):
+        return False
+    try:
+        signup_dt = (
+            datetime.fromisoformat(str(signup_date).replace('Z', '+00:00'))
+            if not isinstance(signup_date, datetime) else signup_date
+        )
+        if signup_dt.tzinfo is None:
+            signup_dt = signup_dt.replace(tzinfo=timezone.utc)
+        paid_dt = datetime.fromisoformat(first_payment['razorpay_created_at'])
+        if paid_dt.tzinfo is None:
+            paid_dt = paid_dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return False
+    return paid_dt - signup_dt > timedelta(hours=FREE_TO_PAID_MIN_GAP_HOURS)
 
 
 def _corp_account_id(label_names: list[str]) -> Optional[str]:
@@ -235,6 +265,8 @@ async def _build_subscriber_rows() -> list[dict]:
             tier = 'comped'
         summary = payment_summaries.get(email)
         last_payment = summary.get('last_payment') if summary else None
+        first_payment = summary.get('first_payment') if summary else None
+        converted_from_free = _is_free_to_paid_conversion(member.get('created_at'), first_payment)
         ghost_subscription_expires = _ghost_subscription_end(member.get('subscriptions'))
         corp_account_id = _corp_account_id(label_names)
         company_name = corp_name_map.get(corp_account_id) if corp_account_id else None
@@ -264,6 +296,8 @@ async def _build_subscriber_rows() -> list[dict]:
             'label_names': label_names,
             'created_at': member.get('created_at'),
             'last_payment': last_payment,
+            'first_payment': first_payment,
+            'converted_from_free': converted_from_free,
             'total_paid': summary.get('total_paid') if summary else {'INR': 0, 'USD': 0},
             'payment_count': summary.get('payment_count') if summary else 0,
             'computed_expiry': computed_expiry,
@@ -306,6 +340,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
     rows = await _build_subscriber_rows()
 
     paid_rows = [r for r in rows if r['is_paid']]
+    converted_from_free_rows = [r for r in rows if r['converted_from_free']]
     expired_but_still_paid = [r for r in paid_rows if r['expired_but_still_paid']]
     expiring_7d = [r for r in paid_rows if _within_days(r['computed_expiry'], 7, now)]
     expiring_30d = [r for r in paid_rows if _within_days(r['computed_expiry'], 30, now)]
@@ -372,6 +407,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
             'expiring_30d': len(expiring_30d),
             'expiring_7d': len(expiring_7d),
             'expired_but_still_paid': len(expired_but_still_paid),
+            'free_to_paid_conversions': len(converted_from_free_rows),
         },
         'attention': {
             'expired_but_still_paid': [_attention_row(r) for r in expired_but_still_paid[:25]],

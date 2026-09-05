@@ -204,32 +204,44 @@ async def fetch_and_record(
 
 
 async def get_subscriber_payment_summaries() -> dict:
-    """{email: {last_payment: {...}, total_paid: {INR: int, USD: int},
-    payment_count: int}}. The two currencies are never summed together --
-    a subscriber's total is always shown as two separate figures, never
-    converted. Used by admin_dashboard.py's subscriber listing, not
-    exposed as its own endpoint."""
+    """{email: {last_payment: {...}, first_payment: {...}, total_paid:
+    {INR: int, USD: int}, payment_count: int}}. The two currencies are
+    never summed together -- a subscriber's total is always shown as two
+    separate figures, never converted. `first_payment` is the earliest
+    captured payment on record for that email -- the conversion-date
+    signal admin_dashboard.py joins against a Ghost member's signup date
+    to answer "did a free reader ever become a paying one, and when."
+    Used by admin_dashboard.py's subscriber listing, not exposed as its
+    own endpoint."""
     if _db is None:
         return {}
     summaries: dict = {}
+    # Sorted newest-first: the first doc seen per email is the last
+    # payment, and since we keep overwriting first_payment on every
+    # subsequent doc for that email, whichever write happens last (the
+    # oldest doc, seen last in this descending scan) is the true earliest
+    # payment once the cursor is exhausted.
     cursor = _db.payments.find({}).sort('razorpay_created_at', -1)
     async for doc in cursor:
         email = doc.get('email')
         if not email:
             continue
+        payment_snapshot = {
+            'payment_id': doc.get('payment_id'),
+            'amount': doc.get('amount'),
+            'currency': doc.get('currency'),
+            'plan': doc.get('plan'),
+            'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+        }
         if email not in summaries:
             summaries[email] = {
-                'last_payment': {
-                    'payment_id': doc.get('payment_id'),
-                    'amount': doc.get('amount'),
-                    'currency': doc.get('currency'),
-                    'plan': doc.get('plan'),
-                    'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
-                },
+                'last_payment': payment_snapshot,
+                'first_payment': payment_snapshot,
                 'total_paid': {'INR': 0, 'USD': 0},
                 'payment_count': 0,
             }
         summary = summaries[email]
+        summary['first_payment'] = payment_snapshot
         summary['payment_count'] += 1
         currency = doc.get('currency')
         if currency in summary['total_paid']:
