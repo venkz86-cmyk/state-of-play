@@ -111,7 +111,7 @@ export const SubscribeMockup = () => {
         </div>
       </section>
 
-      {/* What's included */}
+      {/* What you get */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">What you get</p>

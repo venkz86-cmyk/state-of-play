@@ -227,7 +227,7 @@ export const TeamsEmailsMockup = () => {
           </h1>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] max-w-[55ch]">
             Two emails go out for any team subscription — one to the admin who paid, one to each
-            colleague they later add through the dashboard.
+            colleague they later add to the account.
           </p>
         </section>
 
@@ -260,8 +260,8 @@ export const TeamsEmailsMockup = () => {
         <div className="mt-12">{active === 'member' ? <MemberEmail /> : <AdminEmail />}</div>
 
         <p className="font-plex text-[12px] text-[var(--text-muted)] mt-10 text-center max-w-[55ch] mx-auto">
-          These are templates for Zapier (or wherever you trigger the send). The dashboard token
-          shown here is mock — Apps Script generates a real UUID per account.
+          These are templates for Zapier (or wherever you trigger the send). The account token
+          shown here is mock. Apps Script generates a real UUID per account.
         </p>
       </div>
     </MockupLayout>
