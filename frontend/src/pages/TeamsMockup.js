@@ -5,36 +5,16 @@ const PLANS = [
   {
     id: 'team-5',
     name: 'Team-5',
-    seats: 5,
-    base: '₹10,000',
-    total: '₹11,800',
-    perSeat: '₹2,000 + GST per seat',
-    compare: 'Five separate subscriptions would cost ₹12,495 + GST. You save ₹2,495.',
+    body: '₹10,000 + GST a year (₹11,800 total). Five seats, ₹2,000 + GST each. Five separate subscriptions would cost ₹12,495. You save ₹2,495.',
     href: 'https://rzp.io/rzp/tsopteam5',
   },
   {
     id: 'team-10',
     name: 'Team-10',
-    seats: 10,
-    base: '₹20,000',
-    total: '₹23,600',
-    perSeat: '₹2,000 + GST per seat',
-    compare: 'Ten separate subscriptions would cost ₹24,990 + GST. You save ₹4,990.',
+    body: '₹20,000 + GST a year (₹23,600 total). Ten seats, ₹2,000 + GST each. Ten separate subscriptions would cost ₹24,990. You save ₹4,990.',
     href: 'https://rzp.io/rzp/tsopteam10',
   },
 ];
-
-const COVERAGE = ['franchise valuations', 'media rights', 'ownership deals'];
-
-const USES = [
-  'brief colleagues before a client or prospect meeting',
-  'find the deal and market context behind the latest announcement',
-  'check what was reported about a franchise, rights cycle, owner, investor or regulator',
-  'give analysts and associates the same starting point',
-  'return to a searchable archive of what actually happened, rather than rely on memory or the latest headline',
-];
-
-const TALK_TO_VENKAT_HREF = 'mailto:venkat@stateofplay.club?subject=Team%20plan%20%E2%80%94%20a%20quick%20question';
 
 export const TeamsMockup = () => {
   return (
@@ -55,57 +35,47 @@ export const TeamsMockup = () => {
         </h1>
         <div className="max-w-[65ch] space-y-5">
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            A client asks what a franchise is worth, mid-pitch, with no time to reconstruct the deal history from press releases and old decks. By the time it reaches a general business publication, your team may already need a view.
+            A client asks what a franchise is worth, mid-pitch, with no time to reconstruct the deal history from press releases and old decks. By the time it reaches a general business publication, your team already needs a view.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            I write The State of Play, a weekly reported publication on the business of Indian sport: {COVERAGE.slice(0, -1).join(', ')} and {COVERAGE[COVERAGE.length - 1]}. 360 individual subscribers read it. The reporting has been cited by Bloomberg, SportBusiness, ESPNcricinfo, The Athletic and SportsPro.
+            I write The State of Play, a weekly reported publication on the business of Indian sport: franchise valuations, media rights, ownership. One deeply reported story a week. No scores, no opinion, no noise. In its first year, 360 readers have chosen to pay for it. The reporting has been cited by <em>Bloomberg</em>, <em>SportBusiness</em>, <em>ESPNcricinfo</em>, <em>The Athletic</em> and <em>SportsPro</em>.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators use it to {USES.slice(0, -1).join(', ')}, and {USES[USES.length - 1]}.
+            The desks that read it work in consulting, law, agencies, broadcast, funds and franchises. They use it to brief a colleague before a client meeting, find the deal context behind an announcement, check what was reported about a franchise, a rights cycle or an owner, and give analysts and associates the same starting point. When the meeting starts, everyone in the room has the same facts. That's the whole product.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            It is a consistent source of reported facts, market context and analysis on a sector that is still poorly documented.
+            A team plan puts the weekly story, the twice-weekly Left Field briefings and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes. Nothing to re-sign, nothing lost when someone leaves.
           </p>
-          <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            A team plan puts the weekly story, the twice-weekly Left Field briefings and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes, no re-signing and nothing lost when someone leaves.
-          </p>
-          <div className="space-y-4">
+          <div data-testid="teams-pricing" className="space-y-6">
             {PLANS.map((p) => (
-              <p key={p.id} className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-                <strong className="font-semibold text-[var(--text)]">{p.name}</strong>: {p.base} + GST a year ({p.total} total). {p.seats} seats, {p.perSeat} each.
-                <br />
-                {p.compare}
-              </p>
+              <div key={p.id}>
+                <p className="font-editorial font-medium text-lg mb-1">{p.name}</p>
+                <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] mb-2">
+                  {p.body}
+                </p>
+                <a
+                  href={p.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`teams-cta-${p.id}`}
+                  className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                >
+                  Buy {p.name}
+                </a>
+              </div>
             ))}
           </div>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Both include a GST-compliant invoice. Need more than ten seats, or want to talk it through first? Email me at{' '}
-            <a href={TALK_TO_VENKAT_HREF} className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
+            Both come with one annual, GST-compliant invoice. More than ten seats, or want to talk it through first? Write to me:{' '}
+            <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
               venkat@stateofplay.club
-            </a>.
-          </p>
-          <div data-testid="teams-pricing" className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-2">
-            {PLANS.map((p) => (
-              <a
-                key={p.id}
-                href={p.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid={`teams-cta-${p.id}`}
-                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-              >
-                Buy {p.name}
-              </a>
-            ))}
-          </div>
-          <p className="font-plex text-sm text-[var(--text-muted)] pt-1">
-            Already subscribed?{' '}
-            <Link to="/teams/login" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="teams-existing-customer-link">
+            </a>. Already subscribed?{' '}
+            <Link to="/teams/login" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors" data-testid="teams-existing-customer-link">
               Go to your team account
             </Link>.
           </p>
         </div>
-        <p className="font-editorial italic text-lg mt-10">Venkat Ananth</p>
+        <p className="font-editorial italic text-lg mt-10">Venkat</p>
       </section>
     </MockupLayout>
   );
