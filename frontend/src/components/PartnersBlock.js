@@ -74,7 +74,7 @@ export const PartnersBlock = ({
                 href="mailto:prerna@stateofplay.club?subject=Partnerships"
                 className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
               >
-                Get in touch →
+                Get in touch
               </a>
             </p>
           )}

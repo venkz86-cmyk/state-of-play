@@ -303,7 +303,7 @@ export const LeftFieldMockup = () => {
               data-testid="leftfield-upgrade"
               className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-colors duration-200"
             >
-              Read The State of Play →
+              Read The State of Play
             </Link>
           </div>
         </div>

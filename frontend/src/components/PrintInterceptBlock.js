@@ -303,7 +303,7 @@ export const PrintInterceptBlock = ({
                 className="tsop-print-only__cta"
                 data-testid="print-blocked-duplicate-try-another"
               >
-                Nominate someone else →
+                Nominate someone else
               </button>
             </div>
           ) : submitted ? (
@@ -370,7 +370,7 @@ export const PrintInterceptBlock = ({
                   disabled={submitting}
                   data-testid="print-nominate-submit"
                 >
-                  {submitting ? 'Sending…' : 'Nominate them →'}
+                  {submitting ? 'Sending…' : 'Nominate them'}
                 </button>
               </form>
               <p className="tsop-print-only__footnote">

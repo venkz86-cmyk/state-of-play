@@ -55,16 +55,16 @@ export const TeamsLogin = () => {
       <div className="max-w-[560px] mx-auto px-6 pt-12 lg:pt-16 pb-32">
         <div className="border-b border-[var(--rule)] pb-3 mb-12 flex items-baseline justify-between">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>
-          <span className="font-plex text-[13px] text-[var(--text-muted)]">Dashboard access</span>
+          <span className="font-plex text-[13px] text-[var(--text-muted)]">Account access</span>
         </div>
 
         {!submitted ? (
           <>
             <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.25rem] lg:text-[2.5rem] leading-[1.1] mb-5">
-              Find your <em className="italic font-normal">team dashboard.</em>
+              Find your <em className="italic font-normal">team account.</em>
             </h1>
             <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-10 max-w-[52ch]">
-              Enter the email address you used when your company subscribed. We&rsquo;ll send your private dashboard link there.
+              Enter the email address you used when your company subscribed. We&rsquo;ll send your account link there.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -101,12 +101,12 @@ export const TeamsLogin = () => {
                 className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                 style={{ borderRadius: 'var(--control-radius)' }}
               >
-                {submitting ? 'Sending…' : 'Email me the link →'}
+                {submitting ? 'Sending…' : 'Email me the link'}
               </button>
             </form>
 
             <p className="font-plex text-[13px] text-[var(--text-muted)] mt-10 max-w-[52ch]">
-              The dashboard is for the company admin who set up the subscription. Team members
+              The account link is for the company admin who set up the subscription. Team members
               don&rsquo;t need it. They sign in at{' '}
               <a
                 href="/login"
@@ -124,13 +124,13 @@ export const TeamsLogin = () => {
               Check your inbox.
             </h1>
             <p className="font-plex text-[16px] leading-[1.7] text-[var(--text-muted)] max-w-[55ch] mb-8">
-              If we have a teams account for that email, you&rsquo;ll receive your dashboard link
-              shortly. It usually arrives within a minute &mdash; check spam if you don&rsquo;t see it.
+              If we have a teams account for that email, you&rsquo;ll receive your account link
+              shortly. It usually arrives within a minute. Check spam if you don&rsquo;t see it.
             </p>
             <p className="font-plex text-[14px] text-[var(--text-muted)] max-w-[55ch]">
               Still nothing after five minutes? Write to{' '}
               <a
-                href="mailto:prerna@stateofplay.club?subject=Team%20dashboard%20link"
+                href="mailto:prerna@stateofplay.club?subject=Team%20account%20link"
                 className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1"
               >
                 prerna@stateofplay.club

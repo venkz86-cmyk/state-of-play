@@ -67,7 +67,7 @@ export const ContinueReading = ({ articleId }) => {
         data-testid="continue-reading-cta"
         className="font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 hover:decoration-2 transition-all text-left"
       >
-        Continue where you left off →
+        Continue where you left off
       </button>
       <button
         type="button"

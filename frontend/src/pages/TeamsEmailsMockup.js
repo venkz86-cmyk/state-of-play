@@ -16,7 +16,7 @@ const ADMIN_EMAIL = {
   to: 'rohini@acmesports.in',
   subject: 'Your State of Play team subscription — Acme Sports',
   preheader:
-    'Welcome aboard. Your dashboard link is inside, and a quick word on how the seats work.',
+    'Welcome aboard. Your account link is inside, and a quick word on how the seats work.',
 };
 
 const MEMBER_EMAIL = {
@@ -93,7 +93,7 @@ const AdminEmail = () => (
       </p>
 
       <p>
-        Your team dashboard lives at the link below. Bookmark it. It’s how you’ll add or remove
+        Your team account lives at the link below. Bookmark it. It’s how you’ll add or remove
         colleagues, see who has access, and pull invoices when you need them.
       </p>
 
@@ -104,7 +104,7 @@ const AdminEmail = () => (
           style={{ borderRadius: 0 }}
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 no-underline transition-colors"
         >
-          Open your dashboard →
+          Open your account
         </a>
       </p>
 
@@ -118,9 +118,9 @@ const AdminEmail = () => (
       <p className="pt-3"><strong className="font-semibold">A few notes:</strong></p>
 
       <ul className="list-disc pl-5 space-y-2 font-reading">
-        <li>You have <strong className="font-semibold">5 seats</strong>. Add colleagues from the dashboard. They’ll get a private sign-in link by email, no password required.</li>
+        <li>You have <strong className="font-semibold">5 seats</strong>. Add colleagues from your account. They’ll get a one-time sign-in link by email, no password required.</li>
         <li>Only <strong className="font-semibold">@acmesports.in</strong> email addresses can be added. If you need a different domain, write to Prerna.</li>
-        <li>The link in this email is unique to your account. Don’t forward it. Share the dashboard with colleagues by adding them to the seats instead.</li>
+        <li>The link in this email is unique to your account. Don’t forward it. Share access by adding colleagues to the seats instead.</li>
         <li>For a GST tax invoice, write to <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">prerna@stateofplay.club</a>.</li>
       </ul>
 
@@ -169,7 +169,7 @@ const MemberEmail = () => (
           style={{ borderRadius: 0 }}
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 no-underline transition-colors"
         >
-          Sign in to read →
+          Sign in to read
         </a>
       </p>
 

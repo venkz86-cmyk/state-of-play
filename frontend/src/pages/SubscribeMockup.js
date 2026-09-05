@@ -62,7 +62,7 @@ export const SubscribeMockup = () => {
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
-            Original reporting on the business of Indian sport, across leagues, franchises, governance, media rights, retail and policy. Delivered weekly.
+            Original reporting on the business of Indian sport: the deals, the valuations and the people making them. Delivered weekly.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">
@@ -96,7 +96,7 @@ export const SubscribeMockup = () => {
               <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹2,949 / year total</p>
             )}
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
-              Billed annually. 12 months of full access.{pricing.country === 'IN' ? ' GST-compliant invoice.' : ''}
+              One payment for the year.{pricing.country === 'IN' ? ' GST-compliant invoice included.' : ''}
             </p>
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
@@ -114,7 +114,7 @@ export const SubscribeMockup = () => {
       {/* What's included */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-16">
         <div className="border-t border-[var(--text)] pt-8">
-          <p className="font-editorial italic text-lg mb-8">What’s included</p>
+          <p className="font-editorial italic text-lg mb-8">What you get</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16">
             {BENEFITS.map(([title, desc], i) => (
               <div

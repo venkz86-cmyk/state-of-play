@@ -378,7 +378,7 @@ export const ArticleMockup = () => {
                 data-testid="comments-subscribe"
                 className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
               >
-                Subscribe →
+                Subscribe
               </Link>
             </>
           )}

@@ -53,7 +53,7 @@ export const ContactMockup = () => (
                   href={`mailto:${email}`}
                   className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
                 >
-                  {email} →
+                  {email}
                 </a>
               </div>
             </li>

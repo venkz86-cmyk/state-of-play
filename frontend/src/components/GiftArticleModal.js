@@ -179,7 +179,7 @@ export const GiftArticleModal = ({
                 style={{ borderRadius: 'var(--control-radius)' }}
                 data-testid="gift-modal-subscribe-cta"
               >
-                Subscribe to gift articles →
+                Subscribe to gift articles
               </a>
             </div>
           ) : view === 'link' ? (
@@ -271,7 +271,7 @@ export const GiftArticleModal = ({
                     data-testid="gift-modal-blocked-duplicate-try-another"
                     className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
-                    Nominate someone else →
+                    Nominate someone else
                   </button>
                 </div>
               ) : !submitted ? (
@@ -350,7 +350,7 @@ export const GiftArticleModal = ({
                       className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
-                      {submitting ? 'Sending…' : 'Nominate →'}
+                      {submitting ? 'Sending…' : 'Nominate'}
                     </button>
                     <p className="font-plex text-[12px] text-[var(--text-muted)] mt-3">
                       One note from me, nothing else. No marketing, ever.
@@ -385,7 +385,7 @@ export const GiftArticleModal = ({
                     data-testid="gift-modal-again"
                     className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
-                    Nominate someone else →
+                    Nominate someone else
                   </button>
                 </div>
               )}

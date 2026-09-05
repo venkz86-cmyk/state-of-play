@@ -82,7 +82,7 @@ export const NominateReaderBlock = ({
             className="inline-block mt-6 font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             data-testid="nominate-gift-cta"
           >
-            Gift a subscription instead →
+            Gift a subscription instead
           </a>
         </div>
       ) : blocked === 'duplicate' ? (
@@ -100,7 +100,7 @@ export const NominateReaderBlock = ({
             className="mt-6 font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             data-testid="nominate-blocked-duplicate-try-another"
           >
-            Nominate someone else →
+            Nominate someone else
           </button>
         </div>
       ) : !submitted ? (
@@ -187,7 +187,7 @@ export const NominateReaderBlock = ({
                 className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                 style={{ borderRadius: 'var(--control-radius)' }}
               >
-                {submitting ? 'Sending…' : 'Nominate →'}
+                {submitting ? 'Sending…' : 'Nominate'}
               </button>
               <p className="font-plex text-[12px] text-[var(--text-muted)] max-w-[36ch]">
                 We only send one note. No marketing follow-ups.
@@ -207,7 +207,7 @@ export const NominateReaderBlock = ({
               onClick={reset}
               className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             >
-              Add another →
+              Add another
             </button>
           </p>
         </div>
@@ -217,7 +217,7 @@ export const NominateReaderBlock = ({
             Thanks. We’ll reach out to your nominee <em className="italic font-normal">within a few days.</em>
           </h2>
           <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-3">
-            No further action needed on your end — we’ll take it from here.
+            No further action needed on your end. We’ll take it from here.
           </p>
           <p className="font-plex text-[13px] text-[var(--text-muted)]">
             Want to nominate someone else?{' '}
@@ -226,7 +226,7 @@ export const NominateReaderBlock = ({
               onClick={reset}
               className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
             >
-              Add another →
+              Add another
             </button>
           </p>
         </div>

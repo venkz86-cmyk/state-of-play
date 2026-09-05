@@ -113,7 +113,7 @@ export const AccountMockup = () => {
             data-testid="account-signout"
             className="font-plex text-sm text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 transition-all"
           >
-            Sign out →
+            Sign out
           </button>
         </div>
       </section>
@@ -235,7 +235,7 @@ export const AccountMockup = () => {
               {
                 title: 'Notifications',
                 desc: 'Weekly TSOP · Left Field briefs · New editions.',
-                cta: 'Edit →',
+                cta: 'Edit',
                 href: 'mailto:venkat@stateofplay.club?subject=Notification%20preferences',
               },
               {
@@ -243,14 +243,14 @@ export const AccountMockup = () => {
                 desc: canAccessPremium
                   ? `Last invoice ${memberSince || '—'} · ₹2,949 · Razorpay.`
                   : 'No active subscription.',
-                cta: 'Need GST invoice? Download →',
+                cta: 'Need GST invoice? Download',
                 onClick: canAccessPremium ? () => setInvoiceOpen(true) : null,
                 href: canAccessPremium ? null : '#',
               },
               {
                 title: 'Insider Drops · Soon',
                 desc: 'Subscriber-only feed of deal whispers and short notes.',
-                cta: 'Notify me →',
+                cta: 'Notify me',
                 href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%20%E2%80%94%20notify%20me',
               },
             ].map(({ title, desc, cta, href, onClick }) => (

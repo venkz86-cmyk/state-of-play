@@ -41,7 +41,7 @@ const Sched = ({ rows }) => (
         <div className="col-span-2 flex justify-end">
           {r.registerUrl ? (
             <a href={r.registerUrl} target="_blank" rel="noopener noreferrer" className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
-              Register →
+              Register
             </a>
           ) : (
             <span className="font-plex text-xs text-[var(--text-muted)]">{r.done ? '' : 'soon'}</span>

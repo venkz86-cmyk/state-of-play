@@ -125,7 +125,7 @@ export const LoginMockup = () => {
                 data-testid="login-submit"
                 className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
               >
-                {submitting ? 'Sending…' : 'Send code →'}
+                {submitting ? 'Sending…' : 'Send code'}
               </button>
               <p className="font-plex text-sm text-[var(--text-muted)]">
                 Not a member yet?{' '}
@@ -138,7 +138,7 @@ export const LoginMockup = () => {
         ) : (
           <>
             <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
-              If {email.trim()} has an account, a sign-in code is on its way. Enter it below — it expires in 10 minutes.
+              If {email.trim()} has an account, a sign-in code is on its way. Enter it below. It expires in 10 minutes.
             </p>
 
             <form onSubmit={onVerifyCode} className="space-y-7">
@@ -175,7 +175,7 @@ export const LoginMockup = () => {
                 data-testid="login-submit"
                 className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
               >
-                {submitting ? 'Verifying…' : 'Sign in →'}
+                {submitting ? 'Verifying…' : 'Sign in'}
               </button>
 
               <div className="space-y-2">

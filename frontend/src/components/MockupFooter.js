@@ -40,7 +40,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
               data-testid="mockup-footer-subscribe"
               className="font-plex text-sm text-white underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all whitespace-nowrap"
             >
-              Subscribe →
+              Subscribe
             </Link>
           </div>
         </div>

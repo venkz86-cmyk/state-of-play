@@ -223,8 +223,8 @@ export const TeamInvoiceRequestModal = ({ open, onClose, token, companyName, pla
                 </select>
                 <p className="font-plex text-[12px] text-[var(--text-label)] mt-2">
                   {stateCode === '29'
-                    ? 'Karnataka buyer → 9% CGST + 9% SGST'
-                    : 'Inter-state → 18% IGST'}
+                    ? 'Karnataka buyer: 9% CGST + 9% SGST'
+                    : 'Inter-state: 18% IGST'}
                 </p>
               </div>
             </>

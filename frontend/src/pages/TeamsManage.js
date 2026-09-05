@@ -51,7 +51,7 @@ const friendlyError = (raw) => {
   if (m.includes('only emails from')) return raw;                // already friendly
   if (m.includes('seats are filled')) return raw;                // already friendly
   if (m.includes('already a team member')) return raw;           // already friendly
-  if (m.includes('missing access token')) return 'Your dashboard link is incomplete. Please use the link in your welcome email.';
+  if (m.includes('missing access token')) return 'Your account link is incomplete. Please use the link in your welcome email.';
   return 'Something went wrong. Please try again.';
 };
 
@@ -152,7 +152,7 @@ export const TeamsManage = () => {
         <Notice
           title="This link isn’t valid."
           body={
-            "If you’ve recently subscribed, check your email for a message from venkat@stateofplay.club with your team dashboard link.\n\n" +
+            "If you’ve recently subscribed, check your email for a message from venkat@stateofplay.club with your team account link.\n\n" +
             'If you need help, write to prerna@stateofplay.club'
           }
         />
@@ -175,7 +175,7 @@ export const TeamsManage = () => {
     return (
       <MockupLayout testId="page-teams-manage-network" hideFooterHeroCta>
         <Notice
-          title="Couldn’t load your dashboard."
+          title="Couldn’t load your account."
           body="Refresh the page, or write to prerna@stateofplay.club if it keeps failing."
         />
       </MockupLayout>
@@ -308,7 +308,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
   };
 
   return (
-    <MockupLayout testId="page-teams-manage" hideFooterHeroCta seo={{ title: 'Team Dashboard', path: '/teams/manage', noindex: true }}>
+    <MockupLayout testId="page-teams-manage" hideFooterHeroCta seo={{ title: 'Team Account', path: '/teams/manage', noindex: true }}>
       <div className="max-w-[860px] mx-auto px-6 lg:px-0 pt-10 lg:pt-12">
         {/* SECTION A — Dateline + headline */}
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3 gap-4 flex-wrap">
@@ -397,7 +397,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                   className="h-12 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
                   style={{ borderRadius: 'var(--control-radius)' }}
                 >
-                  {submitting ? 'Adding…' : 'Add →'}
+                  {submitting ? 'Adding…' : 'Add'}
                 </button>
               </form>
               <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3">
@@ -542,7 +542,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                 data-testid="teams-invoice-link"
               >
-                Download invoice →
+                Download invoice
               </button>
             </div>
           </div>

@@ -15,7 +15,7 @@ export const NotFoundMockup = () => (
         data-testid="notfound-cta"
         className="inline-flex items-center font-plex text-[15px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
       >
-        → Back to The State of Play
+        Back to The State of Play
       </Link>
     </section>
   </MockupLayout>

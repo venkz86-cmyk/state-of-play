@@ -259,7 +259,7 @@ export const HomeMockup = () => {
                 rel="noopener noreferrer"
                 className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
               >
-                Get The Left Field free →
+                Get The Left Field free
               </a>
             </aside>
           </div>
@@ -383,7 +383,7 @@ export const HomeMockup = () => {
               data-testid="subscribe-link"
               className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
             >
-              Subscribe →
+              Subscribe
             </Link>
           </div>
         </section>

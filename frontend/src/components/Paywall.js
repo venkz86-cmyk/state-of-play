@@ -111,7 +111,7 @@ export const Paywall = () => {
           className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)] mb-3"
           data-testid="paywall-cta-prompt"
         >
-          Subscribe to continue reading →
+          Subscribe to continue reading
         </p>
         <RazorpayButton dataTestId="paywall-subscribe" />
 
@@ -123,7 +123,7 @@ export const Paywall = () => {
               data-testid="paywall-login"
               className="font-plex text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] hover:underline underline-offset-[5px] decoration-1 transition-all"
             >
-              Already a member? Sign in →
+              Already a member? Sign in
             </Link>
           </div>
         )}

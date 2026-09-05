@@ -116,7 +116,7 @@ export const AboutMockup = () => (
             </a>
           </div>
           <Link to="/signup" data-testid="about-cta" className="inline-block mt-10 font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
-            View membership →
+            View membership
           </Link>
         </div>
       </div>
