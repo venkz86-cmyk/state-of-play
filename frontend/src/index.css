@@ -73,10 +73,10 @@ body {
   --accent-hover: var(--accent-burgundy-hover);
 
   /* Shared corner radius for real interactive controls (buttons, inputs).
-     Deliberately restrained — a hint of ease, not a rounded-lg SaaS pill.
-     Structural surfaces (modal panels, document previews, progress
-     tracks) stay sharp; this is only for things you click or type into. */
-  --control-radius: 4px;
+     Square, matching the newspaper's own hairline-rule geometry — a
+     rounded corner is the one thing every SaaS button has in common,
+     so buttons here don't get one. */
+  --control-radius: 0;
 }
 .dark {
   --bg: #0F0F0F;

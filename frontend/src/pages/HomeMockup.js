@@ -365,23 +365,34 @@ export const HomeMockup = () => {
         </section>
       )}
 
-      {/* QUIET SUBSCRIBE */}
+      {/* SUBSCRIBE BAND — the homepage's one real conversion ask, given
+          enough visual weight to exist without shouting: the price, one
+          line on what a subscription is, and an actual button, not a
+          text link buried in the page's trailing whitespace. */}
       {!isMember && (
-        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32 lg:pb-40">
-          <div className="border-t border-[var(--text)] pt-8 max-w-[55ch]">
-            <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[var(--text)] mb-4">
-              The State of Play runs on subscriptions.
-            </p>
-            <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] mb-5">
-              Independent reporting on the business of Indian sport.{' '}
-              {pricing.country === 'IN'
-                ? '₹2,499 + GST a year (₹2,949 total).'
-                : '$120 / year.'}
-            </p>
+        <section className="border-y border-[var(--text)]" style={{ backgroundColor: 'var(--surface)' }}>
+          <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12 lg:py-14 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+            <div className="max-w-[50ch]">
+              <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-snug text-[var(--text)] mb-4">
+                The State of Play runs on subscriptions.
+              </p>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="font-editorial font-semibold text-[2.5rem] lg:text-[2.75rem] leading-[0.9] text-[var(--text)]">
+                  {pricing.country === 'IN' ? '₹2,499' : '$120'}
+                </span>
+                <span className="font-plex text-sm text-[var(--text-muted)] pb-1.5">
+                  {pricing.country === 'IN' ? '+ GST a year (₹2,949 total)' : '/ year'}
+                </span>
+              </div>
+              <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
+                One deeply reported story a week on the business of Indian sport, the full archive, and every Left Field briefing.
+              </p>
+            </div>
             <Link
               to="/signup"
               data-testid="subscribe-link"
-              className="font-plex text-base text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+              className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 shrink-0"
+              style={{ borderRadius: 'var(--control-radius)' }}
             >
               Subscribe
             </Link>

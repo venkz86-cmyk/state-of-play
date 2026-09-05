@@ -122,7 +122,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/signup"
                   data-testid="mockup-header-subscribe"
-                  className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-5 transition-colors duration-200"
+                  className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-5 transition-colors duration-200"
                   style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   Subscribe
@@ -189,7 +189,7 @@ export const MockupHeader = () => {
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] text-white font-plex font-medium text-[14px] tracking-wide h-12 px-5 w-fit"
+                    className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-5 w-fit"
                     style={{ borderRadius: 'var(--control-radius)' }}
                   >
                     Subscribe
