@@ -79,7 +79,7 @@ export const TeamsMockup = () => {
                         buttonLabel={`Pay for ${p.name}`}
                         dataTestId={`teams-checkout-${p.id}`}
                         extraVerifyFields={{ company_name: companyName.trim() }}
-                        disclosureText="One annual, GST-compliant invoice. Your team dashboard link — where you add seats yourself — arrives by email right after payment."
+                        disclosureText="One annual, GST-compliant invoice. Your team dashboard link arrives by email right after payment, and that's where you add your own seats."
                         onSuccess={() => setPaidPlan(p.id)}
                       />
                     )}
