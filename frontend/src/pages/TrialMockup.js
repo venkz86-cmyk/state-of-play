@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { trialUpgradePricing } from '../lib/trialUpgradePricing';
+import { trialUpgradePricing, newSignupAnnualPricing } from '../lib/octoberPricing';
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
@@ -148,10 +148,10 @@ export const TrialMockup = () => {
             <div>
               <p className="font-editorial font-medium text-lg mb-1">Annual membership</p>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-editorial font-semibold text-[2.25rem] leading-[0.9]">{isIndia ? '₹3,499' : '$169'}</span>
+                <span className="font-editorial font-semibold text-[2.25rem] leading-[0.9]">{newSignupAnnualPricing(isIndia).amount}</span>
                 {isIndia && <span className="font-plex text-sm text-[var(--text-muted)]">+ GST</span>}
               </div>
-              <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">the rate for a new signup, billed once a year</p>
+              <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">{newSignupAnnualPricing(isIndia).note}</p>
               <ul className="space-y-2.5">
                 <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Everything, every week, all year</li>
                 <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Full archive, searchable</li>
