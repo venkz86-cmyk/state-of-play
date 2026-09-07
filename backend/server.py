@@ -548,6 +548,8 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
                         except ValueError:
                             published_at = None
                     trial_allowed = await is_trial_slug_accessible(request.email, request.slug, published_at)
+                    if trial_allowed and record_trial_open:
+                        await record_trial_open(request.email, request.slug)
                 if not trial_allowed:
                     raise HTTPException(status_code=403, detail="Paid membership required")
 
@@ -2333,7 +2335,7 @@ except Exception as _e:
 try:
     from trial_tracking import (
         router as trial_router, init as trial_init, start_trial,
-        is_trial_slug_accessible,
+        is_trial_slug_accessible, record_trial_open,
     )
     trial_init(db)
     app.include_router(trial_router)
@@ -2341,6 +2343,7 @@ except Exception as _e:
     logging.warning(f"trial_tracking module not mounted: {_e!r}")
     start_trial = None
     is_trial_slug_accessible = None
+    record_trial_open = None
 
 _cors_origins_env = os.environ.get('CORS_ORIGINS', '*').strip()
 if _cors_origins_env == '*':
