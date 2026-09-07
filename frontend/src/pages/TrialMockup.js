@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
@@ -20,8 +22,10 @@ const FAQS = [
 ];
 
 export const TrialMockup = () => {
+  const { user } = useAuth();
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
+  const [justPaidEmail, setJustPaidEmail] = useState(null);
 
   return (
     <MockupLayout testId="mockup-trial" seo={{ title: 'The Ten', path: '/trial', description: 'Ten of The State of Play’s most recent stories on the business of Indian sport, for ₹590. Stay the month and everything new is yours too.' }}>
@@ -42,7 +46,30 @@ export const TrialMockup = () => {
           Read the ten most recent State of Play stories on the business of Indian sport: franchise valuations, broadcast rights, ownership fights, the deals nobody else is reporting properly. They are yours to keep. And while your month runs, everything new I publish is yours to read too.
         </p>
 
-        {isIndia ? (
+        {justPaidEmail ? (
+          <div data-testid="trial-checkout-success" className="max-w-[480px] border border-[var(--rule)] p-6">
+            <p className="font-editorial font-medium text-lg mb-2">You're in.</p>
+            {user?.email ? (
+              <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed">
+                Your ten stories are unlocked. Reloading your account now so your session picks up the change.
+              </p>
+            ) : (
+              <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed">
+                A welcome note is on its way to {justPaidEmail}. Sign in with that same email to start reading.
+              </p>
+            )}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
+              {!user?.email && (
+                <a href="/login" className="font-plex text-sm text-[var(--accent-burgundy)] underline underline-offset-4">
+                  Sign in
+                </a>
+              )}
+              <a href="/" className="font-plex text-sm text-[var(--accent-burgundy)] underline underline-offset-4">
+                Start reading
+              </a>
+            </div>
+          </div>
+        ) : isIndia ? (
           <>
             <div className="flex items-baseline gap-3 mb-6">
               <span className="font-editorial font-semibold text-[2.75rem] leading-[0.9] text-[var(--text)]">₹500</span>
@@ -54,6 +81,20 @@ export const TrialMockup = () => {
               buttonLabel="Start The Ten"
               dataTestId="trial-checkout"
               className="max-w-[520px] mb-4"
+              lockedEmail={user?.email}
+              disclosureText="One-time payment for a 30-day trial. Not a recurring subscription."
+              onSuccess={(paidEmail) => {
+                setJustPaidEmail(paidEmail);
+                // A logged-in reader's session was fetched before this
+                // payment happened, so it still reads their pre-trial
+                // tier. A full reload re-runs AuthContext's bootstrap
+                // from scratch against the now-updated Ghost labels,
+                // rather than needing a separate manual session-refresh
+                // path that doesn't exist yet.
+                if (user?.email) {
+                  setTimeout(() => { window.location.href = '/account'; }, 1500);
+                }
+              }}
             />
             <a href="#compare" className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors">
               Compare with the annual membership

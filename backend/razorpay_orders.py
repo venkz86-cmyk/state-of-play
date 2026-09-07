@@ -49,6 +49,7 @@ from tiers import PLAN_LABELS, ensure_member_labeled
 from trial_tracking import start_trial
 from referrals import resolve_referral_code, REFERRED_SIGNUP_AMOUNT_PAISE, REFERRED_SIGNUP_LABEL
 from payments import fetch_and_record
+from session_auth import get_current_member
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ PLAN_PRICING = {
         'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120
     },
     'trial': {
-        'IN': {'amount': 59000, 'currency': 'INR', 'label': 'Trial Pack'},           # ₹500 + 18% GST = ₹590
+        'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
     },
     'student': {
         'IN': {'amount': 177000, 'currency': 'INR', 'label': 'Student Membership'},  # ₹1,500 + 18% GST = ₹1,770
@@ -172,12 +173,24 @@ class VerifyPaymentRequest(BaseModel):
 
 
 @router.post('/api/razorpay/verify-payment')
-async def verify_payment(req: VerifyPaymentRequest):
+async def verify_payment(req: VerifyPaymentRequest, request: Request):
     """Called from Razorpay Checkout's success handler, immediately after
     payment. Verifies the signature server-side (a client can't be trusted
     to just say 'it worked'), then makes sure a correctly-labeled Ghost
     member exists for this email — creating one if this is a brand-new
-    signup, or adding the plan's labels if they already had a free account."""
+    signup, or adding the plan's labels if they already had a free account.
+
+    Whose email actually gets labeled is NOT simply whatever the client
+    sent: if the browser carries a valid reader session, that session's
+    own cryptographically-proven email wins, full stop, regardless of
+    what req.email says. Otherwise a reader who's signed into one account
+    could type a different email into the checkout form and pay for a
+    trial that lands on some other, orphaned Ghost member instead of the
+    account they actually use -- same "never trust a client-supplied
+    identity when a real session exists" fix already applied to
+    /api/gifts/create and /api/nominations/submit. req.email is only
+    ever actually used for a genuine anonymous checkout, where there's no
+    session to derive an identity from in the first place."""
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
@@ -201,7 +214,8 @@ async def verify_payment(req: VerifyPaymentRequest):
     if not token:
         raise HTTPException(status_code=503, detail='Failed to create Ghost admin token')
 
-    email = req.email.lower().strip()
+    session = await get_current_member(request)
+    email = session['email'] if session else req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
     member = await ensure_member_labeled(

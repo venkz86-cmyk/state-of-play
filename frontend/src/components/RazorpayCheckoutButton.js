@@ -43,19 +43,31 @@ export const RazorpayCheckoutButton = ({
   dataTestId = 'razorpay-checkout',
   onSuccess,
   className = '',
+  // Set when the visitor already has a session: skips the editable email
+  // input entirely and uses this instead, everywhere an email is needed.
+  // The backend now derives identity from the session anyway (never
+  // trusts a client-supplied email once a session exists), so offering
+  // an editable box here would just be an out-of-sync field the backend
+  // silently overrides -- its own confusing surprise.
+  lockedEmail,
+  // Optional one-line disclosure rendered directly under the button --
+  // e.g. making explicit that a plan is a one-time trial, not a
+  // subscription, right at the point of payment itself, not just
+  // somewhere else on the page.
+  disclosureText,
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
   const [error, setError] = useState('');
 
   const startCheckout = async () => {
-    if (!isValidEmail(email)) {
+    const trimmedEmail = lockedEmail ? lockedEmail.trim().toLowerCase() : email.trim().toLowerCase();
+    if (!isValidEmail(trimmedEmail)) {
       setError('Enter a valid email address.');
       return;
     }
     setError('');
     setStatus('loading');
-    const trimmedEmail = email.trim().toLowerCase();
 
     try {
       await loadCheckoutScript();
@@ -79,7 +91,7 @@ export const RazorpayCheckoutButton = ({
         description: order.label,
         order_id: order.order_id,
         prefill: { email: trimmedEmail },
-        theme: { color: '#A0291C' },
+        theme: { color: '#2B5DAC' },
         modal: {
           ondismiss: () => setStatus('idle'),
         },
@@ -122,15 +134,21 @@ export const RazorpayCheckoutButton = ({
   return (
     <div className={className} data-testid={dataTestId}>
       <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
-          placeholder="you@email.com"
-          disabled={status === 'loading'}
-          data-testid={`${dataTestId}-email`}
-          className="flex-1 h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-        />
+        {lockedEmail ? (
+          <div className="flex-1 h-12 px-4 flex items-center border border-[var(--rule)] font-plex text-[15px] text-[var(--text-muted)]">
+            Using your account: <span className="text-[var(--text)] ml-1">{lockedEmail}</span>
+          </div>
+        ) : (
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+            placeholder="you@email.com"
+            disabled={status === 'loading'}
+            data-testid={`${dataTestId}-email`}
+            className="flex-1 h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+          />
+        )}
         <button
           type="button"
           onClick={startCheckout}
@@ -141,6 +159,11 @@ export const RazorpayCheckoutButton = ({
           {status === 'loading' ? 'Opening…' : buttonLabel}
         </button>
       </div>
+      {disclosureText && (
+        <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3 max-w-[50ch]">
+          {disclosureText}
+        </p>
+      )}
       {error && (
         <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>
           {error}
