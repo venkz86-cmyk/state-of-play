@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
+import { trialUpgradePricing } from '../lib/trialUpgradePricing';
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
@@ -16,7 +17,7 @@ const TRACK = [
 
 const FAQS = [
   ['What happens to my ten stories after 30 days?', 'They stay yours, permanently. That never changes, whether you subscribe or not. If you don’t subscribe, your account becomes a free membership, same as anyone who signs up for the Left Field briefing, with the original ten still there whenever you want them. What closes is everything published after you joined. Subscribing picks that back up, plus the rest of the archive.'],
-  ['Can I upgrade before the 30 days are up?', 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve, at ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'],
+  ['Can I upgrade before the 30 days are up?', 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before 1 October and it’s ₹1,999 + GST, the launch price. From 1 October it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'],
   ['Does it auto-renew into a subscription?', 'No. It is a one-time payment for thirty days. Nothing renews, nothing charges you again. If you want more after that, you choose it yourself.'],
   ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
 ];
@@ -173,7 +174,7 @@ export const TrialMockup = () => {
                 <>
                   <p className="font-editorial font-medium text-lg mb-1">Already in The Ten?</p>
                   <p className="font-plex text-sm text-[var(--text-muted)] mb-4">
-                    Upgrade any time before day 30 and pay the renewal rate, not the new-signup rate: ₹2,999 + GST, thirteen months for the price of twelve.
+                    {trialUpgradePricing().blurb}
                   </p>
                   <RazorpayCheckoutButton
                     plan="trial-upgrade"
@@ -181,7 +182,7 @@ export const TrialMockup = () => {
                     buttonLabel="Upgrade to annual"
                     dataTestId="trial-upgrade-checkout"
                     lockedEmail={user?.email}
-                    disclosureText="₹2,999 + 18% GST = ₹3,539. One payment, thirteen months of access."
+                    disclosureText={trialUpgradePricing().disclosure}
                     onSuccess={() => {
                       setJustUpgraded(true);
                       setTimeout(() => { window.location.href = '/account'; }, 1500);

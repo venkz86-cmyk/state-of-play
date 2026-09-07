@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import os
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
@@ -116,12 +116,28 @@ PLAN_PRICING = {
     },
 }
 
+# Launch-window discount on the trial-upgrade price: The Ten launches
+# 15 September, and Venkat's call is that upgraders in the window before
+# the 1 October rate change pay a cheaper launch price than the
+# steady-state ₹2,999 rate above, reverting automatically at the same
+# instant the new-signup rate goes live. IN-only, matching
+# PLAN_PRICING['trial-upgrade']'s existing scope.
+IST = timezone(timedelta(hours=5, minutes=30))
+TRIAL_UPGRADE_LAUNCH_CUTOFF = datetime(2026, 10, 1, tzinfo=IST)
+TRIAL_UPGRADE_LAUNCH_PRICING = {
+    'IN': {'amount': 235900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # ₹1,999 + 18% GST = ₹2,359
+}
+
+
 def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
     plans = PLAN_PRICING.get(plan)
     if not plans:
         return None
     geo = country if country in plans else ('IN' if 'IN' in plans else None)
-    return plans.get(geo)
+    config = plans.get(geo)
+    if plan == 'trial-upgrade' and geo == 'IN' and datetime.now(IST) < TRIAL_UPGRADE_LAUNCH_CUTOFF:
+        config = TRIAL_UPGRADE_LAUNCH_PRICING['IN']
+    return config
 
 
 class CreateOrderRequest(BaseModel):
