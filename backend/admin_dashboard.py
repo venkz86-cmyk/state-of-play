@@ -40,7 +40,7 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from admin_auth import require_admin_key_or_session
 from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels
-from payments import get_subscriber_payment_summaries
+from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from corporate import fetch_accounts as fetch_corporate_accounts
 
 logger = logging.getLogger(__name__)
@@ -51,8 +51,6 @@ GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
 MAX_ROWS = 5000
-SYNTHETIC_CYCLE_DAYS = 365  # a real paid annual member's cheap expiry estimate
-TRIAL_UPGRADE_BONUS_DAYS = 30  # thirteen months for twelve, for plan='trial-upgrade' payments
 FREE_TO_PAID_MIN_GAP_HOURS = 24  # see _is_free_to_paid_conversion
 
 _db = None
@@ -209,24 +207,9 @@ def _compute_expiry(
         if exp.tzinfo is None:
             exp = exp.replace(tzinfo=timezone.utc)
         return exp.isoformat(), 'nomination'
-    if last_payment and last_payment.get('razorpay_created_at'):
-        try:
-            paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
-            # payments._iso() already attaches UTC before this string is
-            # built, so this should always be aware -- guarded anyway,
-            # matching the trial/nomination branches above, since a naive
-            # datetime here is exactly what crashed this endpoint once a
-            # real payment's date flowed through it (real MongoDB returns
-            # naive datetimes by default; the fake-Mongo test harness this
-            # was verified against didn't, which is why it wasn't caught).
-            if paid_at.tzinfo is None:
-                paid_at = paid_at.replace(tzinfo=timezone.utc)
-            cycle_days = SYNTHETIC_CYCLE_DAYS
-            if last_payment.get('plan') == 'trial-upgrade':
-                cycle_days += TRIAL_UPGRADE_BONUS_DAYS
-            return (paid_at + timedelta(days=cycle_days)).isoformat(), 'payment_estimate'
-        except (ValueError, TypeError):
-            pass
+    payment_expiry = compute_synthetic_expiry(last_payment)
+    if payment_expiry:
+        return payment_expiry, 'payment_estimate'
     return None, 'none'
 
 
@@ -309,18 +292,7 @@ async def _build_subscriber_rows() -> list[dict]:
         # exact Admin API call for re-granting a dated comp subscription
         # is confirmed against a real record instead of guessed at.
         ghost_status_downgraded = 'paid-via-razorpay' in label_names and (member.get('status') or 'free') == 'free'
-        restore_to_date = None
-        if ghost_status_downgraded and last_payment and last_payment.get('razorpay_created_at'):
-            try:
-                paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
-                if paid_at.tzinfo is None:
-                    paid_at = paid_at.replace(tzinfo=timezone.utc)
-                cycle_days = SYNTHETIC_CYCLE_DAYS
-                if last_payment.get('plan') == 'trial-upgrade':
-                    cycle_days += TRIAL_UPGRADE_BONUS_DAYS
-                restore_to_date = (paid_at + timedelta(days=cycle_days)).isoformat()
-            except (ValueError, TypeError):
-                pass
+        restore_to_date = compute_synthetic_expiry(last_payment) if ghost_status_downgraded else None
 
         rows.append({
             'email': email,

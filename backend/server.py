@@ -13,6 +13,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 
 from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
+from payments import get_last_payment_for_email, compute_synthetic_expiry
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -350,23 +351,36 @@ async def get_member_details(request: MemberVerifyRequest):
                         subscription_end = sub.get('current_period_end')
                         subscription_status = sub.get('status', 'active')
                     elif has_razorpay_label:
-                        # Razorpay subscriber: derive 12-month cycle from member created_at
-                        created_at = member.get('created_at')
-                        subscription_start = created_at
+                        # Razorpay subscriber: derive the cycle from their actual
+                        # last real payment (not member.created_at -- the Ghost
+                        # signup date can predate a real payment, e.g. a free
+                        # reader who paid later), via the same
+                        # compute_synthetic_expiry() admin_dashboard.py uses, so
+                        # this account page and the admin dashboard can't disagree
+                        # on a member's renewal date -- including the thirteen-
+                        # months-for-twelve trial-upgrade bonus, which a plain
+                        # created_at + 365 days had no way to know about.
                         subscription_status = 'active'
-                        if created_at:
-                            try:
-                                start_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                                subscription_end = (start_dt + timedelta(days=365)).isoformat().replace('+00:00', 'Z')
-                            except Exception as e:
-                                # Rare — Ghost created_at came back in an unexpected shape.
-                                # Log so we can spot format drift; account page will show
-                                # a blank expiry until this is fixed.
-                                logger.warning(
-                                    f"Razorpay subscription_end parse failed: "
-                                    f"email={request.email} created_at={created_at!r} err={e!r}"
-                                )
-                                subscription_end = None
+                        last_payment = await get_last_payment_for_email(member.get('email') or request.email)
+                        if last_payment:
+                            subscription_start = last_payment.get('razorpay_created_at')
+                            subscription_end = compute_synthetic_expiry(last_payment)
+                        else:
+                            # No payment record on file for a labeled member --
+                            # shouldn't happen, but falls back to the signup-date
+                            # estimate rather than showing a blank expiry.
+                            created_at = member.get('created_at')
+                            subscription_start = created_at
+                            if created_at:
+                                try:
+                                    start_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                                    subscription_end = (start_dt + timedelta(days=365)).isoformat().replace('+00:00', 'Z')
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Razorpay subscription_end fallback parse failed: "
+                                        f"email={request.email} created_at={created_at!r} err={e!r}"
+                                    )
+                                    subscription_end = None
                     elif 'nomination-access' in label_names:
                         # Real, time-boxed access from being nominated by a
                         # subscriber (nominations.py) -- neither a Ghost-native
