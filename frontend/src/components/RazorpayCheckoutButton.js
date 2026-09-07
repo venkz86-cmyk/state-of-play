@@ -135,7 +135,10 @@ export const RazorpayCheckoutButton = ({
     <div className={className} data-testid={dataTestId}>
       <div className="flex flex-col sm:flex-row gap-3">
         {lockedEmail ? (
-          <div className="flex-1 h-12 px-4 flex items-center border border-[var(--rule)] font-plex text-[15px] text-[var(--text-muted)]">
+          <div
+            className="flex-1 h-12 px-4 flex items-center border border-[var(--rule)] font-plex text-[15px] text-[var(--text-muted)]"
+            style={{ borderRadius: 'var(--control-radius)' }}
+          >
             Using your account: <span className="text-[var(--text)] ml-1">{lockedEmail}</span>
           </div>
         ) : (
@@ -147,6 +150,7 @@ export const RazorpayCheckoutButton = ({
             disabled={status === 'loading'}
             data-testid={`${dataTestId}-email`}
             className="flex-1 h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
+            style={{ borderRadius: 'var(--control-radius)' }}
           />
         )}
         <button
@@ -155,6 +159,7 @@ export const RazorpayCheckoutButton = ({
           disabled={status === 'loading'}
           data-testid={`${dataTestId}-submit`}
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60 shrink-0"
+          style={{ borderRadius: 'var(--control-radius)' }}
         >
           {status === 'loading' ? 'Opening…' : buttonLabel}
         </button>
