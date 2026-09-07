@@ -127,6 +127,18 @@ PLAN_LABELS = {
 # and still don't need to).
 AMOUNT_TO_PLAN = {
     235900: 'community-ftwtsop',  # ₹1,999 + 18% GST = ₹2,359 — FTWTSOP
+    # Student plan (staged, not yet live — see students-plan-build-spec):
+    # the two static Razorpay links Venkat creates carry no notes.plan
+    # either, same as the two original buttons, so they'd otherwise fall
+    # through to the 'standard' default below and mislabel every student
+    # payment the instant it lands, before manual ID verification/tagging
+    # ever happens. 177000 (₹1,770 = ₹1,500 + 18% GST) is specific enough
+    # to be safe. 2900 ($29/year) is NOT currency-checked here (this dict
+    # is amount-only) -- a real ₹29 INR payment would collide, but no
+    # price on this account is anywhere near that low, so the practical
+    # risk is negligible, not zero.
+    177000: 'student',
+    2900: 'student',
 }
 
 router = APIRouter()
