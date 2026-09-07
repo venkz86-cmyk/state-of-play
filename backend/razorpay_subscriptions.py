@@ -1,29 +1,27 @@
 """
-razorpay_subscriptions.py — real auto-renewing membership, built for the
-Nov 1 2026 pricing transition. Companion to razorpay_orders.py — one-time
-Orders stay the mechanism for Student and Trial; this module is only for
-the ongoing annual membership.
+razorpay_subscriptions.py — real auto-renewing membership, for anyone who
+has ALREADY paid at least once and is renewing. Companion to
+razorpay_orders.py — a brand-new signup always pays through that module's
+plain one-time Orders flow instead (plan='standard'), never touches a
+Subscription object, and makes no promise about what they'll pay next
+year. Renewal price is next year's decision, made at renewal time.
 
-Three signup/renewal cases, one underlying mechanism (a Razorpay
-Subscription with either a deferred or an immediate first charge):
-
-  X — signs up now, before Nov 1: pays today's one-time price through the
-      EXISTING Orders flow (razorpay_orders.py, plan='standard',
-      unchanged — still 294900 paise). Alongside that, a Subscription is
-      created here on the 'existing' (grandfathered) Plan with `start_at`
-      set ~1 year out, so the mandate is authorised today but the first
-      auto-charge, at the grandfathered rate, only happens at their real
-      renewal next year.
-  Y — an existing subscriber renewing right now: a Subscription on the
-      same 'existing' Plan, but `start_at` = now, so the renewal payment
-      itself IS the subscription's first charge, and it recurs from there.
-  Z — signs up from Nov 1 onward: a Subscription on the 'new' Plan,
-      `start_at` = now. No bridge order — there's no old rate to honour.
+Deliberately simple, one case: a subscriber renewing right now pays the
+current renewal rate in ONE Checkout step, and that same payment sets up
+real auto-renewal from this point forward (`start_at` = now, so the
+payment itself is the subscription's first charge). Nothing is deferred,
+nothing bridges two different prices in one signup -- an earlier version
+of this module tried to also handle a brand-new signup being pre-
+authorised today for a *different* price a year out, which needed two
+separate Checkout popups back to back for that one case. Cut, per
+Venkat's call: renewal pricing is only ever shown to an existing
+subscriber in the first place, so there's nothing to pre-promise a new
+signup at all.
 
 Provides:
-  * SUBSCRIPTION_PLANS                     — tier+country -> plan config
-  * POST /api/razorpay/create-subscription — creates the Subscription for
-    X/Y/Z per the above, returns what the frontend needs to open Razorpay
+  * SUBSCRIPTION_PLANS                     — country -> plan config
+  * POST /api/razorpay/create-subscription — creates the renewal
+    Subscription, returns what the frontend needs to open Razorpay
     Checkout in subscription mode (subscription_id, not order_id).
   * POST /api/razorpay/verify-subscription — verifies the checkout
     signature, then finds-or-creates the Ghost member and applies labels,
@@ -39,19 +37,14 @@ when a renewal auto-charge fails and a subscription goes `halted` —
 immediate downgrade or a grace period first. Until that's decided,
 `subscription.halted` is logged only; the paid label is left untouched.
 
-Plan IDs below are placeholders (empty string). Venkat creates the four
-real Plans (existing/new x IN/INTL) in the Razorpay dashboard's
-Subscriptions product and hands back the plan_ids.
+Plan IDs below are placeholders (empty string) except IN, which Venkat
+has already created in the Razorpay dashboard. INTL still needs one
+created there before an international renewal can use this.
 
 Confirmed against the installed razorpay SDK (2.0.x, utility/utility.py):
 `client.utility.verify_subscription_payment_signature` exists and takes
 exactly `razorpay_subscription_id`/`razorpay_payment_id`/`razorpay_signature`,
 matching what this module already sends -- no longer a guess.
-
-Still flagged as needing a live test in Razorpay's test mode before this
-goes live, not just a code review: that a `start_at`-deferred subscription
-actually lets the mandate authenticate now while deferring the charge,
-without an unexpected small verification charge landing on the customer.
 
 Dependencies: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (existing, now live),
 GHOST_URL, GHOST_ADMIN_API_KEY (existing).
@@ -60,7 +53,6 @@ from __future__ import annotations
 
 import os
 import logging
-import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -103,19 +95,12 @@ def _create_ghost_admin_token() -> Optional[str]:
         return None
 
 
-# tier -> country -> Plan config. 'existing' is the grandfathered rate for
-# anyone who was a member before Nov 1 (X's deferred year-2 billing, and
-# Y's renewal-now billing, both land here). 'new' is Z's rate.
-# plan_id is filled in once Venkat creates these in the Razorpay dashboard.
+# country -> Plan config, the one renewal rate. plan_id is filled in once
+# Venkat creates each Plan in the Razorpay dashboard -- IN already done,
+# INTL still a placeholder.
 SUBSCRIPTION_PLANS = {
-    'existing': {
-        'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
-        'INTL': {'plan_id': '', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
-    },
-    'new': {
-        'IN': {'plan_id': '', 'amount': 412900, 'currency': 'INR', 'label': 'Annual Membership'},   # 3,499 + 18% GST = 4,128.82 -> 4,129
-        'INTL': {'plan_id': '', 'amount': 16900, 'currency': 'USD', 'label': 'Annual Membership'},  # $169
-    },
+    'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
+    'INTL': {'plan_id': '', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
 }
 
 # A Razorpay Subscription needs a finite total_count, not true "forever".
@@ -123,19 +108,13 @@ SUBSCRIPTION_PLANS = {
 TOTAL_COUNT_YEARS = 100
 
 
-
-def _resolve_plan_config(tier: str, country: str) -> Optional[dict]:
-    plans = SUBSCRIPTION_PLANS.get(tier)
-    if not plans:
-        return None
-    geo = country if country in plans else ('IN' if 'IN' in plans else None)
-    return plans.get(geo)
+def _resolve_plan_config(country: str) -> Optional[dict]:
+    geo = country if country in SUBSCRIPTION_PLANS else 'IN'
+    return SUBSCRIPTION_PLANS.get(geo)
 
 
 class CreateSubscriptionRequest(BaseModel):
-    tier: str          # 'existing' | 'new'
     country: str = 'IN'
-    deferred: bool = False  # True for X: mandate now, first charge ~1 year out
 
 
 @router.post('/api/razorpay/create-subscription')
@@ -143,29 +122,25 @@ async def create_subscription(req: CreateSubscriptionRequest):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
-    config = _resolve_plan_config(req.tier, req.country)
+    config = _resolve_plan_config(req.country)
     if not config:
         raise HTTPException(
             status_code=400,
-            detail=f"No pricing configured for tier='{req.tier}' country='{req.country}'",
+            detail=f"No pricing configured for country='{req.country}'",
         )
     if not config['plan_id']:
         raise HTTPException(
             status_code=503,
-            detail=f"Razorpay Plan not yet created for tier='{req.tier}' country='{req.country}'",
+            detail=f"Razorpay Plan not yet created for country='{req.country}'",
         )
 
-    params = {
-        'plan_id': config['plan_id'],
-        'customer_notify': 1,
-        'total_count': TOTAL_COUNT_YEARS,
-        'notes': {'tier': req.tier, 'country': req.country},
-    }
-    if req.deferred:
-        params['start_at'] = int(time.time()) + 365 * 24 * 60 * 60
-
     try:
-        subscription = _razorpay_client.subscription.create(params)
+        subscription = _razorpay_client.subscription.create({
+            'plan_id': config['plan_id'],
+            'customer_notify': 1,
+            'total_count': TOTAL_COUNT_YEARS,
+            'notes': {'country': req.country},
+        })
     except Exception as e:
         logger.error(f'Razorpay subscription creation failed: {e!r}')
         raise HTTPException(status_code=502, detail='Could not create subscription')
@@ -175,8 +150,6 @@ async def create_subscription(req: CreateSubscriptionRequest):
         'amount': config['amount'],
         'currency': config['currency'],
         'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
-        'tier': req.tier,
-        'deferred': req.deferred,
         'label': config['label'],
     }
 
@@ -213,9 +186,8 @@ async def verify_subscription(req: VerifySubscriptionRequest):
 
     email = req.email.lower().strip()
 
-    # Every subscription tier (existing/grandfathered or new) is a full paid
-    # membership product-wise, just at a different price point — same label
-    # set as the one-shot standard plan.
+    # Same full paid membership access as the one-shot standard plan --
+    # just billed on a real recurring schedule instead of once.
     member = await ensure_member_labeled(email, req.name or '', PLAN_LABELS['standard'], token)
     if not member:
         raise HTTPException(

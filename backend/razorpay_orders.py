@@ -90,18 +90,23 @@ def _create_ghost_admin_token() -> Optional[str]:
 # plan -> country -> price. Amounts are in the smallest currency unit
 # (paise for INR, cents for USD), as Razorpay's Orders API requires.
 #
-# 'standard' stays the one-time bridge price for X (anyone signing up
-# before the old rate retires) — unchanged, see razorpay_subscriptions.py's
-# module docstring for the full X/Y/Z picture. 'trial-upgrade' is a
-# DELIBERATELY separate plan from the 'existing' Subscription rate in
-# razorpay_subscriptions.py, even though the amount is identical
-# (₹2,999 + GST): an upgrade from The Ten carries the thirteen-months-
-# for-twelve bonus (see admin_dashboard.py's _compute_expiry), which only
-# applies to this plan, not to a normal renewal at the same price.
+# 'standard' is a brand-new signup's one-time payment -- always a plain
+# Order, never a Subscription. A new subscriber only ever sees and pays
+# the current new-signup rate, once; they don't set up auto-renewal
+# until they actually come back to renew a year later, at which point
+# they're an "existing" subscriber and use razorpay_subscriptions.py's
+# single-step Subscription checkout instead, at the (lower) renewal
+# rate. No promise about a future price is ever made at signup time --
+# next year's rate is next year's decision. 'trial-upgrade' is a
+# DELIBERATELY separate plan from razorpay_subscriptions.py's renewal
+# rate, even though the amount is identical (₹2,999 + GST): an upgrade
+# from The Ten carries the thirteen-months-for-twelve bonus (see
+# admin_dashboard.py's _compute_expiry), which only applies to this
+# plan, not to a normal renewal at the same price.
 PLAN_PRICING = {
     'standard': {
-        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949
-        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120
+        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, until 1 October
+        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, until 1 October
     },
     'trial': {
         'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
@@ -116,14 +121,26 @@ PLAN_PRICING = {
     },
 }
 
+# Everything below pivots on the same instant: 1 October, when the
+# new-signup rate rises from ₹2,499/$120 to ₹3,499/$169, and the
+# trial-upgrade launch discount (below) ends.
+IST = timezone(timedelta(hours=5, minutes=30))
+OCT_1_CUTOFF = datetime(2026, 10, 1, tzinfo=IST)
+
+# The new-signup rate itself, from 1 October on -- this is the one
+# place that number is actually charged (a new signup never touches a
+# Subscription object at all, see the PLAN_PRICING comment above).
+NEW_SIGNUP_RATE_RISE_PRICING = {
+    'IN': {'amount': 412900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹3,499 + 18% GST = ₹4,129
+    'INTL': {'amount': 16900, 'currency': 'USD', 'label': 'Annual Membership'},  # $169
+}
+
 # Launch-window discount on the trial-upgrade price: The Ten launches
 # 15 September, and Venkat's call is that upgraders in the window before
 # the 1 October rate change pay a cheaper launch price than the
 # steady-state ₹2,999 rate above, reverting automatically at the same
 # instant the new-signup rate goes live. IN-only, matching
 # PLAN_PRICING['trial-upgrade']'s existing scope.
-IST = timezone(timedelta(hours=5, minutes=30))
-TRIAL_UPGRADE_LAUNCH_CUTOFF = datetime(2026, 10, 1, tzinfo=IST)
 TRIAL_UPGRADE_LAUNCH_PRICING = {
     'IN': {'amount': 235900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # ₹1,999 + 18% GST = ₹2,359
 }
@@ -135,8 +152,11 @@ def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
         return None
     geo = country if country in plans else ('IN' if 'IN' in plans else None)
     config = plans.get(geo)
-    if plan == 'trial-upgrade' and geo == 'IN' and datetime.now(IST) < TRIAL_UPGRADE_LAUNCH_CUTOFF:
+    before_cutoff = datetime.now(IST) < OCT_1_CUTOFF
+    if plan == 'trial-upgrade' and geo == 'IN' and before_cutoff:
         config = TRIAL_UPGRADE_LAUNCH_PRICING['IN']
+    elif plan == 'standard' and not before_cutoff:
+        config = NEW_SIGNUP_RATE_RISE_PRICING.get(geo, config)
     return config
 
 

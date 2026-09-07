@@ -7,22 +7,16 @@ import { SubscriptionCheckoutButton } from '../components/SubscriptionCheckoutBu
    linked from anywhere on the live site and not part of MockupIndex's
    page list -- those are parallel routes to actual site pages, this is
    a bare test rig for Venkat to exercise the flow in Razorpay's test
-   mode before it goes anywhere near /signup's live button.
+   mode before it goes anywhere near a real renewal reminder.
 
-   Only tier='existing'/country='IN' has a real Razorpay Plan created
-   as of this build -- the other three SUBSCRIPTION_PLANS entries in
-   razorpay_subscriptions.py still have empty plan_ids, so
-   create-subscription will 503 for them (shown here as the button's
-   normal error state, not a crash). */
-
-const SCENARIOS = [
-  { key: 'y', label: 'Y — renew now (immediate charge)', tier: 'existing', country: 'IN', bridgeOrderPlan: null },
-  { key: 'x', label: 'X — sign up now, bridge + deferred mandate', tier: 'existing', country: 'IN', bridgeOrderPlan: 'standard' },
-  { key: 'z', label: 'Z — new-rate signup (no real Plan yet — expect a 503)', tier: 'new', country: 'IN', bridgeOrderPlan: null },
-];
+   Only country='IN' has a real Razorpay Plan created as of this build
+   -- SUBSCRIPTION_PLANS['INTL'] in razorpay_subscriptions.py still has
+   an empty plan_id, so switching the country toggle below to INTL is
+   expected to 503 (shown here as the button's normal error state, not
+   a crash). */
 
 export const SubscriptionCheckoutTest = () => {
-  const [scenario, setScenario] = useState(SCENARIOS[0]);
+  const [country, setCountry] = useState('IN');
   const [result, setResult] = useState('');
 
   return (
@@ -30,18 +24,18 @@ export const SubscriptionCheckoutTest = () => {
       <div className="max-w-[800px] mx-auto px-6 py-16">
         <p className="font-editorial italic text-2xl mb-2">Subscription checkout — test rig</p>
         <p className="font-plex text-sm text-[var(--text-muted)] mb-8 max-w-[60ch]">
-          Not a real page. Exercises SubscriptionCheckoutButton against razorpay_subscriptions.py directly. Use Razorpay test-mode cards only.
+          Not a real page. Exercises SubscriptionCheckoutButton against razorpay_subscriptions.py directly — one Checkout step, the renewal rate, sets up real auto-renewal. Use Razorpay test-mode cards only.
         </p>
 
         <div className="flex flex-wrap gap-3 mb-10">
-          {SCENARIOS.map((s) => (
+          {['IN', 'INTL'].map((c) => (
             <button
-              key={s.key}
+              key={c}
               type="button"
-              onClick={() => { setScenario(s); setResult(''); }}
-              className={`font-plex text-[13px] px-4 py-2 border ${scenario.key === s.key ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]' : 'border-[var(--rule)] text-[var(--text-muted)]'}`}
+              onClick={() => { setCountry(c); setResult(''); }}
+              className={`font-plex text-[13px] px-4 py-2 border ${country === c ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]' : 'border-[var(--rule)] text-[var(--text-muted)]'}`}
             >
-              {s.label}
+              {c === 'IN' ? 'IN — real Plan created' : 'INTL — expect a 503'}
             </button>
           ))}
         </div>
@@ -53,13 +47,11 @@ export const SubscriptionCheckoutTest = () => {
         )}
 
         <SubscriptionCheckoutButton
-          key={scenario.key}
-          tier={scenario.tier}
-          country={scenario.country}
-          bridgeOrderPlan={scenario.bridgeOrderPlan}
-          buttonLabel="Run this scenario"
+          key={country}
+          country={country}
+          buttonLabel="Renew now"
           dataTestId="subscription-test"
-          disclosureText={`tier=${scenario.tier} country=${scenario.country} bridgeOrderPlan=${scenario.bridgeOrderPlan || 'none'}`}
+          disclosureText={`country=${country}`}
           onSuccess={(email) => setResult(`Verified. Ghost member labeled for ${email}.`)}
         />
       </div>
