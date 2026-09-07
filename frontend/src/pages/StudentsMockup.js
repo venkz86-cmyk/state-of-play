@@ -19,16 +19,10 @@ const RAZORPAY_LINK_USD = 'https://rzp.io/rzp/tsopstudentusd';
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
-const WHAT_YOU_GET = [
-  ['The weekly story', 'One deeply reported story a week on the business of Indian sport.'],
-  ['The Left Field briefing', 'Twice-weekly news briefs, included at no extra cost.'],
-  ['The full archive', 'Every premium story since launch, searchable and always available.'],
-];
-
 const HOW_IT_WORKS = [
   ['Apply', 'Submit the form with your name, college and a photo of your current student ID.'],
-  ['We verify', 'Venkat checks the ID by hand. Most applications get a decision within two working days.'],
-  ['Pay and start reading', 'Once approved, you get a payment link by email. Pay it and you have full access.'],
+  ['We verify', 'Venkat checks the ID by hand.'],
+  ['Pay and start reading', 'Once approved, you get a payment link by email. Pay it and you\'re in: every story, the whole archive.'],
 ];
 
 const FAQS = [
@@ -72,29 +66,14 @@ export const StudentsMockup = () => {
       {/* Hero */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-12">
         <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-5 max-w-[22ch]">
-          The same desk, <em className="italic font-normal">a student price.</em>
+          Same stories, <em className="italic font-normal">student price.</em>
         </h1>
-        <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
-          Full access to The State of Play for currently enrolled students: every weekly story, the full archive, at a fraction of the annual price. Verification is manual and by ID, so the price stays real for the people it's for.
+        <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed mb-4">
+          Every weekly story and the full archive, at a student price. Verification is manual and by ID, so the price stays real for the people it's for.
         </p>
-      </section>
-
-      {/* What you get */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
-        <div className="border-t border-[var(--text)] pt-8">
-          <p className="font-editorial italic text-lg mb-8">What you get</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8 border-y border-[var(--rule)] py-8">
-            {WHAT_YOU_GET.map(([t, d]) => (
-              <div key={t}>
-                <h3 className="font-editorial font-medium text-lg mb-2">{t}</h3>
-                <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)]">{d}</p>
-              </div>
-            ))}
-          </div>
-          <p className="font-plex text-sm text-[var(--text-muted)] mt-6 max-w-[65ch]">
-            It's identical access to the annual plan. The only difference is the price, and who it's for.
-          </p>
-        </div>
+        <p className="font-plex text-base text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
+          The weekly story, the Left Field briefing on Mondays and Wednesdays, and the full archive. Same as the annual plan.
+        </p>
       </section>
 
       {/* Who qualifies */}
@@ -127,7 +106,7 @@ export const StudentsMockup = () => {
             <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹1,500 + 18% GST</p>
           )}
           <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)] max-w-[55ch]">
-            The annual plan is {pricing.country === 'IN' ? '₹2,499 + GST' : '$120'} a year. The student plan is the same access, less than a third of the price.
+            The annual plan is {pricing.country === 'IN' ? '₹3,499 + GST' : '$120'} a year. The student plan is the same access, for less than half the price.
           </p>
         </div>
       </section>

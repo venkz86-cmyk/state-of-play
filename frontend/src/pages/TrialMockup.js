@@ -36,7 +36,7 @@ export const TrialMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-12">
         <Overline className="mb-4 block">— The State of Play —</Overline>
         <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
-          Ten stories.<br />Thirty days.<br /><em className="italic font-normal">₹590.</em>
+          Ten stories.<br />Thirty days.<br /><em className="italic font-normal">₹500.</em>
         </h1>
         <p className="font-plex text-lg text-[var(--text-muted)] leading-relaxed max-w-[54ch] mb-8">
           Read the ten most recent State of Play stories on the business of Indian sport: franchise valuations, broadcast rights, ownership fights, the deals nobody else is reporting properly. They are yours to keep. And while your month runs, everything new I publish is yours to read too.
