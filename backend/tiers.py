@@ -110,6 +110,12 @@ PLAN_LABELS = {
     'standard': ['paid-via-razorpay', 'premium-subscriber'],
     'student': ['paid-via-razorpay', 'tier-student'],
     'trial': ['tier-trial'],
+    # Same paid access as 'standard', at the same price as a normal
+    # renewal -- kept as its own plan (not reused from 'standard') purely
+    # so this specific label lets the thirteen-months-for-twelve bonus
+    # (admin_dashboard.py's _compute_expiry) and any reporting on it find
+    # exactly these members, not every renewal at ₹2,999.
+    'trial-upgrade': ['paid-via-razorpay', 'premium-subscriber', 'trial-upgrade'],
     # Community offers: a Razorpay Payment Link shared directly outside the
     # website (a Slack/WhatsApp/email link, not a checkout the site itself
     # offers), so there's no notes.plan to read the way the site's own

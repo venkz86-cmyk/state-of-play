@@ -52,6 +52,7 @@ GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
 MAX_ROWS = 5000
 SYNTHETIC_CYCLE_DAYS = 365  # a real paid annual member's cheap expiry estimate
+TRIAL_UPGRADE_BONUS_DAYS = 30  # thirteen months for twelve, for plan='trial-upgrade' payments
 FREE_TO_PAID_MIN_GAP_HOURS = 24  # see _is_free_to_paid_conversion
 
 _db = None
@@ -220,7 +221,10 @@ def _compute_expiry(
             # was verified against didn't, which is why it wasn't caught).
             if paid_at.tzinfo is None:
                 paid_at = paid_at.replace(tzinfo=timezone.utc)
-            return (paid_at + timedelta(days=SYNTHETIC_CYCLE_DAYS)).isoformat(), 'payment_estimate'
+            cycle_days = SYNTHETIC_CYCLE_DAYS
+            if last_payment.get('plan') == 'trial-upgrade':
+                cycle_days += TRIAL_UPGRADE_BONUS_DAYS
+            return (paid_at + timedelta(days=cycle_days)).isoformat(), 'payment_estimate'
         except (ValueError, TypeError):
             pass
     return None, 'none'
@@ -311,7 +315,10 @@ async def _build_subscriber_rows() -> list[dict]:
                 paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
                 if paid_at.tzinfo is None:
                     paid_at = paid_at.replace(tzinfo=timezone.utc)
-                restore_to_date = (paid_at + timedelta(days=SYNTHETIC_CYCLE_DAYS)).isoformat()
+                cycle_days = SYNTHETIC_CYCLE_DAYS
+                if last_payment.get('plan') == 'trial-upgrade':
+                    cycle_days += TRIAL_UPGRADE_BONUS_DAYS
+                restore_to_date = (paid_at + timedelta(days=cycle_days)).isoformat()
             except (ValueError, TypeError):
                 pass
 

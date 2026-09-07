@@ -45,7 +45,7 @@ import jwt
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, ensure_member_labeled
+from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label
 from trial_tracking import start_trial
 from referrals import resolve_referral_code, REFERRED_SIGNUP_AMOUNT_PAISE, REFERRED_SIGNUP_LABEL
 from payments import fetch_and_record
@@ -89,8 +89,15 @@ def _create_ghost_admin_token() -> Optional[str]:
 
 # plan -> country -> price. Amounts are in the smallest currency unit
 # (paise for INR, cents for USD), as Razorpay's Orders API requires.
-# Trial and Student are India-only for now — no international price has
-# been set for either.
+#
+# 'standard' stays the one-time bridge price for X (anyone signing up
+# before the old rate retires) — unchanged, see razorpay_subscriptions.py's
+# module docstring for the full X/Y/Z picture. 'trial-upgrade' is a
+# DELIBERATELY separate plan from the 'existing' Subscription rate in
+# razorpay_subscriptions.py, even though the amount is identical
+# (₹2,999 + GST): an upgrade from The Ten carries the thirteen-months-
+# for-twelve bonus (see admin_dashboard.py's _compute_expiry), which only
+# applies to this plan, not to a normal renewal at the same price.
 PLAN_PRICING = {
     'standard': {
         'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949
@@ -98,9 +105,14 @@ PLAN_PRICING = {
     },
     'trial': {
         'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
+        'INTL': {'amount': 900, 'currency': 'USD', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # $9
     },
     'student': {
         'IN': {'amount': 177000, 'currency': 'INR', 'label': 'Student Membership'},  # ₹1,500 + 18% GST = ₹1,770
+        'INTL': {'amount': 2900, 'currency': 'USD', 'label': 'Student Membership'},  # $29
+    },
+    'trial-upgrade': {
+        'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539
     },
 }
 
@@ -230,6 +242,15 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
 
     if req.plan == 'trial':
         await start_trial(email, member.get('id', ''))
+
+    if req.plan == 'trial-upgrade' and member.get('id'):
+        # A trial member graduating to the annual membership must lose
+        # 'tier-trial' -- resolve_tier checks tier labels before the
+        # generic paid signal, so leaving it on would keep reporting this
+        # member as still on the trial even after they paid to upgrade.
+        existing_labels = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+        if 'tier-trial' in existing_labels:
+            await remove_member_label(member['id'], existing_labels, 'tier-trial', token)
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)

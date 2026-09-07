@@ -106,7 +106,7 @@ export const StudentsMockup = () => {
             <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹1,500 + 18% GST</p>
           )}
           <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)] max-w-[55ch]">
-            The annual plan is {pricing.country === 'IN' ? '₹3,499 + GST' : '$120'} a year. The student plan is the same access, for less than half the price.
+            The annual plan is {pricing.country === 'IN' ? '₹3,499 + GST' : '$169'} a year. The student plan is the same access, for a fraction of the price.
           </p>
         </div>
       </section>
