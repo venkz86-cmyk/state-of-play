@@ -47,6 +47,7 @@ export const SubscribersPanel = ({ onAuthError }) => {
   const [history, setHistory] = useState({});
   const [filter, setFilter] = useState('all');
   const [driftOnly, setDriftOnly] = useState(false);
+  const [downgradedOnly, setDowngradedOnly] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -89,10 +90,12 @@ export const SubscribersPanel = ({ onAuthError }) => {
 
   const paidCount = subscribers.filter((s) => s.is_paid).length;
   const driftCount = subscribers.filter((s) => s.expired_but_still_paid).length;
+  const downgradedCount = subscribers.filter((s) => s.ghost_status_downgraded).length;
 
   const filteredRows = subscribers
     .filter((r) => matchesFilter(r, filter))
-    .filter((r) => !driftOnly || r.expired_but_still_paid);
+    .filter((r) => !driftOnly || r.expired_but_still_paid)
+    .filter((r) => !downgradedOnly || r.ghost_status_downgraded);
 
   const columns = [
     { key: 'name', label: 'Name', sortable: true, render: (r) => r.name || '—' },
@@ -114,11 +117,23 @@ export const SubscribersPanel = ({ onAuthError }) => {
         </span>
       ),
     },
+    {
+      key: 'ghost_status_downgraded', label: 'Ghost status', sortable: true, align: 'right',
+      render: (r) => (
+        r.ghost_status_downgraded ? (
+          <span style={{ color: 'var(--accent-burgundy)' }}>
+            free (should be {r.restore_to_date ? formatDate(r.restore_to_date) : 'restored'})
+          </span>
+        ) : (
+          <span className="text-[var(--text-muted)]">{r.ghost_status}</span>
+        )
+      ),
+    },
   ];
 
   return (
     <div>
-      <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-3 mb-6">
+      <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-6">
         <KPITile
           label="Total members"
           value={subscribers.length}
@@ -126,6 +141,13 @@ export const SubscribersPanel = ({ onAuthError }) => {
         />
         <KPITile label="Paid" value={paidCount} bordered />
         <KPITile label="Label/payment drift" value={driftCount} accent={driftCount > 0} bordered />
+        <KPITile
+          label="Ghost-downgraded"
+          value={downgradedCount}
+          accent={downgradedCount > 0}
+          bordered
+          sublabel="paid label, free status"
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-6">
@@ -148,6 +170,10 @@ export const SubscribersPanel = ({ onAuthError }) => {
         <label className="font-plex text-[13px] text-[var(--text-muted)] flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={driftOnly} onChange={(e) => setDriftOnly(e.target.checked)} />
           Drift only
+        </label>
+        <label className="font-plex text-[13px] text-[var(--text-muted)] flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={downgradedOnly} onChange={(e) => setDowngradedOnly(e.target.checked)} />
+          Ghost-downgraded only
         </label>
       </div>
 

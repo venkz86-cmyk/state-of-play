@@ -287,6 +287,34 @@ async def _build_subscriber_rows() -> list[dict]:
             except (ValueError, TypeError):
                 pass
 
+        # Ghost's own native "Complimentary" subscription silently expires
+        # on its own clock (observed: ~3 months), unrelated to and
+        # invisible from our label system. A real Razorpay-paying member
+        # who was also given a native comp grant (by hand in Ghost Admin,
+        # or by the still-parallel Zap) can drop to Ghost's own
+        # status='free' the moment that native grant lapses -- while still
+        # correctly carrying paid-via-razorpay, so OUR OWN paywall
+        # (label-based, never checks Ghost's native status) keeps working
+        # for them. The real damage is anything that runs off Ghost's own
+        # native status instead of our labels -- most plausibly Ghost's
+        # own newsletter delivery, which is not something this codebase
+        # controls or can verify from here. restore_to_date is what their
+        # real cycle should read (their own last real payment + 365 days,
+        # not "when a comp grant happened to lapse") -- surfaced so this
+        # can be fixed by hand in Ghost Admin, or later automated once the
+        # exact Admin API call for re-granting a dated comp subscription
+        # is confirmed against a real record instead of guessed at.
+        ghost_status_downgraded = 'paid-via-razorpay' in label_names and (member.get('status') or 'free') == 'free'
+        restore_to_date = None
+        if ghost_status_downgraded and last_payment and last_payment.get('razorpay_created_at'):
+            try:
+                paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
+                if paid_at.tzinfo is None:
+                    paid_at = paid_at.replace(tzinfo=timezone.utc)
+                restore_to_date = (paid_at + timedelta(days=SYNTHETIC_CYCLE_DAYS)).isoformat()
+            except (ValueError, TypeError):
+                pass
+
         rows.append({
             'email': email,
             'name': member.get('name') or '',
@@ -297,6 +325,8 @@ async def _build_subscriber_rows() -> list[dict]:
             'created_at': member.get('created_at'),
             'last_payment': last_payment,
             'first_payment': first_payment,
+            'ghost_status_downgraded': ghost_status_downgraded,
+            'restore_to_date': restore_to_date,
             'converted_from_free': converted_from_free,
             'total_paid': summary.get('total_paid') if summary else {'INR': 0, 'USD': 0},
             'payment_count': summary.get('payment_count') if summary else 0,
@@ -341,6 +371,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
 
     paid_rows = [r for r in rows if r['is_paid']]
     converted_from_free_rows = [r for r in rows if r['converted_from_free']]
+    ghost_downgraded_rows = [r for r in rows if r['ghost_status_downgraded']]
     expired_but_still_paid = [r for r in paid_rows if r['expired_but_still_paid']]
     expiring_7d = [r for r in paid_rows if _within_days(r['computed_expiry'], 7, now)]
     expiring_30d = [r for r in paid_rows if _within_days(r['computed_expiry'], 30, now)]
@@ -408,10 +439,15 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
             'expiring_7d': len(expiring_7d),
             'expired_but_still_paid': len(expired_but_still_paid),
             'free_to_paid_conversions': len(converted_from_free_rows),
+            'ghost_status_downgraded': len(ghost_downgraded_rows),
         },
         'attention': {
             'expired_but_still_paid': [_attention_row(r) for r in expired_but_still_paid[:25]],
             'expiring_7d': [_attention_row(r) for r in expiring_7d[:25]],
+            'ghost_status_downgraded': [
+                {**_attention_row(r), 'restore_to_date': r['restore_to_date']}
+                for r in ghost_downgraded_rows[:25]
+            ],
             'pending_comments': pending_comments,
         },
     }
