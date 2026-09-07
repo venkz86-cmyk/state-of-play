@@ -23,6 +23,7 @@ import { TermsMockup as Terms } from "./pages/TermsMockup";
 import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
 import { NotFoundMockup as NotFound } from "./pages/NotFoundMockup";
 import { InvoicePreviewMockup } from "./pages/InvoicePreviewMockup";
+import { SubscriptionCheckoutTest } from "./pages/SubscriptionCheckoutTest";
 // Keep the mockup index reachable for future review
 import { MockupIndex } from "./pages/MockupIndex";
 import { TeamsManage } from "./pages/TeamsManage";
@@ -83,6 +84,7 @@ function Shell() {
           {/* Mockup review index — kept for future design previews */}
           <Route path="/mockup" element={<MockupIndex />} />
           <Route path="/mockup/invoice" element={<InvoicePreviewMockup />} />
+          <Route path="/internal/subscription-test" element={<SubscriptionCheckoutTest />} />
           <Route path="/mockup/teams-emails" element={<TeamsEmailsMockup />} />
 
           {/* Article catch-all (Ghost slug). MUST be last. */}

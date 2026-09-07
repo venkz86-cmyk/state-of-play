@@ -43,15 +43,15 @@ Plan IDs below are placeholders (empty string). Venkat creates the four
 real Plans (existing/new x IN/INTL) in the Razorpay dashboard's
 Subscriptions product and hands back the plan_ids.
 
-Two things flagged as needing a live test in Razorpay's test mode before
-this goes live, not just a code review: (1) that a `start_at`-deferred
-subscription actually lets the mandate authenticate now while deferring
-the charge, without an unexpected small verification charge landing on
-the customer; (2) the exact SDK method for verifying a subscription
-checkout's signature — this module assumes
-`client.utility.verify_subscription_payment_signature`, mirroring
-`verify_payment_signature` used for Orders, but that name should be
-confirmed against the installed razorpay SDK version before relying on it.
+Confirmed against the installed razorpay SDK (2.0.x, utility/utility.py):
+`client.utility.verify_subscription_payment_signature` exists and takes
+exactly `razorpay_subscription_id`/`razorpay_payment_id`/`razorpay_signature`,
+matching what this module already sends -- no longer a guess.
+
+Still flagged as needing a live test in Razorpay's test mode before this
+goes live, not just a code review: that a `start_at`-deferred subscription
+actually lets the mandate authenticate now while deferring the charge,
+without an unexpected small verification charge landing on the customer.
 
 Dependencies: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (existing, now live),
 GHOST_URL, GHOST_ADMIN_API_KEY (existing).
