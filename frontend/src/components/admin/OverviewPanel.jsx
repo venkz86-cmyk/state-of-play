@@ -55,6 +55,11 @@ export const OverviewPanel = ({ onAuthError }) => {
       text: `${attention.expiring_7d.length} subscriber${attention.expiring_7d.length === 1 ? '' : 's'} expiring within 7 days`,
       path: 'renewals',
     },
+    attention.ghost_status_downgraded.length > 0 && {
+      key: 'ghost-downgraded',
+      text: `${kpis.ghost_status_downgraded} paying subscriber${kpis.ghost_status_downgraded === 1 ? '' : 's'} downgraded to Ghost's free status`,
+      path: 'subscribers',
+    },
   ].filter(Boolean);
 
   return (
@@ -122,6 +127,29 @@ export const OverviewPanel = ({ onAuthError }) => {
               <li key={r.email} className="border-b border-[var(--rule)] py-2 flex items-center justify-between gap-4">
                 <span className="font-plex text-[13px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
                 <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">{formatDate(r.computed_expiry)} · {r.expiry_source}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {attention.ghost_status_downgraded.length > 0 && (
+        <div className="mb-10">
+          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
+            Paid label, Ghost's own status shows free
+          </p>
+          <p className="font-plex text-[13px] text-[var(--text-muted)] mb-3">
+            Ghost's own complimentary-subscription grant expired on its own clock, unrelated to
+            the paid-via-razorpay label -- these readers still have full site access, but restore
+            their Ghost status by hand to the date shown.
+          </p>
+          <ul>
+            {attention.ghost_status_downgraded.map((r) => (
+              <li key={r.email} className="border-b border-[var(--rule)] py-2 flex items-center justify-between gap-4">
+                <span className="font-plex text-[13px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
+                <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">
+                  restore to {r.restore_to_date ? formatDate(r.restore_to_date) : 'unknown (no payment on record)'}
+                </span>
               </li>
             ))}
           </ul>
