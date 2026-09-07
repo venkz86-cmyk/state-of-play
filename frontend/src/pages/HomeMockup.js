@@ -9,6 +9,7 @@ import { MockupFooter } from '../components/MockupFooter';
 import { PartnersBlock } from '../components/PartnersBlock';
 import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
+import { seasonLabel } from '../lib/season';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -18,17 +19,6 @@ const datelineDate = (d = new Date()) =>
 const shortDate = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-};
-
-// 50 published stories = one "season". Computed from the real edition
-// count so it rolls over on its own — never a hand-maintained number.
-const STORIES_PER_SEASON = 50;
-const SEASON_WORDS = [
-  'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
-];
-const seasonLabel = (editionNo) => {
-  const n = Math.max(1, Math.ceil((editionNo || 1) / STORIES_PER_SEASON));
-  return SEASON_WORDS[n - 1] || String(n);
 };
 
 const longDate = (iso) => {
