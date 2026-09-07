@@ -36,8 +36,10 @@ Provides:
     True, so the day-25 email can say how many of the available stories
     were actually read.
   * GET /api/trial/status?email=         — what a trial member is
-    entitled to and how long they have left. Will back the curated trial
-    homepage once that's built.
+    entitled to and how long they have left: the permanent snapshot
+    slugs, any bonus slugs published since signup (while the window is
+    still open), which of those they've opened, and the days remaining.
+    Backs the "The Ten" reading-list panel on /account.
   * POST /api/trial/reminder-check       — admin-only daily sweep. Sends
     the day-10 progress email, the day-25 reminder, and the day-37
     winback, once each per trial, via Resend -- matches nominations.py's
@@ -212,6 +214,39 @@ async def _count_premium_published_since(started_at: datetime) -> int:
     except Exception as e:
         logger.warning(f'Ghost published-since count failed: {e!r}')
     return 0
+
+
+BONUS_SLUGS_LIMIT = 50  # plenty for a 30-day window; matches this module's other safety caps
+
+
+async def _fetch_bonus_slugs(started_at: datetime) -> list[str]:
+    """The actual slugs of premium stories published since a trial
+    started -- same query _count_premium_published_since runs for the
+    reminder emails' headline number, but returning the posts themselves
+    (for the reading-list page's "unlocked since you joined" section)
+    instead of just a count. Returns [] on any failure rather than
+    raising -- a missed fetch should degrade to an empty bonus section,
+    never break the page around it."""
+    if not GHOST_CONTENT_API_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/content/posts/',
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'limit': BONUS_SLUGS_LIMIT,
+                    'order': 'published_at desc',
+                    'filter': f"status:published+visibility:[paid,members]+published_at:>'{started_at.strftime('%Y-%m-%d %H:%M:%S')}'",
+                    'fields': 'slug',
+                },
+            )
+        if r.status_code == 200:
+            return [p['slug'] for p in r.json().get('posts', [])]
+        logger.warning(f'Ghost bonus-slugs fetch HTTP {r.status_code}')
+    except Exception as e:
+        logger.warning(f'Ghost bonus-slugs fetch failed: {e!r}')
+    return []
 
 
 async def _trial_access_counts(record: dict) -> tuple[int, int]:
@@ -413,14 +448,21 @@ async def trial_status(email: str):
     expires_at = _aware(record['expires_at'])
     started_at = _aware(record.get('started_at'))
     days_left = max(0, (expires_at - now).days)
+    expired = now >= expires_at
+
+    # No point paying for the Ghost round trip once the window that would
+    # make bonus stories visible has already closed.
+    bonus_slugs = await _fetch_bonus_slugs(started_at) if (started_at and not expired) else []
 
     return {
         'email': record['email'],
         'slugs': record.get('snapshot_slugs', []),
+        'bonus_slugs': bonus_slugs,
+        'opened_slugs': record.get('opened_slugs', []),
         'started_at': started_at.isoformat() if started_at else None,
         'expires_at': expires_at.isoformat(),
         'days_left': days_left,
-        'expired': now >= expires_at,
+        'expired': expired,
     }
 
 
