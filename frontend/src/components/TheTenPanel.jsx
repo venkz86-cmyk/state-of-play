@@ -9,50 +9,74 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const shortDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
 
-// A row for one of the original ten -- numbered, since "The Ten" is a
-// literal, countable set and the number is real information (this is
-// story No. 4 of your ten), not decoration. A story already opened
-// dims rather than carries a separate badge -- the same quiet, no-chrome
-// way the rest of the site distinguishes visited from unvisited.
-const NumberedRow = ({ n, post, read }) => (
-  <a href={`/${post.slug}`} className="grid grid-cols-[2.5rem_1fr] gap-4 py-4 border-b border-[var(--rule)]/60 group">
-    <span className="font-editorial italic text-[1.4rem] leading-none text-[var(--text-label)] tabular-nums pt-0.5">
-      {String(n).padStart(2, '0')}
-    </span>
-    <span>
-      <Overline className="!normal-case !tracking-normal !text-[11px] block mb-1">{post.theme}</Overline>
-      <span
-        className={`block font-editorial font-medium text-[15px] leading-snug transition-colors ${
-          read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'
-        }`}
-      >
-        {post.title}
-      </span>
-      <span className="block font-plex text-[12px] text-[var(--text-label)] mt-1 tabular-nums">
-        {shortDate(post.created_at)} · {post.read_time || 5} min{read ? ' · Read' : ''}
-      </span>
-    </span>
+// Byline/meta line shared by every card size below. A read story doesn't
+// carry a badge -- the title itself dims, and "Read" quietly joins the
+// same meta line the way an unread story shows its read time.
+const Meta = ({ post, read, className = '' }) => (
+  <p className={`font-plex text-[12px] text-[var(--text-label)] tabular-nums ${className}`}>
+    {shortDate(post.created_at)}
+    {post.read_time ? ` · ${post.read_time} min` : ''}
+    {read ? ' · Read' : ''}
+  </p>
+);
+
+const titleClass = (read) =>
+  `transition-colors duration-300 ${read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'}`;
+
+// Lead card -- the single most recent story, same treatment as the
+// homepage's own hero: image (when the post has one), theme label, big
+// serif headline, dek, byline.
+const LeadCard = ({ post, read }) => (
+  <a href={`/${post.slug}`} className="group block">
+    {post.image_url && (
+      <div className="mb-5 lg:mb-6 overflow-hidden">
+        <img
+          src={post.image_url}
+          alt={post.title}
+          referrerPolicy="no-referrer"
+          className="w-full aspect-[16/10] object-cover saturate-0 group-hover:saturate-100 transition-all duration-700 ease-out"
+        />
+      </div>
+    )}
+    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <h2 className={`font-editorial font-semibold tracking-tight text-[1.6rem] lg:text-[2rem] leading-[1.1] mb-3 max-w-[26ch] ${titleClass(read)}`}>
+      {post.title}
+    </h2>
+    {post.subtitle && (
+      <p className="font-plex text-base lg:text-lg leading-[1.5] text-[var(--text-secondary)] max-w-[55ch] mb-3">
+        {post.subtitle}
+      </p>
+    )}
+    <Meta post={post} read={read} />
   </a>
 );
 
-// A bonus row -- not numbered, since these aren't part of the countable
-// ten and a number here would imply an order that doesn't mean anything.
-const BonusRow = ({ post, read }) => (
-  <a href={`/${post.slug}`} className="grid grid-cols-[2.5rem_1fr] gap-4 py-4 border-b border-[var(--rule)]/60 group">
-    <span className="font-plex text-[13px] text-[var(--text-label)] pt-0.5">+</span>
-    <span>
-      <Overline className="!normal-case !tracking-normal !text-[11px] block mb-1">{post.theme}</Overline>
-      <span
-        className={`block font-editorial font-medium text-[15px] leading-snug transition-colors ${
-          read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'
-        }`}
-      >
-        {post.title}
-      </span>
-      <span className="block font-plex text-[12px] text-[var(--text-label)] mt-1 tabular-nums">
-        {shortDate(post.created_at)} · {post.read_time || 5} min{read ? ' · Read' : ''}
-      </span>
-    </span>
+// Secondary card -- the next three, side by side, same shape as the
+// homepage's secondary row.
+const SecondaryCard = ({ post, read }) => (
+  <a href={`/${post.slug}`} className="group block">
+    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <h3 className={`font-editorial font-medium tracking-tight text-[1.15rem] leading-[1.25] mb-2 ${titleClass(read)}`}>
+      {post.title}
+    </h3>
+    {post.subtitle && (
+      <p className="font-plex text-sm leading-relaxed text-[var(--text-muted)] line-clamp-2 mb-2">
+        {post.subtitle}
+      </p>
+    )}
+    <Meta post={post} read={read} />
+  </a>
+);
+
+// Desk card -- everything else, dense 3-column grid, same shape as the
+// homepage's "The Desk".
+const DeskCard = ({ post, read }) => (
+  <a href={`/${post.slug}`} className="group block py-5 border-b border-[var(--rule)]">
+    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <h3 className={`font-editorial font-medium text-[17px] leading-snug mb-2 ${titleClass(read)}`}>
+      {post.title}
+    </h3>
+    <Meta post={post} read={read} />
   </a>
 );
 
@@ -62,7 +86,11 @@ const BonusRow = ({ post, read }) => (
    trial's real state (permanent snapshot slugs, any bonus slugs
    published since signup, which of those have been opened, days left),
    then batch-fetches the actual story metadata for all of them in one
-   Ghost Content API call rather than one request per story. */
+   Ghost Content API call rather than one request per story. Laid out
+   as lead + 3 secondary + a desk grid -- the same 1/3/6 split
+   HomeMockup.js uses for its own hero, deliberately: "The Ten" is
+   exactly ten stories, most recent first, so the homepage's own shape
+   fits it without inventing a new one. */
 export const TheTenPanel = ({ email, country = 'IN' }) => {
   const [status, setStatus] = useState(null);
   const [posts, setPosts] = useState({});
@@ -103,14 +131,22 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
   }
 
   const openedSlugs = new Set(status.opened_slugs || []);
+  // snapshot_slugs is already stored most-recent-first (the order
+  // _fetch_recent_premium_slugs fetched them in at signup) -- preserved
+  // here by mapping over status.slugs rather than whatever order Ghost's
+  // own slug:[...] filter happens to return.
   const tenPosts = (status.slugs || []).map((slug) => posts[slug]).filter(Boolean);
   const bonusPosts = (status.bonus_slugs || []).map((slug) => posts[slug]).filter(Boolean);
   const availableCount = tenPosts.length + bonusPosts.length;
   const readCount = [...tenPosts, ...bonusPosts].filter((p) => openedSlugs.has(p.slug)).length;
 
+  const [lead, ...rest] = tenPosts;
+  const secondary = rest.slice(0, 3);
+  const desk = rest.slice(3);
+
   return (
     <div>
-      <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-8">
+      <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-10">
         <div className="py-6 px-6">
           <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">Read</Overline>
           <p className="font-editorial font-medium text-lg lg:text-xl leading-tight tabular-nums">
@@ -127,26 +163,45 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
         </div>
       </div>
 
-      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
+      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-6">
         Your ten, permanently yours
       </p>
-      <div className="mb-10">
-        {tenPosts.map((post, i) => (
-          <NumberedRow key={post.slug} n={i + 1} post={post} read={openedSlugs.has(post.slug)} />
-        ))}
-      </div>
+
+      {lead && (
+        <div className="mb-10 lg:mb-12">
+          <LeadCard post={lead} read={openedSlugs.has(lead.slug)} />
+        </div>
+      )}
+
+      {secondary.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8 pb-10 lg:pb-12 border-b border-[var(--rule)] mb-10">
+          {secondary.map((post) => (
+            <SecondaryCard key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
+          ))}
+        </div>
+      )}
+
+      {desk.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-2 mb-10">
+          {desk.map((post) => (
+            <DeskCard key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
+          ))}
+        </div>
+      )}
 
       {!status.expired && bonusPosts.length > 0 && (
         <div className="mb-10">
           <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
             Unlocked since you joined
           </p>
-          <p className="font-plex text-[12.5px] text-[var(--text-muted)] mb-2">
+          <p className="font-plex text-[12.5px] text-[var(--text-muted)] mb-4">
             These close with your trial window, unlike the original ten.
           </p>
-          {bonusPosts.map((post) => (
-            <BonusRow key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-2">
+            {bonusPosts.map((post) => (
+              <DeskCard key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
+            ))}
+          </div>
         </div>
       )}
 
