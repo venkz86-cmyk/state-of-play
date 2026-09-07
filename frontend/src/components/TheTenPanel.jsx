@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
+import { Overline } from './MockupLayout';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -8,23 +9,49 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const shortDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
 
-// One card for a single story in either list below -- read state comes
-// from openedSlugs, not from anything Ghost itself tracks.
-const StoryCard = ({ post, read }) => (
-  <a
-    href={`/${post.slug}`}
-    className="flex items-baseline justify-between gap-4 py-3 border-b border-[var(--rule)]/60 group"
-  >
+// A row for one of the original ten -- numbered, since "The Ten" is a
+// literal, countable set and the number is real information (this is
+// story No. 4 of your ten), not decoration. A story already opened
+// dims rather than carries a separate badge -- the same quiet, no-chrome
+// way the rest of the site distinguishes visited from unvisited.
+const NumberedRow = ({ n, post, read }) => (
+  <a href={`/${post.slug}`} className="grid grid-cols-[2.5rem_1fr] gap-4 py-4 border-b border-[var(--rule)]/60 group">
+    <span className="font-editorial italic text-[1.4rem] leading-none text-[var(--text-label)] tabular-nums pt-0.5">
+      {String(n).padStart(2, '0')}
+    </span>
     <span>
-      <span className="font-editorial font-medium text-[15px] leading-snug group-hover:text-[var(--accent-burgundy)] transition-colors">
+      <Overline className="!normal-case !tracking-normal !text-[11px] block mb-1">{post.theme}</Overline>
+      <span
+        className={`block font-editorial font-medium text-[15px] leading-snug transition-colors ${
+          read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'
+        }`}
+      >
         {post.title}
       </span>
-      <span className="block font-plex text-[12.5px] text-[var(--text-label)] mt-0.5">
-        {shortDate(post.created_at)} · {post.read_time || 5} min
+      <span className="block font-plex text-[12px] text-[var(--text-label)] mt-1 tabular-nums">
+        {shortDate(post.created_at)} · {post.read_time || 5} min{read ? ' · Read' : ''}
       </span>
     </span>
-    <span className="font-plex text-[11px] uppercase tracking-[0.05em] text-[var(--text-label)] shrink-0">
-      {read ? 'Read' : 'Unread'}
+  </a>
+);
+
+// A bonus row -- not numbered, since these aren't part of the countable
+// ten and a number here would imply an order that doesn't mean anything.
+const BonusRow = ({ post, read }) => (
+  <a href={`/${post.slug}`} className="grid grid-cols-[2.5rem_1fr] gap-4 py-4 border-b border-[var(--rule)]/60 group">
+    <span className="font-plex text-[13px] text-[var(--text-label)] pt-0.5">+</span>
+    <span>
+      <Overline className="!normal-case !tracking-normal !text-[11px] block mb-1">{post.theme}</Overline>
+      <span
+        className={`block font-editorial font-medium text-[15px] leading-snug transition-colors ${
+          read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'
+        }`}
+      >
+        {post.title}
+      </span>
+      <span className="block font-plex text-[12px] text-[var(--text-label)] mt-1 tabular-nums">
+        {shortDate(post.created_at)} · {post.read_time || 5} min{read ? ' · Read' : ''}
+      </span>
     </span>
   </a>
 );
@@ -83,43 +110,54 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
 
   return (
     <div>
-      <p className="font-plex text-sm text-[var(--text-muted)] mb-6">
-        {status.expired
-          ? 'Your trial has closed. Your original ten stay yours, for keeps.'
-          : `${readCount} of ${availableCount} read · ${status.days_left} day${status.days_left === 1 ? '' : 's'} left`}
-      </p>
+      <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-8">
+        <div className="py-6 px-6">
+          <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">Read</Overline>
+          <p className="font-editorial font-medium text-lg lg:text-xl leading-tight tabular-nums">
+            {readCount} of {availableCount}
+          </p>
+        </div>
+        <div className="py-6 px-6 border-l border-[var(--rule)]">
+          <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">
+            {status.expired ? 'Status' : 'Time left'}
+          </Overline>
+          <p className="font-editorial font-medium text-lg lg:text-xl leading-tight tabular-nums">
+            {status.expired ? 'Closed' : `${status.days_left} day${status.days_left === 1 ? '' : 's'}`}
+          </p>
+        </div>
+      </div>
 
-      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-2">
+      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
         Your ten, permanently yours
       </p>
-      <div className="mb-8">
-        {tenPosts.map((post) => (
-          <StoryCard key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
+      <div className="mb-10">
+        {tenPosts.map((post, i) => (
+          <NumberedRow key={post.slug} n={i + 1} post={post} read={openedSlugs.has(post.slug)} />
         ))}
       </div>
 
       {!status.expired && bonusPosts.length > 0 && (
-        <div className="mb-8">
-          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-2">
+        <div className="mb-10">
+          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
             Unlocked since you joined
           </p>
-          <p className="font-plex text-[12.5px] text-[var(--text-muted)] mb-3">
+          <p className="font-plex text-[12.5px] text-[var(--text-muted)] mb-2">
             These close with your trial window, unlike the original ten.
           </p>
           {bonusPosts.map((post) => (
-            <StoryCard key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
+            <BonusRow key={post.slug} post={post} read={openedSlugs.has(post.slug)} />
           ))}
         </div>
       )}
 
       {country === 'IN' && (
-        <div className="mt-8 pt-6 border-t border-[var(--rule)]">
+        <div className="border border-[var(--rule)] p-6 lg:p-8">
           {upgraded ? (
             <p className="font-plex text-[14px] text-[var(--text-muted)]">You're upgraded. Reloading your account…</p>
           ) : (
             <>
-              <p className="font-editorial font-medium text-[15px] mb-1">Ready for the full archive?</p>
-              <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4 max-w-[50ch]">
+              <p className="font-editorial italic text-lg mb-1">Ready for the full archive?</p>
+              <p className="font-plex text-[13px] text-[var(--text-muted)] mb-5 max-w-[50ch]">
                 Upgrade any time before day 30 and pay ₹2,999 + GST, the renewal rate, not the new-signup rate — thirteen months for the price of twelve.
               </p>
               <RazorpayCheckoutButton
