@@ -16,6 +16,7 @@ import { AccountMockup as MemberDashboard } from "./pages/AccountMockup";
 import { AboutMockup as About } from "./pages/AboutMockup";
 import { ContactMockup as Contact } from "./pages/ContactMockup";
 import { TeamsMockup as Teams } from "./pages/TeamsMockup";
+import { TrialMockup as Trial } from "./pages/TrialMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
 import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
@@ -70,6 +71,7 @@ function Shell() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/trial" element={<Trial />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
