@@ -123,6 +123,16 @@ PLAN_LABELS = {
     # extra label so Venkat can filter/report how many signups came through
     # this specific link.
     'community-ftwtsop': ['paid-via-razorpay', 'premium-subscriber', 'community-ftwtsop'],
+    # Team-5/Team-10: labels the checkout payer as paid (for revenue
+    # reporting/the payments ledger) and tags which plan size they bought,
+    # but deliberately does NOT grant 'premium-subscriber' -- the person
+    # who pays isn't necessarily one of the actual seat-holders, and real
+    # seats get provisioned by hand afterward against the Corporate
+    # Subscriptions Sheet (corporate.py), same as today's static-link
+    # flow. Flagged to Venkat: if the payer should always get their own
+    # reading access too, add 'premium-subscriber' back here.
+    'team-5': ['paid-via-razorpay', 'team-size-5'],
+    'team-10': ['paid-via-razorpay', 'team-size-10'],
 }
 
 # Payment amount (paise) -> plan, for payments that carry no notes.plan at
@@ -145,6 +155,12 @@ AMOUNT_TO_PLAN = {
     # risk is negligible, not zero.
     177000: 'student',
     2900: 'student',
+    # The two Team static Payment Links stay live even once the site's own
+    # checkout goes up (old bookmarks, old emails) -- these amounts route
+    # any stray payment on them to the right plan/labels instead of
+    # falling through to 'standard'.
+    1180000: 'team-5',   # ₹11,800 = ₹10,000 + 18% GST
+    2360000: 'team-10',  # ₹23,600 = ₹20,000 + 18% GST
 }
 
 router = APIRouter()

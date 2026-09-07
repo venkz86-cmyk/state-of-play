@@ -9,6 +9,14 @@ import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 import { TheTenPanel } from '../components/TheTenPanel';
+import { SubscriptionCheckoutButton } from '../components/SubscriptionCheckoutButton';
+import { daysUntil } from '../lib/format';
+
+// A renewal charges the current rate immediately -- it must only be
+// offered once someone is actually close to (or past) their real
+// expiry, never mid-cycle, or "set up auto-renewal" would silently
+// double-charge someone with months of paid access left.
+const RENEWAL_WINDOW_DAYS = 30;
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -23,6 +31,7 @@ export const AccountMockup = () => {
   const [saved, setSaved] = useState([]);
   const [details, setDetails] = useState(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [justRenewed, setJustRenewed] = useState(false);
 
   useEffect(() => {
     setRecent(getReadingHistory().slice(0, 5));
@@ -90,13 +99,22 @@ export const AccountMockup = () => {
             : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
       : 'Free';
 
-  // Razorpay annual subscriptions are one-shot — they expire, not auto-renew.
-  // Stripe-billed Ghost subscriptions show as 'active' and do auto-renew.
+  // A Razorpay member's own subscription_status now distinguishes a real
+  // recurring Subscription ('active') from a one-time Order payment
+  // ('one_time') -- server.py's get_member_details checks Razorpay's own
+  // subscription_id on their last payment, not a blanket assumption.
+  // Stripe-billed Ghost subscriptions still show as 'active' too.
   const autoRenews = details?.subscription_status === 'active';
+  const daysToExpiry = daysUntil(details?.subscription_end);
+  // Within the renewal window (or already past it) -- offer to renew.
+  // Not simply "not auto-renewing yet," or this would charge someone
+  // with months of paid access left the moment they open their account.
+  const needsManualRenewal = details?.subscription_status === 'one_time'
+    && daysToExpiry !== null && daysToExpiry <= RENEWAL_WINDOW_DAYS;
   const dateLabel = autoRenews ? 'Renews' : 'Expires';
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
-  const nextCharge = autoRenews && canAccessPremium ? '₹2,949' : '—';
+  const nextCharge = autoRenews && canAccessPremium ? '₹3,539' : '—';
 
   return (
     <MockupLayout testId="page-account" seo={{ title: 'Your Account', path: '/account', noindex: true }}>
@@ -148,6 +166,44 @@ export const AccountMockup = () => {
           ))}
         </div>
       </section>
+
+      {/* Renew — a standard annual member still on a one-time payment,
+          not yet on real auto-renewal (subscription_status !== 'active').
+          A trial/student/corporate/comped member never sees this: they
+          either don't hold this tier or renew through their own path. */}
+      {details?.tier === 'standard' && needsManualRenewal && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+          <div className="border-t border-[var(--text)] pt-8 max-w-[520px]">
+            {justRenewed ? (
+              <p className="font-plex text-[15px] text-[var(--text-muted)]">
+                You're set up for auto-renewal. Reloading your account…
+              </p>
+            ) : (
+              <>
+                <p className="font-editorial italic text-lg mb-1">
+                  {daysToExpiry < 0 ? 'Your membership has lapsed' : 'Time to renew'}
+                </p>
+                <p className="font-plex text-sm text-[var(--text-muted)] mb-5">
+                  {daysToExpiry < 0
+                    ? "Your last payment covered you through this date, and it's passed. Renew to keep your access, at the renewal rate: ₹2,999 + GST."
+                    : "Your membership doesn't renew on its own yet. Set it up once, at the renewal rate, and it renews automatically every year from here: ₹2,999 + GST."}
+                </p>
+                <SubscriptionCheckoutButton
+                  country="IN"
+                  buttonLabel="Set up auto-renewal"
+                  dataTestId="account-renew"
+                  lockedEmail={memberEmail}
+                  disclosureText="₹2,999 + 18% GST = ₹3,539, charged today and automatically every year after."
+                  onSuccess={() => {
+                    setJustRenewed(true);
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* The Ten — Trial members only, backs onto GET /api/trial/status */}
       {details?.tier === 'trial' && (

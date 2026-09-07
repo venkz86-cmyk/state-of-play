@@ -119,6 +119,21 @@ PLAN_PRICING = {
     'trial-upgrade': {
         'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539
     },
+    # Team-5/Team-10: this only replaces the payment step itself (static
+    # Razorpay Payment Links, opening in a new tab -- "ugly," Venkat's own
+    # words) with the site's own on-brand checkout. It does NOT automate
+    # the actual corporate-account provisioning (real seats, a scoped
+    # team-<company-slug> label, entries in the Corporate Subscriptions
+    # Sheet) -- that still lives entirely outside this backend
+    # (corporate.py's own docstring), and stays Venkat's manual step
+    # after seeing the payment land, same as it is today. IN-only, per
+    # Venkat's own "only INR for now."
+    'team-5': {
+        'IN': {'amount': 1180000, 'currency': 'INR', 'label': 'Team-5 Membership'},   # ₹10,000 + 18% GST = ₹11,800
+    },
+    'team-10': {
+        'IN': {'amount': 2360000, 'currency': 'INR', 'label': 'Team-10 Membership'},  # ₹20,000 + 18% GST = ₹23,600
+    },
 }
 
 # Everything below pivots on the same instant: 1 October, when the

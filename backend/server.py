@@ -360,8 +360,18 @@ async def get_member_details(request: MemberVerifyRequest):
                         # on a member's renewal date -- including the thirteen-
                         # months-for-twelve trial-upgrade bonus, which a plain
                         # created_at + 365 days had no way to know about.
-                        subscription_status = 'active'
                         last_payment = await get_last_payment_for_email(member.get('email') or request.email)
+                        # A real recurring Subscription payment (razorpay_
+                        # subscriptions.py's verify_subscription) carries a
+                        # subscription_id Razorpay itself attaches -- a plain
+                        # one-time Order payment never does. That's the only
+                        # reliable way to tell "already auto-renewing" from
+                        # "paid once, needs to renew manually" apart; every
+                        # Razorpay-labeled member used to get 'active' here
+                        # unconditionally, which silently claimed everyone
+                        # auto-renews even before any real Subscription flow
+                        # existed.
+                        subscription_status = 'active' if (last_payment and last_payment.get('subscription_id')) else 'one_time'
                         if last_payment:
                             subscription_start = last_payment.get('razorpay_created_at')
                             subscription_end = compute_synthetic_expiry(last_payment)

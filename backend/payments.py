@@ -265,6 +265,7 @@ async def get_last_payment_for_email(email: str) -> Optional[dict]:
         'amount': doc.get('amount'),
         'currency': doc.get('currency'),
         'plan': doc.get('plan'),
+        'subscription_id': doc.get('subscription_id') or '',
         'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
     }
 

@@ -1,22 +1,25 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 
 const PLANS = [
   {
     id: 'team-5',
     name: 'Team-5',
     body: '₹10,000 + GST a year (₹11,800 total). Five seats, ₹2,000 + GST each. Five separate subscriptions would cost ₹12,495. You save ₹2,495.',
-    href: 'https://rzp.io/rzp/tsopteam5',
   },
   {
     id: 'team-10',
     name: 'Team-10',
     body: '₹20,000 + GST a year (₹23,600 total). Ten seats, ₹2,000 + GST each. Ten separate subscriptions would cost ₹24,990. You save ₹4,990.',
-    href: 'https://rzp.io/rzp/tsopteam10',
   },
 ];
 
 export const TeamsMockup = () => {
+  const [paidPlan, setPaidPlan] = useState(null);
+  const [openPlan, setOpenPlan] = useState(null);
+
   return (
     <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
@@ -46,27 +49,42 @@ export const TeamsMockup = () => {
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             A team plan puts the weekly story, the twice-weekly Left Field briefings and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes. Nothing to re-sign, nothing lost when someone leaves.
           </p>
-          <div data-testid="teams-pricing" className="space-y-6">
+          <div data-testid="teams-pricing" className="space-y-8">
             {PLANS.map((p) => (
               <div key={p.id}>
                 <p className="font-editorial font-medium text-lg mb-1">{p.name}</p>
-                <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] mb-2">
+                <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] mb-3">
                   {p.body}
                 </p>
-                <a
-                  href={p.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`teams-cta-${p.id}`}
-                  className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-                >
-                  Buy {p.name}
-                </a>
+                {paidPlan === p.id ? (
+                  <p className="font-plex text-sm text-[var(--text-muted)] border-b border-[var(--rule)] py-3 max-w-[480px]">
+                    Paid. I'll be in touch by email shortly to set up your seats.
+                  </p>
+                ) : openPlan === p.id ? (
+                  <RazorpayCheckoutButton
+                    plan={p.id}
+                    country="IN"
+                    buttonLabel={`Pay for ${p.name}`}
+                    dataTestId={`teams-checkout-${p.id}`}
+                    className="max-w-[480px]"
+                    disclosureText="One annual, GST-compliant invoice. Seats are set up by hand after payment, usually within a working day."
+                    onSuccess={() => setPaidPlan(p.id)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenPlan(p.id)}
+                    data-testid={`teams-cta-${p.id}`}
+                    className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                  >
+                    Buy {p.name}
+                  </button>
+                )}
               </div>
             ))}
           </div>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            Both come with one annual, GST-compliant invoice. More than ten seats, or want to talk it through first? Write to me:{' '}
+            More than ten seats, or want to talk it through first? Write to me:{' '}
             <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
               venkat@stateofplay.club
             </a>. Already subscribed?{' '}
