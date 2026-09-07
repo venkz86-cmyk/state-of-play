@@ -19,6 +19,7 @@ import { ContinueReading } from '../components/ContinueReading';
 import { CustomComments } from '../components/CustomComments';
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
+import { seasonLabel } from '../lib/season';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -73,6 +74,7 @@ export const ArticleMockup = () => {
   const [loading, setLoading] = useState(true);
   const [size, setSize] = useArticleSize();
   const [giftModalOpen, setGiftModalOpen] = useState(false);
+  const [editionNo, setEditionNo] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -90,6 +92,10 @@ export const ArticleMockup = () => {
         const rel = await ghostAPI.getRelatedPosts(post, 3);
         if (!active) return;
         setRelated(rel);
+        // Same real edition count HomeMockup.js uses for its own dateline
+        // -- so the two never disagree on which season it is.
+        const count = await ghostAPI.getPostCount();
+        if (active && count > 0) setEditionNo(count);
       } catch (e) {
         console.error(e);
       } finally {
@@ -208,7 +214,7 @@ export const ArticleMockup = () => {
             {datelineDate(new Date(article.created_at))}
           </span>
           <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
-            Year Two
+            Season {seasonLabel(editionNo)}
           </span>
         </div>
       </div>
