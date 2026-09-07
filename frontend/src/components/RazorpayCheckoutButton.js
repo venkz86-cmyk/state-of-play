@@ -133,37 +133,34 @@ export const RazorpayCheckoutButton = ({
 
   return (
     <div className={className} data-testid={dataTestId}>
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="mb-5">
+        <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</p>
         {lockedEmail ? (
-          <div
-            className="flex-1 h-12 px-4 flex items-center border border-[var(--rule)] font-plex text-[15px] text-[var(--text-muted)]"
-            style={{ borderRadius: 'var(--control-radius)' }}
-          >
-            Using your account: <span className="text-[var(--text)] ml-1">{lockedEmail}</span>
-          </div>
+          <p className="font-plex text-lg text-[var(--text-muted)] border-b border-[var(--rule)] py-3">
+            Using your account: <span className="text-[var(--text)]">{lockedEmail}</span>
+          </p>
         ) : (
           <input
             type="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
-            placeholder="you@email.com"
+            placeholder="you@yourdomain.com"
             disabled={status === 'loading'}
             data-testid={`${dataTestId}-email`}
-            className="flex-1 h-12 px-4 bg-transparent border border-[var(--rule)] font-plex text-[15px] focus:outline-none focus:border-[var(--accent-burgundy)] disabled:opacity-60"
-            style={{ borderRadius: 'var(--control-radius)' }}
+            className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
           />
         )}
-        <button
-          type="button"
-          onClick={startCheckout}
-          disabled={status === 'loading'}
-          data-testid={`${dataTestId}-submit`}
-          className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60 shrink-0"
-          style={{ borderRadius: 'var(--control-radius)' }}
-        >
-          {status === 'loading' ? 'Opening…' : buttonLabel}
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={startCheckout}
+        disabled={status === 'loading'}
+        data-testid={`${dataTestId}-submit`}
+        className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60"
+        style={{ borderRadius: 'var(--control-radius)' }}
+      >
+        {status === 'loading' ? 'Opening…' : buttonLabel}
+      </button>
       {disclosureText && (
         <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3 max-w-[50ch]">
           {disclosureText}
