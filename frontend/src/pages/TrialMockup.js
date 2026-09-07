@@ -83,12 +83,13 @@ export const TrialMockup = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-baseline gap-3 mb-6">
+            <div className={`flex items-end gap-3 ${isIndia ? 'mb-2' : 'mb-6'}`}>
               <span className="font-editorial font-semibold text-[2.75rem] leading-[0.9] text-[var(--text)]">{isIndia ? '₹500' : '$9'}</span>
-              <span className="font-plex text-[15px] text-[var(--text-muted)]">
-                {isIndia ? '+ 18% GST · ₹590 total · one payment, not a subscription' : 'one payment, not a subscription'}
-              </span>
+              <span className="font-plex text-base text-[var(--text-muted)] pb-1">{isIndia ? '+ 18% GST' : 'one-time'}</span>
             </div>
+            {isIndia && (
+              <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">₹590 total</p>
+            )}
             <RazorpayCheckoutButton
               plan="trial"
               country={checkoutCountry}
