@@ -4,14 +4,23 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { trialUpgradePricing, newSignupAnnualPricing } from '../lib/octoberPricing';
+import { STORIES_PER_SEASON } from '../lib/season';
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
+// The fourteen-stories outcome described below is illustrative (ten
+// plus roughly a month of weekly publishing), not a per-visitor live
+// count -- but the season size it's measured against is the same real
+// STORIES_PER_SEASON constant HomeMockup.js's "Season One" dateline
+// uses, so this stays honest if that constant ever changes.
+const TYPICAL_MONTH_STORY_COUNT = 14;
+const SEASON_SHARE_PCT = Math.round((TYPICAL_MONTH_STORY_COUNT / STORIES_PER_SEASON) * 100);
+
 const TRACK = [
   ['Day 1', 'You pay, you read', 'The ten most recent premium stories the moment you sign up. In full. Permanently yours.'],
   ['Week 2', 'A new story every week', 'I publish one long-form story every week. Anything that comes out while you are in, you can read too.'],
-  ['Weeks 3–4', 'Same again', 'By the end of the month, most readers of The Ten have read fourteen stories, not ten. Nothing lost, only added.'],
+  ['Weeks 3–4', 'Same again', `By the end of the month, most readers of The Ten have read fourteen stories, not ten — roughly ${SEASON_SHARE_PCT}% of a full season's worth of State of Play reporting. Nothing lost, only added.`],
   ['Day 30', 'The extras close', 'Anything published after you joined closes with the month. Your original ten never do.'],
 ];
 
