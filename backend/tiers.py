@@ -126,11 +126,12 @@ PLAN_LABELS = {
     # Team-5/Team-10: labels the checkout payer as paid (for revenue
     # reporting/the payments ledger) and tags which plan size they bought,
     # but deliberately does NOT grant 'premium-subscriber' -- the person
-    # who pays isn't necessarily one of the actual seat-holders, and real
-    # seats get provisioned by hand afterward against the Corporate
-    # Subscriptions Sheet (corporate.py), same as today's static-link
-    # flow. Flagged to Venkat: if the payer should always get their own
-    # reading access too, add 'premium-subscriber' back here.
+    # who pays is the team admin, not necessarily a seat-holder themselves.
+    # Real seats are self-served by that admin afterward, through their own
+    # /teams/manage dashboard (razorpay_orders.py's verify_payment now
+    # creates their account and emails them that link directly). Flagged
+    # to Venkat: if the payer should always get their own reading access
+    # too, add 'premium-subscriber' back here.
     'team-5': ['paid-via-razorpay', 'team-size-5'],
     'team-10': ['paid-via-razorpay', 'team-size-10'],
 }

@@ -19,6 +19,7 @@ const PLANS = [
 export const TeamsMockup = () => {
   const [paidPlan, setPaidPlan] = useState(null);
   const [openPlan, setOpenPlan] = useState(null);
+  const [companyName, setCompanyName] = useState('');
 
   return (
     <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
@@ -58,22 +59,35 @@ export const TeamsMockup = () => {
                 </p>
                 {paidPlan === p.id ? (
                   <p className="font-plex text-sm text-[var(--text-muted)] border-b border-[var(--rule)] py-3 max-w-[480px]">
-                    Paid. I'll be in touch by email shortly to set up your seats.
+                    Paid. Check your email — your team dashboard link is on its way.
                   </p>
                 ) : openPlan === p.id ? (
-                  <RazorpayCheckoutButton
-                    plan={p.id}
-                    country="IN"
-                    buttonLabel={`Pay for ${p.name}`}
-                    dataTestId={`teams-checkout-${p.id}`}
-                    className="max-w-[480px]"
-                    disclosureText="One annual, GST-compliant invoice. Seats are set up by hand after payment, usually within a working day."
-                    onSuccess={() => setPaidPlan(p.id)}
-                  />
+                  <div className="max-w-[480px]">
+                    <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Company name</p>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Acme Sports Consulting"
+                      data-testid={`teams-company-name-${p.id}`}
+                      className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
+                    />
+                    {companyName.trim() && (
+                      <RazorpayCheckoutButton
+                        plan={p.id}
+                        country="IN"
+                        buttonLabel={`Pay for ${p.name}`}
+                        dataTestId={`teams-checkout-${p.id}`}
+                        extraVerifyFields={{ company_name: companyName.trim() }}
+                        disclosureText="One annual, GST-compliant invoice. Your team dashboard link — where you add seats yourself — arrives by email right after payment."
+                        onSuccess={() => setPaidPlan(p.id)}
+                      />
+                    )}
+                  </div>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setOpenPlan(p.id)}
+                    onClick={() => { setOpenPlan(p.id); setCompanyName(''); }}
                     data-testid={`teams-cta-${p.id}`}
                     className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                   >

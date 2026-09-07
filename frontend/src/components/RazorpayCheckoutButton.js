@@ -55,6 +55,12 @@ export const RazorpayCheckoutButton = ({
   // subscription, right at the point of payment itself, not just
   // somewhere else on the page.
   disclosureText,
+  // Extra fields merged into the verify-payment request body -- e.g.
+  // Team-5/10's company_name, which razorpay_orders.py's verify_payment
+  // needs to auto-create the corporate account. Generic on purpose, so
+  // this stays a passthrough rather than hardcoding one plan's concerns
+  // into a shared component every checkout on the site uses.
+  extraVerifyFields,
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
@@ -106,6 +112,7 @@ export const RazorpayCheckoutButton = ({
                 razorpay_signature: response.razorpay_signature,
                 email: trimmedEmail,
                 plan,
+                ...extraVerifyFields,
               }),
             });
             if (!verifyRes.ok) {

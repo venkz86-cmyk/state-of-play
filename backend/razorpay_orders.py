@@ -41,6 +41,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
@@ -55,6 +56,21 @@ logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+
+# Same Apps Script the corporate accounts system already runs on
+# (corporate.py, server.py's /invoice/generate-team) -- Team-5/10's
+# checkout calls its 'create_account' action directly, taking over the
+# job a Zapier automation used to do by watching the old static Payment
+# Links. create_account itself takes no admin_key (it was designed for
+# an external, unauthenticated caller); by the time this module reaches
+# it, the Razorpay signature is already verified, so this is at least as
+# trustworthy a caller as Zapier ever was.
+APPS_SCRIPT_URL = os.environ.get(
+    "APPS_SCRIPT_URL",
+    "https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec",
+)
+TEAM_SEATS = {'team-5': 5, 'team-10': 10}
+TEAM_PLAN_NAME = {'team-5': 'Team-5', 'team-10': 'Team-10'}
 
 router = APIRouter()
 
@@ -119,14 +135,14 @@ PLAN_PRICING = {
     'trial-upgrade': {
         'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539
     },
-    # Team-5/Team-10: this only replaces the payment step itself (static
-    # Razorpay Payment Links, opening in a new tab -- "ugly," Venkat's own
-    # words) with the site's own on-brand checkout. It does NOT automate
-    # the actual corporate-account provisioning (real seats, a scoped
-    # team-<company-slug> label, entries in the Corporate Subscriptions
-    # Sheet) -- that still lives entirely outside this backend
-    # (corporate.py's own docstring), and stays Venkat's manual step
-    # after seeing the payment land, same as it is today. IN-only, per
+    # Team-5/Team-10: replaces the static Razorpay Payment Links (opening
+    # in a new tab -- "ugly," Venkat's own words) with the site's own
+    # on-brand checkout, AND takes over the account-provisioning job a
+    # Zapier zap used to do by watching those links -- see
+    # _create_team_account() below, called from verify_payment. Real
+    # seats still get added by the team's own admin afterward (they get
+    # emailed their /teams/manage link), same self-serve flow as today,
+    # just triggered directly instead of through Zapier. IN-only, per
     # Venkat's own "only INR for now."
     'team-5': {
         'IN': {'amount': 1180000, 'currency': 'INR', 'label': 'Team-5 Membership'},   # ₹10,000 + 18% GST = ₹11,800
@@ -233,6 +249,7 @@ class VerifyPaymentRequest(BaseModel):
     email: EmailStr
     name: Optional[str] = ''
     plan: str
+    company_name: Optional[str] = None  # required in practice for plan in ('team-5', 'team-10')
 
 
 @router.post('/api/razorpay/verify-payment')
@@ -314,4 +331,57 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         fallback_email=email, fallback_plan=req.plan,
     )
 
+    if req.plan in TEAM_SEATS:
+        await _create_team_account(req, email)
+
     return {'verified': True, 'email': email, 'plan': req.plan}
+
+
+async def _create_team_account(req: VerifyPaymentRequest, email: str) -> None:
+    """Fires the same Apps Script action ('create_account') a Zapier zap
+    used to call after a payment on the old static Team-5/10 Payment
+    Links, then 'send_dashboard_link' to actually email the buyer their
+    team management link -- replicating the real, working self-serve
+    flow Venkat already has, not inventing a new one. Non-fatal: the
+    payment is already real and already recorded by the time this runs,
+    so a failure here logs loudly but doesn't fail the request -- the
+    alternative (raising) would tell a customer their real payment
+    failed when it didn't."""
+    if not req.company_name:
+        logger.error(
+            f'Team account creation skipped: no company_name on a {req.plan} '
+            f'payment (payment_id={req.razorpay_payment_id}, email={email}) -- '
+            f'needs manual follow-up in the Corporate Subscriptions Sheet.'
+        )
+        return
+
+    config = PLAN_PRICING[req.plan]['IN']
+    amount_rupees = config['amount'] // 100
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            create_res = await client.post(APPS_SCRIPT_URL, json={
+                'action': 'create_account',
+                'company_name': req.company_name,
+                'admin_email': email,
+                'plan_name': TEAM_PLAN_NAME[req.plan],
+                'seats': TEAM_SEATS[req.plan],
+                'amount_paid': amount_rupees,
+                'currency': 'INR',
+                'razorpay_payment_id': req.razorpay_payment_id,
+            })
+            body = create_res.json() if create_res.status_code == 200 else {}
+            if not body.get('success'):
+                logger.error(
+                    f'Team account creation failed for {req.plan} payment '
+                    f'{req.razorpay_payment_id} ({email}): {body.get("error") or create_res.text[:300]!r} '
+                    f'-- needs manual follow-up in the Corporate Subscriptions Sheet.'
+                )
+                return
+            await client.post(APPS_SCRIPT_URL, json={'action': 'send_dashboard_link', 'email': email})
+    except Exception as e:
+        logger.error(
+            f'Team account creation request failed for {req.plan} payment '
+            f'{req.razorpay_payment_id} ({email}): {e!r} -- needs manual '
+            f'follow-up in the Corporate Subscriptions Sheet.'
+        )
