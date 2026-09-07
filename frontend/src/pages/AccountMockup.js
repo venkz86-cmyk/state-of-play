@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
 import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
+import { TheTenPanel } from '../components/TheTenPanel';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +18,7 @@ const longDate = (iso) =>
 export const AccountMockup = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
+  const pricing = useGeoPricing();
   const [recent, setRecent] = useState([]);
   const [saved, setSaved] = useState([]);
   const [details, setDetails] = useState(null);
@@ -74,13 +77,18 @@ export const AccountMockup = () => {
 
   const memberName = (user?.name?.split(' ')[0]) || 'Reader';
   const memberEmail = user?.email || '';
-  const planLabel = canAccessPremium
-    ? (details?.tier === 'student'
-        ? 'Student'
-        : details?.subscription_status === 'nomination'
-          ? 'Trial'
-          : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
-    : 'Free';
+  // A real Trial ("The Ten") member carries only 'tier-trial', no paid
+  // label, so canAccessPremium is false for them -- checked first, or
+  // they'd fall through to 'Free' despite the Trial section below.
+  const planLabel = details?.tier === 'trial'
+    ? 'Trial'
+    : canAccessPremium
+      ? (details?.tier === 'student'
+          ? 'Student'
+          : details?.subscription_status === 'nomination'
+            ? 'Trial'
+            : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
+      : 'Free';
 
   // Razorpay annual subscriptions are one-shot — they expire, not auto-renew.
   // Stripe-billed Ghost subscriptions show as 'active' and do auto-renew.
@@ -140,6 +148,16 @@ export const AccountMockup = () => {
           ))}
         </div>
       </section>
+
+      {/* The Ten — Trial members only, backs onto GET /api/trial/status */}
+      {details?.tier === 'trial' && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
+          <div className="border-t border-[var(--text)] pt-8">
+            <p className="font-editorial italic text-lg mb-6">The Ten</p>
+            <TheTenPanel email={memberEmail} country={pricing.country === 'IN' ? 'IN' : 'INTL'} />
+          </div>
+        </section>
+      )}
 
       {/* Saved — deliberate bookmarks, distinct from passive reading history */}
       {saved.length > 0 && (
