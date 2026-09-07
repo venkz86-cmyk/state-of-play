@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { Overline } from './MockupLayout';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
+import { trialUpgradePricing } from '../lib/trialUpgradePricing';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -213,7 +214,7 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
             <>
               <p className="font-editorial italic text-lg mb-1">Ready for the full archive?</p>
               <p className="font-plex text-[13px] text-[var(--text-muted)] mb-5 max-w-[50ch]">
-                Upgrade any time before day 30 and pay ₹2,999 + GST, the renewal rate, not the new-signup rate — thirteen months for the price of twelve.
+                {trialUpgradePricing().blurb}
               </p>
               <RazorpayCheckoutButton
                 plan="trial-upgrade"
@@ -221,7 +222,7 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
                 buttonLabel="Upgrade to annual"
                 dataTestId="account-trial-upgrade"
                 lockedEmail={email}
-                disclosureText="₹2,999 + 18% GST = ₹3,539. One payment, thirteen months of access."
+                disclosureText={trialUpgradePricing().disclosure}
                 onSuccess={() => {
                   setUpgraded(true);
                   setTimeout(() => { window.location.reload(); }, 1500);
