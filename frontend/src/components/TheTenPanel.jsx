@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ghostAPI } from '../services/ghostAPI';
 import { Overline } from './MockupLayout';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
-import { trialUpgradePricing } from '../lib/trialUpgradePricing';
+import { trialUpgradePricing } from '../lib/octoberPricing';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
