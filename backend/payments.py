@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -247,6 +247,51 @@ async def get_subscriber_payment_summaries() -> dict:
         if currency in summary['total_paid']:
             summary['total_paid'][currency] += doc.get('amount') or 0
     return summaries
+
+
+async def get_last_payment_for_email(email: str) -> Optional[dict]:
+    """Single-email version of get_subscriber_payment_summaries()'s
+    last_payment -- for a caller (server.py's /ghost/member-details) that
+    only needs one member's record, not every subscriber's."""
+    if _db is None:
+        return None
+    doc = await _db.payments.find_one(
+        {'email': email.lower().strip()}, sort=[('razorpay_created_at', -1)],
+    )
+    if not doc:
+        return None
+    return {
+        'payment_id': doc.get('payment_id'),
+        'amount': doc.get('amount'),
+        'currency': doc.get('currency'),
+        'plan': doc.get('plan'),
+        'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+    }
+
+
+# A real paid annual member's cheap expiry estimate (no Ghost-native
+# subscription/comp end date to trust instead) -- last real payment's
+# date + 365 days, +30 more for a trial-upgrade payment's
+# thirteen-months-for-twelve bonus. Shared by admin_dashboard.py's
+# _compute_expiry/restore_to_date and server.py's /ghost/member-details,
+# so the two surfaces can't disagree on when a subscriber's year is up.
+SYNTHETIC_CYCLE_DAYS = 365
+TRIAL_UPGRADE_BONUS_DAYS = 30
+
+
+def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
+    if not last_payment or not last_payment.get('razorpay_created_at'):
+        return None
+    try:
+        paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
+        if paid_at.tzinfo is None:
+            paid_at = paid_at.replace(tzinfo=timezone.utc)
+        cycle_days = SYNTHETIC_CYCLE_DAYS
+        if last_payment.get('plan') == 'trial-upgrade':
+            cycle_days += TRIAL_UPGRADE_BONUS_DAYS
+        return (paid_at + timedelta(days=cycle_days)).isoformat()
+    except (ValueError, TypeError):
+        return None
 
 
 @router.get('/api/admin/payments')
