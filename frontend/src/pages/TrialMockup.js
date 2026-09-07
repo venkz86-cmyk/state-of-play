@@ -20,7 +20,7 @@ const SEASON_SHARE_PCT = Math.round((TYPICAL_MONTH_STORY_COUNT / STORIES_PER_SEA
 const TRACK = [
   ['Day 1', 'You pay, you read', 'The ten most recent premium stories the moment you sign up. In full. Permanently yours.'],
   ['Week 2', 'A new story every week', 'I publish one long-form story every week. Anything that comes out while you are in, you can read too.'],
-  ['Weeks 3–4', 'Same again', `By the end of the month, most readers of The Ten have read fourteen stories, not ten — roughly ${SEASON_SHARE_PCT}% of a full season's worth of State of Play reporting. Nothing lost, only added.`],
+  ['Weeks 3–4', 'Same again', `By the end of the month, most readers of The Ten have read fourteen stories, not ten. That's about ${SEASON_SHARE_PCT}% of the State of Play's annual season. Nothing lost, only added.`],
   ['Day 30', 'The extras close', 'Anything published after you joined closes with the month. Your original ten never do.'],
 ];
 
