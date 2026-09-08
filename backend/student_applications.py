@@ -25,12 +25,23 @@ Flow:
   2. GET /api/admin/student-applications -- admin-only, the review
      queue AdminDashboard.js's Students panel lists.
   3. POST /api/admin/student-applications/{id}/approve -- admin-only,
-     {country: 'IN'|'INTL'}. Emails the applicant the matching
-     Razorpay payment link via resend_email.send_email, marks the
-     application approved. The two links are the same placeholders
-     StudentsMockup.js has -- swap both here the moment Venkat sends
-     the real ones, same edit as that file.
-  4. POST /api/admin/student-applications/{id}/reject -- admin-only.
+     {country: 'IN'|'INTL'}. Mints a one-time payment_token, emails the
+     applicant a link to /students/pay?token=... on our own site (not
+     a raw rzp.io Payment Link), marks the application approved.
+  4. GET /api/students/pay-info/{token} -- public, no admin gate. The
+     new /students/pay page calls this on load to check the token is
+     real and still approved, and to get back the email/country/plan
+     it needs to render RazorpayCheckoutButton already locked to the
+     right person and price -- the applicant never picks anything,
+     Venkat already decided both when he approved.
+  5. POST /api/students/pay-info/{token}/mark-paid -- public. Called
+     from RazorpayCheckoutButton's onSuccess, purely so the admin
+     queue can stop showing a converted applicant under "approved"
+     forever. Cosmetic bookkeeping only -- the actual access grant
+     happens inside razorpay_orders.py's verify-payment (the same
+     Ghost-labeling path every other on-site checkout already uses),
+     completely independent of this call.
+  6. POST /api/admin/student-applications/{id}/reject -- admin-only.
      No automatic email -- a rejection is worth Venkat's own words,
      not a form letter; he follows up by hand if he wants to.
 
@@ -72,10 +83,9 @@ _db = None
 
 TALLY_SIGNING_SECRET = os.environ.get('TALLY_SIGNING_SECRET', '')
 
-# TODO(Venkat): replace with the real Razorpay payment links once created
-# -- the same two placeholders StudentsMockup.js has (spec section 4).
-RAZORPAY_LINK_IN = 'https://rzp.io/rzp/tsopstudent'
-RAZORPAY_LINK_INTL = 'https://rzp.io/rzp/tsopstudentusd'
+# Matches nominations.py's own constant -- the frontend's own public URL,
+# for a link that has to work from inside an email, not a relative path.
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 
 def init(db_handle):
@@ -89,6 +99,7 @@ async def _ensure_indexes():
     try:
         await _db.student_applications.create_index('tally_response_id', unique=True)
         await _db.student_applications.create_index('application_id', unique=True)
+        await _db.student_applications.create_index('payment_token', unique=True, sparse=True)
         await _db.student_applications.create_index('status')
         await _db.student_applications.create_index('created_at')
     except Exception as e:
@@ -214,7 +225,7 @@ class DecisionRequest(BaseModel):
     country: Optional[str] = None  # 'IN' | 'INTL' -- required for approve
 
 
-def _payment_link_email_html(name: str, link: str) -> str:
+def _payment_link_email_html(name: str, pay_url: str) -> str:
     first_name = (name or '').split(' ')[0] or 'there'
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
@@ -225,7 +236,7 @@ def _payment_link_email_html(name: str, link: str) -> str:
         f'{html.escape(first_name)}, you’re <em style="font-style: italic;">approved.</em>'
         '</h1>'
         '<p>Your student ID checked out. Complete your membership below to start reading.</p>'
-        f'<p style="margin: 32px 0;"><a href="{link}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Complete your membership &rarr;</a></p>'
+        f'<p style="margin: 32px 0;"><a href="{pay_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Complete your membership &rarr;</a></p>'
         '<p style="color: #555555;">Once you’ve paid, you’re in immediately — every weekly story, the Left Field briefing, and the full archive.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
@@ -254,11 +265,12 @@ async def approve_student_application(
             detail='This application has no email on file -- check raw_fields and reach out manually.',
         )
 
-    link = RAZORPAY_LINK_IN if req.country == 'IN' else RAZORPAY_LINK_INTL
+    payment_token = str(uuid.uuid4())
+    pay_url = f'{PUBLIC_BASE_URL}/students/pay?token={payment_token}'
     sent = await send_email(
         to=application['email'],
         subject='You’re approved — complete your Student membership',
-        html=_payment_link_email_html(application.get('name', ''), link),
+        html=_payment_link_email_html(application.get('name', ''), pay_url),
     )
     if not sent:
         raise HTTPException(
@@ -269,10 +281,50 @@ async def approve_student_application(
     now = datetime.now(timezone.utc)
     await _db.student_applications.update_one(
         {'application_id': application_id},
-        {'$set': {'status': 'approved', 'decided_at': now, 'decided_country': req.country}},
+        {'$set': {
+            'status': 'approved', 'decided_at': now,
+            'decided_country': req.country, 'payment_token': payment_token,
+        }},
     )
     updated = await _db.student_applications.find_one({'application_id': application_id})
     return _serialize(updated)
+
+
+@router.get('/api/students/pay-info/{token}')
+async def student_pay_info(token: str):
+    """Public, unauthenticated -- the /students/pay page's own load call.
+    Deliberately returns only what that page needs to render a locked
+    checkout (name/email/country), never the full application record
+    (college, ID photo, raw form answers stay admin-only)."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    application = await _db.student_applications.find_one({'payment_token': token})
+    if not application or application.get('status') not in ('approved', 'paid'):
+        raise HTTPException(status_code=404, detail='This link is invalid or has expired.')
+    return {
+        'name': application.get('name') or '',
+        'email': application.get('email') or '',
+        'country': application.get('decided_country') or 'IN',
+        'already_paid': application.get('status') == 'paid',
+    }
+
+
+@router.post('/api/students/pay-info/{token}/mark-paid')
+async def student_mark_paid(token: str):
+    """Public, unauthenticated -- called from RazorpayCheckoutButton's
+    onSuccess. Purely queue hygiene (moves a converted applicant out of
+    the admin panel's "approved" filter); grants nothing itself. The
+    real access grant already happened inside razorpay_orders.py's
+    verify-payment, via the same Ghost-labeling every other on-site
+    checkout uses -- this call succeeding or failing changes nothing
+    about whether that member actually has access."""
+    if _db is None:
+        return {'ok': False}
+    await _db.student_applications.update_one(
+        {'payment_token': token, 'status': 'approved'},
+        {'$set': {'status': 'paid', 'paid_at': datetime.now(timezone.utc)}},
+    )
+    return {'ok': True}
 
 
 @router.post('/api/admin/student-applications/{application_id}/reject')

@@ -9,11 +9,6 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const TALLY_FORM_URL = 'https://tally.so/r/RGNvOd';
 
-// TODO(Venkat): replace with the real Razorpay payment links once
-// created (spec section 4 suggests these exact slugs).
-const RAZORPAY_LINK_IN = 'https://rzp.io/rzp/tsopstudent';
-const RAZORPAY_LINK_USD = 'https://rzp.io/rzp/tsopstudentusd';
-
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
