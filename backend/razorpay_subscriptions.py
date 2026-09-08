@@ -32,10 +32,17 @@ Provides:
     see handle_subscription_webhook_event(), called from server.py's
     webhook handler for subscription.* event types.
 
-NOT YET DECIDED, deliberately not guessed at: what happens to paid access
-when a renewal auto-charge fails and a subscription goes `halted` —
-immediate downgrade or a grace period first. Until that's decided,
-`subscription.halted` is logged only; the paid label is left untouched.
+When a renewal auto-charge fails and Razorpay gives up retrying, it
+sends `subscription.halted` -- Venkat's call: a one-week grace period,
+not an immediate downgrade. `_start_grace_period()` records the halt
+and emails the subscriber once; `subscription-grace/expire-check` (an
+admin-gated sweep, same shape as nominations.py's own expire-check
+endpoints -- wire it to run daily via a Render Cron Job) strips paid
+access from anyone still in the grace collection past their
+`grace_ends_at`. If the subscription successfully charges again before
+that (`subscription.charged`, handled in server.py's main webhook
+branch), `clear_grace_period()` cancels the pending downgrade so the
+sweep doesn't act on stale state.
 
 Plan IDs below are placeholders (empty string) except IN, which Venkat
 has already created in the Razorpay dashboard. INTL still needs one
@@ -53,32 +60,43 @@ from __future__ import annotations
 
 import os
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+import httpx
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, ensure_member_labeled
-from payments import fetch_and_record
+from admin_auth import require_admin_key_or_session
+from tiers import PLAN_LABELS, ensure_member_labeled, find_ghost_member
+from payments import fetch_and_record, get_last_payment_by_subscription_id
+from resend_email import send_email
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
+# Same two labels PLAN_LABELS['standard'] grants -- a subscription only
+# ever confers standard-equivalent access (see module docstring), so a
+# grace-period downgrade just reverses exactly that grant, nothing more.
+GRACE_PERIOD_DAYS = 7
+_DOWNGRADE_LABELS = ('paid-via-razorpay', 'premium-subscriber')
+
 router = APIRouter()
 
 # Injected by server.py at mount time — same pattern as razorpay_orders.py.
 _razorpay_client = None
 _recent_payments: Optional[dict] = None
+_db = None
 
 
-def init(razorpay_client, recent_payments: dict):
-    global _razorpay_client, _recent_payments
+def init(razorpay_client, recent_payments: dict, db_handle=None):
+    global _razorpay_client, _recent_payments, _db
     _razorpay_client = razorpay_client
     _recent_payments = recent_payments
+    _db = db_handle
 
 
 def _create_ghost_admin_token() -> Optional[str]:
@@ -206,21 +224,146 @@ async def verify_subscription(req: VerifySubscriptionRequest):
     return {'verified': True, 'email': email}
 
 
-def handle_subscription_webhook_event(event: str, payload: dict) -> None:
+async def _ensure_grace_indexes():
+    if _db is None:
+        return
+    try:
+        await _db.subscription_grace.create_index('subscription_id', unique=True)
+        await _db.subscription_grace.create_index('status')
+        await _db.subscription_grace.create_index('grace_ends_at')
+    except Exception as e:
+        logger.warning(f'subscription_grace index ensure failed (non-fatal): {e!r}')
+
+
+def _grace_period_email_html() -> str:
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        'Your renewal payment <em style="font-style: italic;">didn’t go through.</em>'
+        '</h1>'
+        '<p>We tried to charge your card for your annual renewal and it didn’t go through. Your access is still active for now.</p>'
+        f'<p>You have {GRACE_PERIOD_DAYS} days to update your payment method before access pauses. Reply to this email or write to '
+        '<a href="mailto:venkat@stateofplay.club" style="color: #A0291C;">venkat@stateofplay.club</a> and we’ll help you sort it out.</p>'
+        '<p style="margin-top: 32px;">Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '</div>'
+    )
+
+
+async def _start_grace_period(subscription_id: str) -> None:
+    if _db is None:
+        logger.error(f'Subscription {subscription_id} halted but no DB configured -- cannot start grace period')
+        return
+    last_payment = await get_last_payment_by_subscription_id(subscription_id)
+    email = (last_payment or {}).get('email') or ''
+    if not email:
+        logger.error(f'Subscription {subscription_id} halted but no payment record found -- cannot start grace period or notify')
+        return
+
+    await _ensure_grace_indexes()
+    now = datetime.now(timezone.utc)
+    result = await _db.subscription_grace.update_one(
+        {'subscription_id': subscription_id},
+        {'$setOnInsert': {
+            'subscription_id': subscription_id,
+            'email': email,
+            'halted_at': now,
+            'grace_ends_at': now + timedelta(days=GRACE_PERIOD_DAYS),
+            'status': 'in_grace',
+        }},
+        upsert=True,
+    )
+    if getattr(result, 'upserted_id', None) is not None:
+        logger.warning(f'Subscription {subscription_id} halted for {email} — {GRACE_PERIOD_DAYS}-day grace period started')
+        await send_email(
+            to=email,
+            subject='Your renewal payment didn’t go through',
+            html=_grace_period_email_html(),
+        )
+    # else: already in grace from an earlier delivery of the same event —
+    # $setOnInsert means the clock isn't reset by a re-delivered webhook.
+
+
+async def clear_grace_period(subscription_id: str) -> None:
+    """Called from server.py's main webhook branch when a previously
+    halted subscription charges successfully again -- cancels the
+    pending downgrade so the sweep below doesn't act on stale state."""
+    if _db is None or not subscription_id:
+        return
+    await _db.subscription_grace.update_one(
+        {'subscription_id': subscription_id, 'status': 'in_grace'},
+        {'$set': {'status': 'resolved'}},
+    )
+
+
+async def _downgrade_member(email: str, token: str) -> bool:
+    """Reverses exactly what a subscription payment granted -- strips
+    'paid-via-razorpay' and 'premium-subscriber' (PLAN_LABELS['standard'])
+    from the member. Removing only one of the two would leave the other
+    still satisfying tiers.is_paid_from_labels(), so access wouldn't
+    actually change."""
+    member = await find_ghost_member(email, token)
+    if not member:
+        return False
+    existing_labels = [(l.get('name') or '') for l in (member.get('labels') or [])]
+    new_labels = [l for l in existing_labels if l not in _DOWNGRADE_LABELS]
+    if new_labels == existing_labels:
+        return True  # already doesn't carry paid access
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.put(
+                f'{GHOST_URL}/ghost/api/admin/members/{member["id"]}/',
+                json={'members': [{'labels': new_labels}]},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        return r.status_code == 200
+    except Exception as e:
+        logger.warning(f'Grace-period downgrade PUT failed for {email}: {e!r}')
+        return False
+
+
+@router.post('/api/razorpay/subscription-grace/expire-check')
+async def subscription_grace_expire_check(_admin: None = Depends(require_admin_key_or_session)):
+    """Cron sweep (admin-gated, same shape as nominations.py's own
+    expire-check endpoints) -- for every grace record still 'in_grace'
+    past its grace_ends_at, strips paid access from that member. Wire
+    this to run daily via a Render Cron Job (or Apps Script's
+    time-driven trigger, same as the nominations sweeps)."""
+    if _db is None:
+        return {'downgraded_count': 0}
+    token = _create_ghost_admin_token()
+    now = datetime.now(timezone.utc)
+    downgraded_count = 0
+
+    cursor = _db.subscription_grace.find({'status': 'in_grace', 'grace_ends_at': {'$lt': now}})
+    async for record in cursor:
+        email = record.get('email') or ''
+        ok = bool(token and email) and await _downgrade_member(email, token)
+        await _db.subscription_grace.update_one(
+            {'_id': record['_id']},
+            {'$set': {'status': 'downgraded', 'downgraded_at': now, 'downgrade_succeeded': ok}},
+        )
+        if ok:
+            downgraded_count += 1
+    return {'downgraded_count': downgraded_count}
+
+
+async def handle_subscription_webhook_event(event: str, payload: dict) -> None:
     """Called from server.py's razorpay_webhook for subscription.* events
     other than .activated and .charged — those two now get the same Ghost
     labeling + Slack treatment as payment.captured, handled directly in
-    server.py's primary webhook branch. .halted is logged, not acted on —
-    see the module docstring for why."""
+    server.py's primary webhook branch (which also calls
+    clear_grace_period() there for a successful charge)."""
     subscription_entity = payload.get('payload', {}).get('subscription', {}).get('entity', {})
     sub_id = subscription_entity.get('id', 'unknown')
 
     if event == 'subscription.halted':
-        logger.warning(
-            f'Subscription halted (renewal charge failed): {sub_id} — '
-            f'no automatic action taken, grace-period policy not yet decided'
-        )
-    elif event in ('subscription.authenticated', 'subscription.activated', 'subscription.cancelled'):
+        await _start_grace_period(sub_id)
+    elif event in ('subscription.authenticated', 'subscription.cancelled'):
         logger.info(f'Subscription event {event}: {sub_id}')
     else:
         logger.info(f'Unhandled subscription event {event}: {sub_id}')

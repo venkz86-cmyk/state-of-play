@@ -1206,6 +1206,18 @@ async def razorpay_webhook(request: Request):
                                         referral_code, email, payment_id,
                                         payment_entity.get('created_at'),
                                     )
+
+                                # A subscription that previously halted
+                                # (a failed renewal charge) and is now
+                                # charging again successfully -- cancel
+                                # its pending grace-period downgrade so
+                                # the daily sweep doesn't act on stale
+                                # state. No-op for a plain one-time
+                                # payment (no subscription_id) or a
+                                # subscription that was never halted.
+                                sub_id = subscription_entity.get('id')
+                                if sub_id and clear_grace_period:
+                                    await clear_grace_period(sub_id)
                             else:
                                 logger.warning(f"Ghost member ensure/label failed for {email}")
                     except Exception as e:
@@ -1221,7 +1233,7 @@ async def razorpay_webhook(request: Request):
             # covered above (Ghost labeling + Slack, same as payment.captured);
             # the remaining lifecycle (authenticated, halted, cancelled) is
             # handled in razorpay_subscriptions.py.
-            handle_subscription_webhook_event(event, payload)
+            await handle_subscription_webhook_event(event, payload)
         else:
             logger.info(f"Ignoring event type: {event}")
         
@@ -2348,12 +2360,14 @@ try:
         router as razorpay_subscriptions_router,
         init as razorpay_subscriptions_init,
         handle_subscription_webhook_event,
+        clear_grace_period,
     )
-    razorpay_subscriptions_init(razorpay_client, recent_payments)
+    razorpay_subscriptions_init(razorpay_client, recent_payments, db)
     app.include_router(razorpay_subscriptions_router)
 except Exception as _e:
     logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
     handle_subscription_webhook_event = None
+    clear_grace_period = None
 
 # Mount the Student plan application review queue (Sept 2026) -- after
 # admin_auth (for require_admin_key_or_session) and resend_email (for
