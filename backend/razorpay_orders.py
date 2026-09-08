@@ -128,6 +128,7 @@ PLAN_PRICING = {
     },
     'trial-upgrade': {
         'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539
+        'INTL': {'amount': 16000, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten)'},  # $169 new-signup rate minus the $9 trial fee = $160
     },
     # Team-5/Team-10: replaces the static Razorpay Payment Links (opening
     # in a new tab -- "ugly," Venkat's own words) with the site's own
@@ -149,13 +150,17 @@ PLAN_PRICING = {
 # Launch-window discount on the trial-upgrade price: The Ten launches
 # 15 September, and Venkat's call is that upgraders in the window before
 # the 1 October rate change pay a cheaper launch price than the
-# steady-state ₹2,999 rate above, reverting automatically at the same
-# instant the new-signup rate goes live. IN-only, matching
-# PLAN_PRICING['trial-upgrade']'s existing scope.
+# steady-state rate above, reverting automatically at the same instant
+# the new-signup rate goes live. Same "new-signup rate minus the trial
+# fee already paid" logic both sides of the cutoff and both geos:
+# IN pre-Oct-1 ₹2,499 − ₹500 = ₹1,999; INTL pre-Oct-1 $120 − $9 = $111
+# (post-Oct-1 versions land in PLAN_PRICING['trial-upgrade'] above:
+# ₹3,499 − ₹500 = ₹2,999, $169 − $9 = $160).
 IST = timezone(timedelta(hours=5, minutes=30))
 TRIAL_UPGRADE_LAUNCH_CUTOFF = datetime(2026, 10, 1, tzinfo=IST)
 TRIAL_UPGRADE_LAUNCH_PRICING = {
     'IN': {'amount': 235900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # ₹1,999 + 18% GST = ₹2,359
+    'INTL': {'amount': 11100, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # $111
 }
 
 
@@ -165,8 +170,8 @@ def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
         return None
     geo = country if country in plans else ('IN' if 'IN' in plans else None)
     config = plans.get(geo)
-    if plan == 'trial-upgrade' and geo == 'IN' and datetime.now(IST) < TRIAL_UPGRADE_LAUNCH_CUTOFF:
-        config = TRIAL_UPGRADE_LAUNCH_PRICING['IN']
+    if plan == 'trial-upgrade' and datetime.now(IST) < TRIAL_UPGRADE_LAUNCH_CUTOFF:
+        config = TRIAL_UPGRADE_LAUNCH_PRICING.get(geo, config)
     return config
 
 
