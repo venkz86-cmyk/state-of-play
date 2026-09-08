@@ -249,6 +249,27 @@ async def get_subscriber_payment_summaries() -> dict:
     return summaries
 
 
+async def get_last_payment_by_subscription_id(subscription_id: str) -> Optional[dict]:
+    """Reverse lookup of get_last_payment_for_email -- resolves which
+    email a given Razorpay subscription belongs to. A subscription.*
+    webhook event carries only the subscription's own id, never the
+    subscriber's email, so razorpay_subscriptions.py's grace-period
+    handling needs this to know who to notify/eventually downgrade."""
+    if _db is None or not subscription_id:
+        return None
+    doc = await _db.payments.find_one(
+        {'subscription_id': subscription_id}, sort=[('razorpay_created_at', -1)],
+    )
+    if not doc:
+        return None
+    return {
+        'payment_id': doc.get('payment_id'),
+        'email': doc.get('email'),
+        'amount': doc.get('amount'),
+        'currency': doc.get('currency'),
+    }
+
+
 async def get_last_payment_for_email(email: str) -> Optional[dict]:
     """Single-email version of get_subscriber_payment_summaries()'s
     last_payment -- for a caller (server.py's /ghost/member-details) that
