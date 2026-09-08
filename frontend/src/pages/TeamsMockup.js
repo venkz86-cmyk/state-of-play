@@ -68,7 +68,7 @@ export const TeamsMockup = () => {
                       type="text"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="Acme Sports Consulting"
+                      placeholder="Your company name"
                       data-testid={`teams-company-name-${p.id}`}
                       className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
                     />
