@@ -44,9 +44,8 @@ that (`subscription.charged`, handled in server.py's main webhook
 branch), `clear_grace_period()` cancels the pending downgrade so the
 sweep doesn't act on stale state.
 
-Plan IDs below are placeholders (empty string) except IN, which Venkat
-has already created in the Razorpay dashboard. INTL still needs one
-created there before an international renewal can use this.
+Both Plan IDs below are real, created in the Razorpay dashboard --
+IN and INTL renewal both work end to end.
 
 Confirmed against the installed razorpay SDK (2.0.x, utility/utility.py):
 `client.utility.verify_subscription_payment_signature` exists and takes
@@ -118,7 +117,7 @@ def _create_ghost_admin_token() -> Optional[str]:
 # INTL still a placeholder.
 SUBSCRIPTION_PLANS = {
     'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
-    'INTL': {'plan_id': '', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
+    'INTL': {'plan_id': 'plan_TZOohCLUkhJAFy', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
 }
 
 # A Razorpay Subscription needs a finite total_count, not true "forever".
