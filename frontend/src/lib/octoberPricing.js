@@ -26,15 +26,32 @@ export const newSignupAnnualPricing = (isIndia) => {
   };
 };
 
-export const trialUpgradePricing = () => {
+// Same "new-signup rate minus the trial fee already paid" logic both
+// geos and both sides of the cutoff (razorpay_orders.py's
+// TRIAL_UPGRADE_LAUNCH_PRICING/PLAN_PRICING['trial-upgrade'] comment
+// spells out the same four numbers): IN launch ₹2,499 − ₹500 = ₹1,999,
+// IN steady ₹3,499 − ₹500 = ₹2,999; INTL launch $120 − $9 = $111,
+// INTL steady $169 − $9 = $160.
+export const trialUpgradePricing = (isIndia) => {
   const launch = isBeforeOctoberCutover();
+  if (isIndia) {
+    return launch
+      ? {
+          blurb: 'Upgrade before 1 October for the launch price: ₹1,999 + GST, thirteen months for the price of twelve.',
+          disclosure: '₹1,999 + 18% GST = ₹2,359. One payment, thirteen months of access.',
+        }
+      : {
+          blurb: 'Upgrade any time before day 30 and pay the renewal rate, not the new-signup rate: ₹2,999 + GST, thirteen months for the price of twelve.',
+          disclosure: '₹2,999 + 18% GST = ₹3,539. One payment, thirteen months of access.',
+        };
+  }
   return launch
     ? {
-        blurb: 'Upgrade before 1 October for the launch price: ₹1,999 + GST, thirteen months for the price of twelve.',
-        disclosure: '₹1,999 + 18% GST = ₹2,359. One payment, thirteen months of access.',
+        blurb: 'Upgrade before 1 October for the launch price: $111, thirteen months for the price of twelve.',
+        disclosure: '$111. One payment, thirteen months of access.',
       }
     : {
-        blurb: 'Upgrade any time before day 30 and pay the renewal rate, not the new-signup rate: ₹2,999 + GST, thirteen months for the price of twelve.',
-        disclosure: '₹2,999 + 18% GST = ₹3,539. One payment, thirteen months of access.',
+        blurb: 'Upgrade any time before day 30 and pay $160, thirteen months for the price of twelve.',
+        disclosure: '$160. One payment, thirteen months of access.',
       };
 };

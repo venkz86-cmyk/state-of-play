@@ -206,32 +206,30 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
         </div>
       )}
 
-      {country === 'IN' && (
-        <div className="border border-[var(--rule)] p-6 lg:p-8">
-          {upgraded ? (
-            <p className="font-plex text-[14px] text-[var(--text-muted)]">You're upgraded. Reloading your account…</p>
-          ) : (
-            <>
-              <p className="font-editorial italic text-lg mb-1">Ready for the full archive?</p>
-              <p className="font-plex text-[13px] text-[var(--text-muted)] mb-5 max-w-[50ch]">
-                {trialUpgradePricing().blurb}
-              </p>
-              <RazorpayCheckoutButton
-                plan="trial-upgrade"
-                country="IN"
-                buttonLabel="Upgrade to annual"
-                dataTestId="account-trial-upgrade"
-                lockedEmail={email}
-                disclosureText={trialUpgradePricing().disclosure}
-                onSuccess={() => {
-                  setUpgraded(true);
-                  setTimeout(() => { window.location.reload(); }, 1500);
-                }}
-              />
-            </>
-          )}
-        </div>
-      )}
+      <div className="border border-[var(--rule)] p-6 lg:p-8">
+        {upgraded ? (
+          <p className="font-plex text-[14px] text-[var(--text-muted)]">You're upgraded. Reloading your account…</p>
+        ) : (
+          <>
+            <p className="font-editorial italic text-lg mb-1">Ready for the full archive?</p>
+            <p className="font-plex text-[13px] text-[var(--text-muted)] mb-5 max-w-[50ch]">
+              {trialUpgradePricing(country === 'IN').blurb}
+            </p>
+            <RazorpayCheckoutButton
+              plan="trial-upgrade"
+              country={country}
+              buttonLabel="Upgrade to annual"
+              dataTestId="account-trial-upgrade"
+              lockedEmail={email}
+              disclosureText={trialUpgradePricing(country === 'IN').disclosure}
+              onSuccess={() => {
+                setUpgraded(true);
+                setTimeout(() => { window.location.reload(); }, 1500);
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 };

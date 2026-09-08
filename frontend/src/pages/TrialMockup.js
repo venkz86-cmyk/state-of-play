@@ -174,34 +174,32 @@ export const TrialMockup = () => {
             The Left Field briefing is free either way: trial, subscriber, or neither.
           </p>
 
-          {isIndia && (
-            <div className="mt-10 border-t border-[var(--rule)] pt-8 max-w-[520px]">
-              {justUpgraded ? (
-                <p className="font-plex text-[15px] text-[var(--text-muted)]">
-                  You're upgraded. Reloading your account now…
+          <div className="mt-10 border-t border-[var(--rule)] pt-8 max-w-[520px]">
+            {justUpgraded ? (
+              <p className="font-plex text-[15px] text-[var(--text-muted)]">
+                You're upgraded. Reloading your account now…
+              </p>
+            ) : (
+              <>
+                <p className="font-editorial font-medium text-lg mb-1">Already in The Ten?</p>
+                <p className="font-plex text-sm text-[var(--text-muted)] mb-4">
+                  {trialUpgradePricing(isIndia).blurb}
                 </p>
-              ) : (
-                <>
-                  <p className="font-editorial font-medium text-lg mb-1">Already in The Ten?</p>
-                  <p className="font-plex text-sm text-[var(--text-muted)] mb-4">
-                    {trialUpgradePricing().blurb}
-                  </p>
-                  <RazorpayCheckoutButton
-                    plan="trial-upgrade"
-                    country="IN"
-                    buttonLabel="Upgrade to annual"
-                    dataTestId="trial-upgrade-checkout"
-                    lockedEmail={user?.email}
-                    disclosureText={trialUpgradePricing().disclosure}
-                    onSuccess={() => {
-                      setJustUpgraded(true);
-                      setTimeout(() => { window.location.href = '/account'; }, 1500);
-                    }}
-                  />
-                </>
-              )}
-            </div>
-          )}
+                <RazorpayCheckoutButton
+                  plan="trial-upgrade"
+                  country={isIndia ? 'IN' : 'INTL'}
+                  buttonLabel="Upgrade to annual"
+                  dataTestId="trial-upgrade-checkout"
+                  lockedEmail={user?.email}
+                  disclosureText={trialUpgradePricing(isIndia).disclosure}
+                  onSuccess={() => {
+                    setJustUpgraded(true);
+                    setTimeout(() => { window.location.href = '/account'; }, 1500);
+                  }}
+                />
+              </>
+            )}
+          </div>
         </div>
       </section>
 
