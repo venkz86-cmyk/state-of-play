@@ -7,9 +7,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// TODO(Venkat): replace with the real Tally form URL once it's built
-// (see the Student plan build spec, section 3).
-const TALLY_FORM_URL = 'https://tally.so/r/REPLACE_ME';
+const TALLY_FORM_URL = 'https://tally.so/r/RGNvOd';
 
 // TODO(Venkat): replace with the real Razorpay payment links once
 // created (spec section 4 suggests these exact slugs).
