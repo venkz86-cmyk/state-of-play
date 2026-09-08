@@ -8,6 +8,7 @@ import { RenewalsPanel } from '../components/admin/RenewalsPanel';
 import { CommentsPanel } from '../components/admin/CommentsPanel';
 import { NominatedReadersPanel } from '../components/admin/NominatedReadersPanel';
 import { TrialsPanel } from '../components/admin/TrialsPanel';
+import { StudentApplicationsPanel } from '../components/admin/StudentApplicationsPanel';
 import { ReferralsPanel } from '../components/admin/ReferralsPanel';
 import { CorporateAccountsPanel } from '../components/admin/CorporateAccountsPanel';
 import { LinksPanel } from '../components/admin/LinksPanel';
@@ -83,6 +84,7 @@ export const AdminDashboard = () => {
           <Route path="nominated" element={<NominatedReadersPanel onAuthError={onAuthError} />} />
           <Route path="corporate" element={<CorporateAccountsPanel onAuthError={onAuthError} />} />
           <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
+          <Route path="students" element={<StudentApplicationsPanel onAuthError={onAuthError} />} />
           <Route path="referrals" element={<ReferralsPanel onAuthError={onAuthError} />} />
           <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
         </Routes>

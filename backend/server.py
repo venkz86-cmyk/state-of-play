@@ -2355,6 +2355,16 @@ except Exception as _e:
     logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
     handle_subscription_webhook_event = None
 
+# Mount the Student plan application review queue (Sept 2026) -- after
+# admin_auth (for require_admin_key_or_session) and resend_email (for
+# send_email), both already mounted above.
+try:
+    from student_applications import router as student_applications_router, init as student_applications_init
+    student_applications_init(db)
+    app.include_router(student_applications_router)
+except Exception as _e:
+    logging.warning(f"student_applications module not mounted: {_e!r}")
+
 # Mount Trial ("The Ten") expiry tracking — 30-day window + story snapshot
 try:
     from trial_tracking import (
