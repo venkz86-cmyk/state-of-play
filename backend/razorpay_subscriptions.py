@@ -46,9 +46,10 @@ that (`subscription.charged`, handled in server.py's main webhook
 branch), `clear_grace_period()` cancels the pending downgrade so the
 sweep doesn't act on stale state.
 
-Plan IDs below are placeholders (empty string). Venkat creates the four
-real Plans (existing/new x IN/INTL) in the Razorpay dashboard's
-Subscriptions product and hands back the plan_ids.
+Both 'existing' Plan IDs below are real -- IN and INTL renewal (X/Y)
+both work end to end. 'new' (Z, post-Nov-1 fresh signups) is still a
+placeholder; Venkat creates those two Plans in the Razorpay dashboard's
+Subscriptions product and hands back the plan_ids when that's ready.
 
 Two things flagged as needing a live test in Razorpay's test mode before
 this goes live, not just a code review: (1) that a `start_at`-deferred
@@ -128,7 +129,7 @@ def _create_ghost_admin_token() -> Optional[str]:
 SUBSCRIPTION_PLANS = {
     'existing': {
         'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
-        'INTL': {'plan_id': '', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
+        'INTL': {'plan_id': 'plan_TZOohCLUkhJAFy', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
     },
     'new': {
         'IN': {'plan_id': '', 'amount': 412900, 'currency': 'INR', 'label': 'Annual Membership'},   # 3,499 + 18% GST = 4,128.82 -> 4,129
