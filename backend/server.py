@@ -2329,6 +2329,15 @@ try:
 except Exception as _e:
     logging.warning(f"razorpay_orders module not mounted: {_e!r}")
 
+# Mount gift-a-subscription (Sept 2026) -- after razorpay_orders, whose
+# create-order endpoint it reuses unchanged for the payment step itself.
+try:
+    from gift_subscriptions import router as gift_subscriptions_router, init as gift_subscriptions_init
+    gift_subscriptions_init(razorpay_client, db)
+    app.include_router(gift_subscriptions_router)
+except Exception as _e:
+    logging.warning(f"gift_subscriptions module not mounted: {_e!r}")
+
 # Mount corporate.py (Phase 4) -- before admin_dashboard, which now imports
 # fetch_accounts from it to resolve corp-* members' real renewal dates.
 try:

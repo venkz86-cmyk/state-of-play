@@ -18,6 +18,8 @@ import { ContactMockup as Contact } from "./pages/ContactMockup";
 import { TeamsMockup as Teams } from "./pages/TeamsMockup";
 import { StudentsMockup as Students } from "./pages/StudentsMockup";
 import { StudentPayMockup as StudentPay } from "./pages/StudentPayMockup";
+import { GiftMockup as Gift } from "./pages/GiftMockup";
+import { GiftRedeemMockup as GiftRedeem } from "./pages/GiftRedeemMockup";
 import { TrialMockup as Trial } from "./pages/TrialMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
@@ -76,6 +78,8 @@ function Shell() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/students" element={<Students />} />
           <Route path="/students/pay" element={<StudentPay />} />
+          <Route path="/gift" element={<Gift />} />
+          <Route path="/gift/redeem" element={<GiftRedeem />} />
           <Route path="/trial" element={<Trial />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
