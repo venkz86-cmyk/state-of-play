@@ -50,6 +50,16 @@ export const RazorpayCheckoutButton = ({
   // an editable box here would just be an out-of-sync field the backend
   // silently overrides -- its own confusing surprise.
   lockedEmail,
+  // Suppresses this component's own email UI entirely (neither the
+  // editable input nor the locked "Using your account" line) --
+  // for a caller like GiftMockup.js that already collects the
+  // buyer's email itself, live, as the visitor types (so lockedEmail
+  // is '' before they've typed anything -- a plain truthy check on
+  // lockedEmail would render the editable input in that gap, giving
+  // two email fields on screen at once). trimmedEmail below still
+  // comes from lockedEmail either way; this only controls what's
+  // rendered.
+  hideEmailField = false,
   // Optional one-line disclosure rendered directly under the button --
   // e.g. making explicit that a plan is a one-time trial, not a
   // subscription, right at the point of payment itself, not just
@@ -68,17 +78,13 @@ export const RazorpayCheckoutButton = ({
   // stays the shared endpoint either way -- pricing a 'standard' plan
   // is identical regardless of who ends up with the access.
   verifyEndpoint = '/api/razorpay/verify-payment',
-  // Overrides the email field's own label -- plain "Email" reads
-  // ambiguously on GiftMockup.js, which also asks for a recipient's
-  // email on the same screen.
-  emailLabel = 'Email',
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
   const [error, setError] = useState('');
 
   const startCheckout = async () => {
-    const trimmedEmail = lockedEmail ? lockedEmail.trim().toLowerCase() : email.trim().toLowerCase();
+    const trimmedEmail = (hideEmailField || lockedEmail) ? (lockedEmail || '').trim().toLowerCase() : email.trim().toLowerCase();
     if (!isValidEmail(trimmedEmail)) {
       setError('Enter a valid email address.');
       return;
@@ -158,24 +164,26 @@ export const RazorpayCheckoutButton = ({
 
   return (
     <div className={className} data-testid={dataTestId}>
-      <div className="mb-5">
-        <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">{emailLabel}</p>
-        {lockedEmail ? (
-          <p className="font-plex text-lg text-[var(--text-muted)] border-b border-[var(--rule)] py-3">
-            Using your account: <span className="text-[var(--text)]">{lockedEmail}</span>
-          </p>
-        ) : (
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
-            placeholder="you@yourdomain.com"
-            disabled={status === 'loading'}
-            data-testid={`${dataTestId}-email`}
-            className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
-          />
-        )}
-      </div>
+      {!hideEmailField && (
+        <div className="mb-5">
+          <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</p>
+          {lockedEmail ? (
+            <p className="font-plex text-lg text-[var(--text-muted)] border-b border-[var(--rule)] py-3">
+              Using your account: <span className="text-[var(--text)]">{lockedEmail}</span>
+            </p>
+          ) : (
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+              placeholder="you@yourdomain.com"
+              disabled={status === 'loading'}
+              data-testid={`${dataTestId}-email`}
+              className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
+            />
+          )}
+        </div>
+      )}
       <button
         type="button"
         onClick={startCheckout}
