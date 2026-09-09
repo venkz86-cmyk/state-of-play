@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
+import { newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPricing';
 
 // Buy the real annual membership for someone else -- distinct from
 // NominateReaderBlock's free 14-day taste and GiftArticleModal's
@@ -15,9 +16,17 @@ export const GiftMockup = () => {
   const isIndia = pricing.country === 'IN';
 
   const [buyerName, setBuyerName] = useState('');
+  const [buyerEmail, setBuyerEmail] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [personalNote, setPersonalNote] = useState('');
   const [result, setResult] = useState(null);
+
+  // Same rate a new signup pays for themselves (razorpay_orders.py's
+  // PLAN_PRICING['standard'], date-gated at the same Oct 1 cutoff) --
+  // a gift is basically a new subscription, so it follows the new-
+  // signup price on both sides of Oct 1, not a separate gift price.
+  const pricingInfo = newSignupAnnualPricing(isIndia);
+  const gstTotal = isBeforeOctoberCutover() ? '₹2,949' : '₹4,129';
 
   return (
     <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', description: 'Give someone a year of The State of Play — reported stories on the business of Indian sport, delivered weekly.' }}>
@@ -63,14 +72,14 @@ export const GiftMockup = () => {
               <p className="font-editorial italic text-lg mb-6">Annual Membership</p>
               <div className="flex items-end gap-3 mb-2">
                 <span className="font-editorial font-semibold tracking-tight text-[3rem] lg:text-[3.5rem] leading-[0.9] text-[var(--text)]">
-                  {isIndia ? '₹2,499' : '$120'}
+                  {pricingInfo.amount}
                 </span>
                 <span className="font-plex text-base text-[var(--text-muted)] pb-2">
                   {isIndia ? '+ 18% GST' : '/ year'}
                 </span>
               </div>
               {isIndia && (
-                <p className="font-plex text-[14px] text-[var(--text-label)] mb-8">₹2,949 total</p>
+                <p className="font-plex text-[14px] text-[var(--text-label)] mb-8">{gstTotal} total</p>
               )}
               {!isIndia && <div className="mb-8" />}
 
@@ -81,6 +90,16 @@ export const GiftMockup = () => {
                 onChange={(e) => setBuyerName(e.target.value)}
                 placeholder="So they know who this is from"
                 data-testid="gift-buyer-name"
+                className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
+              />
+
+              <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your email</p>
+              <input
+                type="email"
+                value={buyerEmail}
+                onChange={(e) => setBuyerEmail(e.target.value)}
+                placeholder="you@yourdomain.com"
+                data-testid="gift-buyer-email"
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
               />
 
@@ -101,11 +120,14 @@ export const GiftMockup = () => {
               <textarea
                 value={personalNote}
                 onChange={(e) => setPersonalNote(e.target.value)}
-                placeholder="Add a short note"
+                placeholder="Optional message"
                 rows={2}
                 data-testid="gift-personal-note"
-                className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-base py-3 mb-6 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] resize-none"
+                className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-base py-3 mb-2 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] resize-none"
               />
+              <p className="font-plex text-[13px] text-[var(--text-muted)] mb-6">
+                They'll see this when they get their gift.
+              </p>
 
               <RazorpayCheckoutButton
                 plan="standard"
@@ -113,13 +135,14 @@ export const GiftMockup = () => {
                 buttonLabel={recipientEmail ? 'Gift now' : 'Pay and get a link'}
                 dataTestId="gift-checkout"
                 verifyEndpoint="/api/gifts/subscription/verify-payment"
-                emailLabel="Your email"
+                lockedEmail={buyerEmail}
+                hideEmailField
                 extraVerifyFields={{
                   name: buyerName,
                   recipient_email: recipientEmail.trim() || null,
                   personal_note: personalNote.trim() || null,
                 }}
-                disclosureText="One payment, one year. If you gave us their email, they're set up immediately — otherwise you'll get a link to pass along yourself."
+                disclosureText="One payment, one year. If you gave us their email, they're set up immediately. Otherwise you'll get a link to pass along yourself."
                 onSuccess={(_email, response) => setResult(response)}
               />
             </>
