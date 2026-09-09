@@ -249,6 +249,25 @@ async def get_subscriber_payment_summaries() -> dict:
     return summaries
 
 
+async def reassign_payment_email(payment_id: str, new_email: str) -> bool:
+    """Moves an existing payment record to a different email -- used by
+    gift_subscriptions.py's redeem step, where the real Razorpay charge
+    already happened (and was recorded under the buyer, while the gift
+    code sat unredeemed) and redemption itself isn't a second charge --
+    it's the moment the payment's real beneficiary becomes known. A
+    second record_payment() call for the same payment_id would either
+    no-op (record_payment upserts on payment_id) or, if given a
+    different synthetic id to dodge that, double-count one real charge
+    as two ledger rows. This mutates the one row in place instead."""
+    if _db is None or not payment_id:
+        return False
+    result = await _db.payments.update_one(
+        {'payment_id': payment_id},
+        {'$set': {'email': new_email.lower().strip()}},
+    )
+    return result.matched_count > 0
+
+
 async def get_last_payment_by_subscription_id(subscription_id: str) -> Optional[dict]:
     """Reverse lookup of get_last_payment_for_email -- resolves which
     email a given Razorpay subscription belongs to. A subscription.*

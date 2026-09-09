@@ -61,6 +61,17 @@ export const RazorpayCheckoutButton = ({
   // this stays a passthrough rather than hardcoding one plan's concerns
   // into a shared component every checkout on the site uses.
   extraVerifyFields,
+  // Overrides where the post-payment verify call goes -- e.g.
+  // gift_subscriptions.py's own verify-payment, which needs the same
+  // Checkout.js wiring this component already has but a different
+  // Ghost-labeling target (the recipient, not the payer). create-order
+  // stays the shared endpoint either way -- pricing a 'standard' plan
+  // is identical regardless of who ends up with the access.
+  verifyEndpoint = '/api/razorpay/verify-payment',
+  // Overrides the email field's own label -- plain "Email" reads
+  // ambiguously on GiftMockup.js, which also asks for a recipient's
+  // email on the same screen.
+  emailLabel = 'Email',
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
@@ -103,7 +114,7 @@ export const RazorpayCheckoutButton = ({
         },
         handler: async (response) => {
           try {
-            const verifyRes = await fetch(`${API}/api/razorpay/verify-payment`, {
+            const verifyRes = await fetch(`${API}${verifyEndpoint}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -118,8 +129,15 @@ export const RazorpayCheckoutButton = ({
             if (!verifyRes.ok) {
               throw new Error('Payment went through, but activation failed. Email venkat@stateofplay.club with your payment ID and we’ll sort it out.');
             }
+            // Most callers only need to know it worked (trimmedEmail is
+            // enough); gift_subscriptions.py's verify-payment returns
+            // extra fields (delivery type, redeem_url) a caller like
+            // GiftMockup.js needs to render its own result -- passed as
+            // a second, optional argument so every existing single-arg
+            // onSuccess(email) caller keeps working unchanged.
+            const verifyBody = await verifyRes.json().catch(() => ({}));
             setStatus('idle');
-            onSuccess?.(trimmedEmail);
+            onSuccess?.(trimmedEmail, verifyBody);
           } catch (e) {
             setError(e.message);
             setStatus('idle');
@@ -141,7 +159,7 @@ export const RazorpayCheckoutButton = ({
   return (
     <div className={className} data-testid={dataTestId}>
       <div className="mb-5">
-        <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</p>
+        <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">{emailLabel}</p>
         {lockedEmail ? (
           <p className="font-plex text-lg text-[var(--text-muted)] border-b border-[var(--rule)] py-3">
             Using your account: <span className="text-[var(--text)]">{lockedEmail}</span>
