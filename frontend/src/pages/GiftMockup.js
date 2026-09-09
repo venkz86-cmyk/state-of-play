@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
@@ -43,8 +44,14 @@ export const GiftMockup = () => {
         <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-6 max-w-[22ch]">
           Give someone a year of <em className="italic font-normal">The State of Play.</em>
         </h1>
-        <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
+        <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed mb-3">
           Every weekly story, the Left Field briefing and the full archive, on you. Same price as subscribing for yourself.
+        </p>
+        <p className="font-plex text-sm text-[var(--text-muted)]">
+          Already have a gift code?{' '}
+          <Link to="/gift/redeem" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="gift-redeem-link">
+            Redeem it
+          </Link>.
         </p>
       </section>
 

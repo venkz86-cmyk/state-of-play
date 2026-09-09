@@ -64,7 +64,7 @@ GHOST_ADMIN_API_KEY (all existing, shared with razorpay_orders.py).
 from __future__ import annotations
 
 import os
-import uuid
+import secrets
 import html
 import logging
 from datetime import datetime, timezone, timedelta
@@ -104,6 +104,30 @@ _db = None
 _razorpay_client = None
 
 PUBLIC_BASE_URL = 'https://www.stateofplay.club'
+
+# A UUID isn't something anyone reads out loud or copies off a printed
+# card. 8 characters, split XXXX-XXXX, drawn from a charset with 0/O
+# and 1/I removed so a spoken or handwritten code can't be misread --
+# the same alphabet Crockford base32 uses for exactly this reason.
+_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+
+def _generate_gift_code() -> str:
+    raw = ''.join(secrets.choice(_CODE_CHARSET) for _ in range(8))
+    return f'{raw[:4]}-{raw[4:]}'
+
+
+def _normalize_code(raw: str) -> str:
+    """Accepts a code in any case/spacing (typed by hand, pasted from a
+    lowercase URL, read off a card) and returns the canonical stored
+    form -- uppercase, XXXX-XXXX. Codes are looked up through this
+    everywhere, so a redeem link shown in lowercase (reads better in a
+    URL) and the same code spelled out in uppercase (reads better
+    standalone) both resolve to the same record."""
+    cleaned = ''.join(ch for ch in raw.upper() if ch.isalnum())
+    if len(cleaned) == 8:
+        return f'{cleaned[:4]}-{cleaned[4:]}'
+    return cleaned
 
 
 def init(razorpay_client, db_handle):
@@ -192,20 +216,20 @@ def _gift_direct_email_html(buyer_name: str, personal_note: str, already_subscri
     if already_subscribed:
         headline = f'{buyer} added a year to your <em style="font-style: italic;">State of Play.</em>'
         body = (
-            f'{html.escape(buyer_name or "A reader")} has gifted you a full extra year, added on top of your '
+            f'{html.escape(buyer_name or "A reader")} gave you a full extra year, added on top of your '
             'current membership. Nothing changes today. It just means your access runs a year longer than it '
             'would have. If your plan renews automatically, reply to this and I\'ll sort it.'
         )
     else:
         headline = f'{buyer} gave you a year of <em style="font-style: italic;">The State of Play.</em>'
-        body = f'{html.escape(buyer_name or "A reader")} has gifted you a full annual membership. Every weekly story, the Left Field briefing, and the complete archive, for the next twelve months. Already paid for, already yours.'
+        body = f'{html.escape(buyer_name or "A reader")} gave you a full annual membership. Every weekly story, the Left Field briefing, and the complete archive, for the next twelve months. Already paid for, already yours.'
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
         '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
         '— The State of Play —'
         '</p>'
         f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">{headline}</h1>'
-        '<p>Dear reader,</p>'
+        '<p>Hello,</p>'
         f'<p>{body}</p>'
         f'{note_block}'
         f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/login" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start reading &rarr;</a></p>'
@@ -217,7 +241,11 @@ def _gift_direct_email_html(buyer_name: str, personal_note: str, already_subscri
     )
 
 
-def _gift_claimed_email_html(redeemer_email: str) -> str:
+def _gift_claimed_email_html(redeemer_email: str, redeemer_name: str = '') -> str:
+    # The buyer knows the person, not the address -- name it if we have
+    # one (collected right there on the claim form), fall back to just
+    # the email if somehow not.
+    who = f'{html.escape(redeemer_name)} ({html.escape(redeemer_email)})' if redeemer_name else html.escape(redeemer_email)
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
         '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
@@ -226,7 +254,7 @@ def _gift_claimed_email_html(redeemer_email: str) -> str:
         '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
         'Your gift was <em style="font-style: italic;">claimed.</em>'
         '</h1>'
-        f'<p>{html.escape(redeemer_email)} just claimed the year of The State of Play you gifted. They\'re all set. Nothing more for you to do.</p>'
+        f'<p>{who} just claimed the year you gave them. They\'re all set. Nothing more for you to do.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
         '</p>'
@@ -234,7 +262,7 @@ def _gift_claimed_email_html(redeemer_email: str) -> str:
     )
 
 
-def _gift_receipt_email_html(redeem_url: str) -> str:
+def _gift_receipt_email_html(redeem_url: str, code: str) -> str:
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
         '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
@@ -243,9 +271,10 @@ def _gift_receipt_email_html(redeem_url: str) -> str:
         '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
         'Your gift is <em style="font-style: italic;">ready to send.</em>'
         '</h1>'
-        '<p>Thanks for gifting a year of The State of Play. Send this link to whoever it\'s for. They redeem it with their own email, whenever they\'re ready:</p>'
+        '<p>Thanks for giving a year of The State of Play. Send this link to whoever it\'s for. They redeem it with their own email, whenever they\'re ready:</p>'
         f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
-        '<p style="color: #555555;">Already paid for. This link is just how they claim it.</p>'
+        f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
+        '<p style="color: #555555;">Already paid for. This link (or the code) is just how they claim it.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
         '</p>'
@@ -333,29 +362,42 @@ async def gift_subscription_verify_payment(req: GiftVerifyPaymentRequest, reques
     # No recipient named -- mint a redeemable code instead. Nobody
     # gets access until it's redeemed.
     await _ensure_indexes()
-    code = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
+    code = _generate_gift_code()
     if _db is not None:
-        await _db.gift_subscriptions.insert_one({
-            'code': code,
-            'buyer_email': buyer_email,
-            'buyer_name': buyer_name,
-            'personal_note': personal_note,
-            'razorpay_payment_id': req.razorpay_payment_id,
-            'razorpay_order_id': req.razorpay_order_id,
-            'status': 'unredeemed',
-            'created_at': now,
-            'redeemed_at': None,
-            'redeemed_email': '',
-            'nudge_count': 0,
-            'last_nudge_at': None,
-        })
+        # code has a unique index -- an 8-char draw from a 32-char
+        # alphabet is astronomically unlikely to collide, but retry
+        # rather than assume, same discipline as generating any other
+        # access-granting token in this codebase.
+        for _ in range(5):
+            try:
+                await _db.gift_subscriptions.insert_one({
+                    'code': code,
+                    'buyer_email': buyer_email,
+                    'buyer_name': buyer_name,
+                    'personal_note': personal_note,
+                    'razorpay_payment_id': req.razorpay_payment_id,
+                    'razorpay_order_id': req.razorpay_order_id,
+                    'status': 'unredeemed',
+                    'created_at': now,
+                    'redeemed_at': None,
+                    'redeemed_email': '',
+                    'nudge_count': 0,
+                    'last_nudge_at': None,
+                })
+                break
+            except Exception as e:
+                if 'duplicate key' not in str(e).lower():
+                    raise
+                code = _generate_gift_code()
 
-    redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code}'
+    # Lowercase in the URL -- reads better there, and _normalize_code()
+    # uppercases on the way back in, so it still resolves regardless.
+    redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code.lower()}'
     await send_email(
         to=buyer_email,
         subject='Your gift is ready to send',
-        html=_gift_receipt_email_html(redeem_url),
+        html=_gift_receipt_email_html(redeem_url, code),
     )
     await _record_gift_payment(
         req.razorpay_payment_id, req.razorpay_order_id, buyer_email, buyer_name,
@@ -373,7 +415,7 @@ async def gift_subscription_lookup(code: str):
     payment identifiers."""
     if _db is None:
         raise HTTPException(status_code=503, detail='Not configured')
-    gift = await _db.gift_subscriptions.find_one({'code': code})
+    gift = await _db.gift_subscriptions.find_one({'code': _normalize_code(code)})
     if not gift:
         raise HTTPException(status_code=404, detail='This gift link is invalid.')
     return {
@@ -394,7 +436,8 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
     if _db is None:
         raise HTTPException(status_code=503, detail='Not configured')
 
-    gift = await _db.gift_subscriptions.find_one({'code': req.code})
+    code = _normalize_code(req.code)
+    gift = await _db.gift_subscriptions.find_one({'code': code})
     if not gift:
         raise HTTPException(status_code=404, detail='This gift link is invalid.')
     if gift.get('status') != 'unredeemed':
@@ -423,7 +466,7 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
 
     now = datetime.now(timezone.utc)
     await _db.gift_subscriptions.update_one(
-        {'code': req.code},
+        {'code': code},
         {'$set': {'status': 'redeemed', 'redeemed_at': now, 'redeemed_email': email}},
     )
     # The real charge already happened when the buyer paid -- this
@@ -465,13 +508,15 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
         await send_email(
             to=buyer_email,
             subject='Your gift was claimed',
-            html=_gift_claimed_email_html(email),
+            html=_gift_claimed_email_html(email, req.name or ''),
         )
 
     return {'redeemed': True, 'email': email, 'already_subscribed': already_subscribed}
 
 
-def _unclaimed_nudge_email_html(redeem_url: str) -> str:
+def _unclaimed_nudge_email_html(redeem_url: str, code: str) -> str:
+    # One neutral line covers all three nudges (day 7, 14, 21) --
+    # "a few weeks ago" would just be wrong on the first one.
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
         '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
@@ -480,8 +525,9 @@ def _unclaimed_nudge_email_html(redeem_url: str) -> str:
         '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
         'Your gift is still <em style="font-style: italic;">waiting.</em>'
         '</h1>'
-        '<p>A few weeks ago you gifted a year of The State of Play, but the link hasn\'t been claimed yet. Here it is again, in case it got lost:</p>'
+        '<p>A little while back you gave a year of The State of Play, but it hasn\'t been claimed yet. Here it is again, in case it got lost:</p>'
         f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
+        f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
         '<p style="color: #555555;">Already paid for. Nothing more to do than pass it along.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
@@ -519,11 +565,11 @@ async def gift_subscription_nudge_check(_admin: None = Depends(require_admin_key
             code = gift.get('code') or ''
             if not buyer_email or not code:
                 continue
-            redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code}'
+            redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code.lower()}'
             sent = await send_email(
                 to=buyer_email,
                 subject='Your gift is still waiting to be claimed',
-                html=_unclaimed_nudge_email_html(redeem_url),
+                html=_unclaimed_nudge_email_html(redeem_url, code),
             )
             if sent:
                 await _db.gift_subscriptions.update_one(
