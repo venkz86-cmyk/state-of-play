@@ -11,6 +11,8 @@ import { newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPr
 // the only choice here is who ends up with the access, not what it
 // costs.
 
+const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
+
 export const GiftMockup = () => {
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
@@ -53,7 +55,9 @@ export const GiftMockup = () => {
               <div>
                 <p className="font-editorial italic text-lg mb-3">Sent.</p>
                 <p className="font-plex text-base text-[var(--text-muted)]" data-testid="gift-result-direct">
-                  {result.recipient_email} now has full access, and an email letting them know it came from you.
+                  {result.already_subscribed
+                    ? `${result.recipient_email} already subscribes. A year has been added to their membership, and they've been emailed to let them know it came from you.`
+                    : `${result.recipient_email} now has full access, and an email letting them know it came from you.`}
                 </p>
               </div>
             ) : (
@@ -128,6 +132,12 @@ export const GiftMockup = () => {
               <p className="font-plex text-[13px] text-[var(--text-muted)] mb-6">
                 They'll see this when they get their gift.
               </p>
+
+              {isValidEmail(recipientEmail) && (
+                <p className="font-plex text-[13px] text-[var(--text)] bg-[var(--rule)]/15 px-4 py-3 mb-6" data-testid="gift-recipient-confirm">
+                  We'll set up <span className="font-medium">{recipientEmail.trim()}</span> immediately. Look right? A typo here means the gift goes to the wrong address.
+                </p>
+              )}
 
               <RazorpayCheckoutButton
                 plan="standard"

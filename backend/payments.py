@@ -249,7 +249,7 @@ async def get_subscriber_payment_summaries() -> dict:
     return summaries
 
 
-async def reassign_payment_email(payment_id: str, new_email: str) -> bool:
+async def reassign_payment_email(payment_id: str, new_email: str, new_created_at: Optional[datetime] = None) -> bool:
     """Moves an existing payment record to a different email -- used by
     gift_subscriptions.py's redeem step, where the real Razorpay charge
     already happened (and was recorded under the buyer, while the gift
@@ -258,12 +258,25 @@ async def reassign_payment_email(payment_id: str, new_email: str) -> bool:
     second record_payment() call for the same payment_id would either
     no-op (record_payment upserts on payment_id) or, if given a
     different synthetic id to dodge that, double-count one real charge
-    as two ledger rows. This mutates the one row in place instead."""
+    as two ledger rows. This mutates the one row in place instead.
+
+    new_created_at optionally backdates razorpay_created_at too --
+    gift_subscriptions.py uses this so a redeemer's year starts on
+    their claim date, not the (possibly much earlier) purchase date a
+    link sat unclaimed for, and so it can stack a gifted year onto an
+    already-subscribed recipient's existing paid-through date instead
+    of resetting their clock to today. razorpay_created_at already
+    functions as "cycle start date" everywhere else in this codebase
+    (compute_synthetic_expiry, trial-upgrade's bonus days), not a
+    strictly literal charge timestamp, so this isn't a new precedent."""
     if _db is None or not payment_id:
         return False
+    update = {'email': new_email.lower().strip()}
+    if new_created_at is not None:
+        update['razorpay_created_at'] = new_created_at
     result = await _db.payments.update_one(
         {'payment_id': payment_id},
-        {'$set': {'email': new_email.lower().strip()}},
+        {'$set': update},
     )
     return result.matched_count > 0
 
