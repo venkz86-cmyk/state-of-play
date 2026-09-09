@@ -34,7 +34,7 @@ Provides:
     before the redemption page renders its form.
   * POST /api/gifts/subscription/redeem — public, claims a code.
   * POST /api/gifts/subscription/nudge-check — admin-gated sweep,
-    reminds a buyer whose code has sat unclaimed for a while.
+    reminds a buyer whose code has sat unclaimed, up to three times.
 
 Two real correctness rules, both live in _resolve_access_start():
   * A redeemable code's year starts on the CLAIM date, not the
@@ -52,7 +52,11 @@ Two real correctness rules, both live in _resolve_access_start():
     own real schedule regardless -- this only extends the synthetic
     "your access runs until" date the account page and admin
     dashboard show, it doesn't reach into Razorpay to delay a real
-    subscription's next charge.
+    subscription's next charge. Deliberately not automated -- rare
+    enough at this scale to hand to Venkat by hand, so the
+    "already subscribed" email just asks them to reply if their plan
+    auto-renews, rather than this module reaching into Razorpay's
+    Subscription API for a case that barely happens.
 
 Dependencies: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, GHOST_URL,
 GHOST_ADMIN_API_KEY (all existing, shared with razorpay_orders.py).
@@ -80,11 +84,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# A gift code that's sat unclaimed this long gets one reminder email to
-# the buyer, with the link again -- otherwise a real payment can just
-# quietly go nowhere if the link dies in a chat somewhere. One nudge
-# only (nudge_sent_at gates re-sends), not a recurring pester.
-UNCLAIMED_NUDGE_DAYS = 21
+# A gift code that's sat unclaimed gets up to three reminder emails to
+# the buyer, roughly weekly, with the link again -- otherwise a real
+# payment can just quietly go nowhere if the link dies in a chat
+# somewhere. Three, then stop -- nudge_count gates each one so the
+# sweep (run daily) advances a gift through this schedule exactly
+# once per threshold, never re-sends, and never nudges a 4th time.
+NUDGE_SCHEDULE_DAYS = [7, 14, 21]
 
 _db = None
 # Own copy, set via init() -- NOT imported from razorpay_orders, whose
@@ -185,10 +191,14 @@ def _gift_direct_email_html(buyer_name: str, personal_note: str, already_subscri
     buyer = html.escape(buyer_name or 'Someone')
     if already_subscribed:
         headline = f'{buyer} added a year to your <em style="font-style: italic;">State of Play.</em>'
-        body = f'{html.escape(buyer_name or "A reader")} has gifted you a full extra year, added on top of your current membership. Nothing changes today -- it just means your access runs a year longer than it would have.'
+        body = (
+            f'{html.escape(buyer_name or "A reader")} has gifted you a full extra year, added on top of your '
+            'current membership. Nothing changes today. It just means your access runs a year longer than it '
+            'would have. If your plan renews automatically, reply to this and I\'ll sort it.'
+        )
     else:
         headline = f'{buyer} gave you a year of <em style="font-style: italic;">The State of Play.</em>'
-        body = f'{html.escape(buyer_name or "A reader")} has gifted you a full annual membership — every weekly story, the Left Field briefing, and the complete archive, for the next twelve months. Already paid for, already yours.'
+        body = f'{html.escape(buyer_name or "A reader")} has gifted you a full annual membership. Every weekly story, the Left Field briefing, and the complete archive, for the next twelve months. Already paid for, already yours.'
     return (
         '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
         '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
@@ -199,7 +209,24 @@ def _gift_direct_email_html(buyer_name: str, personal_note: str, already_subscri
         f'<p>{body}</p>'
         f'{note_block}'
         f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/login" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start reading &rarr;</a></p>'
-        '<p style="color: #555555;">Sign in anytime with just your email (no password) — you\'re already set up.</p>'
+        '<p style="color: #555555;">Sign in anytime with just your email (no password). You\'re already set up.</p>'
+        '<p style="margin-top: 32px;">Venkat<br>'
+        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
+        '</p>'
+        '</div>'
+    )
+
+
+def _gift_claimed_email_html(redeemer_email: str) -> str:
+    return (
+        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
+        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
+        '— The State of Play —'
+        '</p>'
+        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
+        'Your gift was <em style="font-style: italic;">claimed.</em>'
+        '</h1>'
+        f'<p>{html.escape(redeemer_email)} just claimed the year of The State of Play you gifted. They\'re all set. Nothing more for you to do.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
         '</p>'
@@ -216,9 +243,9 @@ def _gift_receipt_email_html(redeem_url: str) -> str:
         '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
         'Your gift is <em style="font-style: italic;">ready to send.</em>'
         '</h1>'
-        '<p>Thanks for gifting a year of The State of Play. Send this link to whoever it\'s for — they redeem it with their own email, whenever they\'re ready:</p>'
+        '<p>Thanks for gifting a year of The State of Play. Send this link to whoever it\'s for. They redeem it with their own email, whenever they\'re ready:</p>'
         f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
-        '<p style="color: #555555;">Already paid for — this link is just how they claim it.</p>'
+        '<p style="color: #555555;">Already paid for. This link is just how they claim it.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
         '</p>'
@@ -320,7 +347,8 @@ async def gift_subscription_verify_payment(req: GiftVerifyPaymentRequest, reques
             'created_at': now,
             'redeemed_at': None,
             'redeemed_email': '',
-            'nudge_sent_at': None,
+            'nudge_count': 0,
+            'last_nudge_at': None,
         })
 
     redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code}'
@@ -412,11 +440,32 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
     if not moved:
         logger.warning(f'gift redeem: could not reassign payment {payment_id!r} to {email!r} (code={req.code})')
 
-    if already_subscribed:
+    # Both sides of a claim get told -- the giftee (welcome, or "a year
+    # was added" if they already subscribed), and the buyer (their
+    # gift found its person). Direct delivery already covers both of
+    # these at payment time on its own; redemption needed both added
+    # explicitly, since the giftee's identity isn't known until this
+    # exact moment and nothing previously told the buyer their code
+    # got used at all.
+    buyer_name = gift.get('buyer_name') or ''
+    personal_note = gift.get('personal_note') or ''
+    giftee_subject = (
+        f'{buyer_name or "Someone"} added a year to your State of Play'
+        if already_subscribed else
+        f'{buyer_name or "Someone"} gave you a year of The State of Play'
+    )
+    await send_email(
+        to=email,
+        subject=giftee_subject,
+        html=_gift_direct_email_html(buyer_name, personal_note, already_subscribed),
+    )
+
+    buyer_email = gift.get('buyer_email') or ''
+    if buyer_email:
         await send_email(
-            to=email,
-            subject=f'{gift.get("buyer_name") or "Someone"} added a year to your State of Play',
-            html=_gift_direct_email_html(gift.get('buyer_name') or '', gift.get('personal_note') or '', True),
+            to=buyer_email,
+            subject='Your gift was claimed',
+            html=_gift_claimed_email_html(email),
         )
 
     return {'redeemed': True, 'email': email, 'already_subscribed': already_subscribed}
@@ -433,7 +482,7 @@ def _unclaimed_nudge_email_html(redeem_url: str) -> str:
         '</h1>'
         '<p>A few weeks ago you gifted a year of The State of Play, but the link hasn\'t been claimed yet. Here it is again, in case it got lost:</p>'
         f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
-        '<p style="color: #555555;">Already paid for — nothing more to do than pass it along.</p>'
+        '<p style="color: #555555;">Already paid for. Nothing more to do than pass it along.</p>'
         '<p style="margin-top: 32px;">Venkat<br>'
         '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
         '</p>'
@@ -444,36 +493,42 @@ def _unclaimed_nudge_email_html(redeem_url: str) -> str:
 @router.post('/api/gifts/subscription/nudge-check')
 async def gift_subscription_nudge_check(_admin: None = Depends(require_admin_key_or_session)):
     """Cron sweep (admin-gated, same shape as nominations.py's own
-    expire-check endpoints and subscription_grace.py's) -- for every
-    unredeemed gift older than UNCLAIMED_NUDGE_DAYS that hasn't already
-    been nudged, emails the buyer the link again. One nudge per gift,
-    ever -- nudge_sent_at gates it from firing twice. Wire this to run
-    daily via a Render Cron Job, same as the other sweeps."""
+    expire-check endpoints and subscription_grace.py's) -- advances
+    every unredeemed gift through NUDGE_SCHEDULE_DAYS's three
+    thresholds, at most one nudge per run per gift. One targeted query
+    per threshold (gifts sitting at exactly nudge_count=N, older than
+    that threshold), same "let Mongo's own query do the date
+    comparison" pattern subscription_grace.py's sweep uses, rather
+    than pulling every unredeemed gift and doing the math in Python.
+    Wire this to run daily via a Render Cron Job, same as the other
+    sweeps."""
     if _db is None:
         return {'nudged_count': 0}
-    cutoff = datetime.now(timezone.utc) - timedelta(days=UNCLAIMED_NUDGE_DAYS)
+    now = datetime.now(timezone.utc)
     nudged_count = 0
 
-    cursor = _db.gift_subscriptions.find({
-        'status': 'unredeemed',
-        'created_at': {'$lt': cutoff},
-        'nudge_sent_at': None,
-    })
-    async for gift in cursor:
-        buyer_email = gift.get('buyer_email') or ''
-        code = gift.get('code') or ''
-        if not buyer_email or not code:
-            continue
-        redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code}'
-        sent = await send_email(
-            to=buyer_email,
-            subject='Your gift is still waiting to be claimed',
-            html=_unclaimed_nudge_email_html(redeem_url),
-        )
-        if sent:
-            await _db.gift_subscriptions.update_one(
-                {'code': code},
-                {'$set': {'nudge_sent_at': datetime.now(timezone.utc)}},
+    for nudge_index, days in enumerate(NUDGE_SCHEDULE_DAYS):
+        cutoff = now - timedelta(days=days)
+        cursor = _db.gift_subscriptions.find({
+            'status': 'unredeemed',
+            'created_at': {'$lt': cutoff},
+            'nudge_count': nudge_index,
+        })
+        async for gift in cursor:
+            buyer_email = gift.get('buyer_email') or ''
+            code = gift.get('code') or ''
+            if not buyer_email or not code:
+                continue
+            redeem_url = f'{PUBLIC_BASE_URL}/gift/redeem?code={code}'
+            sent = await send_email(
+                to=buyer_email,
+                subject='Your gift is still waiting to be claimed',
+                html=_unclaimed_nudge_email_html(redeem_url),
             )
-            nudged_count += 1
+            if sent:
+                await _db.gift_subscriptions.update_one(
+                    {'code': code},
+                    {'$set': {'nudge_count': nudge_index + 1, 'last_nudge_at': now}},
+                )
+                nudged_count += 1
     return {'nudged_count': nudged_count}
