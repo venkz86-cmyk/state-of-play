@@ -23,7 +23,7 @@ export const GiftRedeemMockup = () => {
   const [name, setName] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
   const [error, setError] = useState('');
-  const [redeemed, setRedeemed] = useState(false);
+  const [redeemed, setRedeemed] = useState(null);
 
   useEffect(() => {
     if (!code || !API) return undefined;
@@ -70,7 +70,8 @@ export const GiftRedeemMockup = () => {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.detail || 'Could not redeem this gift. Please try again.');
       }
-      setRedeemed(true);
+      const body = await res.json().catch(() => ({}));
+      setRedeemed(body);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -118,7 +119,9 @@ export const GiftRedeemMockup = () => {
 
         {redeemed ? (
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed" data-testid="gift-redeem-success">
-            Every weekly story, the Left Field briefing, and the full archive are yours now — sign in with {email} whenever you're ready.
+            {redeemed.already_subscribed
+              ? `You already subscribe, so a year has been added on top of your current membership. Sign in with ${email} whenever you're ready.`
+              : `Every weekly story, the Left Field briefing, and the full archive are yours now. Sign in with ${email} whenever you're ready.`}
           </p>
         ) : (
           <>
