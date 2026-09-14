@@ -74,10 +74,14 @@ export const RazorpayCheckoutButton = ({
   // Overrides where the post-payment verify call goes -- e.g.
   // gift_subscriptions.py's own verify-payment, which needs the same
   // Checkout.js wiring this component already has but a different
-  // Ghost-labeling target (the recipient, not the payer). create-order
-  // stays the shared endpoint either way -- pricing a 'standard' plan
-  // is identical regardless of who ends up with the access.
+  // Ghost-labeling target (the recipient, not the payer).
   verifyEndpoint = '/api/razorpay/verify-payment',
+  // Same pair of overrides for the pricing step -- e.g.
+  // gift_subscriptions.py's own create-order, which needs to know the
+  // recipient before payment so it can floor the price when they're
+  // already a paying subscriber (see that module's docstring).
+  createOrderEndpoint = '/api/razorpay/create-order',
+  extraOrderFields,
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
@@ -95,10 +99,10 @@ export const RazorpayCheckoutButton = ({
     try {
       await loadCheckoutScript();
 
-      const orderRes = await fetch(`${API}/api/razorpay/create-order`, {
+      const orderRes = await fetch(`${API}${createOrderEndpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, country }),
+        body: JSON.stringify({ plan, country, ...extraOrderFields }),
       });
       if (!orderRes.ok) {
         const body = await orderRes.json().catch(() => ({}));

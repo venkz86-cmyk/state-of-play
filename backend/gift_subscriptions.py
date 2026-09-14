@@ -9,10 +9,23 @@ account. Standard plan only, priced identically to a normal signup
 (razorpay_orders.py's own PLAN_PRICING['standard']/_resolve_plan_config,
 reused as-is) -- no separate gift pricing, no gift-specific discount.
 
-Reuses razorpay_orders.py's existing POST /api/razorpay/create-order
-UNCHANGED for the payment step (plan='standard' -- there's no reason
-to duplicate identical pricing logic). This module only adds what's
-actually different: what happens once payment succeeds.
+This module has its OWN POST /api/gifts/subscription/create-order,
+not a plain reuse of razorpay_orders.py's -- 'standard' pricing is
+identical, but for the direct-delivery path (recipient's email known
+at checkout) it also has to guard against undercutting a real renewal:
+right now, pre-Oct-1, the 'standard' rate happens to sit below
+razorpay_subscriptions.py's existing-subscriber renewal rate (the
+renewal price was set as a discount off the POST-Oct-1 standard rate,
+not today's promotional one), and _resolve_access_start() below
+already stacks a gifted year onto an existing subscriber's
+paid-through date by design -- so without a floor, anyone already
+subscribed could just buy themselves a "gift" today to renew below the
+real renewal price. create-order checks recipient_email against
+_resolve_access_start() and floors the charged amount at the renewal
+rate when the recipient is already an active paid subscriber. Only
+the direct path can know the recipient before payment; the code/redeem
+path doesn't, which is a weaker version of the same gap and
+self-corrects the same way once the standard rate rises on Oct 1.
 
 Two delivery paths, decided by whether the buyer knows the recipient's
 email at checkout time -- both charge the same amount immediately;
@@ -74,7 +87,8 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
-from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS
+from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS, _resolve_plan_config as _resolve_standard_plan
+from razorpay_subscriptions import SUBSCRIPTION_PLANS as RENEWAL_PLANS
 from tiers import ensure_member_labeled, find_ghost_member, is_paid_from_labels
 from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry
 from resend_email import send_email
@@ -280,6 +294,62 @@ def _gift_receipt_email_html(redeem_url: str, code: str) -> str:
         '</p>'
         '</div>'
     )
+
+
+class GiftCreateOrderRequest(BaseModel):
+    country: str = 'IN'
+    recipient_email: Optional[str] = None
+
+
+@router.post('/api/gifts/subscription/create-order')
+async def gift_create_order(req: GiftCreateOrderRequest):
+    """Same 'standard' pricing razorpay_orders.py's own create-order
+    uses -- except when recipient_email is already an active paid
+    subscriber, in which case the charge is floored at the renewal
+    rate. Without this, the direct-delivery path (buyer names a
+    recipient up front) would let anyone already subscribed renew
+    themselves through Gift for less than razorpay_subscriptions.py's
+    own renewal rate -- see the module docstring."""
+    if not _razorpay_client:
+        raise HTTPException(status_code=503, detail='Razorpay not configured')
+
+    config = _resolve_standard_plan('standard', req.country)
+    if not config:
+        raise HTTPException(status_code=400, detail=f"No pricing configured for country={req.country!r}")
+
+    amount = config['amount']
+    currency = config['currency']
+    label = config['label']
+
+    recipient_email = (req.recipient_email or '').strip().lower()
+    if recipient_email:
+        token = _create_ghost_admin_token()
+        if token:
+            _, already_subscribed = await _resolve_access_start(recipient_email, token)
+            if already_subscribed:
+                renewal_config = RENEWAL_PLANS.get(req.country) or RENEWAL_PLANS.get('IN')
+                if renewal_config and renewal_config['currency'] == currency:
+                    amount = max(amount, renewal_config['amount'])
+
+    try:
+        order = _razorpay_client.order.create({
+            'amount': amount,
+            'currency': currency,
+            'payment_capture': 1,
+            'notes': {'plan': 'standard', 'gift': 'true'},
+        })
+    except Exception as e:
+        logger.error(f'Razorpay gift order creation failed: {e!r}')
+        raise HTTPException(status_code=502, detail='Could not create payment order')
+
+    return {
+        'order_id': order['id'],
+        'amount': amount,
+        'currency': currency,
+        'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
+        'plan': 'standard',
+        'label': label,
+    }
 
 
 class GiftVerifyPaymentRequest(BaseModel):

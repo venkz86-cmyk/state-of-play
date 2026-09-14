@@ -152,8 +152,12 @@ export const GiftMockup = () => {
                 buttonLabel={recipientEmail ? 'Gift now' : 'Pay and get a link'}
                 dataTestId="gift-checkout"
                 verifyEndpoint="/api/gifts/subscription/verify-payment"
+                createOrderEndpoint="/api/gifts/subscription/create-order"
                 lockedEmail={buyerEmail}
                 hideEmailField
+                extraOrderFields={{
+                  recipient_email: recipientEmail.trim() || null,
+                }}
                 extraVerifyFields={{
                   name: buyerName,
                   recipient_email: recipientEmail.trim() || null,
