@@ -313,8 +313,21 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
             detail='Payment verified but member setup failed, contact support',
         )
 
+    # Records what Razorpay itself says was charged -- not PLAN_PRICING,
+    # which can drift from the actual amount (a referral discount, a
+    # community offer already applied at create-order time). Done here,
+    # before the trial/trial-upgrade branches below, so a 'trial' payment
+    # can also pass its real geo into start_trial(): Razorpay's own
+    # currency on the actual charge, not a client-supplied field, decides
+    # IN vs INTL for the trial-upgrade emails later.
+    payment_record = await fetch_and_record(
+        _razorpay_client, req.razorpay_payment_id, source='order_verify',
+        fallback_email=email, fallback_plan=req.plan,
+    )
+
     if req.plan == 'trial':
-        await start_trial(email, member.get('id', ''))
+        country = 'IN' if (payment_record and payment_record.get('currency') == 'INR') else 'INTL'
+        await start_trial(email, member.get('id', ''), country)
 
     if req.plan == 'trial-upgrade' and member.get('id'):
         # A trial member graduating to the annual membership must lose
@@ -327,14 +340,6 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
 
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
-
-    # Record what Razorpay itself says was charged -- not PLAN_PRICING,
-    # which can drift from the actual amount (a referral discount, a
-    # community offer already applied at create-order time).
-    await fetch_and_record(
-        _razorpay_client, req.razorpay_payment_id, source='order_verify',
-        fallback_email=email, fallback_plan=req.plan,
-    )
 
     if req.plan in TEAM_SEATS:
         await _create_team_account(req, email)
