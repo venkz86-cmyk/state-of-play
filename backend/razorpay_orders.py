@@ -48,7 +48,6 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label
 from trial_tracking import start_trial
-from referrals import resolve_referral_code, REFERRED_SIGNUP_AMOUNT_PAISE, REFERRED_SIGNUP_LABEL
 from payments import fetch_and_record
 from session_auth import get_current_member
 
@@ -202,7 +201,7 @@ class CreateOrderRequest(BaseModel):
 
 
 @router.post('/api/razorpay/create-order')
-async def create_order(req: CreateOrderRequest, request: Request):
+async def create_order(req: CreateOrderRequest):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
@@ -213,18 +212,9 @@ async def create_order(req: CreateOrderRequest, request: Request):
             detail=f"No pricing configured for plan='{req.plan}' country='{req.country}'",
         )
 
-    # A referred new-India-signup pays the existing/renewal rate instead
-    # of the standard new-signup rate — no third price point, matching
-    # Venkat's call. Only applies to plain 'standard' signups; trial,
-    # student, and community-offer amounts are untouched.
     amount = config['amount']
     label = config['label']
     notes = {'plan': req.plan}
-    referral_code = resolve_referral_code(request) if req.plan == 'standard' and req.country == 'IN' else None
-    if referral_code:
-        amount = REFERRED_SIGNUP_AMOUNT_PAISE
-        label = REFERRED_SIGNUP_LABEL
-        notes['referral_code'] = referral_code
 
     try:
         order = _razorpay_client.order.create({
@@ -314,8 +304,8 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         )
 
     # Records what Razorpay itself says was charged -- not PLAN_PRICING,
-    # which can drift from the actual amount (a referral discount, a
-    # community offer already applied at create-order time). Done here,
+    # which can drift from the actual amount (a discount already applied
+    # at create-order time). Done here,
     # before the trial/trial-upgrade branches below, so a 'trial' payment
     # can also pass its real geo into start_trial(): Razorpay's own
     # currency on the actual charge, not a client-supplied field, decides

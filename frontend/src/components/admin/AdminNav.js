@@ -9,9 +9,6 @@ const TABS = [
   { to: '/admin/dashboard/corporate', label: 'Corporate accounts' },
   { to: '/admin/dashboard/trials', label: 'Trials' },
   { to: '/admin/dashboard/students', label: 'Students' },
-  // Referrals hidden from nav until the reader-facing referral product
-  // actually launches -- the tab/route/backend all still work, just not
-  // surfaced, so nothing has to be rebuilt when it's ready.
   { to: '/admin/dashboard/links', label: 'Links' },
 ];
 
