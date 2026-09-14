@@ -78,7 +78,7 @@ REFERRAL_CREDIT_PAISE = 50000  # Rs 500, flat, both sides
 # The referred friend pays the same rate as an existing/renewal
 # subscriber — referenced from razorpay_subscriptions.py, never
 # duplicated, so a future price change only needs one edit.
-REFERRED_SIGNUP_AMOUNT_PAISE = SUBSCRIPTION_PLANS['existing']['IN']['amount']
+REFERRED_SIGNUP_AMOUNT_PAISE = SUBSCRIPTION_PLANS['IN']['amount']
 REFERRED_SIGNUP_LABEL = 'Annual Membership (referred)'
 
 router = APIRouter()
