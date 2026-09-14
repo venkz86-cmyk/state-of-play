@@ -8,8 +8,8 @@ member's `note` field, which is OVERWRITTEN on every subsequent payment --
 no history. This module is that missing ledger.
 
 Trusts Razorpay's own record of a payment, not this codebase's pricing
-tables (PLAN_PRICING/SUBSCRIPTION_PLANS), which drift -- referral
-discounts, community offers, the Nov 1 pricing transition. Every write
+tables (PLAN_PRICING/SUBSCRIPTION_PLANS), which drift -- community
+offers, the Nov 1 pricing transition. Every write
 path (the webhook, both verify-* endpoints, and the historical backfill)
 funnels through record_payment(), which upserts on Razorpay's own
 `payment_id` -- first writer wins, every later call for the same payment
@@ -168,7 +168,7 @@ async def fetch_and_record(
     """Calls Razorpay's own payment.fetch(), then record_payment() with
     what Razorpay itself says about the payment -- not this codebase's
     own pricing tables, which can drift from what was actually charged
-    (a referral discount, a community offer). Shared by
+    (a community offer). Shared by
     razorpay_orders.verify_payment and razorpay_subscriptions.
     verify_subscription so this "trust Razorpay's own record" logic
     exists exactly once."""

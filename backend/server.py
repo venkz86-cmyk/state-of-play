@@ -1186,17 +1186,6 @@ async def razorpay_webhook(request: Request):
                                 )
                                 await _slack_post(slack_text)
 
-                                # Referral earn: only for a genuinely new
-                                # standard signup that carried a referral
-                                # code (razorpay_orders.py's create_order
-                                # is the only place that sets one).
-                                referral_code = payment_entity.get('notes', {}).get('referral_code')
-                                if was_new and referral_code and record_referral_earn:
-                                    await record_referral_earn(
-                                        referral_code, email, payment_id,
-                                        payment_entity.get('created_at'),
-                                    )
-
                                 # A subscription that previously halted
                                 # (a failed renewal charge) and is now
                                 # charging again successfully -- cancel
@@ -2287,17 +2276,6 @@ try:
     app.include_router(session_auth_router)
 except Exception as _e:
     logging.warning(f"session_auth module not mounted: {_e!r}")
-
-# Mount the referral programme (flat Rs 500 both ways, Sept 2026 design —
-# see plan file / HANDOVER.md). razorpay_orders.py imports from this
-# module, so it must be importable before that mount below.
-try:
-    from referrals import router as referrals_router, init as referrals_init, record_referral_earn
-    referrals_init(db)
-    app.include_router(referrals_router)
-except Exception as _e:
-    logging.warning(f"referrals module not mounted: {_e!r}")
-    record_referral_earn = None
 
 # Mount the payments ledger (Sept 2026) -- must mount before
 # razorpay_orders/razorpay_subscriptions below, which both call its
