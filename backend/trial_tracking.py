@@ -4,9 +4,10 @@ trial_tracking.py — the access side of Trial ("The Ten"), ₹590.
 Nothing in the codebase tracked WHEN a trial started or ended before this
 module — tiers.py's `tier-trial` label says someone is on Trial, but not
 since when, or which 10 stories they're allowed to read. This module is
-that missing piece: a Mongo record per trial signup, snapshotting the 10
-most recent premium stories at that moment (a fixed set, not rolling) and
-computing the 30-day window around it.
+that missing piece: a Mongo record per trial signup, snapshotting
+Venkat's currently admin-curated Ten at that moment (a fixed set, not
+rolling -- see _get_curated_ten_slugs and the admin panel's "Edit The
+Ten" button) and computing the 30-day window around it.
 
 Two access rules (see is_trial_slug_accessible's own docstring for the
 full reasoning): the original 10-story snapshot is a PERMANENT keepsake,
@@ -121,9 +122,26 @@ async def _fetch_recent_premium_slugs(limit: int = SNAPSHOT_SIZE) -> list[str]:
     return []
 
 
+THE_TEN_CONFIG_ID = 'the_ten'  # singleton _id, same pattern as payments.py's payments_meta doc
+
+
+async def _get_curated_ten_slugs() -> list[str]:
+    """What a brand-new signup's permanent Ten actually is: Venkat's own
+    admin-curated list (trial_config's singleton doc), not an automatic
+    pick -- see the admin panel's "Edit The Ten" button. Falls back to
+    the old auto-pick (most recent premium stories) if the list hasn't
+    been set up yet, or has been emptied out, so start_trial() always
+    has something sensible to snapshot rather than an empty Ten."""
+    if _db is not None:
+        doc = await _db.trial_config.find_one({'_id': THE_TEN_CONFIG_ID})
+        if doc and doc.get('slugs'):
+            return doc['slugs']
+    return await _fetch_recent_premium_slugs()
+
+
 async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN') -> Optional[dict]:
-    """Snapshot the current 10 most recent premium stories and open a
-    30-day window from right now. Idempotent on email — re-running (e.g. a
+    """Snapshot Venkat's currently curated Ten (see _get_curated_ten_slugs)
+    and open a 30-day window from right now. Idempotent on email — re-running (e.g. a
     retried webhook) updates rather than duplicating, but does NOT reset
     an already-running trial's clock; only inserts fresh state if none
     exists yet. Sends the day-1 welcome email exactly once, as a side
@@ -150,7 +168,7 @@ async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN'
         'email': email,
         'ghost_member_id': ghost_member_id or '',
         'country': country if country in ('IN', 'INTL') else 'IN',
-        'snapshot_slugs': await _fetch_recent_premium_slugs(),
+        'snapshot_slugs': await _get_curated_ten_slugs(),
         'opened_slugs': [],
         'started_at': now,
         'expires_at': now + timedelta(days=TRIAL_DAYS),
@@ -678,6 +696,22 @@ async def trial_stories_detail(email: str, _admin: None = Depends(require_admin_
     return {'email': record.get('email'), 'current': current, 'candidates': candidates}
 
 
+async def _validate_addable_slug(slug: str, existing_slugs: list[str]) -> None:
+    """The one rule both the per-member and the global add-endpoints
+    need: not already in the list, and a real, currently published
+    paid/members story -- so neither can be used to add a free one by
+    mistake. Raises HTTPException(400) with a message naming which
+    check failed; callers just await this and continue on success."""
+    if slug in existing_slugs:
+        raise HTTPException(status_code=400, detail=f'{slug!r} is already in this Ten')
+    visibility = await _fetch_slug_visibility([slug])
+    if visibility.get(slug) not in ('paid', 'members'):
+        raise HTTPException(
+            status_code=400,
+            detail=f'{slug!r} is not a currently published paid/members story',
+        )
+
+
 class TrialSlugRequest(BaseModel):
     email: EmailStr
     slug: str
@@ -686,9 +720,7 @@ class TrialSlugRequest(BaseModel):
 @router.post('/api/admin/trials/add-slug')
 async def add_trial_slug(req: TrialSlugRequest, _admin: None = Depends(require_admin_key_or_session)):
     """Adds one story to a member's permanent snapshot_slugs -- e.g. a
-    replacement after removing one that drifted to free. Validates the
-    slug is a real, currently paid/members published story first, so
-    this can't be used to add a free one by mistake."""
+    replacement after removing one that drifted to free."""
     if _db is None:
         raise HTTPException(status_code=503, detail='Not configured')
     email = req.email.lower().strip()
@@ -697,15 +729,7 @@ async def add_trial_slug(req: TrialSlugRequest, _admin: None = Depends(require_a
         raise HTTPException(status_code=404, detail='No trial found for this email')
 
     slugs = record.get('snapshot_slugs') or []
-    if req.slug in slugs:
-        raise HTTPException(status_code=400, detail=f'{req.slug!r} is already in this member’s Ten')
-
-    visibility = await _fetch_slug_visibility([req.slug])
-    if visibility.get(req.slug) not in ('paid', 'members'):
-        raise HTTPException(
-            status_code=400,
-            detail=f'{req.slug!r} is not a currently published paid/members story',
-        )
+    await _validate_addable_slug(req.slug, slugs)
 
     updated = slugs + [req.slug]
     await _db.trial_members.update_one({'email': email}, {'$set': {'snapshot_slugs': updated}})
@@ -733,6 +757,76 @@ async def remove_trial_slug(req: TrialSlugRequest, _admin: None = Depends(requir
     updated = [s for s in slugs if s != req.slug]
     await _db.trial_members.update_one({'email': email}, {'$set': {'snapshot_slugs': updated}})
     return {'email': email, 'snapshot_slugs': updated}
+
+
+@router.get('/api/admin/trials/the-ten')
+async def the_ten_detail(_admin: None = Depends(require_admin_key_or_session)):
+    """The global admin-curated Ten every NEW signup's permanent
+    snapshot is copied from (see _get_curated_ten_slugs) -- same shape
+    as GET .../{email}/stories, just reading/resolving the trial_config
+    singleton instead of one member's snapshot_slugs. Doesn't touch any
+    existing member's already-locked-in Ten; this only sets what a
+    signup from this point forward gets."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    doc = await _db.trial_config.find_one({'_id': THE_TEN_CONFIG_ID})
+    slugs = (doc or {}).get('slugs') or []
+
+    titles = await _fetch_titles(slugs)
+    visibility = await _fetch_slug_visibility(slugs)
+    current = [
+        {'slug': s, 'title': titles.get(s, s), 'visibility': visibility.get(s, 'unknown')}
+        for s in slugs
+    ]
+    candidates = [
+        story for story in await _fetch_recent_premium_stories()
+        if story['slug'] not in slugs
+    ]
+    return {'current': current, 'candidates': candidates}
+
+
+class TheTenSlugRequest(BaseModel):
+    slug: str
+
+
+@router.post('/api/admin/trials/the-ten/add')
+async def the_ten_add(req: TheTenSlugRequest, _admin: None = Depends(require_admin_key_or_session)):
+    """Adds one story to the curated default list -- affects new
+    signups from this point on, never an already-signed-up member's own
+    locked-in snapshot_slugs (use .../add-slug for that)."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    doc = await _db.trial_config.find_one({'_id': THE_TEN_CONFIG_ID})
+    slugs = (doc or {}).get('slugs') or []
+    await _validate_addable_slug(req.slug, slugs)
+
+    updated = slugs + [req.slug]
+    await _db.trial_config.update_one(
+        {'_id': THE_TEN_CONFIG_ID},
+        {'$set': {'slugs': updated, 'updated_at': datetime.now(timezone.utc)}},
+        upsert=True,
+    )
+    return {'slugs': updated}
+
+
+@router.post('/api/admin/trials/the-ten/remove')
+async def the_ten_remove(req: TheTenSlugRequest, _admin: None = Depends(require_admin_key_or_session)):
+    """Removes one story from the curated default list -- same "future
+    signups only" scope as the-ten/add above."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    doc = await _db.trial_config.find_one({'_id': THE_TEN_CONFIG_ID})
+    slugs = (doc or {}).get('slugs') or []
+    if req.slug not in slugs:
+        raise HTTPException(status_code=400, detail=f'{req.slug!r} is not in the current Ten')
+
+    updated = [s for s in slugs if s != req.slug]
+    await _db.trial_config.update_one(
+        {'_id': THE_TEN_CONFIG_ID},
+        {'$set': {'slugs': updated, 'updated_at': datetime.now(timezone.utc)}},
+        upsert=True,
+    )
+    return {'slugs': updated}
 
 
 @router.post('/api/trial/reminder-check')
