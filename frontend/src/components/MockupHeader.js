@@ -23,14 +23,21 @@ const NAV = [
 ];
 
 export const MockupHeader = () => {
-  const { user, logout, canAccessPremium } = useAuth();
+  const { user, isLoggedIn, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const previewMember = searchParams.get('preview') === 'member';
-  const isMember = canAccessPremium || previewMember;
+  // Whether to show "My Account/Sign out" vs "Sign in/Subscribe" -- any
+  // signed-in reader, not just a paying one. This used to key off
+  // canAccessPremium, which is deliberately false for a Trial ("The Ten")
+  // member (tiers.py's PAID_LABELS), so a logged-in trial reader saw
+  // "Sign in" and "Subscribe" in their own nav the entire time they were
+  // reading their own unlocked stories -- confusing, and wrong regardless
+  // of tier, since it's asking someone to do something they've already done.
+  const showAccountNav = isLoggedIn || previewMember;
   const memberName =
     (user && (user.name || user.email?.split('@')[0])) ||
     (previewMember ? 'Venkatesh' : null);
@@ -92,7 +99,7 @@ export const MockupHeader = () => {
                 : <Moon className="h-[18px] w-[18px]" strokeWidth={1.5} />}
             </button>
 
-            {isMember ? (
+            {showAccountNav ? (
               <div className="hidden sm:flex items-center gap-5">
                 <Link
                   to="/account"
@@ -161,7 +168,7 @@ export const MockupHeader = () => {
                 </Link>
               ))}
               <span className="h-px w-full bg-[var(--rule)]" />
-              {isMember ? (
+              {showAccountNav ? (
                 <>
                   <Link
                     to="/account"
