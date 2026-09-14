@@ -58,6 +58,7 @@ from typing import Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
 from resend_email import send_email as _send_email
@@ -253,6 +254,38 @@ async def _fetch_bonus_slugs(started_at: datetime) -> list[str]:
     except Exception as e:
         logger.warning(f'Ghost bonus-slugs fetch failed: {e!r}')
     return []
+
+
+async def _fetch_slug_visibility(slugs: list[str]) -> dict[str, str]:
+    """slug -> Ghost's current visibility ('public', 'members', 'paid'),
+    for whichever of the given slugs still exist and are published.
+    Used to catch drift: a slug snapshotted into someone's permanent Ten
+    while it was paid/members can later be unlocked to public by an
+    editorial decision made well after that trial started (aging a
+    story out of the paywall is a normal, separate workflow this module
+    has no visibility into when it runs) -- the snapshot itself never
+    re-checks, so a member's "ten premium stories" can quietly include
+    one that's now free for everyone. A missing slug (deleted/renamed)
+    is simply absent from the returned dict, same as a fetch failure."""
+    if not GHOST_CONTENT_API_KEY or not slugs:
+        return {}
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/content/posts/',
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'limit': len(slugs),
+                    'filter': f"slug:[{','.join(slugs)}]",
+                    'fields': 'slug,visibility,status',
+                },
+            )
+        if r.status_code == 200:
+            return {p['slug']: p.get('visibility', '') for p in r.json().get('posts', []) if p.get('status') == 'published'}
+        logger.warning(f'Ghost slug-visibility fetch HTTP {r.status_code}')
+    except Exception as e:
+        logger.warning(f'Ghost slug-visibility fetch failed: {e!r}')
+    return {}
 
 
 async def _trial_access_counts(record: dict) -> tuple[int, int]:
@@ -524,6 +557,182 @@ async def list_trials(_admin: None = Depends(require_admin_key_or_session)):
             'reminder_winback_sent': record.get('reminder_winback_sent', False),
         })
     return {'trials': trials, 'count': len(trials)}
+
+
+@router.get('/api/admin/trials/drift-check')
+async def trials_drift_check(_admin: None = Depends(require_admin_key_or_session)):
+    """Scans every trial member's permanent snapshot_slugs for one that's
+    since been unlocked to a free/public visibility in Ghost -- see
+    _fetch_slug_visibility's own docstring for why this can happen well
+    after a trial starts, with this module having no way to know at the
+    time. Read-only: reports what's drifted so Venkat can pick a real
+    replacement story himself (an editorial judgment call, not something
+    to auto-pick) via the admin panel's per-member story editor
+    (GET .../{email}/stories, POST .../add-slug, POST .../remove-slug
+    below). Batches one Ghost lookup per unique slug across every
+    member, not one call per member."""
+    if _db is None:
+        return {'affected': [], 'count': 0}
+
+    all_slugs: set[str] = set()
+    records = []
+    async for record in _db.trial_members.find({}, {'email': 1, 'snapshot_slugs': 1}):
+        records.append(record)
+        all_slugs.update(record.get('snapshot_slugs') or [])
+
+    visibility = await _fetch_slug_visibility(list(all_slugs))
+
+    affected = []
+    for record in records:
+        drifted = [
+            slug for slug in (record.get('snapshot_slugs') or [])
+            if visibility.get(slug) == 'public'
+        ]
+        if drifted:
+            affected.append({'email': record.get('email'), 'drifted_slugs': drifted})
+    return {'affected': affected, 'count': len(affected)}
+
+
+ADMIN_CANDIDATE_STORIES_LIMIT = 30  # plenty of recent premium stories to pick an addition from
+
+
+async def _fetch_recent_premium_stories(limit: int = ADMIN_CANDIDATE_STORIES_LIMIT) -> list[dict]:
+    """Like _fetch_recent_premium_slugs, but for the admin picker below --
+    titles too (an admin recognizes a story by its headline, not its
+    slug), and a bigger limit than a real signup's fixed-10 snapshot."""
+    if not GHOST_CONTENT_API_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/content/posts/',
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'limit': limit,
+                    'order': 'published_at desc',
+                    'filter': 'status:published+visibility:[paid,members]',
+                    'fields': 'slug,title,published_at',
+                },
+            )
+        if r.status_code == 200:
+            return [
+                {'slug': p['slug'], 'title': p.get('title', p['slug']), 'published_at': p.get('published_at')}
+                for p in r.json().get('posts', [])
+            ]
+        logger.warning(f'Ghost recent-premium-stories fetch HTTP {r.status_code}')
+    except Exception as e:
+        logger.warning(f'Ghost recent-premium-stories fetch failed: {e!r}')
+    return []
+
+
+async def _fetch_titles(slugs: list[str]) -> dict[str, str]:
+    """slug -> title, for whichever of the given slugs still resolve in
+    Ghost (a removed/renamed slug just won't have an entry -- the admin
+    UI falls back to showing the bare slug for those)."""
+    if not GHOST_CONTENT_API_KEY or not slugs:
+        return {}
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/content/posts/',
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'limit': len(slugs),
+                    'filter': f"slug:[{','.join(slugs)}]",
+                    'fields': 'slug,title',
+                },
+            )
+        if r.status_code == 200:
+            return {p['slug']: p.get('title', p['slug']) for p in r.json().get('posts', [])}
+        logger.warning(f'Ghost title fetch HTTP {r.status_code}')
+    except Exception as e:
+        logger.warning(f'Ghost title fetch failed: {e!r}')
+    return {}
+
+
+@router.get('/api/admin/trials/{email}/stories')
+async def trial_stories_detail(email: str, _admin: None = Depends(require_admin_key_or_session)):
+    """Backs the admin panel's per-member story editor: this member's
+    current permanent Ten with real titles (not just slugs) plus a
+    visibility flag so a drifted-to-free story is visibly flagged in the
+    UI too, not just in the drift-check sweep -- and a candidates list of
+    recent premium stories not already in their snapshot, to add from."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    record = await _db.trial_members.find_one({'email': email.lower().strip()})
+    if not record:
+        raise HTTPException(status_code=404, detail='No trial found for this email')
+
+    slugs = record.get('snapshot_slugs') or []
+    titles = await _fetch_titles(slugs)
+    visibility = await _fetch_slug_visibility(slugs)
+    current = [
+        {'slug': s, 'title': titles.get(s, s), 'visibility': visibility.get(s, 'unknown')}
+        for s in slugs
+    ]
+
+    candidates = [
+        story for story in await _fetch_recent_premium_stories()
+        if story['slug'] not in slugs
+    ]
+    return {'email': record.get('email'), 'current': current, 'candidates': candidates}
+
+
+class TrialSlugRequest(BaseModel):
+    email: EmailStr
+    slug: str
+
+
+@router.post('/api/admin/trials/add-slug')
+async def add_trial_slug(req: TrialSlugRequest, _admin: None = Depends(require_admin_key_or_session)):
+    """Adds one story to a member's permanent snapshot_slugs -- e.g. a
+    replacement after removing one that drifted to free. Validates the
+    slug is a real, currently paid/members published story first, so
+    this can't be used to add a free one by mistake."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    email = req.email.lower().strip()
+    record = await _db.trial_members.find_one({'email': email})
+    if not record:
+        raise HTTPException(status_code=404, detail='No trial found for this email')
+
+    slugs = record.get('snapshot_slugs') or []
+    if req.slug in slugs:
+        raise HTTPException(status_code=400, detail=f'{req.slug!r} is already in this member’s Ten')
+
+    visibility = await _fetch_slug_visibility([req.slug])
+    if visibility.get(req.slug) not in ('paid', 'members'):
+        raise HTTPException(
+            status_code=400,
+            detail=f'{req.slug!r} is not a currently published paid/members story',
+        )
+
+    updated = slugs + [req.slug]
+    await _db.trial_members.update_one({'email': email}, {'$set': {'snapshot_slugs': updated}})
+    return {'email': email, 'snapshot_slugs': updated}
+
+
+@router.post('/api/admin/trials/remove-slug')
+async def remove_trial_slug(req: TrialSlugRequest, _admin: None = Depends(require_admin_key_or_session)):
+    """Removes one story from a member's permanent snapshot_slugs -- e.g.
+    one drift-check flagged as having gone free. Leaves the member with
+    fewer than ten until/unless an add-slug call tops it back up; that's
+    fine, this is a rare manual correction, not something that needs to
+    self-balance."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    email = req.email.lower().strip()
+    record = await _db.trial_members.find_one({'email': email})
+    if not record:
+        raise HTTPException(status_code=404, detail='No trial found for this email')
+
+    slugs = record.get('snapshot_slugs') or []
+    if req.slug not in slugs:
+        raise HTTPException(status_code=400, detail=f'{req.slug!r} is not in this member’s Ten')
+
+    updated = [s for s in slugs if s != req.slug]
+    await _db.trial_members.update_one({'email': email}, {'$set': {'snapshot_slugs': updated}})
+    return {'email': email, 'snapshot_slugs': updated}
 
 
 @router.post('/api/trial/reminder-check')

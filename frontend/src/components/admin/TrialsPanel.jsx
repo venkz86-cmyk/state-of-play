@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
+import { TrialStoryEditorModal } from './TrialStoryEditorModal';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatDate } from '../../lib/format';
 
@@ -9,6 +10,9 @@ export const TrialsPanel = ({ onAuthError }) => {
   const [error, setError] = useState('');
   const [sweeping, setSweeping] = useState(false);
   const [sweepResult, setSweepResult] = useState(null);
+  const [editingEmail, setEditingEmail] = useState(null);
+  const [drifted, setDrifted] = useState(null);
+  const [checkingDrift, setCheckingDrift] = useState(false);
 
   const load = async () => {
     try {
@@ -37,6 +41,25 @@ export const TrialsPanel = ({ onAuthError }) => {
     }
   };
 
+  // Checks whether any member's permanent Ten includes a story that's
+  // since been unlocked to free -- see trial_tracking.py's
+  // _fetch_slug_visibility for why this can happen well after a trial
+  // starts. Read-only; fixing what it finds happens in the per-member
+  // story editor below.
+  const checkDrift = async () => {
+    setCheckingDrift(true);
+    setDrifted(null);
+    try {
+      const result = await adminFetch('/api/admin/trials/drift-check');
+      setDrifted(result.affected || []);
+    } catch (e) {
+      if (e instanceof AdminAuthError) { onAuthError?.(); return; }
+      setError(e.message || 'Drift check failed.');
+    } finally {
+      setCheckingDrift(false);
+    }
+  };
+
   if (error) {
     return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
   }
@@ -48,7 +71,19 @@ export const TrialsPanel = ({ onAuthError }) => {
 
   const columns = [
     { key: 'email', label: 'Email', sortable: true },
-    { key: 'snapshot_slugs', label: 'Stories', sortable: false, render: (t) => `${(t.snapshot_slugs || []).length} snapshotted` },
+    {
+      key: 'snapshot_slugs', label: 'Stories', sortable: false,
+      render: (t) => (
+        <button
+          type="button"
+          onClick={() => setEditingEmail(t.email)}
+          className="font-plex text-[13px] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+        >
+          {(t.snapshot_slugs || []).length} snapshotted
+          {drifted?.some((d) => d.email === t.email) ? ' · needs a swap' : ''}
+        </button>
+      ),
+    },
     { key: 'started_at', label: 'Started', sortable: true, render: (t) => formatDate(t.started_at) },
     {
       key: 'expires_at', label: 'Expires', sortable: true, align: 'right',
@@ -103,6 +138,31 @@ export const TrialsPanel = ({ onAuthError }) => {
         </button>
       </div>
 
+      <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
+        <div>
+          <p className="font-plex text-[13px] text-[var(--text-muted)]">
+            Checks whether any member's permanent Ten includes a story that's since been unlocked
+            to free, an editorial change made well after their trial started. Click a flagged
+            row's "Stories" link to swap it for a real replacement.
+          </p>
+          {drifted && (
+            <p className="font-plex text-[13px] text-[var(--text)] mt-2">
+              {drifted.length === 0
+                ? 'Nothing drifted, every snapshotted story is still paywalled.'
+                : `${drifted.length} member${drifted.length === 1 ? '' : 's'} affected.`}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={checkDrift}
+          disabled={checkingDrift}
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
+        >
+          {checkingDrift ? 'Checking…' : 'Check for drifted stories'}
+        </button>
+      </div>
+
       <DataTable
         columns={columns}
         rows={trials}
@@ -110,6 +170,13 @@ export const TrialsPanel = ({ onAuthError }) => {
         searchKeys={['email']}
         searchPlaceholder="Search by email…"
         emptyMessage="No trial signups yet."
+      />
+
+      <TrialStoryEditorModal
+        email={editingEmail}
+        open={!!editingEmail}
+        onOpenChange={(v) => { if (!v) setEditingEmail(null); }}
+        onChanged={load}
       />
     </div>
   );
