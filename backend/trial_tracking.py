@@ -120,14 +120,19 @@ async def _fetch_recent_premium_slugs(limit: int = SNAPSHOT_SIZE) -> list[str]:
     return []
 
 
-async def start_trial(email: str, ghost_member_id: str = '') -> Optional[dict]:
+async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN') -> Optional[dict]:
     """Snapshot the current 10 most recent premium stories and open a
     30-day window from right now. Idempotent on email — re-running (e.g. a
     retried webhook) updates rather than duplicating, but does NOT reset
     an already-running trial's clock; only inserts fresh state if none
     exists yet. Sends the day-1 welcome email exactly once, as a side
     effect of the insert actually happening (a retried call that finds an
-    existing record returns early above and never re-sends it)."""
+    existing record returns early above and never re-sends it).
+
+    country ('IN' or 'INTL') is derived by the caller from Razorpay's own
+    payment currency, not trusted from the client -- stored so the day-25/
+    day-37 upgrade emails can quote the correct, geo-specific
+    trial-upgrade price instead of a flat number."""
     if _db is None:
         logger.warning('trial_tracking: no db handle, skipping start_trial')
         return None
@@ -143,6 +148,7 @@ async def start_trial(email: str, ghost_member_id: str = '') -> Optional[dict]:
     record = {
         'email': email,
         'ghost_member_id': ghost_member_id or '',
+        'country': country if country in ('IN', 'INTL') else 'IN',
         'snapshot_slugs': await _fetch_recent_premium_slugs(),
         'opened_slugs': [],
         'started_at': now,
@@ -356,8 +362,31 @@ def _trial_email_shell(headline_html: str, body_html: str) -> str:
 
 
 _SUBSCRIBE_CTA = (
-    f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
+    f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/trial" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
 )
+
+# /signup's own checkout has no idea this reader already paid for a
+# trial -- it charges the plain new-signup price and never applies
+# 'trial-upgrade', which is the only plan that credits the trial fee
+# and grants the thirteen-months-for-twelve bonus. /trial's own second
+# checkout button is the one place that plan is actually reachable, so
+# every upgrade CTA in this file must point there, not at /signup.
+
+
+def _trial_upgrade_price_text(country: str) -> str:
+    """The live trial-upgrade price for this reader's geo, resolved
+    through razorpay_orders.py's own pricing config rather than a
+    number hardcoded here -- that config already handles the Oct-1
+    launch/steady-state cutoff, so this line can't go stale the way a
+    fixed figure already had. Imported locally rather than at module
+    level: razorpay_orders.py imports start_trial from this module, so
+    a module-level import back here would be circular."""
+    from razorpay_orders import _resolve_plan_config
+    config = _resolve_plan_config('trial-upgrade', country)
+    amount = config['amount']
+    if config.get('currency') == 'INR':
+        return f'₹{amount // 100:,} all in'
+    return f'${amount // 100}'
 
 
 def _trial_welcome_email_html() -> str:
@@ -396,7 +425,7 @@ def _trial_progress_email_html(available_count: int, bonus_count: int) -> str:
     )
 
 
-def _trial_reminder_email_html(days_left: int, available_count: int = 0, read_count: int = 0) -> str:
+def _trial_reminder_email_html(days_left: int, available_count: int = 0, read_count: int = 0, country: str = 'IN') -> str:
     """Sent ~day 25 of the 30-day trial (5 days left). Leads with actual
     read/available counts when they're known (read_count > 0) -- "12 of
     14" is a sharper conversion pitch than a generic day-count, because
@@ -410,26 +439,28 @@ def _trial_reminder_email_html(days_left: int, available_count: int = 0, read_co
     else:
         headline = f'{days_left} days left on <em style="font-style: italic;">The Ten.</em>'
         opening = '<p>Your original ten stories are yours to keep either way, no matter what you decide.</p>'
+    price_text = _trial_upgrade_price_text(country)
     return _trial_email_shell(
         headline,
         (
             f'<p>Your trial closes in {days_left} days. Everything new we\'ve published since you joined, on top of your original ten, goes with it.</p>'
             f'{opening}'
-            '<p>An annual subscription is Rs 2,499 + GST: one properly reported story a week on the business of Indian sport, the twice-weekly Left Field briefing, and the full archive, not just a month of it.</p>'
+            f'<p>Upgrading now is {price_text}, less than signing up fresh, since you\'ve already paid for the trial. And because you\'re upgrading from The Ten, you get thirteen months instead of twelve.</p>'
             + _SUBSCRIBE_CTA
             + '<p style="color: #555555;">If the trial wasn’t for you, that’s fine. Access simply ends, nothing to cancel.</p>'
         ),
     )
 
 
-def _trial_winback_email_html() -> str:
+def _trial_winback_email_html(country: str = 'IN') -> str:
     """Sent ~day 37 of the 30-day trial (7 days after it closed)."""
+    price_text = _trial_upgrade_price_text(country)
     return _trial_email_shell(
         'Still thinking <em style="font-style: italic;">about it?</em>',
         (
             '<p>Your State of Play trial ended a week ago. Your original ten stories are still yours, for keeps. Everything published since closed with the trial.</p>'
             '<p>If any of it was useful, the full subscription gets you a new story every week, plus the twice-weekly Left Field briefing and the entire archive.</p>'
-            '<p>Rs 2,499 + GST a year.</p>'
+            f'<p>Upgrading now is {price_text}, less than signing up fresh, since you\'ve already paid for the trial. And you get thirteen months instead of twelve, since you\'re upgrading from The Ten.</p>'
             + _SUBSCRIBE_CTA
             + '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
         ),
@@ -565,7 +596,7 @@ async def trial_reminder_check(_admin: None = Depends(require_admin_key_or_sessi
             sent = await _send_email(
                 to=email,
                 subject=subject,
-                html=_trial_reminder_email_html(days_left, available_count, read_count),
+                html=_trial_reminder_email_html(days_left, available_count, read_count, record.get('country', 'IN')),
             )
         await _db.trial_members.update_one(
             {'_id': record['_id']},
@@ -586,7 +617,7 @@ async def trial_reminder_check(_admin: None = Depends(require_admin_key_or_sessi
             sent = await _send_email(
                 to=email,
                 subject='Still thinking about it?',
-                html=_trial_winback_email_html(),
+                html=_trial_winback_email_html(record.get('country', 'IN')),
             )
         await _db.trial_members.update_one(
             {'_id': record['_id']},
