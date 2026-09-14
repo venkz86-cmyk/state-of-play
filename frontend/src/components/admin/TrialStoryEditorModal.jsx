@@ -3,16 +3,33 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatDate } from '../../lib/format';
 
-/* TrialStoryEditorModal -- manual correction for one Trial ("The Ten")
-   member's permanent snapshot_slugs. Exists for the rare case a story
-   snapshotted while paid/members later gets unlocked to free (an
-   editorial decision this module has no visibility into when it
-   happens): trials_drift_check flags it, this is where Venkat actually
-   fixes it, removing the drifted story and adding a real replacement
-   from the candidates list. Two plain POSTs (add-slug/remove-slug), not
-   a combined "swap" -- a rare manual action, no reason to special-case
-   it over two clicks. */
+/* TrialStoryEditorModal -- add/remove stories from a Trial ("The Ten")
+   snapshot. Two scopes, chosen by whether `email` is passed:
+
+   - email given: one already-signed-up member's own permanent
+     snapshot_slugs (GET/{email}/stories, add-slug/remove-slug with
+     {email, slug} bodies). Exists for the rare case a story
+     snapshotted while paid/members later gets unlocked to free (an
+     editorial decision this module has no visibility into when it
+     happens) -- trials_drift_check flags it, this fixes it for that
+     one member. Real example: Sanjog Gupta's JioStar profile.
+   - email omitted: the global admin-curated list every NEW signup's
+     permanent snapshot is copied from (GET/POST .../the-ten...,
+     {slug}-only bodies). Doesn't touch anyone already signed up --
+     only what a future signup gets.
+
+   Both scopes share the exact same current-list/remove,
+   filter/candidates-list/add UI -- only the data source and endpoint
+   paths differ. Two plain POSTs (add/remove), not a combined "swap":
+   a rare manual action, no reason to special-case it over two
+   clicks. */
 export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) => {
+  const isGlobal = !email;
+  const detailPath = isGlobal ? '/api/admin/trials/the-ten' : `/api/admin/trials/${encodeURIComponent(email)}/stories`;
+  const addPath = isGlobal ? '/api/admin/trials/the-ten/add' : '/api/admin/trials/add-slug';
+  const removePath = isGlobal ? '/api/admin/trials/the-ten/remove' : '/api/admin/trials/remove-slug';
+  const bodyFor = (slug) => JSON.stringify(isGlobal ? { slug } : { email, slug });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [current, setCurrent] = useState([]);
@@ -21,16 +38,16 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
   const [busySlug, setBusySlug] = useState('');
 
   const load = async () => {
-    if (!email) return;
+    if (!isGlobal && !email) return;
     setLoading(true);
     setError('');
     try {
-      const data = await adminFetch(`/api/admin/trials/${encodeURIComponent(email)}/stories`);
+      const data = await adminFetch(detailPath);
       setCurrent(data.current || []);
       setCandidates(data.candidates || []);
     } catch (e) {
       if (e instanceof AdminAuthError) throw e;
-      setError(e.message || 'Could not load this member\'s stories.');
+      setError(e.message || 'Could not load these stories.');
     } finally {
       setLoading(false);
     }
@@ -45,7 +62,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
     setBusySlug(slug);
     setError('');
     try {
-      await adminFetch('/api/admin/trials/remove-slug', { method: 'POST', body: JSON.stringify({ email, slug }) });
+      await adminFetch(removePath, { method: 'POST', body: bodyFor(slug) });
       await load();
       onChanged?.();
     } catch (e) {
@@ -59,7 +76,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
     setBusySlug(slug);
     setError('');
     try {
-      await adminFetch('/api/admin/trials/add-slug', { method: 'POST', body: JSON.stringify({ email, slug }) });
+      await adminFetch(addPath, { method: 'POST', body: bodyFor(slug) });
       await load();
       onChanged?.();
     } catch (e) {
@@ -76,10 +93,13 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogTitle className="font-editorial text-xl">The Ten: {email}</DialogTitle>
+        <DialogTitle className="font-editorial text-xl">
+          {isGlobal ? 'The Ten: default for new signups' : `The Ten: ${email}`}
+        </DialogTitle>
         <DialogDescription className="font-plex text-[13px] text-[var(--text-muted)]">
-          This member's permanent story snapshot. Remove one that's drifted to free, add a real
-          replacement from below.
+          {isGlobal
+            ? "What a brand-new signup's permanent Ten is copied from. Doesn't change anyone already signed up."
+            : "This member's permanent story snapshot. Remove one that's drifted to free, add a real replacement from below."}
         </DialogDescription>
 
         {error && (
@@ -95,7 +115,9 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
                 Current ({current.length})
               </p>
               {current.length === 0 && (
-                <p className="font-plex text-[13px] text-[var(--text-muted)]">No stories snapshotted.</p>
+                <p className="font-plex text-[13px] text-[var(--text-muted)]">
+                  {isGlobal ? 'Nothing curated yet -- new signups fall back to the ten most recent premium stories.' : 'No stories snapshotted.'}
+                </p>
               )}
               <ul className="divide-y divide-[var(--rule)] border-y border-[var(--rule)]">
                 {current.map((story) => (

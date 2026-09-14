@@ -11,6 +11,7 @@ export const TrialsPanel = ({ onAuthError }) => {
   const [sweeping, setSweeping] = useState(false);
   const [sweepResult, setSweepResult] = useState(null);
   const [editingEmail, setEditingEmail] = useState(null);
+  const [editingGlobal, setEditingGlobal] = useState(false);
   const [drifted, setDrifted] = useState(null);
   const [checkingDrift, setCheckingDrift] = useState(false);
 
@@ -115,6 +116,22 @@ export const TrialsPanel = ({ onAuthError }) => {
       <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
         <div>
           <p className="font-plex text-[13px] text-[var(--text-muted)]">
+            The ten stories a brand-new signup's permanent Ten is copied from. Add or remove
+            stories directly; nobody already signed up is affected, only what a future signup gets.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditingGlobal(true)}
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 shrink-0 ml-6"
+        >
+          Edit The Ten
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
+        <div>
+          <p className="font-plex text-[13px] text-[var(--text-muted)]">
             Sends the day-10 progress email, the day-25 reminder and the day-37 winback, once each
             per trial. The day-1 welcome sends immediately on signup, not from this sweep. Runs
             automatically once the daily Apps Script trigger is set up — this button is for
@@ -173,9 +190,10 @@ export const TrialsPanel = ({ onAuthError }) => {
       />
 
       <TrialStoryEditorModal
-        email={editingEmail}
-        open={!!editingEmail}
-        onOpenChange={(v) => { if (!v) setEditingEmail(null); }}
+        key={editingGlobal ? 'global' : editingEmail || 'closed'}
+        email={editingGlobal ? null : editingEmail}
+        open={editingGlobal || !!editingEmail}
+        onOpenChange={(v) => { if (!v) { setEditingEmail(null); setEditingGlobal(false); } }}
         onChanged={load}
       />
     </div>
