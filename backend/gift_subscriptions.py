@@ -88,7 +88,13 @@ from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
 from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS, _resolve_plan_config as _resolve_standard_plan
-from razorpay_subscriptions import SUBSCRIPTION_PLANS as RENEWAL_PLANS
+# SUBSCRIPTION_PLANS is tier-then-country ('existing'/'new' x IN/INTL,
+# see razorpay_subscriptions.py's own docstring for X/Y/Z) -- 'existing'
+# is what an already-subscribed reader actually renews at today, which
+# is exactly the floor create-order needs below. 'new' is the post-Nov-1
+# rate for someone who was never subscribed, not relevant here.
+from razorpay_subscriptions import SUBSCRIPTION_PLANS as _SUBSCRIPTION_PLANS
+RENEWAL_PLANS = _SUBSCRIPTION_PLANS['existing']
 from tiers import ensure_member_labeled, find_ghost_member, is_paid_from_labels
 from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry
 from resend_email import send_email
