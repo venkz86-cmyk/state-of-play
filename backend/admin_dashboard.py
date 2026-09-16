@@ -35,6 +35,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Depends
 
@@ -466,4 +467,77 @@ async def subscriber_subscription_status(
         'current_start': subscription.get('current_start'),
         'current_end': subscription.get('current_end'),
         'charge_at': subscription.get('charge_at'),
+    }
+
+
+# Rough "does this look like a photo credit" check -- not a real parser,
+# just enough to separate "Photo: X / Y" or an actual <a href> link from
+# a plain descriptive sentence like "A picture from the PKL final". Never
+# auto-fixes anything -- only Venkat knows the real source for a given
+# photo; this is a punch-list, not a corrector.
+_CREDIT_MARKERS = ('photo', 'credit', 'courtesy', 'via ', '<a ', 'source:')
+
+
+def _looks_like_credit(caption: str) -> bool:
+    lowered = (caption or '').lower()
+    return any(marker in lowered for marker in _CREDIT_MARKERS)
+
+
+async def _fetch_all_published_posts_with_images(token: str) -> list[dict]:
+    """Same paginated-listing shape tiers.list_all_ghost_members already
+    uses, applied to posts instead of members."""
+    posts: list[dict] = []
+    page = 1
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        while True:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/admin/posts/',
+                params={
+                    'limit': 100,
+                    'page': page,
+                    'filter': 'status:published',
+                    'fields': 'slug,title,feature_image,feature_image_caption,published_at',
+                },
+                headers={'Authorization': f'Ghost {token}'},
+            )
+            if r.status_code != 200:
+                logger.warning(f'Ghost posts list HTTP {r.status_code} on page {page}')
+                break
+            payload = r.json()
+            posts.extend(payload.get('posts', []))
+            pages = (payload.get('meta', {}).get('pagination') or {}).get('pages') or 1
+            if page >= pages:
+                break
+            page += 1
+    return posts
+
+
+@router.get('/api/admin/image-captions/audit')
+async def audit_image_captions(_admin: None = Depends(require_admin_key_or_session)):
+    """Punch-list of published stories whose feature image has no
+    credit-shaped caption -- doesn't edit anything, just flags what to
+    go check in Ghost. Only stories that actually have a feature image
+    are considered; a story with no image has nothing to credit."""
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Could not create Ghost admin token')
+
+    posts = await _fetch_all_published_posts_with_images(token)
+    with_image = [p for p in posts if p.get('feature_image')]
+    flagged = [
+        {
+            'slug': p.get('slug'),
+            'title': p.get('title'),
+            'published_at': p.get('published_at'),
+            'caption': p.get('feature_image_caption') or '',
+        }
+        for p in with_image
+        if not _looks_like_credit(p.get('feature_image_caption') or '')
+    ]
+    return {
+        'checked_count': len(with_image),
+        'flagged_count': len(flagged),
+        'flagged': flagged,
     }

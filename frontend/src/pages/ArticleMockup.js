@@ -310,9 +310,18 @@ export const ArticleMockup = () => {
               className="w-full aspect-[16/9] object-cover saturate-0 hover:saturate-100 transition-all duration-700 ease-out"
             />
             {article.image_caption && (
-              <figcaption className="font-plex text-[12px] italic text-[var(--text-label)] mt-3 px-6 lg:px-0">
-                {article.image_caption.replace(/<[^>]+>/g, '')}
-              </figcaption>
+              // Rendered as trusted rich text, not plain-text-stripped --
+              // this is Ghost's own feature-image caption box, typed by
+              // Venkat, doubling as the photo credit (README.md's own
+              // "Image credits displayed from Ghost"). Stripping tags
+              // here silently ate any credit link he'd added; the SSR
+              // route (server.py's hero_caption) already renders this
+              // exact field raw, same trust level as article.content
+              // itself elsewhere in this file.
+              <figcaption
+                className="font-plex text-[12px] italic text-[var(--text-label)] mt-3 px-6 lg:px-0"
+                dangerouslySetInnerHTML={{ __html: article.image_caption }}
+              />
             )}
           </figure>
         )}
