@@ -472,7 +472,10 @@ def _check_article_rate_limit(key: str) -> bool:
 
 @api_router.post("/ghost/article-content", response_model=ArticleContentResponse)
 async def get_full_article_content(request: ArticleContentRequest, http_request: Request):
-    """Get full article content for verified paid members using Admin API.
+    """Get full article content for a verified member using Admin API --
+    a paid member for 'paid'-visibility posts, or any signed-up member
+    (free or paid) for 'members'-visibility posts, plus the existing
+    Trial ("The Ten") carve-out for eligible trial readers.
 
     Rate-limited per (email, ip) to prevent a leaked subscriber email being
     used to scrape the entire premium archive.
@@ -551,7 +554,14 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
 
             post = posts[0]
 
-            if not is_paid:
+            if not is_paid and post.get('visibility') != 'members':
+                # 'members' visibility means any signed-up reader, free or
+                # paid, may read it -- Ghost's own semantics for that tier,
+                # not a new eligibility concept. A found Ghost member (the
+                # lookup above already confirmed one exists) already
+                # satisfies it, no further check needed. 'paid' visibility
+                # still requires actual paid status, or the Trial carve-out
+                # below.
                 trial_allowed = False
                 if 'tier-trial' in labels and is_trial_slug_accessible:
                     published_at_raw = post.get('published_at')

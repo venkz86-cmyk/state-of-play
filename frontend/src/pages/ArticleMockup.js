@@ -14,6 +14,7 @@ import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
 import { GiftArticleModal } from '../components/GiftArticleModal';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
+import { EmailGate } from '../components/EmailGate';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { ContinueReading } from '../components/ContinueReading';
 import { CustomComments } from '../components/CustomComments';
@@ -51,7 +52,7 @@ const previewParagraphs = (html) => {
 export const ArticleMockup = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { canAccessPremium, user } = useAuth();
+  const { canAccessPremium, user, isLoggedIn } = useAuth();
 
   const previewMember = searchParams.get('preview') === 'member';
   // isMember drives comments/bookmark/gift/nominate -- real subscriber
@@ -124,7 +125,10 @@ export const ArticleMockup = () => {
   useEffect(() => {
     let active = true;
     if (!article) return;
-    const needsFullContent = !!(article.is_premium && (user?.is_paid || isTrialTier) && user?.email && API);
+    const needsFullContent = !!(
+      article.is_premium && user?.email && API &&
+      (user?.is_paid || isTrialTier || (article.requires_registration && isLoggedIn))
+    );
     if (!needsFullContent) {
       setFullContentReady(true);
       return;
@@ -154,7 +158,7 @@ export const ArticleMockup = () => {
       }
     })();
     return () => { active = false; };
-  }, [article?.is_premium, article?.id, user?.is_paid, user?.email, isTrialTier]);
+  }, [article?.is_premium, article?.id, article?.requires_registration, user?.is_paid, user?.email, isTrialTier, isLoggedIn]);
 
   if (loading) {
     return (
@@ -174,11 +178,24 @@ export const ArticleMockup = () => {
   // until fullContentReady resolves, we don't yet know if this story is
   // theirs to read, so showing the skeleton beats flashing the paywall
   // and then un-paywalling it a moment later.
-  const bodyStillLoading = article.is_premium && (isMember || isTrialTier) && !fullContentReady;
-  const canReadArticle = isMember || (isTrialTier && trialAllowed);
+  // Ghost's own 'members' visibility -- any signed-up reader, free or
+  // paid, not just this article's own is_premium (which still lumps
+  // 'members' in with 'paid' for existing display copy elsewhere). Same
+  // "narrower access than isMember" shape as Trial: registering only
+  // unlocks THIS story, nothing else -- a free-registered reader still
+  // hits the real Paywall on any 'paid'-visibility story.
+  const requiresRegistration = !!article.requires_registration;
+  const bodyStillLoading = article.is_premium && (isMember || isTrialTier || (requiresRegistration && isLoggedIn)) && !fullContentReady;
+  const canReadArticle = isMember || (isTrialTier && trialAllowed) || (requiresRegistration && isLoggedIn);
 
-  const isPaywalled = article.is_premium && !canReadArticle;
-  const bodyHtml = isPaywalled
+  // isGated: content is locked behind SOME gate, regardless of which.
+  // isPaywalled/needsRegistration: which gate widget to actually show.
+  // A 'members' story is never isPaywalled (never shows the payment
+  // Paywall) and a 'paid' story never shows the EmailGate.
+  const isGated = article.is_premium && !canReadArticle;
+  const isPaywalled = isGated && !requiresRegistration;
+  const needsRegistration = isGated && requiresRegistration;
+  const bodyHtml = isGated
     ? previewParagraphs(article.content)
     : (article.content || article.preview_content || '');
   const beat = article.theme;
@@ -282,7 +299,7 @@ export const ArticleMockup = () => {
           </div>
         </header>
 
-        {!isPaywalled && !bodyStillLoading && <ContinueReading articleId={article.id} />}
+        {!isGated && !bodyStillLoading && <ContinueReading articleId={article.id} />}
 
         {article.image_url && (
           <figure className="mb-10 lg:mb-12 -mx-6 lg:mx-0 overflow-hidden">
@@ -325,8 +342,9 @@ export const ArticleMockup = () => {
         )}
 
         {isPaywalled && <Paywall />}
+        {needsRegistration && <EmailGate />}
 
-        {!isPaywalled && (
+        {!isGated && (
           <div className="mt-12 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <p className="font-plex text-[13px] text-[var(--text-label)] flex flex-wrap items-baseline gap-x-2">
               <span>Filed under</span>

@@ -40,6 +40,10 @@ Flow:
      (proves *current entitlement* — deliberately not cached in the
      cookie, since entitlement can change after a session is issued).
   4. POST /api/auth/logout — clears the cookie.
+  5. POST /api/auth/register-free {email, name}: creates a brand-new
+     FREE Ghost member (no payment) and mints a session immediately,
+     skipping steps 1-2 entirely. There's no existing account to prove
+     ownership of; the email typed in IS the new account.
 
 Wrong-code attempts are capped (MAX_ATTEMPTS) so a 6-digit code — far
 weaker than a long random token — can't just be brute-forced within its
@@ -70,7 +74,7 @@ import jwt
 from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import find_ghost_member, is_paid_from_labels, resolve_tier
+from tiers import find_ghost_member, create_ghost_member, is_paid_from_labels, resolve_tier
 from resend_email import send_email
 
 logger = logging.getLogger(__name__)
@@ -362,6 +366,72 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         # `Authorization: Bearer <token>` on every request from here on --
         # see _read_session's docstring for why that's now the mechanism
         # this actually depends on, not the cookie set above.
+        'session_token': session_token,
+    }
+
+
+class RegisterFreeBody(BaseModel):
+    email: EmailStr
+    name: Optional[str] = ''
+
+
+@router.post('/api/auth/register-free')
+async def register_free(req: RegisterFreeBody, response: Response):
+    """Registers a brand-new FREE Ghost member (no payment, no labels
+    beyond whatever Ghost applies on its own) and signs them straight
+    in -- deliberately not routed through request-code/verify-code
+    above: those exist to prove ownership of an email tied to an
+    EXISTING account before trusting it with something (money, an
+    already-paid entitlement). Here there's no existing account and
+    nothing paid to protect -- the email just typed in IS the account
+    being created, so minting a session immediately is both safe and
+    the point: a reader shouldn't have to wait on a code email just to
+    keep reading the free story they were already reading.
+
+    Ghost's own site-level "subscribe new members to newsletter X by
+    default" setting applies automatically here, the same as every
+    other free-member path in this codebase (nominations.py's
+    _ghost_create_free_member, tiers.create_ghost_member itself) --
+    none of them ever set Ghost's `newsletters` field explicitly."""
+    if not JWT_SECRET:
+        raise HTTPException(status_code=503, detail='Not configured')
+
+    email = req.email.lower().strip()
+    admin_token = _create_ghost_admin_token()
+    if not admin_token:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+
+    member = await create_ghost_member(email, (req.name or '').strip(), [], admin_token)
+    if not member:
+        raise HTTPException(status_code=502, detail='Could not create account')
+
+    session_token = _mint_session(email, member.get('id', ''))
+    if not session_token:
+        raise HTTPException(status_code=503, detail='Could not create session')
+
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=session_token,
+        max_age=SESSION_TTL_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=True,
+        samesite='none',
+        path='/',
+    )
+
+    label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+    is_paid = is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped')
+
+    return {
+        'email': email,
+        'ghost_member_id': member.get('id', ''),
+        'name': member.get('name', ''),
+        'is_paid': is_paid,
+        'is_free': not is_paid,
+        'trial_expired': False,
+        'tier': resolve_tier(label_names, is_paid),
+        'status': member.get('status', 'free'),
+        'label_names': label_names,
         'session_token': session_token,
     }
 
