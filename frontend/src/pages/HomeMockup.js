@@ -187,7 +187,9 @@ export const HomeMockup = () => {
                 </div>
               )}
               <SectionLabel className="mb-3">
-                {lead.theme}{lead.is_premium ? ' · For Subscribers' : ' · Free'}
+                {lead.theme}{lead.is_premium
+                  ? (lead.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
+                  : ' · Free'}
               </SectionLabel>
               <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
                 {lead.title}
@@ -268,7 +270,9 @@ export const HomeMockup = () => {
                 className="group block"
               >
                 <SectionLabel className="mb-3">
-                  {a.theme}{a.is_premium ? ' · For Subscribers' : ' · Free'}
+                  {a.theme}{a.is_premium
+                    ? (a.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
+                    : ' · Free'}
                 </SectionLabel>
                 <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent)] transition-colors duration-300">
                   {a.title}

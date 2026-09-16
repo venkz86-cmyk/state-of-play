@@ -177,7 +177,9 @@ export const SiteSearchTrigger = ({ className = '' }) => {
                   className="w-full text-left px-5 py-3 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--surface)] transition-colors"
                 >
                   <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
-                    {post.theme}{post.is_premium ? ' · For Subscribers' : ' · Free'}
+                    {post.theme}{post.is_premium
+                      ? (post.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
+                      : ' · Free'}
                   </p>
                   <p className="font-editorial text-[16px] leading-snug text-[var(--text)]">
                     {post.title}
