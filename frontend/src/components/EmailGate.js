@@ -84,14 +84,10 @@ export const EmailGate = () => {
         </h2>
 
         <p
-          className="font-editorial text-[22px] md:text-[24px] italic font-normal leading-[1.3] text-[var(--text-muted)] mb-8 max-w-[26ch]"
+          className="font-editorial text-[22px] md:text-[24px] italic font-normal leading-[1.3] text-[var(--text-muted)] mb-10 max-w-[26ch]"
           data-testid="email-gate-subheading"
         >
           Enter your email to keep reading, free.
-        </p>
-
-        <p className="font-plex text-[15px] leading-[1.65] text-[var(--text-muted)] mb-8 max-w-[58ch]">
-          This story is free. We just ask for your email so we can keep sending you the stories we publish.
         </p>
 
         <form onSubmit={onSubmit} className="max-w-[420px]" data-testid="email-gate-form">
