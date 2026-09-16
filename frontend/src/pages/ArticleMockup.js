@@ -195,8 +195,16 @@ export const ArticleMockup = () => {
   const isGated = article.is_premium && !canReadArticle;
   const isPaywalled = isGated && !requiresRegistration;
   const needsRegistration = isGated && requiresRegistration;
+  // Falls back to ghostAPI.js's own preview_content (which itself falls
+  // back to the post's excerpt) when article.content has no real <p>
+  // tags to extract from -- Ghost's Content API can hand an anonymous
+  // reader very little (sometimes nothing) for a 'members'-visibility
+  // post, and previewParagraphs' "floor of 2 paragraphs" can only floor
+  // how many of the AVAILABLE paragraphs it shows, not manufacture text
+  // that was never sent. Without this, a thin post shows the gate
+  // right up against the hero image with nothing in between.
   const bodyHtml = isGated
-    ? previewParagraphs(article.content)
+    ? (previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
     : (article.content || article.preview_content || '');
   const beat = article.theme;
   const articleTags = article.tags?.length > 0
