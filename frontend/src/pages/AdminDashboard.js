@@ -12,6 +12,7 @@ import { StudentApplicationsPanel } from '../components/admin/StudentApplication
 import { CorporateAccountsPanel } from '../components/admin/CorporateAccountsPanel';
 import { LinksPanel } from '../components/admin/LinksPanel';
 import { OverviewPanel } from '../components/admin/OverviewPanel';
+import { FreeRegistrationsPanel } from '../components/admin/FreeRegistrationsPanel';
 
 const DashboardHeader = () => {
   const { adminEmail, logout } = useAdminAuth();
@@ -85,6 +86,7 @@ export const AdminDashboard = () => {
           <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
           <Route path="students" element={<StudentApplicationsPanel onAuthError={onAuthError} />} />
           <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
+          <Route path="free-signups" element={<FreeRegistrationsPanel onAuthError={onAuthError} />} />
         </Routes>
       </main>
     </div>

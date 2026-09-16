@@ -10,6 +10,7 @@ const TABS = [
   { to: '/admin/dashboard/trials', label: 'Trials' },
   { to: '/admin/dashboard/students', label: 'Students' },
   { to: '/admin/dashboard/links', label: 'Links' },
+  { to: '/admin/dashboard/free-signups', label: 'Free signups' },
 ];
 
 export const AdminNav = () => (
