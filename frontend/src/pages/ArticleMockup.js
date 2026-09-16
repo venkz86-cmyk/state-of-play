@@ -240,7 +240,9 @@ export const ArticleMockup = () => {
       <article className="max-w-[680px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
         <header className="mb-8 lg:mb-10">
           <SectionLabel className="mb-5">
-            {beat}{article.is_premium ? ' · For Subscribers' : ' · Free'}
+            {beat}{article.is_premium
+              ? (article.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
+              : ' · Free'}
           </SectionLabel>
           <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[40px] leading-[1.08] text-[var(--text)] mb-5 max-w-[24ch]">
             {article.title}
