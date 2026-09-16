@@ -600,6 +600,94 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
         logger.error(f"Error fetching article content: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+class ArticlePreviewRequest(BaseModel):
+    slug: str
+
+class ArticlePreviewResponse(BaseModel):
+    slug: str
+    html: str
+
+
+def _preview_paragraphs(html: str) -> str:
+    """Same floor-of-2/cap-of-6/~35%-of-length slice ArticleMockup.js's
+    own previewParagraphs() computes client-side -- kept here too
+    because this endpoint exists specifically for the case where the
+    CLIENT never receives enough real HTML to slice from in the first
+    place (see get_article_preview's docstring below)."""
+    if not html:
+        return ''
+    paragraphs = re.findall(r'<p[\s\S]*?</p>', html, re.IGNORECASE)
+    count = max(2, min(6, round(len(paragraphs) * 0.35)))
+    return '\n'.join(paragraphs[:count])
+
+
+@api_router.post("/ghost/article-preview", response_model=ArticlePreviewResponse)
+async def get_article_preview(request: ArticlePreviewRequest, http_request: Request):
+    """Public, unauthenticated preview slice for a 'members'-visibility
+    story -- confirmed live (Venkat's own screenshot, Sept 16): unlike
+    'paid' visibility, where Ghost's Content API hands an anonymous
+    reader a generous truncated preview (what previewParagraphs() on
+    the frontend already slices further), 'members' visibility can give
+    back little-to-nothing to an anonymous request -- there's no
+    purchase decision to entice, so Ghost doesn't bother with a teaser.
+    Fetches the real post via the Admin API (always has full access,
+    past whatever the Content API restricts for that visibility tier),
+    computes the same kind of preview slice, and returns ONLY that
+    slice -- never the full body -- so a 'members' story gets the same
+    real-content teaser a 'paid' one already gets for free, without
+    this becoming a way to read the whole thing without signing up.
+
+    Rate-limited by IP only (no email -- this runs before anyone has
+    identified themselves), same token-bucket shape as the full-content
+    endpoint above.
+    """
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail="Admin API not configured")
+
+    client_ip = (
+        http_request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+        or (http_request.client.host if http_request.client else '0.0.0.0')
+    )
+    if not _check_article_rate_limit(f'preview|{client_ip}'):
+        raise HTTPException(status_code=429, detail="Too many requests. Please slow down.")
+
+    token = create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail="Failed to create admin token")
+
+    try:
+        async with httpx.AsyncClient() as http_client:
+            r = await http_client.get(
+                f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
+                params={'formats': 'html'},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code != 200:
+            raise HTTPException(status_code=404, detail="Article not found")
+        posts = r.json().get('posts', [])
+        if not posts:
+            raise HTTPException(status_code=404, detail="Article not found")
+        post = posts[0]
+
+        # Only ever serves this admin-fetched preview boost for the
+        # free-registration tier -- 'paid' content already gets its own
+        # preview straight from Ghost's Content API; no reason (or
+        # safety) to duplicate that here with admin-level access.
+        if post.get('visibility') != 'members':
+            raise HTTPException(status_code=403, detail="Preview not available for this content")
+
+        return ArticlePreviewResponse(
+            slug=post.get('slug'),
+            html=_preview_paragraphs(post.get('html') or ''),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching article preview: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class MagicLinkRequest(BaseModel):
     email: EmailStr
 

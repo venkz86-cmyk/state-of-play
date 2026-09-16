@@ -160,6 +160,39 @@ export const ArticleMockup = () => {
     return () => { active = false; };
   }, [article?.is_premium, article?.id, article?.requires_registration, user?.is_paid, user?.email, isTrialTier, isLoggedIn]);
 
+  // 'members'-visibility content specifically: Ghost's Content API can
+  // hand an anonymous reader almost nothing to preview (unlike 'paid'
+  // visibility, which already gets a generous truncated preview -- the
+  // whole mechanism previewParagraphs() above slices further) -- there's
+  // no purchase decision to entice, so Ghost doesn't bother with a
+  // teaser. Confirmed live on the actual first story shipped with this
+  // feature (Sept 16): a real ~2,100-word piece showed nothing at all
+  // between the hero image and the email gate. This fetches a real
+  // preview slice via the backend's own Admin-API-backed endpoint
+  // (server.py's /ghost/article-preview, capped the same way
+  // previewParagraphs() caps client-side, never the full body) for
+  // EVERY visitor to a 'members' story, not just after registering --
+  // the whole point is showing real text before asking for an email.
+  const [gatedPreviewHtml, setGatedPreviewHtml] = useState('');
+  useEffect(() => {
+    let active = true;
+    if (!article?.requires_registration || !API) return;
+    (async () => {
+      try {
+        const r = await axios.post(
+          `${API}/api/ghost/article-preview`,
+          { slug: article.id },
+          { timeout: 10000 }
+        );
+        if (active && r.data?.html) setGatedPreviewHtml(r.data.html);
+      } catch (e) {
+        // Non-fatal -- bodyHtml below falls back to whatever client-side
+        // preview is available (Content API's own, then the excerpt).
+      }
+    })();
+    return () => { active = false; };
+  }, [article?.requires_registration, article?.id]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
@@ -195,16 +228,16 @@ export const ArticleMockup = () => {
   const isGated = article.is_premium && !canReadArticle;
   const isPaywalled = isGated && !requiresRegistration;
   const needsRegistration = isGated && requiresRegistration;
-  // Falls back to ghostAPI.js's own preview_content (which itself falls
-  // back to the post's excerpt) when article.content has no real <p>
-  // tags to extract from -- Ghost's Content API can hand an anonymous
-  // reader very little (sometimes nothing) for a 'members'-visibility
-  // post, and previewParagraphs' "floor of 2 paragraphs" can only floor
-  // how many of the AVAILABLE paragraphs it shows, not manufacture text
-  // that was never sent. Without this, a thin post shows the gate
-  // right up against the hero image with nothing in between.
+  // gatedPreviewHtml (real content, fetched via Admin API -- see the
+  // effect above) comes first for a 'members' story, since Ghost's own
+  // Content API often gives nothing to slice with previewParagraphs()
+  // for that visibility tier. Falls back through: the client-side
+  // slice (works fine for 'paid', where Content API IS generous) ->
+  // ghostAPI.js's own preview_content (itself already falls back to
+  // the excerpt) -> the subtitle -- so there's always something real
+  // above the gate even if the preview fetch is still loading or fails.
   const bodyHtml = isGated
-    ? (previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
+    ? (gatedPreviewHtml || previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
     : (article.content || article.preview_content || '');
   const beat = article.theme;
   const articleTags = article.tags?.length > 0
