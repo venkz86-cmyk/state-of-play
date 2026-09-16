@@ -67,9 +67,12 @@ from __future__ import annotations
 import os
 import logging
 import secrets
+import asyncio
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+import dns.resolver
 import jwt
 from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
@@ -90,6 +93,50 @@ MAX_ATTEMPTS = 5
 router = APIRouter()
 
 _db = None
+
+# register-free is the one endpoint here that creates a brand-new Ghost
+# member from an unverified email with zero round-trip (see its own
+# docstring) -- no other check in this file stops someone from hammering
+# it with syntactically-valid junk. Own token-bucket copy, same shape as
+# server.py's _check_article_rate_limit, kept local rather than imported
+# since server.py imports THIS module (importing back would be circular).
+# Tighter than the article buckets -- creating an account is heavier than
+# reading one -- burst 3, then one more every minute from the same IP.
+_REGISTER_BUCKET: dict = defaultdict(lambda: {'tokens': 3.0, 'last': 0.0})
+_REGISTER_BUCKET_BURST = 3.0
+_REGISTER_BUCKET_REFILL_PER_SEC = 1 / 60
+
+
+def _check_register_rate_limit(client_ip: str) -> bool:
+    """Token-bucket. Returns True if the request is allowed."""
+    import time as _t
+    now = _t.monotonic()
+    bucket = _REGISTER_BUCKET[client_ip]
+    elapsed = now - bucket['last']
+    bucket['tokens'] = min(
+        _REGISTER_BUCKET_BURST,
+        bucket['tokens'] + elapsed * _REGISTER_BUCKET_REFILL_PER_SEC,
+    )
+    bucket['last'] = now
+    if bucket['tokens'] >= 1.0:
+        bucket['tokens'] -= 1.0
+        return True
+    return False
+
+
+def _domain_can_receive_mail(domain: str) -> bool:
+    """MX first (the normal case), falling back to A/AAAA for the rarer
+    domain that accepts mail with no explicit MX record. False means the
+    domain can't receive mail at all -- the objective bar for "is this a
+    real address," rather than guessing at what looks fake."""
+    try:
+        return len(dns.resolver.resolve(domain, 'MX', lifetime=3.0)) > 0
+    except Exception:
+        try:
+            dns.resolver.resolve(domain, 'A', lifetime=3.0)
+            return True
+        except Exception:
+            return False
 
 
 def init(db_handle):
@@ -376,7 +423,7 @@ class RegisterFreeBody(BaseModel):
 
 
 @router.post('/api/auth/register-free')
-async def register_free(req: RegisterFreeBody, response: Response):
+async def register_free(req: RegisterFreeBody, http_request: Request, response: Response):
     """Registers a brand-new FREE Ghost member (no payment, no labels
     beyond whatever Ghost applies on its own) and signs them straight
     in -- deliberately not routed through request-code/verify-code
@@ -388,6 +435,14 @@ async def register_free(req: RegisterFreeBody, response: Response):
     the point: a reader shouldn't have to wait on a code email just to
     keep reading the free story they were already reading.
 
+    That no-round-trip design does mean nothing here ever proves the
+    address is real, unlike request-code (which only emails an
+    ALREADY-existing member) -- so this checks the one thing that
+    matters instead: can the domain actually receive mail at all
+    (_domain_can_receive_mail), plus a per-IP rate limit so the check
+    can't just be brute-forced past with a pile of valid-but-random
+    domains.
+
     Ghost's own site-level "subscribe new members to newsletter X by
     default" setting applies automatically here, the same as every
     other free-member path in this codebase (nominations.py's
@@ -396,7 +451,21 @@ async def register_free(req: RegisterFreeBody, response: Response):
     if not JWT_SECRET:
         raise HTTPException(status_code=503, detail='Not configured')
 
+    client_ip = (
+        http_request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+        or (http_request.client.host if http_request.client else '0.0.0.0')
+    )
+    if not _check_register_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail='Too many requests. Please slow down.')
+
     email = req.email.lower().strip()
+    domain = email.rsplit('@', 1)[-1]
+    if not await asyncio.to_thread(_domain_can_receive_mail, domain):
+        raise HTTPException(
+            status_code=400,
+            detail="We couldn't verify that email address can receive mail. Please use a real one.",
+        )
+
     admin_token = _create_ghost_admin_token()
     if not admin_token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
