@@ -331,6 +331,29 @@ async def set_member_note(member_id: str, note: str, token: str) -> bool:
     return False
 
 
+async def delete_ghost_member(member_id: str, token: str) -> bool:
+    """Permanently deletes a Ghost member via the Admin API. No other
+    helper in this file does a real delete (everything else is a label
+    add/remove) -- this exists for admin_dashboard.py's free-registrations
+    cleanup panel, removing an obviously-junk register-free signup
+    (e.g. abc@gmail.com) entirely, including off the newsletter list.
+    Ghost's own API returns 204 on success. The caller is responsible
+    for deciding a member is safe to delete before calling this --
+    it does no judgment of its own."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.delete(
+                f'{GHOST_URL}/ghost/api/admin/members/{member_id}/',
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code == 204:
+            return True
+        logger.warning(f'Ghost member delete HTTP {r.status_code}: {r.text[:200]}')
+    except Exception as e:
+        logger.warning(f'Ghost member delete failed: {e!r}')
+    return False
+
+
 async def ensure_member_labeled(
     email: str, name: str, labels: list[str], token: str,
     strip_unintended_paid_labels: bool = False, note: str = '',

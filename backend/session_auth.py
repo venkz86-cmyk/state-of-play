@@ -470,7 +470,11 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     if not admin_token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
-    member = await create_ghost_member(email, (req.name or '').strip(), [], admin_token)
+    # Tagged (rather than the empty label list this used to pass) so an
+    # admin cleanup panel can reliably tell a register-free signup apart
+    # from every other kind of Ghost member -- there was no way to do
+    # that before this label existed.
+    member = await create_ghost_member(email, (req.name or '').strip(), ['email-gate-signup'], admin_token)
     if not member:
         raise HTTPException(status_code=502, detail='Could not create account')
 

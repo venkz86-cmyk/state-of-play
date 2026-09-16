@@ -9,6 +9,7 @@ const TABS = [
   { to: '/admin/dashboard/corporate', label: 'Corporate accounts' },
   { to: '/admin/dashboard/trials', label: 'Trials' },
   { to: '/admin/dashboard/links', label: 'Links' },
+  { to: '/admin/dashboard/free-signups', label: 'Free signups' },
 ];
 
 export const AdminNav = () => (

@@ -38,9 +38,10 @@ from typing import Optional
 import httpx
 import jwt
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 
 from admin_auth import require_admin_key_or_session
-from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels
+from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels, delete_ghost_member
 from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from corporate import fetch_accounts as fetch_corporate_accounts
 
@@ -541,3 +542,86 @@ async def audit_image_captions(_admin: None = Depends(require_admin_key_or_sessi
         'flagged_count': len(flagged),
         'flagged': flagged,
     }
+
+
+def _is_junk_free_signup(member: dict) -> bool:
+    """A free-registration signup worth a manual look: either tagged
+    'email-gate-signup' (every register-free signup from here on --
+    see session_auth.py's register_free) or carrying no labels at all
+    (every one created before that label existed, e.g. the
+    abc@gmail.com case that prompted this panel) -- and, either way,
+    never actually paid. A real labeled free member (nominated-reader,
+    tier-trial, etc.) never matches this."""
+    label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+    if is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped'):
+        return False
+    return label_names == [] or label_names == ['email-gate-signup']
+
+
+@router.get('/api/admin/free-registrations')
+async def list_free_registrations(_admin: None = Depends(require_admin_key_or_session)):
+    """Free, email-gate-style signups worth a manual look -- register-free
+    creates a real Ghost member (joining the newsletter list) from
+    nothing more than a syntax-valid email, and a domain-deliverability
+    check can't catch an address like abc@gmail.com (real domain, junk
+    local part). This is the fast-cleanup counterpart: list them so
+    Venkat can spot and delete junk ones in one click instead of hunting
+    through Ghost's own admin UI by hand."""
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Could not create Ghost admin token')
+
+    members = await list_all_ghost_members(token)
+    rows = []
+    for m in members:
+        if not _is_junk_free_signup(m):
+            continue
+        label_names = [(lbl.get('name') or '') for lbl in (m.get('labels') or [])]
+        rows.append({
+            'id': m.get('id'),
+            'email': m.get('email'),
+            'name': m.get('name') or '',
+            'created_at': m.get('created_at'),
+            'label_names': label_names,
+            'reason': 'email-gate-signup' if label_names else 'no labels',
+        })
+    rows.sort(key=lambda r: r.get('created_at') or '', reverse=True)
+    return {'count': len(rows), 'members': rows}
+
+
+class DeleteFreeRegistrationBody(BaseModel):
+    member_id: str
+
+
+@router.post('/api/admin/free-registrations/delete')
+async def delete_free_registration(
+    req: DeleteFreeRegistrationBody, _admin: None = Depends(require_admin_key_or_session),
+):
+    """Deletes one flagged member from Ghost entirely, including off the
+    newsletter list. Re-checks the member still qualifies as junk right
+    before deleting -- never trusts a client-supplied id alone, so a
+    stale or mistaken call (e.g. someone paid in the meantime) can't
+    delete a real member."""
+    if not GHOST_ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Could not create Ghost admin token')
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r = await client.get(
+            f'{GHOST_URL}/ghost/api/admin/members/{req.member_id}/',
+            params={'include': 'labels'},
+            headers={'Authorization': f'Ghost {token}'},
+        )
+    if r.status_code != 200 or not r.json().get('members'):
+        raise HTTPException(status_code=404, detail='Member not found')
+    member = r.json()['members'][0]
+    if not _is_junk_free_signup(member):
+        raise HTTPException(status_code=403, detail='This member no longer qualifies for cleanup deletion')
+
+    if not await delete_ghost_member(req.member_id, token):
+        raise HTTPException(status_code=502, detail='Could not delete member')
+    return {'deleted': True, 'email': member.get('email')}
