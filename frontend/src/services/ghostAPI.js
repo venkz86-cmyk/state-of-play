@@ -141,6 +141,13 @@ class GhostAPI {
 
     // Check if this is a paid/members-only post
     const isPremium = post.visibility === 'paid' || post.visibility === 'members';
+    // 'members' visibility is Ghost's own "any signed-up reader, free or
+    // paid" tier -- distinct from is_premium above, which still lumps it
+    // in with 'paid' for existing display copy (For Subscribers/Free
+    // labels across Home/Search/etc). This is the one place ArticleMockup.js
+    // needs the finer distinction, to show an email-registration gate
+    // instead of the payment paywall.
+    const requiresRegistration = post.visibility === 'members';
 
     // Get full content
     let fullContent = post.html || '';
@@ -171,6 +178,7 @@ class GhostAPI {
       author: authorName,
       publication: this.getPublicationType(post),
       is_premium: isPremium,
+      requires_registration: requiresRegistration,
       theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Reportage',
       primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
       tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),

@@ -144,6 +144,34 @@ export const AuthProvider = ({ children }) => {
     return { success: true, member };
   }, []);
 
+  // Free registration: no existing account to prove ownership of, so
+  // this skips requestCode/verifyCode's whole email-then-code round
+  // trip entirely -- the email just typed in IS the new account, and
+  // session_auth.py's /register-free mints a session immediately. Used
+  // by EmailGate.js to unlock a 'members'-visibility story on the spot.
+  const registerFree = useCallback(async (email, name = '') => {
+    let data;
+    try {
+      const res = await fetch('/api/auth/register-free', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+      data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Could not register. Please try again.' };
+      }
+    } catch (_e) {
+      throw new Error('Could not reach the server. Please try again.');
+    }
+
+    setSessionToken(data.session_token || '');
+    const member = shapeMember(data);
+    setUser(member);
+
+    return { success: true, member };
+  }, []);
+
   // Logout - forget the token locally (that's what actually signs the
   // reader out now) and tell the backend for good measure.
   const logout = useCallback(async () => {
@@ -164,6 +192,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       requestCode,
       verifyCode,
+      registerFree,
       logout,
       canAccessPremium,
       isFreeMember,
