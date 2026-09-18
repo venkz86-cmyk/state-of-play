@@ -13,9 +13,9 @@ This module has its OWN POST /api/gifts/subscription/create-order,
 not a plain reuse of razorpay_orders.py's -- 'standard' pricing is
 identical, but for the direct-delivery path (recipient's email known
 at checkout) it also has to guard against undercutting a real renewal:
-right now, pre-Oct-1, the 'standard' rate happens to sit below
+right now, pre-Oct-5, the 'standard' rate happens to sit below
 razorpay_subscriptions.py's existing-subscriber renewal rate (the
-renewal price was set as a discount off the POST-Oct-1 standard rate,
+renewal price was set as a discount off the POST-Oct-5 standard rate,
 not today's promotional one), and _resolve_access_start() below
 already stacks a gifted year onto an existing subscriber's
 paid-through date by design -- so without a floor, anyone already
@@ -25,7 +25,7 @@ _resolve_access_start() and floors the charged amount at the renewal
 rate when the recipient is already an active paid subscriber. Only
 the direct path can know the recipient before payment; the code/redeem
 path doesn't, which is a weaker version of the same gap and
-self-corrects the same way once the standard rate rises on Oct 1.
+self-corrects the same way once the standard rate rises on Oct 5.
 
 Two delivery paths, decided by whether the buyer knows the recipient's
 email at checkout time -- both charge the same amount immediately;

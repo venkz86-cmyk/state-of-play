@@ -2397,7 +2397,7 @@ except Exception as _e:
     record_payment = None
 
 # Mount dynamic Razorpay Orders checkout (replaces static Payment Buttons
-# for plan/add-on combinations ahead of the Oct 1 launch)
+# for plan/add-on combinations ahead of the Oct 5 launch)
 try:
     from razorpay_orders import router as razorpay_orders_router, init as razorpay_orders_init
     razorpay_orders_init(razorpay_client, recent_payments)
