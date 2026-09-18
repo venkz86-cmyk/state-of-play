@@ -26,7 +26,7 @@ const TRACK = [
 
 const FAQS = [
   ['What happens to my ten stories after 30 days?', 'They stay yours, permanently. That never changes, whether you subscribe or not. If you don’t subscribe, your account becomes a free membership, same as anyone who signs up for the Left Field briefing, with the original ten still there whenever you want them. What closes is everything published after you joined. Subscribing picks that back up, plus the rest of the archive.'],
-  ['Can I upgrade before the 30 days are up?', 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve, at ₹1,999 + GST, the launch price. It doesn’t go up.'],
+  ['Can I upgrade before the 30 days are up?', 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before 6 October and it’s ₹2,499 + GST, today’s rate. From 6 October it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'],
   ['Does it auto-renew into a subscription?', 'No. It is a one-time payment for thirty days. Nothing renews, nothing charges you again. If you want more after that, you choose it yourself.'],
   ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
 ];
