@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
-import { NominateReaderBlock } from '../components/NominateReaderBlock';
+import { GiftArticleModal } from '../components/GiftArticleModal';
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 import { TheTenPanel } from '../components/TheTenPanel';
@@ -23,6 +23,7 @@ export const AccountMockup = () => {
   const [saved, setSaved] = useState([]);
   const [details, setDetails] = useState(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
 
   useEffect(() => {
     setRecent(getReadingHistory().slice(0, 5));
@@ -307,13 +308,37 @@ export const AccountMockup = () => {
 
       {canAccessPremium && (
         <section className="max-w-[1080px] mx-auto px-6 lg:px-12 pb-20">
-          <NominateReaderBlock
-            subscriberName={user?.name || ''}
-            subscriberEmail={memberEmail}
-            subscriberGhostId={details?.id || details?.ghost_member_id || ''}
-          />
+          <div className="border-t border-[var(--rule)] pt-12 lg:pt-14 pb-8">
+            <Overline className="block mb-5">Reader to reader</Overline>
+            <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-4 max-w-[24ch]">
+              Know someone who should be <em className="italic font-normal">reading?</em>
+            </h2>
+            <p className="font-plex text-[15px] lg:text-base text-[var(--text-muted)] mb-8 max-w-[58ch]">
+              Send a story their way, free, or nominate them for two weeks of full access.
+            </p>
+            <button
+              type="button"
+              onClick={() => setGiftModalOpen(true)}
+              data-testid="account-gift-cta"
+              className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors"
+              style={{ borderRadius: 'var(--control-radius)' }}
+            >
+              Gift a story
+            </button>
+          </div>
         </section>
       )}
+
+      <GiftArticleModal
+        open={giftModalOpen}
+        onOpenChange={setGiftModalOpen}
+        isPaidSubscriber={!!canAccessPremium}
+        subscriberName={user?.name || ''}
+        subscriberEmail={memberEmail}
+        subscriberGhostId={details?.id || details?.ghost_member_id || ''}
+        postSlug=""
+        articleTitle=""
+      />
 
       <InvoiceRequestModal
         open={invoiceOpen}

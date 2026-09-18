@@ -5,17 +5,27 @@ import { useNominate } from '../hooks/useNominate';
 import { authHeader } from '../lib/sessionToken';
 
 /**
- * GiftArticleModal — subscriber-only "gift this story" surface.
+ * GiftArticleModal: subscriber-only "soft gift" surface, offering a
+ * choice between two free ways to bring someone else in (the paid
+ * gift-a-subscription flow at /gift is a deliberately separate, harder
+ * offer, not merged into this one).
  *
  * Two views:
- *  - 'link' (default, primary): a self-serve, anonymous share link via
- *    POST /api/gifts/create (auth is the real session cookie, not
- *    anything in the body). Copy link / Share on WhatsApp. v0: flat
- *    72-hour access window from creation, no per-browser grant limit.
- *  - 'email' (secondary, reached via "Nominate a reader instead"): the
- *    original nomination flow, unchanged underneath -- same backend
- *    (POST /api/nominations/submit -> Apps Script -> Sheet + Slack +
- *    nominee email), same quota/duplicate rules.
+ *  - 'link': a self-serve, anonymous share link via POST /api/gifts/create
+ *    (auth is the real session cookie, not anything in the body). Copy
+ *    link / Share on WhatsApp. v0: flat 72-hour access window from
+ *    creation, no per-browser grant limit. Needs a specific article
+ *    (postSlug) to scope the link to.
+ *  - 'email' (reached via "Nominate a reader instead"): the original
+ *    nomination flow, unchanged underneath -- same backend (POST
+ *    /api/nominations/submit -> Apps Script -> Sheet + Slack + nominee
+ *    email), same quota/duplicate rules. Works with or without a
+ *    specific story in mind.
+ *
+ * When opened with no postSlug (e.g. from the account page, which isn't
+ * anchored to any one article), this defaults straight to the 'email'
+ * view and hides the link-view toggle -- there's no story to generate a
+ * shareable link for.
  *
  * Non-subscribers see a gentle prompt to subscribe instead.
  */
@@ -29,7 +39,8 @@ export const GiftArticleModal = ({
   postSlug,
   articleTitle,
 }) => {
-  const [view, setView] = useState('link');
+  const hasStory = !!postSlug;
+  const [view, setView] = useState(hasStory ? 'link' : 'email');
   const [linkUrl, setLinkUrl] = useState('');
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState('');
@@ -94,7 +105,7 @@ export const GiftArticleModal = ({
       // Reset form state on close so re-opening feels fresh.
       // Preserve `blocked` — subscribers who hit quota shouldn't reset it.
       reset();
-      setView('link');
+      setView(hasStory ? 'link' : 'email');
       setLinkUrl('');
       setLinkError('');
       setLinkCopied(false);
@@ -154,7 +165,11 @@ export const GiftArticleModal = ({
                 className="font-editorial font-semibold text-[24px] md:text-[28px] leading-[1.15] text-[var(--text)] max-w-[28ch]"
                 data-testid="gift-modal-title"
               >
-                Some people shouldn’t <em className="italic font-normal">just read this one.</em>
+                {hasStory ? (
+                  <>Some people shouldn’t <em className="italic font-normal">just read this one.</em></>
+                ) : (
+                  <>Know someone who should be <em className="italic font-normal">reading?</em></>
+                )}
               </DialogTitle>
               <DialogDescription
                 className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
@@ -239,14 +254,16 @@ export const GiftArticleModal = ({
             </div>
           ) : (
             <div data-testid="gift-modal-email-view">
-              <button
-                type="button"
-                onClick={() => setView('link')}
-                data-testid="gift-modal-switch-link"
-                className="font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors mb-6"
-              >
-                ← Get a shareable link instead
-              </button>
+              {hasStory && (
+                <button
+                  type="button"
+                  onClick={() => setView('link')}
+                  data-testid="gift-modal-switch-link"
+                  className="font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors mb-6"
+                >
+                  ← Get a shareable link instead
+                </button>
+              )}
 
               {blocked === 'quota' ? (
                 <div data-testid="gift-modal-blocked-quota" className="max-w-[46ch]">
