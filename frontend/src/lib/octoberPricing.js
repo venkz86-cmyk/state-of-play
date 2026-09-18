@@ -26,21 +26,32 @@ export const newSignupAnnualPricing = (isIndia) => {
   };
 };
 
-// The Ten's own upgrade price is flat -- deliberately never rises, to
-// keep the case for buying into The Ten simple while it's being pushed
-// hard right through 5 October (razorpay_orders.py's own
-// PLAN_PRICING['trial-upgrade'] carries the same, permanent numbers).
-// Same "new-signup launch rate minus the trial fee already paid" logic
-// both geos: IN ₹2,499 − ₹500 = ₹1,999; INTL $120 − $9 = $111.
+// Through 5 October, upgrading from The Ten costs exactly today's
+// direct-signup rate -- no discount for the ₹590/$9 trial fee already
+// paid (Venkat's explicit call). From 6 October, the new higher
+// direct-signup rate minus that trial fee takes over instead
+// (razorpay_orders.py's own PLAN_PRICING['trial-upgrade'] carries the
+// same numbers): IN ₹3,499 − ₹500 = ₹2,999; INTL $169 − $9 = $160.
 export const trialUpgradePricing = (isIndia) => {
+  const launch = isBeforeOctoberCutover();
   if (isIndia) {
-    return {
-      blurb: 'Upgrade any time before day 30: ₹1,999 + GST, thirteen months for the price of twelve.',
-      disclosure: '₹1,999 + 18% GST = ₹2,359. One payment, thirteen months of access.',
-    };
+    return launch
+      ? {
+          blurb: 'Upgrade before 6 October for ₹2,499 + GST, thirteen months for the price of twelve.',
+          disclosure: '₹2,499 + 18% GST = ₹2,949. One payment, thirteen months of access.',
+        }
+      : {
+          blurb: 'Upgrade any time before day 30 and pay the renewal rate, not the new-signup rate: ₹2,999 + GST, thirteen months for the price of twelve.',
+          disclosure: '₹2,999 + 18% GST = ₹3,539. One payment, thirteen months of access.',
+        };
   }
-  return {
-    blurb: 'Upgrade any time before day 30: $111, thirteen months for the price of twelve.',
-    disclosure: '$111. One payment, thirteen months of access.',
-  };
+  return launch
+    ? {
+        blurb: 'Upgrade before 6 October for $120, thirteen months for the price of twelve.',
+        disclosure: '$120. One payment, thirteen months of access.',
+      }
+    : {
+        blurb: 'Upgrade any time before day 30 and pay $160, thirteen months for the price of twelve.',
+        disclosure: '$160. One payment, thirteen months of access.',
+      };
 };
