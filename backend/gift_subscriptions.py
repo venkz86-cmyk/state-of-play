@@ -25,7 +25,7 @@ _resolve_access_start() and floors the charged amount at the renewal
 rate when the recipient is already an active paid subscriber. Only
 the direct path can know the recipient before payment; the code/redeem
 path doesn't, which is a weaker version of the same gap and
-self-corrects the same way once the standard rate rises on Oct 5.
+self-corrects the same way once the standard rate rises on Oct 6.
 
 Two delivery paths, decided by whether the buyer knows the recipient's
 email at checkout time -- both charge the same amount immediately;

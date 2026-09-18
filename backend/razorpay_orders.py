@@ -121,8 +121,8 @@ def _create_ghost_admin_token() -> Optional[str]:
 # The Ten simple while it's being pushed hard through 5 October.
 PLAN_PRICING = {
     'standard': {
-        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, until 5 October
-        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, until 5 October
+        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, through 5 October
+        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, through 5 October
     },
     'trial': {
         'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
@@ -154,15 +154,16 @@ PLAN_PRICING = {
 }
 
 # The new-signup rate rises from ₹2,499/$120 to ₹3,499/$169 at this
-# instant, 5 October (moved from 1 October -- Venkat's call, to keep
-# pushing The Ten right up to that date). Nothing else is gated on this
-# any more: the trial-upgrade launch discount used to also revert here,
-# but that price is now flat and never changes -- see PLAN_PRICING
+# instant, 6 October 00:00 IST -- 5 October runs the full day at the
+# current rate (moved from 1 October -- Venkat's call, to keep pushing
+# The Ten right through 5 October). Nothing else is gated on this any
+# more: the trial-upgrade launch discount used to also revert here, but
+# that price is now flat and never changes -- see PLAN_PRICING
 # ['trial-upgrade']'s own comment above.
 IST = timezone(timedelta(hours=5, minutes=30))
-OCT_1_CUTOFF = datetime(2026, 10, 5, tzinfo=IST)
+OCT_1_CUTOFF = datetime(2026, 10, 6, tzinfo=IST)
 
-# The new-signup rate itself, from 5 October on -- this is the one
+# The new-signup rate itself, from 6 October on -- this is the one
 # place that number is actually charged (a new signup never touches a
 # Subscription object at all, see the PLAN_PRICING comment above).
 NEW_SIGNUP_RATE_RISE_PRICING = {
