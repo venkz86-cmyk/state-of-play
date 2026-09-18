@@ -1,6 +1,6 @@
 """
 razorpay_orders.py — dynamic Razorpay Orders API checkout, built ahead of the
-October 1st anniversary launch (Student, Trial, WhatsApp add-on all ship
+October 5th anniversary launch (Student, Trial, WhatsApp add-on all ship
 together that day).
 
 The two live Razorpay Payment Buttons (still untouched, still working) can
@@ -105,18 +105,25 @@ def _create_ghost_admin_token() -> Optional[str]:
 # plan -> country -> price. Amounts are in the smallest currency unit
 # (paise for INR, cents for USD), as Razorpay's Orders API requires.
 #
-# 'standard' stays the one-time bridge price for X (anyone signing up
-# before the old rate retires) — unchanged, see razorpay_subscriptions.py's
-# module docstring for the full X/Y/Z picture. 'trial-upgrade' is a
-# DELIBERATELY separate plan from the 'existing' Subscription rate in
-# razorpay_subscriptions.py, even though the amount is identical
-# (₹2,999 + GST): an upgrade from The Ten carries the thirteen-months-
-# for-twelve bonus (see admin_dashboard.py's _compute_expiry), which only
-# applies to this plan, not to a normal renewal at the same price.
+# 'standard' is a brand-new signup's one-time payment -- always a plain
+# Order, never a Subscription. A new subscriber only ever sees and pays
+# the current new-signup rate, once; they don't set up auto-renewal
+# until they actually come back to renew a year later, at which point
+# they're an "existing" subscriber and use razorpay_subscriptions.py's
+# single-step Subscription checkout instead, at the (lower) renewal
+# rate. No promise about a future price is ever made at signup time --
+# next year's rate is next year's decision. 'trial-upgrade' is a
+# DELIBERATELY separate plan from razorpay_subscriptions.py's renewal
+# rate, even though the amount lands on the same number from 6 October
+# on: an upgrade from The Ten carries the thirteen-months-for-twelve
+# bonus (see admin_dashboard.py's _compute_expiry), which only applies
+# to this plan, not to a normal renewal at the same price. The amount
+# here is the STEADY-STATE (post-6-October) figure -- see
+# TRIAL_UPGRADE_LAUNCH_PRICING below for the cheaper pre-cutoff price.
 PLAN_PRICING = {
     'standard': {
-        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949
-        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120
+        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, through 5 October
+        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, through 5 October
     },
     'trial': {
         'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
@@ -126,7 +133,7 @@ PLAN_PRICING = {
         'IN': {'amount': 177000, 'currency': 'INR', 'label': 'Student Membership'},  # ₹1,500 + 18% GST = ₹1,770
     },
     'trial-upgrade': {
-        'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539
+        'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539 -- new ₹3,499 rate minus the ₹590 trial fee already paid
         'INTL': {'amount': 16000, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten)'},  # $169 new-signup rate minus the $9 trial fee = $160
     },
     # Team-5/Team-10: replaces the static Razorpay Payment Links (opening
@@ -146,20 +153,31 @@ PLAN_PRICING = {
     },
 }
 
-# Launch-window discount on the trial-upgrade price: The Ten launches
-# 15 September, and Venkat's call is that upgraders in the window before
-# the 1 October rate change pay a cheaper launch price than the
-# steady-state rate above, reverting automatically at the same instant
-# the new-signup rate goes live. Same "new-signup rate minus the trial
-# fee already paid" logic both sides of the cutoff and both geos:
-# IN pre-Oct-1 ₹2,499 − ₹500 = ₹1,999; INTL pre-Oct-1 $120 − $9 = $111
-# (post-Oct-1 versions land in PLAN_PRICING['trial-upgrade'] above:
-# ₹3,499 − ₹500 = ₹2,999, $169 − $9 = $160).
+# Everything below pivots on the same instant: 6 October 00:00 IST, when
+# the new-signup rate rises from ₹2,499/$120 to ₹3,499/$169, and the
+# trial-upgrade launch discount (below) ends. 5 October runs the full
+# day at the current rate (moved from 1 October -- Venkat's call, to
+# keep pushing The Ten right through 5 October).
 IST = timezone(timedelta(hours=5, minutes=30))
-TRIAL_UPGRADE_LAUNCH_CUTOFF = datetime(2026, 10, 1, tzinfo=IST)
+OCT_1_CUTOFF = datetime(2026, 10, 6, tzinfo=IST)
+
+# The new-signup rate itself, from 6 October on -- this is the one
+# place that number is actually charged (a new signup never touches a
+# Subscription object at all, see the PLAN_PRICING comment above).
+NEW_SIGNUP_RATE_RISE_PRICING = {
+    'IN': {'amount': 412900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹3,499 + 18% GST = ₹4,129
+    'INTL': {'amount': 16900, 'currency': 'USD', 'label': 'Annual Membership'},  # $169
+}
+
+# Launch-window price on the trial-upgrade: through 5 October, upgrading
+# costs exactly today's direct-signup rate -- no discount for the trial
+# fee already paid, Venkat's explicit call. From 6 October, PLAN_PRICING
+# ['trial-upgrade'] above takes over instead: the new, higher direct
+# rate minus the ₹590/$9 trial fee, so the trial fee is effectively
+# refunded for anyone who upgrades after the price rise.
 TRIAL_UPGRADE_LAUNCH_PRICING = {
-    'IN': {'amount': 235900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # ₹1,999 + 18% GST = ₹2,359
-    'INTL': {'amount': 11100, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten — launch price)'},  # $111
+    'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten, launch price)'},  # ₹2,499 + 18% GST = ₹2,949
+    'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten, launch price)'},  # $120
 }
 
 
@@ -169,8 +187,11 @@ def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
         return None
     geo = country if country in plans else ('IN' if 'IN' in plans else None)
     config = plans.get(geo)
-    if plan == 'trial-upgrade' and datetime.now(IST) < TRIAL_UPGRADE_LAUNCH_CUTOFF:
+    before_cutoff = datetime.now(IST) < OCT_1_CUTOFF
+    if plan == 'trial-upgrade' and before_cutoff:
         config = TRIAL_UPGRADE_LAUNCH_PRICING.get(geo, config)
+    elif plan == 'standard' and not before_cutoff:
+        config = NEW_SIGNUP_RATE_RISE_PRICING.get(geo, config)
     return config
 
 

@@ -26,9 +26,9 @@ export const GiftMockup = () => {
   const [result, setResult] = useState(null);
 
   // Same rate a new signup pays for themselves (razorpay_orders.py's
-  // PLAN_PRICING['standard'], date-gated at the same Oct 1 cutoff) --
-  // a gift is basically a new subscription, so it follows the new-
-  // signup price on both sides of Oct 1, not a separate gift price.
+  // PLAN_PRICING['standard'], date-gated at the same 5 October cutoff)
+  // -- a gift is basically a new subscription, so it follows the new-
+  // signup price on both sides of that date, not a separate gift price.
   const pricingInfo = newSignupAnnualPricing(isIndia);
   const gstTotal = isBeforeOctoberCutover() ? '₹2,949' : '₹4,129';
 
