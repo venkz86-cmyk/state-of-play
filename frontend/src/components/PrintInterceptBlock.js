@@ -12,8 +12,8 @@ import { useNominate } from '../hooks/useNominate';
  * Two variants:
  *   • isPaidSubscriber=true  → nominate form (real <input>/<textarea>
  *     elements — Chrome/Safari/Firefox print dialogs render them with
- *     visible borders). Shares state + validation with NominateReaderBlock
- *     via the useNominate() hook.
+ *     visible borders). Shares state + validation with GiftArticleModal's
+ *     nominate view via the useNominate() hook.
  *   • isPaidSubscriber=false → simpler "this piece doesn't travel well"
  *     block with a CTA pointing back to stateofplay.club.
  *

@@ -7,7 +7,7 @@ const CONTEXT_MAX = 200;
 
 /**
  * Shared submission + validation logic for the two nominate surfaces:
- *   • NominateReaderBlock (screen — bottom of every article)
+ *   • GiftArticleModal's 'email' view (the soft-gift modal's nominate choice)
  *   • PrintInterceptBlock (print / save-as-PDF intercept)
  *
  * Both post the same payload to POST /api/nominations/submit. Keeping the

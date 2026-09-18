@@ -5,10 +5,11 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPricing';
 
-// Buy the real annual membership for someone else -- distinct from
-// NominateReaderBlock's free 14-day taste and GiftArticleModal's
-// 72-hour single-article link. Same price a buyer would pay for
-// themselves (razorpay_orders.py's own PLAN_PRICING['standard']);
+// Buy the real annual membership for someone else -- the deliberately
+// separate, paid/transactional gift, distinct from GiftArticleModal's
+// free "soft gift" (a 72-hour single-article link or a 14-day
+// nomination, offered as a choice there). Same price a buyer would pay
+// for themselves (razorpay_orders.py's own PLAN_PRICING['standard']);
 // the only choice here is who ends up with the access, not what it
 // costs.
 

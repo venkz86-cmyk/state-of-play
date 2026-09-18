@@ -9,7 +9,6 @@ import { ShareRow } from '../components/ShareRow';
 import { BookmarkButton } from '../components/BookmarkButton';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
-import { NominateReaderBlock } from '../components/NominateReaderBlock';
 import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
 import { GiftArticleModal } from '../components/GiftArticleModal';
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
@@ -427,8 +426,7 @@ export const ArticleMockup = () => {
       {/* Comments — real Ghost member threads for subscribers; a subscribe
           nudge for everyone else. Gated the same as the rest of the page:
           members only, matching Ghost's own comments setting. Sits right
-          after the article since it's a direct continuation of it, ahead
-          of the separate Nominate-a-reader action below. */}
+          after the article since it's a direct continuation of it. */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
         <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
           <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
@@ -461,17 +459,6 @@ export const ArticleMockup = () => {
         </div>
       </section>
 
-      {isMember && (
-        <section className="max-w-[680px] mx-auto px-6 lg:px-0 pb-16 lg:pb-20">
-          <NominateReaderBlock
-            variant="story"
-            subscriberName={effectiveSubscriberName}
-            subscriberEmail={effectiveSubscriberEmail}
-            subscriberGhostId={effectiveSubscriberGhostId}
-            postSlug={article?.slug || article?.id || ''}
-          />
-        </section>
-      )}
 
       {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks. Sits after
           Nominate deliberately: an exit link to another article shouldn't
