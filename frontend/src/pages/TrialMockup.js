@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -31,6 +31,43 @@ const FAQS = [
   ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
 ];
 
+// Some live payment methods (UPI/netbanking redirect flows on mobile, in
+// particular) take the browser through a full top-level navigation and
+// back, rather than staying inside Checkout's in-page iframe -- when that
+// happens, the confirmation state RazorpayCheckoutButton's `handler`
+// sets in memory is lost the moment the tab reloads, and a real buyer can
+// land back on this page with the payment succeeded but no confirmation
+// ever shown. This key persists just enough (email + a short TTL) to
+// redisplay the same "You're in" panel across that reload, without
+// needing any backend change -- start_trial() is already idempotent per
+// email and the welcome email already went out regardless of what this
+// page renders.
+const JUST_PAID_KEY = 'tsop_trial_just_paid';
+const JUST_PAID_TTL_MS = 30 * 60 * 1000; // 30 minutes -- long enough to cover a slow redirect round trip, short enough not to stick around on a later, unrelated visit
+
+const readPersistedJustPaidEmail = () => {
+  try {
+    const raw = window.sessionStorage.getItem(JUST_PAID_KEY);
+    if (!raw) return null;
+    const { email, ts } = JSON.parse(raw);
+    if (!email || !ts || Date.now() - ts > JUST_PAID_TTL_MS) {
+      window.sessionStorage.removeItem(JUST_PAID_KEY);
+      return null;
+    }
+    return email;
+  } catch (_e) {
+    return null; // private-mode/storage-blocked -- just skip the restore
+  }
+};
+
+const persistJustPaidEmail = (email) => {
+  try {
+    window.sessionStorage.setItem(JUST_PAID_KEY, JSON.stringify({ email, ts: Date.now() }));
+  } catch (_e) {
+    /* private-mode/storage-blocked -- confirmation just won't survive a reload */
+  }
+};
+
 export const TrialMockup = () => {
   const { user } = useAuth();
   const pricing = useGeoPricing();
@@ -38,6 +75,11 @@ export const TrialMockup = () => {
   const checkoutCountry = isIndia ? 'IN' : 'INTL';
   const [justPaidEmail, setJustPaidEmail] = useState(null);
   const [justUpgraded, setJustUpgraded] = useState(false);
+
+  useEffect(() => {
+    const restored = readPersistedJustPaidEmail();
+    if (restored) setJustPaidEmail(restored);
+  }, []);
 
   return (
     <MockupLayout testId="mockup-trial" seo={{ title: 'The Ten', path: '/trial', description: 'Ten of The State of Play’s most recent stories on the business of Indian sport, for ₹590. Stay the month and everything new is yours too.' }}>
@@ -100,6 +142,7 @@ export const TrialMockup = () => {
               disclosureText="One-time payment for a 30-day trial. Not a recurring subscription."
               onSuccess={(paidEmail) => {
                 setJustPaidEmail(paidEmail);
+                persistJustPaidEmail(paidEmail);
                 // A logged-in reader's session was fetched before this
                 // payment happened, so it still reads their pre-trial
                 // tier. A full reload re-runs AuthContext's bootstrap

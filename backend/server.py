@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 
 from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
-from payments import get_last_payment_for_email, compute_synthetic_expiry
+from payments import get_last_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -330,22 +330,42 @@ async def get_member_details(request: MemberVerifyRequest):
                     label_names = [(lbl.get('name') or '').lower() for lbl in labels]
                     has_razorpay_label = 'paid-via-razorpay' in label_names
                     has_paid_label = has_razorpay_label or is_paid_from_labels(label_names)
+                    # A Trial ("The Ten") member should never look like a
+                    # real paid/comped subscriber here, even if the
+                    # still-live "Razorpay Payment Capture" Zap has left a
+                    # stray Ghost-native Subscription object (a $0/yearly
+                    # "Complimentary" grant) on this member from their ₹590
+                    # trial payment -- that object's mere existence is not
+                    # this backend's decision and doesn't belong driving
+                    # what a Trial reader's own account page shows.
+                    is_trial_member = 'tier-trial' in label_names
 
                     # 2. Ghost-native subscriptions
-                    subscriptions = member.get('subscriptions', []) or []
+                    subscriptions = [] if is_trial_member else (member.get('subscriptions', []) or [])
 
                     is_paid = (
                         has_paid_label
                         or status in ['paid', 'comped']
                         or len(subscriptions) > 0
-                    )
+                    ) and not is_trial_member
 
                     # Resolve dates with the right source:
                     subscription_start = None
                     subscription_end = None
                     subscription_status = None
 
-                    if subscriptions:
+                    if is_trial_member:
+                        # Deliberately left None -- AccountMockup.js's own
+                        # "Time left" stat already comes from
+                        # /api/trial/status (TheTenPanel.jsx), the real
+                        # source of truth for a Trial member's dates.
+                        # Anything computed here (a stray Zap-created
+                        # comp subscription, or has_razorpay_label's
+                        # 365-day synthetic-expiry math, which has no
+                        # notion of Trial's 30-day cycle at all) would
+                        # only ever be wrong for this tier.
+                        pass
+                    elif subscriptions:
                         sub = subscriptions[0]
                         subscription_start = sub.get('start_date') or sub.get('created_at')
                         subscription_end = sub.get('current_period_end')
@@ -1251,10 +1271,14 @@ async def razorpay_webhook(request: Request):
                                 f"Payment ID: {payment_id} | Contact: {contact} | Amount: {amount}"
                             )
 
+                            # See razorpay_orders.py's verify_payment for why
+                            # this checks real payment history rather than
+                            # whether the Ghost member already existed.
+                            strip_stray_paid_labels = plan == 'trial' and not await has_paid_beyond_trial(email)
                             wanted_labels = PLAN_LABELS.get(plan, PLAN_LABELS['standard'])
                             member = await ensure_member_labeled(
                                 email, name, wanted_labels, token,
-                                strip_unintended_paid_labels=(plan == 'trial'),
+                                strip_unintended_paid_labels=strip_stray_paid_labels,
                                 note=note,
                             )
                             if member:

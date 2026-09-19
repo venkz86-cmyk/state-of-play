@@ -388,14 +388,18 @@ async def ensure_member_labeled(
     Payment Capture" Zap is not yet plan-aware — it applies its generic
     paid labels to ANY successful payment, ₹590 Trial included, which
     would silently grant full access the moment a real trial payment
-    lands, regardless of whether/when the Zap gets fixed. When set, and
-    only for a member who did NOT exist a moment ago (never touches an
-    existing member's prior history — a genuine paying member separately
-    buying a trial keeps their real access), any label in PAID_LABELS
-    that isn't part of the intended `labels` is stripped. On a brand-new
-    signup, such a label can only have come from something else racing
-    this same payment — there is no legitimate prior state it could be
-    honoring."""
+    lands, regardless of whether/when the Zap gets fixed. Callers only
+    pass True after checking payments.has_paid_beyond_trial(email) is
+    False — i.e. this email has no genuine non-Trial payment on our own
+    ledger — so a real subscriber who separately buys a Trial never has
+    their actual paid labels stripped. That check, not whether the
+    Ghost member already existed, is what makes this safe: an already-
+    existing free/newsletter member buying their first Trial is exactly
+    as eligible for the strip as a brand-new signup, since "existed in
+    Ghost before" and "has genuinely paid us before" are different
+    things. When set, any label in PAID_LABELS that isn't part of the
+    intended `labels` is stripped — it can only have come from
+    something else (most likely that same Zap) racing this payment."""
     member = await find_ghost_member(email, token)
     is_new_signup = member is None
     if not member:
@@ -417,12 +421,15 @@ async def ensure_member_labeled(
             if await add_member_label(member['id'], existing_labels, label):
                 existing_labels.append(label)
 
-    if strip_unintended_paid_labels and is_new_signup:
+    if strip_unintended_paid_labels:
         stray = [l for l in existing_labels if l in PAID_LABELS and l not in labels]
         for label in stray:
             if await remove_member_label(member['id'], existing_labels, label, token):
                 existing_labels.remove(label)
-                logger.info(f'Stripped unintended paid label {label!r} from new trial signup {email}')
+                logger.info(
+                    f'Stripped unintended paid label {label!r} from '
+                    f'{"new" if is_new_signup else "existing"} trial signup {email}'
+                )
 
     return member
 

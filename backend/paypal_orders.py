@@ -58,7 +58,7 @@ from paypal_client import paypal_request, is_configured, amount_minor_units_to_p
 from razorpay_orders import _resolve_plan_config, _create_ghost_admin_token, TEAM_SEATS
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label
 from trial_tracking import start_trial
-from payments import record_payment
+from payments import record_payment, has_paid_beyond_trial
 from session_auth import get_current_member
 
 logger = logging.getLogger(__name__)
@@ -156,9 +156,12 @@ async def paypal_capture_order(req: CaptureOrderRequest, request: Request):
     email = session['email'] if session else req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
+    # See razorpay_orders.py's verify_payment for why this checks real
+    # payment history rather than whether the Ghost member already existed.
+    strip_stray_paid_labels = req.plan == 'trial' and not await has_paid_beyond_trial(email)
     member = await ensure_member_labeled(
         email, req.name or '', wanted_labels, token,
-        strip_unintended_paid_labels=(req.plan == 'trial'),
+        strip_unintended_paid_labels=strip_stray_paid_labels,
     )
     if not member:
         raise HTTPException(

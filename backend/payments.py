@@ -323,6 +323,24 @@ async def get_last_payment_for_email(email: str) -> Optional[dict]:
     }
 
 
+async def has_paid_beyond_trial(email: str) -> bool:
+    """True if this email has a real, non-Trial payment on our own
+    ledger -- used to gate ensure_member_labeled's stray-paid-label
+    strip (tiers.py) so a genuine subscriber who separately buys a
+    ₹590 Trial never has real paid labels stripped, while a member who
+    has only ever bought a Trial (and picked up an unintended paid
+    label from the still-live "Razorpay Payment Capture" Zap) does get
+    cleaned up -- regardless of whether they were a brand-new Ghost
+    signup or already existed as a free/newsletter member. Callers
+    check this BEFORE recording the current payment (fetch_and_record
+    hasn't run yet at that point in verify_payment), so a first-ever
+    Trial purchase never counts itself as prior history."""
+    if _db is None:
+        return False
+    doc = await _db.payments.find_one({'email': email.lower().strip(), 'plan': {'$ne': 'trial'}})
+    return doc is not None
+
+
 # A real paid annual member's cheap expiry estimate (no Ghost-native
 # subscription/comp end date to trust instead) -- last real payment's
 # date + 365 days, +30 more for a trial-upgrade payment's
