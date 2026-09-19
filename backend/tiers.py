@@ -60,6 +60,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
+from payments import has_paid_beyond_trial
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,43 @@ def is_paid_from_labels(label_names: list[str]) -> bool:
         any(label in label_names for label in PAID_LABELS)
         or any(name.startswith('team-') for name in label_names)
     )
+
+
+async def is_genuinely_paid(
+    label_names: list[str], status: str, email: str, has_native_subscription: bool = False,
+) -> bool:
+    """The one paid-access check every real gate in this codebase should
+    call -- session_auth.py, server.py's article-content endpoint, and
+    others each used to carry their own copy of
+    `is_paid_from_labels(...) or status in ('paid', 'comped')` (some also
+    OR'd with `len(subscriptions) > 0`), which drifted, and none of which
+    treated a Trial ("The Ten") member as a special case.
+
+    'tier-trial' can legitimately coexist with a genuine paid signal only
+    when the member separately, really bought full access -- a direct
+    Standard/Team/Student purchase never touches 'tier-trial' at all, and
+    upgrading via 'trial-upgrade' specifically REMOVES 'tier-trial'
+    (razorpay_orders.py's verify_payment), so a real upgrade can never
+    leave the two coexisting. Any other case where 'tier-trial' sits
+    alongside a paid-looking label, Ghost's own `status`, or a native
+    Subscription object can only be explained by something outside this
+    backend's control -- confirmed to be the still-live "Razorpay Payment
+    Capture" Zap, which labels/comps every successful charge regardless
+    of plan, ₹590 Trial included -- not a real purchase. So for a
+    'tier-trial' member, the raw signal is trusted only once
+    payments.has_paid_beyond_trial(email) confirms a real, separate
+    non-Trial payment is actually on file. Without this, a mislabeled (or
+    Zap-comped) Trial member reads as a full paid subscriber everywhere,
+    which is exactly what let a ₹590 Trial purchase unlock the entire
+    paid archive instead of just its own ten-story snapshot."""
+    raw_paid = (
+        is_paid_from_labels(label_names)
+        or status in ('paid', 'comped')
+        or has_native_subscription
+    )
+    if raw_paid and 'tier-trial' in label_names:
+        return await has_paid_beyond_trial(email)
+    return raw_paid
 
 
 # plan -> Ghost labels a successful payment for that plan confers.
@@ -376,14 +414,18 @@ async def ensure_member_labeled(
     Payment Capture" Zap is not yet plan-aware — it applies its generic
     paid labels to ANY successful payment, ₹590 Trial included, which
     would silently grant full access the moment a real trial payment
-    lands, regardless of whether/when the Zap gets fixed. When set, and
-    only for a member who did NOT exist a moment ago (never touches an
-    existing member's prior history — a genuine paying member separately
-    buying a trial keeps their real access), any label in PAID_LABELS
-    that isn't part of the intended `labels` is stripped. On a brand-new
-    signup, such a label can only have come from something else racing
-    this same payment — there is no legitimate prior state it could be
-    honoring."""
+    lands, regardless of whether/when the Zap gets fixed. Callers only
+    pass True after checking payments.has_paid_beyond_trial(email) is
+    False — i.e. this email has no genuine non-Trial payment on our own
+    ledger — so a real subscriber who separately buys a Trial never has
+    their actual paid labels stripped. That check, not whether the
+    Ghost member already existed, is what makes this safe: an already-
+    existing free/newsletter member buying their first Trial is exactly
+    as eligible for the strip as a brand-new signup, since "existed in
+    Ghost before" and "has genuinely paid us before" are different
+    things. When set, any label in PAID_LABELS that isn't part of the
+    intended `labels` is stripped — it can only have come from
+    something else (most likely that same Zap) racing this payment."""
     member = await find_ghost_member(email, token)
     is_new_signup = member is None
     if not member:
@@ -405,12 +447,15 @@ async def ensure_member_labeled(
             if await add_member_label(member['id'], existing_labels, label):
                 existing_labels.append(label)
 
-    if strip_unintended_paid_labels and is_new_signup:
+    if strip_unintended_paid_labels:
         stray = [l for l in existing_labels if l in PAID_LABELS and l not in labels]
         for label in stray:
             if await remove_member_label(member['id'], existing_labels, label, token):
                 existing_labels.remove(label)
-                logger.info(f'Stripped unintended paid label {label!r} from new trial signup {email}')
+                logger.info(
+                    f'Stripped unintended paid label {label!r} from '
+                    f'{"new" if is_new_signup else "existing"} trial signup {email}'
+                )
 
     return member
 

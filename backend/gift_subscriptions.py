@@ -95,7 +95,7 @@ from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS, _resolve_pla
 # rate for someone who was never subscribed, not relevant here.
 from razorpay_subscriptions import SUBSCRIPTION_PLANS as _SUBSCRIPTION_PLANS
 RENEWAL_PLANS = _SUBSCRIPTION_PLANS['existing']
-from tiers import ensure_member_labeled, find_ghost_member, is_paid_from_labels
+from tiers import ensure_member_labeled, find_ghost_member, is_genuinely_paid
 from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry
 from resend_email import send_email
 from session_auth import get_current_member
@@ -200,7 +200,11 @@ async def _resolve_access_start(email: str, token: str) -> tuple[datetime, bool]
     member = await find_ghost_member(email, token)
     if member:
         existing_labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
-        if is_paid_from_labels(existing_labels):
+        # tiers.is_genuinely_paid, not the raw label check -- a mislabeled
+        # Trial member (see tiers.py's own docstring on this) shouldn't
+        # have a gift wrongly stack onto a synthetic expiry computed from
+        # their trial payment.
+        if await is_genuinely_paid(existing_labels, member.get('status', 'free'), email):
             last_payment = await get_last_payment_for_email(email)
             existing_expiry_iso = compute_synthetic_expiry(last_payment) if last_payment else None
             if existing_expiry_iso:

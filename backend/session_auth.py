@@ -77,7 +77,7 @@ import jwt
 from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import find_ghost_member, create_ghost_member, is_paid_from_labels, resolve_tier
+from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier
 from resend_email import send_email
 
 logger = logging.getLogger(__name__)
@@ -226,7 +226,7 @@ async def get_current_member(request: Request) -> Optional[dict]:
         return None
 
     label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
-    is_paid = is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped')
+    is_paid = await is_genuinely_paid(label_names, member.get('status', 'free'), session['email'])
 
     return {
         'email': session['email'],
@@ -397,7 +397,7 @@ async def verify_code(req: VerifyCodeBody, response: Response):
     )
 
     label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
-    is_paid = is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped')
+    is_paid = await is_genuinely_paid(label_names, member.get('status', 'free'), email)
 
     return {
         'email': email,
@@ -493,7 +493,7 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     )
 
     label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
-    is_paid = is_paid_from_labels(label_names) or member.get('status') in ('paid', 'comped')
+    is_paid = await is_genuinely_paid(label_names, member.get('status', 'free'), email)
 
     return {
         'email': email,
