@@ -97,9 +97,15 @@ async def ensure_indexes():
 
 
 async def _fetch_recent_premium_slugs(limit: int = SNAPSHOT_SIZE) -> list[str]:
-    """The most recently published premium (paid-only) stories, same
-    visibility convention the frontend already uses (ghostAPI.js:
-    visibility === 'paid' || 'members')."""
+    """The most recently published premium (paid-only) stories. Only
+    visibility:'paid' counts as premium here -- 'members' visibility is
+    the free, email-gated tier (see EmailGate.js/register-free), so it
+    provides zero exclusive value to a Trial buyer; anyone can already
+    unlock it for free with just an email. This deliberately does NOT
+    match ghostAPI.js's own is_premium flag, which still folds 'paid'
+    and 'members' together for unrelated display-copy purposes -- that
+    distinction only matters for what a reader sees on the page, not
+    for what actually belongs in a Trial member's ten premium stories."""
     if not GHOST_CONTENT_API_KEY:
         return []
     try:
@@ -110,7 +116,7 @@ async def _fetch_recent_premium_slugs(limit: int = SNAPSHOT_SIZE) -> list[str]:
                     'key': GHOST_CONTENT_API_KEY,
                     'limit': limit,
                     'order': 'published_at desc',
-                    'filter': 'status:published+visibility:[paid,members]',
+                    'filter': 'status:published+visibility:paid',
                     'fields': 'slug,published_at',
                 },
             )
@@ -229,7 +235,7 @@ async def _count_premium_published_since(started_at: datetime) -> int:
                 params={
                     'key': GHOST_CONTENT_API_KEY,
                     'limit': 1,
-                    'filter': f"status:published+visibility:[paid,members]+published_at:>'{started_at.strftime('%Y-%m-%d %H:%M:%S')}'",
+                    'filter': f"status:published+visibility:paid+published_at:>'{started_at.strftime('%Y-%m-%d %H:%M:%S')}'",
                     'fields': 'slug',
                 },
             )
@@ -262,7 +268,7 @@ async def _fetch_bonus_slugs(started_at: datetime) -> list[str]:
                     'key': GHOST_CONTENT_API_KEY,
                     'limit': BONUS_SLUGS_LIMIT,
                     'order': 'published_at desc',
-                    'filter': f"status:published+visibility:[paid,members]+published_at:>'{started_at.strftime('%Y-%m-%d %H:%M:%S')}'",
+                    'filter': f"status:published+visibility:paid+published_at:>'{started_at.strftime('%Y-%m-%d %H:%M:%S')}'",
                     'fields': 'slug',
                 },
             )
@@ -278,13 +284,17 @@ async def _fetch_slug_visibility(slugs: list[str]) -> dict[str, str]:
     """slug -> Ghost's current visibility ('public', 'members', 'paid'),
     for whichever of the given slugs still exist and are published.
     Used to catch drift: a slug snapshotted into someone's permanent Ten
-    while it was paid/members can later be unlocked to public by an
-    editorial decision made well after that trial started (aging a
-    story out of the paywall is a normal, separate workflow this module
-    has no visibility into when it runs) -- the snapshot itself never
-    re-checks, so a member's "ten premium stories" can quietly include
-    one that's now free for everyone. A missing slug (deleted/renamed)
-    is simply absent from the returned dict, same as a fetch failure."""
+    while it was paid can later be unlocked to public, or moved to the
+    free/email-gated 'members' tier, by an editorial decision made well
+    after that trial started (aging a story out of the paywall is a
+    normal, separate workflow this module has no visibility into when
+    it runs) -- the snapshot itself never re-checks, so a member's "ten
+    premium stories" can quietly include one that's now free for
+    everyone, one way or the other. A missing slug (deleted/renamed) is
+    simply absent from the returned dict, same as a fetch failure --
+    callers must treat "absent" as "unknown," never as "confirmed
+    drifted," or a Ghost outage would look like every story drifting
+    at once."""
     if not GHOST_CONTENT_API_KEY or not slugs:
         return {}
     try:
@@ -580,15 +590,17 @@ async def list_trials(_admin: None = Depends(require_admin_key_or_session)):
 @router.get('/api/admin/trials/drift-check')
 async def trials_drift_check(_admin: None = Depends(require_admin_key_or_session)):
     """Scans every trial member's permanent snapshot_slugs for one that's
-    since been unlocked to a free/public visibility in Ghost -- see
-    _fetch_slug_visibility's own docstring for why this can happen well
-    after a trial starts, with this module having no way to know at the
-    time. Read-only: reports what's drifted so Venkat can pick a real
-    replacement story himself (an editorial judgment call, not something
-    to auto-pick) via the admin panel's per-member story editor
-    (GET .../{email}/stories, POST .../add-slug, POST .../remove-slug
-    below). Batches one Ghost lookup per unique slug across every
-    member, not one call per member."""
+    since stopped being an actual paid story -- either fully unlocked to
+    'public', or moved to 'members' (free, email-gated -- see
+    _fetch_recent_premium_slugs's own docstring for why that carries no
+    exclusive value either). See _fetch_slug_visibility's own docstring
+    for why this can happen well after a trial starts, with this module
+    having no way to know at the time. Read-only: reports what's drifted
+    so Venkat can pick a real replacement story himself (an editorial
+    judgment call, not something to auto-pick) via the admin panel's
+    per-member story editor (GET .../{email}/stories, POST
+    .../add-slug, POST .../remove-slug below). Batches one Ghost lookup
+    per unique slug across every member, not one call per member."""
     if _db is None:
         return {'affected': [], 'count': 0}
 
@@ -604,7 +616,12 @@ async def trials_drift_check(_admin: None = Depends(require_admin_key_or_session
     for record in records:
         drifted = [
             slug for slug in (record.get('snapshot_slugs') or [])
-            if visibility.get(slug) == 'public'
+            # Only a slug Ghost actually resolved and confirmed isn't
+            # 'paid' counts as drifted -- a slug missing from `visibility`
+            # (a total fetch failure, or Ghost being briefly unreachable)
+            # must NOT be treated the same way, or a transient API blip
+            # would falsely flag every member's every story as drifted.
+            if slug in visibility and visibility[slug] != 'paid'
         ]
         if drifted:
             affected.append({'email': record.get('email'), 'drifted_slugs': drifted})
@@ -615,16 +632,18 @@ ADMIN_CANDIDATE_STORIES_LIMIT = 1000  # a safety cap, not a practical one -- see
 
 
 async def _fetch_recent_premium_stories(limit: int = ADMIN_CANDIDATE_STORIES_LIMIT) -> list[dict]:
-    """Every paid/members story, titles included (an admin recognizes a
-    story by its headline, not its slug) -- the whole archive, paginated,
-    not just the most recent page. It's a custom Ten now, not an
-    auto-pick off the top of the feed, so Venkat needs to be able to
-    reach back to any past story, not only recent ones. Capped at
-    ADMIN_CANDIDATE_STORIES_LIMIT purely as a safety net against a
-    runaway loop; this admin picker is built for the hundreds-of-stories
-    scale this publication is actually at, same assumption
-    admin_dashboard.py's own docstring states for the rest of this
-    dashboard."""
+    """Every paid story, titles included (an admin recognizes a story by
+    its headline, not its slug) -- the whole archive, paginated, not
+    just the most recent page. It's a custom Ten now, not an auto-pick
+    off the top of the feed, so Venkat needs to be able to reach back to
+    any past story, not only recent ones. Only visibility:'paid' counts
+    -- see _fetch_recent_premium_slugs's own docstring for why a
+    'members' (free, email-gated) story doesn't belong in the picker
+    either. Capped at ADMIN_CANDIDATE_STORIES_LIMIT purely as a safety
+    net against a runaway loop; this admin picker is built for the
+    hundreds-of-stories scale this publication is actually at, same
+    assumption admin_dashboard.py's own docstring states for the rest
+    of this dashboard."""
     if not GHOST_CONTENT_API_KEY:
         return []
     stories: list[dict] = []
@@ -639,7 +658,7 @@ async def _fetch_recent_premium_stories(limit: int = ADMIN_CANDIDATE_STORIES_LIM
                         'limit': 100,
                         'page': page,
                         'order': 'published_at desc',
-                        'filter': 'status:published+visibility:[paid,members]',
+                        'filter': 'status:published+visibility:paid',
                         'fields': 'slug,title,published_at',
                     },
                 )
@@ -715,17 +734,20 @@ async def trial_stories_detail(email: str, _admin: None = Depends(require_admin_
 
 async def _validate_addable_slug(slug: str, existing_slugs: list[str]) -> None:
     """The one rule both the per-member and the global add-endpoints
-    need: not already in the list, and a real, currently published
-    paid/members story -- so neither can be used to add a free one by
-    mistake. Raises HTTPException(400) with a message naming which
+    need: not already in the list, and a real, currently published PAID
+    story -- so neither can be used to add a free one by mistake. A
+    'members'-visibility story doesn't qualify either: it's the free,
+    email-gated tier, unlockable by anyone at no cost, so it carries no
+    exclusive value for a Trial buyer (see _fetch_recent_premium_slugs's
+    docstring). Raises HTTPException(400) with a message naming which
     check failed; callers just await this and continue on success."""
     if slug in existing_slugs:
         raise HTTPException(status_code=400, detail=f'{slug!r} is already in this Ten')
     visibility = await _fetch_slug_visibility([slug])
-    if visibility.get(slug) not in ('paid', 'members'):
+    if visibility.get(slug) != 'paid':
         raise HTTPException(
             status_code=400,
-            detail=f'{slug!r} is not a currently published paid/members story',
+            detail=f'{slug!r} is not a currently published paid story',
         )
 
 
