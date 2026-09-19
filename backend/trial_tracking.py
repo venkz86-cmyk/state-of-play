@@ -294,7 +294,22 @@ async def _fetch_slug_visibility(slugs: list[str]) -> dict[str, str]:
     simply absent from the returned dict, same as a fetch failure --
     callers must treat "absent" as "unknown," never as "confirmed
     drifted," or a Ghost outage would look like every story drifting
-    at once."""
+    at once.
+
+    Ghost's CONTENT API only ever serves published posts -- there is no
+    'status' field to request or check here at all (that's an Admin-API
+    -only concept). A previous version of this function requested
+    'status' as a field and filtered on `== 'published'` anyway; Ghost
+    never actually returns that field via the Content API, so the check
+    silently matched nothing, meaning this function always returned an
+    empty dict, for every slug, since the day it was written. That
+    single bug meant _validate_addable_slug rejected every single
+    "Add" attempt regardless of the story's real visibility, and
+    trials_drift_check never once found real drift, because it never
+    saw a resolved visibility to compare against. Every post the
+    Content API returns for a live slug is published by definition, so
+    there is nothing left to filter on -- the dict is built directly
+    from the response."""
     if not GHOST_CONTENT_API_KEY or not slugs:
         return {}
     try:
@@ -305,11 +320,11 @@ async def _fetch_slug_visibility(slugs: list[str]) -> dict[str, str]:
                     'key': GHOST_CONTENT_API_KEY,
                     'limit': len(slugs),
                     'filter': f"slug:[{','.join(slugs)}]",
-                    'fields': 'slug,visibility,status',
+                    'fields': 'slug,visibility',
                 },
             )
         if r.status_code == 200:
-            return {p['slug']: p.get('visibility', '') for p in r.json().get('posts', []) if p.get('status') == 'published'}
+            return {p['slug']: p.get('visibility', '') for p in r.json().get('posts', [])}
         logger.warning(f'Ghost slug-visibility fetch HTTP {r.status_code}')
     except Exception as e:
         logger.warning(f'Ghost slug-visibility fetch failed: {e!r}')
