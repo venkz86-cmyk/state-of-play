@@ -151,7 +151,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="Filter recent premium stories..."
+                placeholder="Filter premium stories..."
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-[14px] py-2 mb-3 focus:outline-none focus:border-[var(--accent-burgundy)]"
               />
               <ul className="divide-y divide-[var(--rule)] border-y border-[var(--rule)] max-h-[240px] overflow-y-auto">

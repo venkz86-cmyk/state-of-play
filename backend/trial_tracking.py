@@ -611,36 +611,53 @@ async def trials_drift_check(_admin: None = Depends(require_admin_key_or_session
     return {'affected': affected, 'count': len(affected)}
 
 
-ADMIN_CANDIDATE_STORIES_LIMIT = 30  # plenty of recent premium stories to pick an addition from
+ADMIN_CANDIDATE_STORIES_LIMIT = 1000  # a safety cap, not a practical one -- see below
 
 
 async def _fetch_recent_premium_stories(limit: int = ADMIN_CANDIDATE_STORIES_LIMIT) -> list[dict]:
-    """Like _fetch_recent_premium_slugs, but for the admin picker below --
-    titles too (an admin recognizes a story by its headline, not its
-    slug), and a bigger limit than a real signup's fixed-10 snapshot."""
+    """Every paid/members story, titles included (an admin recognizes a
+    story by its headline, not its slug) -- the whole archive, paginated,
+    not just the most recent page. It's a custom Ten now, not an
+    auto-pick off the top of the feed, so Venkat needs to be able to
+    reach back to any past story, not only recent ones. Capped at
+    ADMIN_CANDIDATE_STORIES_LIMIT purely as a safety net against a
+    runaway loop; this admin picker is built for the hundreds-of-stories
+    scale this publication is actually at, same assumption
+    admin_dashboard.py's own docstring states for the rest of this
+    dashboard."""
     if not GHOST_CONTENT_API_KEY:
         return []
+    stories: list[dict] = []
+    page = 1
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(
-                f'{GHOST_URL}/ghost/api/content/posts/',
-                params={
-                    'key': GHOST_CONTENT_API_KEY,
-                    'limit': limit,
-                    'order': 'published_at desc',
-                    'filter': 'status:published+visibility:[paid,members]',
-                    'fields': 'slug,title,published_at',
-                },
-            )
-        if r.status_code == 200:
-            return [
-                {'slug': p['slug'], 'title': p.get('title', p['slug']), 'published_at': p.get('published_at')}
-                for p in r.json().get('posts', [])
-            ]
-        logger.warning(f'Ghost recent-premium-stories fetch HTTP {r.status_code}')
+            while True:
+                r = await client.get(
+                    f'{GHOST_URL}/ghost/api/content/posts/',
+                    params={
+                        'key': GHOST_CONTENT_API_KEY,
+                        'limit': 100,
+                        'page': page,
+                        'order': 'published_at desc',
+                        'filter': 'status:published+visibility:[paid,members]',
+                        'fields': 'slug,title,published_at',
+                    },
+                )
+                if r.status_code != 200:
+                    logger.warning(f'Ghost recent-premium-stories fetch HTTP {r.status_code} on page {page}')
+                    break
+                payload = r.json()
+                stories.extend([
+                    {'slug': p['slug'], 'title': p.get('title', p['slug']), 'published_at': p.get('published_at')}
+                    for p in payload.get('posts', [])
+                ])
+                pages = (payload.get('meta', {}).get('pagination') or {}).get('pages') or 1
+                if page >= pages or len(stories) >= limit:
+                    break
+                page += 1
     except Exception as e:
         logger.warning(f'Ghost recent-premium-stories fetch failed: {e!r}')
-    return []
+    return stories[:limit]
 
 
 async def _fetch_titles(slugs: list[str]) -> dict[str, str]:
