@@ -5,6 +5,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupHeader } from '../components/MockupHeader';
+import { SurveyBanner } from '../components/SurveyBanner';
 import { MockupFooter } from '../components/MockupFooter';
 import { PartnersBlock } from '../components/PartnersBlock';
 import { SEO } from '../components/SEO';
@@ -152,6 +153,7 @@ export const HomeMockup = () => {
         description="India's sports business publication. Reportage, analysis and intelligence from sport's most consequential rooms, written for the people who run the game."
       />
       <MockupHeader />
+      {isMember && <SurveyBanner />}
 
       {/* DATELINE — Schibsted Grotesk, #444, weight 400, "No. X · Season One" */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
