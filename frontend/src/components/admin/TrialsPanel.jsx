@@ -14,6 +14,8 @@ export const TrialsPanel = ({ onAuthError }) => {
   const [editingGlobal, setEditingGlobal] = useState(false);
   const [drifted, setDrifted] = useState(null);
   const [checkingDrift, setCheckingDrift] = useState(false);
+  const [auditResult, setAuditResult] = useState(null);
+  const [auditing, setAuditing] = useState(false);
 
   const load = async () => {
     try {
@@ -58,6 +60,25 @@ export const TrialsPanel = ({ onAuthError }) => {
       setError(e.message || 'Drift check failed.');
     } finally {
       setCheckingDrift(false);
+    }
+  };
+
+  // Flags a Trial member whose Ghost record still carries a stray
+  // paid-looking label/status/native-subscription -- see tiers.
+  // is_genuinely_paid, which already ignores this at read time; this is
+  // the proactive, surfaced version so it can be cleaned up in Ghost by
+  // hand instead of only ever being caught by accident.
+  const runAudit = async () => {
+    setAuditing(true);
+    setAuditResult(null);
+    try {
+      const result = await adminFetch('/api/admin/trials/audit');
+      setAuditResult(result);
+    } catch (e) {
+      if (e instanceof AdminAuthError) { onAuthError?.(); return; }
+      setError(e.message || 'Audit failed.');
+    } finally {
+      setAuditing(false);
     }
   };
 
@@ -177,6 +198,43 @@ export const TrialsPanel = ({ onAuthError }) => {
           className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
         >
           {checkingDrift ? 'Checking…' : 'Check for drifted stories'}
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
+        <div>
+          <p className="font-plex text-[13px] text-[var(--text-muted)]">
+            Checks every trial member's Ghost record for a stray paid label, status, or native
+            subscription left over from something outside this app (e.g. the now-retired Razorpay
+            Zap). Already ignored automatically wherever it matters, but flagged here so it can be
+            cleaned up in Ghost directly instead of only being caught by accident.
+          </p>
+          {auditResult && (
+            <div className="mt-2">
+              <p className="font-plex text-[13px] text-[var(--text)]">
+                {auditResult.flagged.length === 0
+                  ? `Nothing flagged, ${auditResult.checked} member${auditResult.checked === 1 ? '' : 's'} checked.`
+                  : `${auditResult.flagged.length} member${auditResult.flagged.length === 1 ? '' : 's'} flagged, of ${auditResult.checked} checked.`}
+              </p>
+              {auditResult.flagged.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {auditResult.flagged.map((f) => (
+                    <li key={f.email} className="font-plex text-[12.5px] text-[var(--text-muted)]">
+                      <span className="text-[var(--accent-burgundy)]">{f.email}</span> — {f.reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={runAudit}
+          disabled={auditing}
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
+        >
+          {auditing ? 'Checking…' : 'Check for stray paid state'}
         </button>
       </div>
 

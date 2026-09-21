@@ -58,16 +58,19 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import httpx
+import jwt
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
 from resend_email import send_email as _send_email
+from tiers import is_paid_from_labels, is_genuinely_paid
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_CONTENT_API_KEY = os.environ.get('GHOST_CONTENT_API_KEY', '')
+GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 TRIAL_DAYS = 30
@@ -600,6 +603,123 @@ async def list_trials(_admin: None = Depends(require_admin_key_or_session)):
             'reminder_winback_sent': record.get('reminder_winback_sent', False),
         })
     return {'trials': trials, 'count': len(trials)}
+
+
+def _create_ghost_admin_token() -> Optional[str]:
+    """JWT for Ghost Admin API; identical algorithm to tiers.py/server.py/
+    nominations.py/comments.py/etc. This module never needed the Admin
+    API before (only the Content API, for slug visibility) -- a small
+    local copy rather than importing tiers.py's private one, matching
+    how every other module here already keeps its own."""
+    if not GHOST_ADMIN_API_KEY or ':' not in GHOST_ADMIN_API_KEY:
+        return None
+    try:
+        kid, secret = GHOST_ADMIN_API_KEY.split(':', 1)
+        iat = int(datetime.now(timezone.utc).timestamp())
+        payload = {'iat': iat, 'exp': iat + 5 * 60, 'aud': '/admin/'}
+        return jwt.encode(payload, bytes.fromhex(secret), algorithm='HS256',
+                          headers={'kid': kid})
+    except Exception as e:
+        logger.warning(f'Ghost JWT mint failed: {e!r}')
+        return None
+
+
+async def _fetch_ghost_paid_signal(email: str, token: str) -> Optional[dict]:
+    """A Trial member's current Ghost labels/status/native-subscription
+    state, for the audit endpoint below -- the same three signals
+    tiers.is_genuinely_paid() itself takes, fetched fresh rather than
+    trusted from whatever's cached on the trial_members record (which
+    never stored any of this in the first place). Returns None if the
+    member's gone from Ghost entirely (skip, don't flag)."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/admin/members/',
+                params={'filter': f"email:'{email}'", 'include': 'labels,subscriptions'},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code != 200:
+            logger.warning(f'trials/audit: Ghost lookup HTTP {r.status_code} for {email}')
+            return None
+        members = r.json().get('members', [])
+        if not members:
+            return None
+        member = members[0]
+        label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+        return {
+            'label_names': label_names,
+            'status': member.get('status', 'free'),
+            'has_native_subscription': len(member.get('subscriptions') or []) > 0,
+        }
+    except Exception as e:
+        logger.warning(f'trials/audit: Ghost lookup failed for {email}: {e!r}')
+        return None
+
+
+@router.get('/api/admin/trials/audit')
+async def trials_audit(_admin: None = Depends(require_admin_key_or_session)):
+    """Flags any Trial member whose Ghost record still carries a
+    paid-looking signal (a stray label, Ghost's own status, or a native
+    Subscription object) that tiers.is_genuinely_paid() would now
+    correctly ignore -- i.e. exactly the state the now-retired "Razorpay
+    Payment Capture" Zap used to leave behind. That fix already stops
+    this from granting real access; this endpoint is the proactive,
+    surfaced version, so a stray record gets cleaned up in Ghost by
+    hand instead of only ever being caught by accident.
+
+    A genuine case -- someone who bought Trial, then separately made a
+    real non-Trial purchase -- is correctly NOT flagged: is_genuinely_paid
+    returns True for them too (payments.has_paid_beyond_trial confirms
+    the real payment), so the raw-vs-corrected gap this endpoint looks
+    for never opens up for them in the first place."""
+    if _db is None:
+        return {'checked': 0, 'flagged': []}
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+
+    checked = 0
+    flagged = []
+    async for record in _db.trial_members.find({}):
+        email = record.get('email')
+        if not email:
+            continue
+        signal = await _fetch_ghost_paid_signal(email, token)
+        if signal is None:
+            continue
+        checked += 1
+
+        label_names = signal['label_names']
+        status = signal['status']
+        has_native_subscription = signal['has_native_subscription']
+
+        raw_paid = (
+            is_paid_from_labels(label_names)
+            or status in ('paid', 'comped')
+            or has_native_subscription
+        )
+        corrected_paid = await is_genuinely_paid(
+            label_names, status, email, has_native_subscription=has_native_subscription,
+        )
+
+        if raw_paid and not corrected_paid:
+            reasons = []
+            stray_labels = [l for l in label_names if is_paid_from_labels([l])]
+            if stray_labels:
+                reasons.append(f'stray paid label(s): {", ".join(stray_labels)}')
+            if has_native_subscription:
+                reasons.append('a native Ghost subscription is still present')
+            if status in ('paid', 'comped') and not stray_labels and not has_native_subscription:
+                reasons.append(f"Ghost status is {status!r}")
+            flagged.append({
+                'email': email,
+                'label_names': label_names,
+                'status': status,
+                'has_native_subscription': has_native_subscription,
+                'reason': '; '.join(reasons) or 'paid-looking signal did not survive the genuine-payment check',
+            })
+
+    return {'checked': checked, 'flagged': flagged}
 
 
 @router.get('/api/admin/trials/drift-check')
