@@ -60,6 +60,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
+from payments import has_paid_beyond_trial
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,43 @@ def is_paid_from_labels(label_names: list[str]) -> bool:
         any(label in label_names for label in PAID_LABELS)
         or any(name.startswith('team-') for name in label_names)
     )
+
+
+async def is_genuinely_paid(
+    label_names: list[str], status: str, email: str, has_native_subscription: bool = False,
+) -> bool:
+    """The one paid-access check every real gate in this codebase should
+    call -- session_auth.py, server.py's article-content endpoint, and
+    others each used to carry their own copy of
+    `is_paid_from_labels(...) or status in ('paid', 'comped')` (some also
+    OR'd with `len(subscriptions) > 0`), which drifted, and none of which
+    treated a Trial ("The Ten") member as a special case.
+
+    'tier-trial' can legitimately coexist with a genuine paid signal only
+    when the member separately, really bought full access -- a direct
+    Standard/Team/Student purchase never touches 'tier-trial' at all, and
+    upgrading via 'trial-upgrade' specifically REMOVES 'tier-trial'
+    (razorpay_orders.py's verify_payment), so a real upgrade can never
+    leave the two coexisting. Any other case where 'tier-trial' sits
+    alongside a paid-looking label, Ghost's own `status`, or a native
+    Subscription object can only be explained by something outside this
+    backend's control -- confirmed to be the still-live "Razorpay Payment
+    Capture" Zap, which labels/comps every successful charge regardless
+    of plan, ₹590 Trial included -- not a real purchase. So for a
+    'tier-trial' member, the raw signal is trusted only once
+    payments.has_paid_beyond_trial(email) confirms a real, separate
+    non-Trial payment is actually on file. Without this, a mislabeled (or
+    Zap-comped) Trial member reads as a full paid subscriber everywhere,
+    which is exactly what let a ₹590 Trial purchase unlock the entire
+    paid archive instead of just its own ten-story snapshot."""
+    raw_paid = (
+        is_paid_from_labels(label_names)
+        or status in ('paid', 'comped')
+        or has_native_subscription
+    )
+    if raw_paid and 'tier-trial' in label_names:
+        return await has_paid_beyond_trial(email)
+    return raw_paid
 
 
 # plan -> Ghost labels a successful payment for that plan confers.

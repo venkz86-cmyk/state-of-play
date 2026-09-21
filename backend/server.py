@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
-from tiers import resolve_tier, is_paid_from_labels, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
+from tiers import resolve_tier, is_genuinely_paid, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
 from payments import get_last_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial
 
 ROOT_DIR = Path(__file__).parent
@@ -234,15 +234,15 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                             # so bespoke clients can be onboarded by Ghost label alone, no backend redeploy.
                             labels = member.get('labels', [])
                             label_names = [lbl.get('name', '').lower() for lbl in labels]
-                            has_paid_label = is_paid_from_labels(label_names)
-                            
-                            # User is paid if: status is paid/comped, OR has subscriptions, OR has paid labels
-                            is_paid = (
-                                status in ['paid', 'comped'] or 
-                                len(member.get('subscriptions', [])) > 0 or
-                                has_paid_label
+                            # Single source of truth (tiers.is_genuinely_paid) -- also
+                            # correctly excludes a Trial member whose paid-looking
+                            # label/status/subscription came from the still-live
+                            # "Razorpay Payment Capture" Zap rather than a real payment.
+                            is_paid = await is_genuinely_paid(
+                                label_names, status, request.email,
+                                has_native_subscription=len(member.get('subscriptions', [])) > 0,
                             )
-                            
+
                             has_sandbox_trial_label = 'sandbox-event-comp' in label_names
 
                             return MemberVerifyResponse(
@@ -250,7 +250,7 @@ async def verify_ghost_member(request: MemberVerifyRequest):
                                 is_paid=is_paid,
                                 email=member.get('email', request.email),
                                 name=member.get('name'),
-                                status=status if not has_paid_label else 'paid',
+                                status=status if not is_paid else 'paid',
                                 id=member.get('id'),
                                 trial_expired=has_sandbox_trial_label and not is_paid,
                                 tier=resolve_tier(label_names, is_paid),
@@ -329,7 +329,6 @@ async def get_member_details(request: MemberVerifyRequest):
                     labels = member.get('labels', []) or []
                     label_names = [(lbl.get('name') or '').lower() for lbl in labels]
                     has_razorpay_label = 'paid-via-razorpay' in label_names
-                    has_paid_label = has_razorpay_label or is_paid_from_labels(label_names)
                     # A Trial ("The Ten") member should never look like a
                     # real paid/comped subscriber here, even if the
                     # still-live "Razorpay Payment Capture" Zap has left a
@@ -339,15 +338,21 @@ async def get_member_details(request: MemberVerifyRequest):
                     # this backend's decision and doesn't belong driving
                     # what a Trial reader's own account page shows.
                     is_trial_member = 'tier-trial' in label_names
+                    native_subscriptions = member.get('subscriptions', []) or []
 
-                    # 2. Ghost-native subscriptions
-                    subscriptions = [] if is_trial_member else (member.get('subscriptions', []) or [])
+                    # Single source of truth (tiers.is_genuinely_paid) --
+                    # excludes a Trial member's stray paid label/status/
+                    # subscription unless a real, separate non-Trial
+                    # payment is on file for them.
+                    is_paid = await is_genuinely_paid(
+                        label_names, status, member.get('email') or request.email,
+                        has_native_subscription=len(native_subscriptions) > 0,
+                    )
 
-                    is_paid = (
-                        has_paid_label
-                        or status in ['paid', 'comped']
-                        or len(subscriptions) > 0
-                    ) and not is_trial_member
+                    # 2. Ghost-native subscriptions — zeroed for a Trial
+                    # member so the date/status branches below (display
+                    # only) never read a stray comp subscription either.
+                    subscriptions = [] if is_trial_member else native_subscriptions
 
                     # Resolve dates with the right source:
                     subscription_start = None
@@ -554,13 +559,21 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
             # meant this endpoint silently missed every label added there since
             # (tier-student, community-ftwtsop, nomination-access): the frontend
             # would show an article as unlocked while this endpoint still 403'd
-            # the actual full-text fetch behind the scenes. Now reads the same
-            # single source of truth session_auth.py's paywall gate already uses.
+            # the actual full-text fetch behind the scenes. Now calls
+            # tiers.is_genuinely_paid -- the actual single source of truth
+            # every paid gate in this codebase shares, which ALSO excludes a
+            # Trial member's stray paid label/status/native subscription
+            # (the still-live "Razorpay Payment Capture" Zap comps every
+            # successful charge regardless of plan) unless a real, separate
+            # non-Trial payment is on file for them. Without this, a
+            # mislabeled Trial member's `is_paid` reads True here and this
+            # endpoint serves every paid-visibility article in full, not
+            # just their own ten-story snapshot -- the actual bug, not just
+            # a display one.
             labels = [(lbl.get('name') or '').lower() for lbl in member.get('labels', []) or []]
-            is_paid = (
-                member.get('status') in ('paid', 'comped')
-                or len(member.get('subscriptions', []) or []) > 0
-                or is_paid_from_labels(labels)
+            is_paid = await is_genuinely_paid(
+                labels, member.get('status', 'free'), request.email,
+                has_native_subscription=len(member.get('subscriptions', []) or []) > 0,
             )
 
             # Fetch the article before deciding access -- a Trial ("The
