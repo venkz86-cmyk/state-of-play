@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { ghostAPI } from '../services/ghostAPI';
+import { ghostAPI, fixContentLinks } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
 import { MockupFooter } from '../components/MockupFooter';
@@ -143,7 +143,7 @@ export const ArticleMockup = () => {
         );
         if (!active) return;
         if (r.data?.html) {
-          setArticle((prev) => ({ ...prev, content: r.data.html }));
+          setArticle((prev) => ({ ...prev, content: fixContentLinks(r.data.html) }));
           if (isTrialTier) setTrialAllowed(true);
         }
       } catch (e) {
@@ -183,7 +183,7 @@ export const ArticleMockup = () => {
           { slug: article.id },
           { timeout: 10000 }
         );
-        if (active && r.data?.html) setGatedPreviewHtml(r.data.html);
+        if (active && r.data?.html) setGatedPreviewHtml(fixContentLinks(r.data.html));
       } catch (e) {
         // Non-fatal -- bodyHtml below falls back to whatever client-side
         // preview is available (Content API's own, then the excerpt).
