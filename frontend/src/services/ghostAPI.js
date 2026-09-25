@@ -12,6 +12,24 @@ const fixImageUrl = (url) => {
             .replace('https://stateofplay.club/content/', `${GHOST_URL}/content/`);
 };
 
+// The opposite direction of fixImageUrl, for a different reason: Ghost's
+// own editor auto-inserts an internal link (to another post on this same
+// site) using whatever domain Ghost itself is configured with -- the raw
+// the-state-of-play.ghost.io subdomain readers never otherwise see, not
+// the public stateofplay.club domain the rest of the site uses. Left
+// alone, a reader clicking one of those links lands on Ghost's own bare
+// site instead of ours -- and would hit a password wall entirely if
+// Ghost's own theme is ever locked down (Settings -> Make this site
+// private, a step worth taking once this is fixed). Applied to every
+// piece of article HTML this file hands back, so it covers both the
+// free-preview path here and the full-content fetch in ArticleMockup.js
+// (exported for that second call site).
+export const fixContentLinks = (html) => {
+  if (!html || !GHOST_URL) return html;
+  const ghostOrigin = GHOST_URL.replace(/\/+$/, '');
+  return html.split(ghostOrigin).join('https://www.stateofplay.club');
+};
+
 // Publication-routing tags — used internally to sort posts into The State
 // of Play vs The Left Field, not meaningful to a reader as a topic.
 const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'public']);
@@ -150,7 +168,7 @@ class GhostAPI {
     const requiresRegistration = post.visibility === 'members';
 
     // Get full content
-    let fullContent = post.html || '';
+    let fullContent = fixContentLinks(post.html || '');
     let previewContent = '';
     
     // Check if content has <!--more--> marker for paywall placement
