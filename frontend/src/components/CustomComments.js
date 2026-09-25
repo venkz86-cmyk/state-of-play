@@ -77,13 +77,14 @@ const LinkifiedText = ({ text }) => {
   return <>{nodes}</>;
 };
 
-/* Edit UI for a commenter's own, already-live comment. Submitting doesn't
-   change what's visible — the backend stores the proposal separately and a
-   human approves it (mirrors CommentForm's own pending-review UX below). */
-const EditCommentForm = ({ comment, user, onDone }) => {
+/* Edit UI for a commenter's own, already-live comment. Applies immediately
+   on save — no moderation queue, unlike a brand-new comment (the comment
+   was already reviewed once to get published; editing it is the author's
+   own call from there). onSaved lifts the new body/edited_at back into the
+   parent's comment list and closes the form. */
+const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
   const [body, setBody] = useState(comment.body);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   const unchanged = body.trim() === (comment.body || '').trim();
@@ -99,32 +100,16 @@ const EditCommentForm = ({ comment, user, onDone }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ author_email: user.email, body: body.trim() }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || 'Could not submit your edit.');
+        throw new Error(data.detail || 'Could not save your edit.');
       }
-      setSubmitted(true);
+      onSaved(data.body, data.edited_at);
     } catch (err) {
       setError(err.message || 'Something went wrong. Try again.');
-    } finally {
       setSubmitting(false);
     }
   };
-
-  if (submitted) {
-    return (
-      <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3" data-testid={`edit-submitted-${comment.id}`}>
-        Edit submitted — it'll replace the comment above once it's been reviewed.{' '}
-        <button
-          type="button"
-          onClick={onDone}
-          className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
-        >
-          Done
-        </button>
-      </p>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="mt-3">
@@ -144,7 +129,7 @@ const EditCommentForm = ({ comment, user, onDone }) => {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={onDone}
+            onClick={onCancel}
             disabled={submitting}
             className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors disabled:opacity-60"
           >
@@ -323,8 +308,14 @@ export const CustomComments = ({ postSlug, user }) => {
   const [editingId, setEditingId] = useState(null);
   const [expandedThreads, setExpandedThreads] = useState({});
 
-  const isOwnComment = (c) =>
-    !!user?.email && !!c.author_email && c.author_email.toLowerCase() === user.email.toLowerCase();
+  // Ownership is decided server-side now (is_own) — the public feed never
+  // sends back anyone's raw email, so there's nothing to compare here.
+  const isOwnComment = (c) => !!c.is_own;
+
+  const applyEditLocally = (commentId, newBody, editedAt) => {
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, body: newBody, edited_at: editedAt } : c)));
+    setEditingId(null);
+  };
 
   useEffect(() => {
     let active = true;
@@ -332,7 +323,8 @@ export const CustomComments = ({ postSlug, user }) => {
       setLoading(false);
       return;
     }
-    fetch(`${API}/api/comments/${postSlug}`)
+    const qs = user?.email ? `?viewer_email=${encodeURIComponent(user.email)}` : '';
+    fetch(`${API}/api/comments/${postSlug}${qs}`)
       .then((r) => r.json())
       .then((data) => {
         if (active) setComments(Array.isArray(data) ? data : []);
@@ -344,7 +336,7 @@ export const CustomComments = ({ postSlug, user }) => {
     return () => {
       active = false;
     };
-  }, [postSlug]);
+  }, [postSlug, user?.email]);
 
   const topLevel = comments.filter((c) => !c.parent_id);
   const repliesByParent = comments.reduce((acc, c) => {
@@ -379,7 +371,12 @@ export const CustomComments = ({ postSlug, user }) => {
                   {c.edited_at && <span> · edited</span>}
                 </p>
                 {editingId === c.id ? (
-                  <EditCommentForm comment={c} user={user} onDone={() => setEditingId(null)} />
+                  <EditCommentForm
+                    comment={c}
+                    user={user}
+                    onCancel={() => setEditingId(null)}
+                    onSaved={(newBody, editedAt) => applyEditLocally(c.id, newBody, editedAt)}
+                  />
                 ) : (
                   <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
                     <LinkifiedText text={c.body} />
@@ -398,7 +395,12 @@ export const CustomComments = ({ postSlug, user }) => {
                           {r.edited_at && <span> · edited</span>}
                         </p>
                         {editingId === r.id ? (
-                          <EditCommentForm comment={r} user={user} onDone={() => setEditingId(null)} />
+                          <EditCommentForm
+                            comment={r}
+                            user={user}
+                            onCancel={() => setEditingId(null)}
+                            onSaved={(newBody, editedAt) => applyEditLocally(r.id, newBody, editedAt)}
+                          />
                         ) : (
                           <>
                             <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
