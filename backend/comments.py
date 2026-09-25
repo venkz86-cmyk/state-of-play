@@ -35,19 +35,17 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote
 
-import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Header, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field, EmailStr
 
 from admin_auth import require_admin_key_or_session
+from tiers import find_ghost_member, is_genuinely_paid
 
 logger = logging.getLogger(__name__)
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
 MAX_BODY_LENGTH = 2000
@@ -94,36 +92,24 @@ def _create_ghost_admin_token() -> Optional[str]:
 
 
 async def _is_paid_ghost_member(email: str) -> bool:
-    """Server-side membership check — mirrors /api/ghost/verify-member's
-    is_paid logic, so a reader can't just POST an arbitrary email and have
-    a comment accepted. Fails closed: any error means not verified."""
+    """Server-side membership check. Single source of truth is
+    tiers.is_genuinely_paid -- the same check every other paid-access
+    gate in this codebase now uses. Was previously its own fourth
+    independent copy of the same flawed status/subscription/label
+    check (see tiers.py's own docstring on why that's wrong): a
+    mislabeled Trial member -- carrying a stray paid label or native
+    subscription left over from the now-retired Razorpay Zap -- could
+    have posted comments despite Trial explicitly not including that
+    access. Fails closed: any error means not verified."""
     token = _create_ghost_admin_token()
     if not token:
         return False
     try:
-        encoded_email = quote(email, safe='')
-        url = f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{encoded_email}'"
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(url, headers={'Authorization': f'Ghost {token}'})
-        if r.status_code != 200:
+        member = await find_ghost_member(email, token)
+        if not member:
             return False
-        members = r.json().get('members', [])
-        if not members:
-            return False
-        member = members[0]
-        status = member.get('status', 'free')
-        labels = member.get('labels', [])
-        label_names = [lbl.get('name', '').lower() for lbl in labels]
-        has_paid_label = (
-            any(label in label_names
-                for label in ['paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber', 'paid', 'premium', 'corporate-member'])
-            or any(name.startswith('team-') for name in label_names)
-        )
-        return (
-            status in ['paid', 'comped']
-            or len(member.get('subscriptions', [])) > 0
-            or has_paid_label
-        )
+        label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+        return await is_genuinely_paid(label_names, member.get('status', 'free'), email)
     except Exception as e:
         logger.warning(f'comments membership check failed: {e!r}')
         return False
@@ -140,6 +126,7 @@ def _serialize(doc: dict) -> dict:
         'body': doc.get('body'),
         'status': doc.get('status'),
         'created_at': doc.get('created_at').isoformat() if doc.get('created_at') else None,
+        'edited_at': doc.get('edited_at').isoformat() if doc.get('edited_at') else None,
     }
 
 
