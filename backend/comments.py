@@ -127,6 +127,7 @@ def _serialize(doc: dict) -> dict:
         'status': doc.get('status'),
         'created_at': doc.get('created_at').isoformat() if doc.get('created_at') else None,
         'edited_at': doc.get('edited_at').isoformat() if doc.get('edited_at') else None,
+        'pending_edit': doc.get('pending_edit'),
     }
 
 
@@ -146,6 +147,11 @@ class CommentSubmit(BaseModel):
 
 class CommentModerate(BaseModel):
     action: str  # 'approve' | 'reject'
+
+
+class CommentEdit(BaseModel):
+    author_email: EmailStr
+    body: str = Field(..., min_length=1, max_length=MAX_BODY_LENGTH)
 
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
@@ -199,6 +205,42 @@ async def submit_comment(req: CommentSubmit):
     return {'success': True, 'id': comment_id, 'status': 'pending'}
 
 
+@router.post('/api/comments/{comment_id}/edit')
+async def edit_comment(comment_id: str, req: CommentEdit):
+    """A commenter editing their own, already-live comment. Deliberately
+    does NOT touch the live `body`/`status` -- stores the proposed text
+    in `pending_edit` instead, so the original stays visible exactly as
+    published until a human approves the edit (see moderate_comment
+    below), matching this module's whole "nothing unreviewed goes
+    public" design. Ownership is the stored author_email matching the
+    caller's -- the same trust boundary submit_comment already uses (a
+    real, Ghost-verified email), not a separate session token this
+    module has no concept of."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Comment store unavailable')
+
+    email_norm = req.author_email.lower().strip()
+    doc = await _db.comments.find_one({'comment_id': comment_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail='Comment not found')
+    if doc.get('author_email') != email_norm:
+        raise HTTPException(status_code=403, detail='You can only edit your own comment')
+    if doc.get('status') != 'approved':
+        raise HTTPException(status_code=400, detail='Only a published comment can be edited')
+
+    body_clean = req.body.strip()
+    if not body_clean:
+        raise HTTPException(status_code=400, detail='Comment cannot be empty')
+    if body_clean == doc.get('body'):
+        raise HTTPException(status_code=400, detail='No changes to submit')
+
+    await _db.comments.update_one(
+        {'comment_id': comment_id},
+        {'$set': {'pending_edit': body_clean}},
+    )
+    return {'success': True, 'id': comment_id, 'status': 'pending_edit'}
+
+
 @router.get('/api/comments/my-title')
 async def get_my_title(email: str):
     """The commenter's own title/affiliation, so the field can be
@@ -221,13 +263,22 @@ async def get_my_title(email: str):
 async def get_pending_comments(
     _admin: None = Depends(require_admin_key_or_session),
 ):
-    """Admin-only moderation queue. Newest first.
+    """Admin-only moderation queue. Newest first. Covers two kinds of work:
+    brand-new comments (status=pending) and edits to already-live comments
+    (status=approved with a pending_edit set) -- both need a human look
+    before anything changes what's publicly visible, so they share one
+    queue and one approve/reject action (see moderate_comment).
     Registered before /api/comments/{slug} — FastAPI matches routes in
     registration order, and a literal path must come before a same-shape
     parameterized one or "pending" would be swallowed as a slug value."""
     if _db is None:
         return []
-    cursor = _db.comments.find({'status': 'pending'}).sort('created_at', -1)
+    cursor = _db.comments.find({
+        '$or': [
+            {'status': 'pending'},
+            {'pending_edit': {'$nin': [None, '']}},
+        ],
+    }).sort('created_at', -1)
     docs = await cursor.to_list(length=500)
     out = [_serialize(d) for d in docs]
 
@@ -265,14 +316,22 @@ async def get_approved_comments(
 
 @router.get('/api/comments/{slug}')
 async def get_comments(slug: str):
-    """Public. Approved comments only, oldest first."""
+    """Public. Approved comments only, oldest first. Strips pending_edit —
+    that's an unmoderated proposal, not something every visitor should see
+    before a human has approved it (unlike edited_at, which only ever
+    reflects an already-approved change)."""
     if _db is None:
         return []
     cursor = _db.comments.find(
         {'post_slug': slug, 'status': 'approved'}
     ).sort('created_at', 1)
     docs = await cursor.to_list(length=500)
-    return [_serialize(d) for d in docs]
+    out = []
+    for d in docs:
+        item = _serialize(d)
+        item.pop('pending_edit', None)
+        out.append(item)
+    return out
 
 
 @router.post('/api/comments/{comment_id}/moderate')
@@ -286,13 +345,36 @@ async def moderate_comment(
     if _db is None:
         raise HTTPException(status_code=503, detail='Comment store unavailable')
 
+    doc = await _db.comments.find_one({'comment_id': comment_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail='Comment not found')
+
+    # An edit-pending comment (already live, status=approved) is a distinct
+    # moderation case from a brand-new one (status=pending): approving it
+    # swaps the live body for the proposed text and stamps edited_at rather
+    # than changing status at all; rejecting it just discards the proposal
+    # and leaves the original comment exactly as it was.
+    if doc.get('status') == 'approved' and doc.get('pending_edit'):
+        if req.action == 'approve':
+            await _db.comments.update_one(
+                {'comment_id': comment_id},
+                {
+                    '$set': {'body': doc['pending_edit'], 'edited_at': datetime.now(timezone.utc)},
+                    '$unset': {'pending_edit': ''},
+                },
+            )
+            return {'success': True, 'id': comment_id, 'status': 'approved', 'edited': True}
+        await _db.comments.update_one(
+            {'comment_id': comment_id},
+            {'$unset': {'pending_edit': ''}},
+        )
+        return {'success': True, 'id': comment_id, 'status': 'approved', 'edited': False}
+
     new_status = 'approved' if req.action == 'approve' else 'rejected'
-    result = await _db.comments.update_one(
+    await _db.comments.update_one(
         {'comment_id': comment_id},
         {'$set': {'status': new_status, 'reviewed_at': datetime.now(timezone.utc)}},
     )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail='Comment not found')
     return {'success': True, 'id': comment_id, 'status': new_status}
 
 

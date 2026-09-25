@@ -12,6 +12,164 @@ const relativeDate = (iso) => {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+const BARE_URL_RE = /(https?:\/\/[^\s<]+)/g;
+// Trailing punctuation a URL picked up from the surrounding sentence, not
+// part of the link itself — "check this out: stateofplay.club/x." shouldn't
+// swallow the period.
+const TRAILING_PUNCT_RE = /[),.!?;:'"]+$/;
+
+const linkClass = 'text-[var(--accent-burgundy)] underline underline-offset-[3px] decoration-1 hover:decoration-2 break-all';
+
+/* Turns a comment body into text + <a> nodes — markdown [text](url) links
+   first, then any bare http(s) URL left in the remaining plain-text
+   segments. No HTML is ever parsed out of user input; every non-link
+   segment stays plain text, so this can't reintroduce XSS the way
+   dangerouslySetInnerHTML would. */
+const LinkifiedText = ({ text }) => {
+  if (!text) return null;
+  const nodes = [];
+  let key = 0;
+
+  const pushPlainSegment = (segment) => {
+    let lastIndex = 0;
+    let match;
+    BARE_URL_RE.lastIndex = 0;
+    while ((match = BARE_URL_RE.exec(segment))) {
+      const start = match.index;
+      if (start > lastIndex) nodes.push(segment.slice(lastIndex, start));
+      let url = match[0];
+      let trailing = '';
+      const trailMatch = url.match(TRAILING_PUNCT_RE);
+      if (trailMatch) {
+        trailing = trailMatch[0];
+        url = url.slice(0, url.length - trailing.length);
+      }
+      if (url) {
+        nodes.push(
+          <a key={key++} href={url} target="_blank" rel="noopener noreferrer nofollow ugc" className={linkClass}>
+            {url}
+          </a>
+        );
+      }
+      if (trailing) nodes.push(trailing);
+      lastIndex = start + match[0].length;
+    }
+    if (lastIndex < segment.length) nodes.push(segment.slice(lastIndex));
+  };
+
+  let lastIndex = 0;
+  let match;
+  MARKDOWN_LINK_RE.lastIndex = 0;
+  while ((match = MARKDOWN_LINK_RE.exec(text))) {
+    const [full, label, url] = match;
+    const start = match.index;
+    if (start > lastIndex) pushPlainSegment(text.slice(lastIndex, start));
+    nodes.push(
+      <a key={key++} href={url} target="_blank" rel="noopener noreferrer nofollow ugc" className={linkClass}>
+        {label}
+      </a>
+    );
+    lastIndex = start + full.length;
+  }
+  if (lastIndex < text.length) pushPlainSegment(text.slice(lastIndex));
+
+  return <>{nodes}</>;
+};
+
+/* Edit UI for a commenter's own, already-live comment. Submitting doesn't
+   change what's visible — the backend stores the proposal separately and a
+   human approves it (mirrors CommentForm's own pending-review UX below). */
+const EditCommentForm = ({ comment, user, onDone }) => {
+  const [body, setBody] = useState(comment.body);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const unchanged = body.trim() === (comment.body || '').trim();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!body.trim() || unchanged) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch(`${API}/api/comments/${comment.id}/edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author_email: user.email, body: body.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'Could not submit your edit.');
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3" data-testid={`edit-submitted-${comment.id}`}>
+        Edit submitted — it'll replace the comment above once it's been reviewed.{' '}
+        <button
+          type="button"
+          onClick={onDone}
+          className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+        >
+          Done
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-3">
+      <textarea
+        rows={3}
+        value={body}
+        onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
+        disabled={submitting}
+        data-testid={`edit-body-input-${comment.id}`}
+        className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-reading text-[15px] focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
+        style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
+      />
+      <div className="flex items-center justify-between mt-3">
+        <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
+          {body.length} / {MAX_BODY_LENGTH}
+        </span>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={onDone}
+            disabled={submitting}
+            className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting || !body.trim() || unchanged}
+            data-testid={`edit-submit-${comment.id}`}
+            className="h-9 px-4 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] transition-colors disabled:opacity-60"
+            style={{ borderRadius: 'var(--control-radius)' }}
+          >
+            {submitting ? 'Saving…' : 'Save edit'}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3" data-testid={`edit-error-${comment.id}`}>
+          {error}
+        </p>
+      )}
+    </form>
+  );
+};
+
 /* Shared submit form — used for both a new top-level comment and an inline
    reply. Reply mode is just parentId being set; everything else (server
    call, pending-approval confirmation) is identical. */
@@ -162,7 +320,11 @@ export const CustomComments = ({ postSlug, user }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [expandedThreads, setExpandedThreads] = useState({});
+
+  const isOwnComment = (c) =>
+    !!user?.email && !!c.author_email && c.author_email.toLowerCase() === user.email.toLowerCase();
 
   useEffect(() => {
     let active = true;
@@ -214,10 +376,15 @@ export const CustomComments = ({ postSlug, user }) => {
                   {c.author_title && <span>, {c.author_title}</span>}
                   {' · '}
                   {relativeDate(c.created_at)}
+                  {c.edited_at && <span> · edited</span>}
                 </p>
-                <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
-                  {c.body}
-                </p>
+                {editingId === c.id ? (
+                  <EditCommentForm comment={c} user={user} onDone={() => setEditingId(null)} />
+                ) : (
+                  <p className="font-reading text-[16px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                    <LinkifiedText text={c.body} />
+                  </p>
+                )}
 
                 {visibleReplies.length > 0 && (
                   <div className="mt-4 pl-4 ml-1 border-l border-[var(--rule)] space-y-4">
@@ -228,10 +395,27 @@ export const CustomComments = ({ postSlug, user }) => {
                           {r.author_title && <span>, {r.author_title}</span>}
                           {' · '}
                           {relativeDate(r.created_at)}
+                          {r.edited_at && <span> · edited</span>}
                         </p>
-                        <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
-                          {r.body}
-                        </p>
+                        {editingId === r.id ? (
+                          <EditCommentForm comment={r} user={user} onDone={() => setEditingId(null)} />
+                        ) : (
+                          <>
+                            <p className="font-reading text-[15px] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                              <LinkifiedText text={r.body} />
+                            </p>
+                            {isOwnComment(r) && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingId(r.id)}
+                                data-testid={`edit-toggle-${r.id}`}
+                                className="mt-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                              >
+                                Edit
+                              </button>
+                            )}
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -258,7 +442,7 @@ export const CustomComments = ({ postSlug, user }) => {
                   </button>
                 )}
 
-                {user?.email && (
+                {user?.email && editingId !== c.id && (
                   replyingTo === c.id ? (
                     <div className="mt-4 pl-4 ml-1">
                       <CommentForm
@@ -270,14 +454,26 @@ export const CustomComments = ({ postSlug, user }) => {
                       />
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setReplyingTo(c.id)}
-                      data-testid={`reply-toggle-${c.id}`}
-                      className="mt-3 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
-                    >
-                      Reply
-                    </button>
+                    <div className="mt-3 flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setReplyingTo(c.id)}
+                        data-testid={`reply-toggle-${c.id}`}
+                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                      >
+                        Reply
+                      </button>
+                      {isOwnComment(c) && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(c.id)}
+                          data-testid={`edit-toggle-${c.id}`}
+                          className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
                   )
                 )}
               </li>
