@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const MAX_BODY_LENGTH = 2000;
@@ -77,6 +77,67 @@ const LinkifiedText = ({ text }) => {
   return <>{nodes}</>;
 };
 
+// A bare domain typed without a scheme ("stateofplay.club/x") still needs
+// one to be a real link the browser will navigate — added here rather than
+// left to the reader to get right.
+const normalizeLinkUrl = (raw) => {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+/i.test(trimmed)) return `https://${trimmed}`;
+  return trimmed;
+};
+
+/* Shared by both the new-comment/reply box and the edit box: wraps the
+   current text selection as a markdown link (or, with nothing selected,
+   just drops the URL in — it auto-linkifies as a bare URL on render, same
+   as pasting one). Triggered by Ctrl/Cmd+K for anyone typing on a keyboard,
+   and by a plain tap-target button for anyone without one — a shortcut
+   alone would leave mobile with no way to add a link at all. window.prompt
+   is deliberately the whole "dialog": it's a one-field, cancel-or-submit
+   ask, and every mobile and desktop browser already renders it natively. */
+const insertLinkAtSelection = (textareaEl, value, setValue, maxLength) => {
+  const url = window.prompt('Link URL');
+  if (url === null) return;
+  const normalized = normalizeLinkUrl(url);
+  if (!normalized) return;
+
+  const start = textareaEl ? textareaEl.selectionStart : value.length;
+  const end = textareaEl ? textareaEl.selectionEnd : value.length;
+  const selected = value.slice(start, end);
+  const insertion = selected ? `[${selected}](${normalized})` : normalized;
+  const nextValue = (value.slice(0, start) + insertion + value.slice(end)).slice(0, maxLength);
+  setValue(nextValue);
+
+  requestAnimationFrame(() => {
+    if (!textareaEl) return;
+    textareaEl.focus();
+    const caret = Math.min(start + insertion.length, maxLength);
+    textareaEl.setSelectionRange(caret, caret);
+  });
+};
+
+const handleLinkShortcut = (e, insert) => {
+  const isMod = e.metaKey || e.ctrlKey;
+  if (isMod && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    insert();
+  }
+};
+
+const LinkButton = ({ onClick, testId }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    data-testid={testId}
+    title="Add link (Ctrl+K)"
+    aria-label="Add link"
+    className="py-1.5 pr-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+  >
+    Link
+  </button>
+);
+
 /* Edit UI for a commenter's own, already-live comment. Applies immediately
    on save — no moderation queue, unlike a brand-new comment (the comment
    was already reviewed once to get published; editing it is the author's
@@ -86,8 +147,10 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
   const [body, setBody] = useState(comment.body);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const textareaRef = useRef(null);
 
   const unchanged = body.trim() === (comment.body || '').trim();
+  const insertLink = () => insertLinkAtSelection(textareaRef.current, body, setBody, MAX_BODY_LENGTH);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,18 +177,23 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="mt-3">
       <textarea
+        ref={textareaRef}
         rows={3}
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
+        onKeyDown={(e) => handleLinkShortcut(e, insertLink)}
         disabled={submitting}
         data-testid={`edit-body-input-${comment.id}`}
         className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-reading text-[15px] focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
         style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
       />
       <div className="flex items-center justify-between mt-3">
-        <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
-          {body.length} / {MAX_BODY_LENGTH}
-        </span>
+        <div className="flex items-center gap-3">
+          <LinkButton onClick={insertLink} testId={`edit-link-${comment.id}`} />
+          <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
+            {body.length} / {MAX_BODY_LENGTH}
+          </span>
+        </div>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -170,6 +238,8 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const textareaRef = useRef(null);
+  const insertLink = () => insertLinkAtSelection(textareaRef.current, body, setBody, MAX_BODY_LENGTH);
 
   // Pull the server-side value (from their most recent comment) so the
   // title follows them across devices, not just this browser. localStorage
@@ -263,9 +333,11 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         </div>
       )}
       <textarea
+        ref={textareaRef}
         rows={compact ? 2 : 3}
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
+        onKeyDown={(e) => handleLinkShortcut(e, insertLink)}
         data-testid={parentId ? `reply-body-input-${parentId}` : 'comment-body-input'}
         disabled={submitting}
         placeholder={parentId ? 'Write a reply…' : 'Add to the conversation…'}
@@ -273,9 +345,12 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         style={{ borderRadius: 'var(--control-radius)', outline: 'none' }}
       />
       <div className="flex items-center justify-between mt-3">
-        <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
-          {body.length} / {MAX_BODY_LENGTH}
-        </span>
+        <div className="flex items-center gap-3">
+          <LinkButton onClick={insertLink} testId={parentId ? `reply-link-${parentId}` : 'comment-link'} />
+          <span className="font-plex text-[11px] text-[var(--text-label)] tabular-nums">
+            {body.length} / {MAX_BODY_LENGTH}
+          </span>
+        </div>
         <button
           type="submit"
           disabled={submitting || !body.trim()}
