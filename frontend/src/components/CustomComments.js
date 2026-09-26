@@ -88,6 +88,24 @@ const normalizeLinkUrl = (raw) => {
   return trimmed;
 };
 
+// Writes `[selected text](url)` (or just the bare url, with nothing
+// selected) into the textarea at the given range, then restores focus and
+// caret. Shared by the prompt-driven insert below and the paste-to-linkify
+// handler, so both end up with identical, predictable output.
+const applyLinkAtRange = (textareaEl, value, setValue, maxLength, start, end, normalizedUrl) => {
+  const selected = value.slice(start, end);
+  const insertion = selected ? `[${selected}](${normalizedUrl})` : normalizedUrl;
+  const nextValue = (value.slice(0, start) + insertion + value.slice(end)).slice(0, maxLength);
+  setValue(nextValue);
+
+  requestAnimationFrame(() => {
+    if (!textareaEl) return;
+    textareaEl.focus();
+    const caret = Math.min(start + insertion.length, maxLength);
+    textareaEl.setSelectionRange(caret, caret);
+  });
+};
+
 /* Shared by both the new-comment/reply box and the edit box: wraps the
    current text selection as a markdown link (or, with nothing selected,
    just drops the URL in — it auto-linkifies as a bare URL on render, same
@@ -104,17 +122,7 @@ const insertLinkAtSelection = (textareaEl, value, setValue, maxLength) => {
 
   const start = textareaEl ? textareaEl.selectionStart : value.length;
   const end = textareaEl ? textareaEl.selectionEnd : value.length;
-  const selected = value.slice(start, end);
-  const insertion = selected ? `[${selected}](${normalized})` : normalized;
-  const nextValue = (value.slice(0, start) + insertion + value.slice(end)).slice(0, maxLength);
-  setValue(nextValue);
-
-  requestAnimationFrame(() => {
-    if (!textareaEl) return;
-    textareaEl.focus();
-    const caret = Math.min(start + insertion.length, maxLength);
-    textareaEl.setSelectionRange(caret, caret);
-  });
+  applyLinkAtRange(textareaEl, value, setValue, maxLength, start, end, normalized);
 };
 
 const handleLinkShortcut = (e, insert) => {
@@ -123,6 +131,33 @@ const handleLinkShortcut = (e, insert) => {
     e.preventDefault();
     insert();
   }
+};
+
+// The whole clipboard payload has to BE a URL, not just contain one --
+// pasting a paragraph that happens to mention a link over a selection
+// should still paste as plain text, same as anywhere else.
+const PASTED_URL_RE = /^(https?:\/\/\S+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?)$/i;
+
+/* Paste-to-linkify, Notion/Docs-style: pasting a URL while text is
+   selected wraps that selection into a link with the pasted URL, instead
+   of replacing it with the raw URL text. Only kicks in when there's an
+   actual selection and the clipboard is nothing but a URL -- any other
+   paste (nothing selected, or pasted text that isn't just a link) falls
+   through to the browser's normal paste untouched. */
+const handleLinkPaste = (e, value, setValue, maxLength) => {
+  const textareaEl = e.target;
+  const start = textareaEl.selectionStart;
+  const end = textareaEl.selectionEnd;
+  if (start === end) return;
+
+  const pasted = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (!PASTED_URL_RE.test(pasted)) return;
+
+  const normalized = normalizeLinkUrl(pasted);
+  if (!normalized) return;
+
+  e.preventDefault();
+  applyLinkAtRange(textareaEl, value, setValue, maxLength, start, end, normalized);
 };
 
 const LinkButton = ({ onClick, testId }) => (
@@ -182,6 +217,7 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
         onKeyDown={(e) => handleLinkShortcut(e, insertLink)}
+        onPaste={(e) => handleLinkPaste(e, body, setBody, MAX_BODY_LENGTH)}
         disabled={submitting}
         data-testid={`edit-body-input-${comment.id}`}
         className="w-full px-4 py-3 bg-transparent border border-[var(--rule)] font-reading text-[15px] focus:border-[var(--accent-burgundy)] disabled:opacity-60 resize-none"
@@ -338,6 +374,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY_LENGTH))}
         onKeyDown={(e) => handleLinkShortcut(e, insertLink)}
+        onPaste={(e) => handleLinkPaste(e, body, setBody, MAX_BODY_LENGTH)}
         data-testid={parentId ? `reply-body-input-${parentId}` : 'comment-body-input'}
         disabled={submitting}
         placeholder={parentId ? 'Write a reply…' : 'Add to the conversation…'}
