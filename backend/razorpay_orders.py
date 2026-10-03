@@ -46,15 +46,18 @@ import jwt
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label
+from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial
 from session_auth import get_current_member
+from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 # Same Apps Script the corporate accounts system already runs on
 # (corporate.py, server.py's /invoice/generate-team) -- Team-5/10's
@@ -238,6 +241,29 @@ async def create_order(req: CreateOrderRequest):
     }
 
 
+def _standard_welcome_email_html() -> str:
+    """Sent once, only to a brand-new member whose first payment is a
+    plain Standard annual signup (plan == 'standard') -- Trial, Student
+    and gift recipients each already get their own tailored confirmation
+    elsewhere and should never also get this generic one."""
+    return email_shell(
+        'Welcome, <em style="font-style: italic;">in full.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for subscribing to The State of Play. I don’t take a first year for granted '
+            '— there’s not much track record yet to go on. It’s the reason I get to do this.</p>'
+            '<p>Here’s what that gets you: the full archive, priority access to our events, and early '
+            'access to everything new before anyone else sees it.</p>'
+            '<p>Go dig in.</p>'
+            + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
+            + '<p>Thank you</p>'
+            '<p style="color: #555555;">Questions, anything at all — reach me directly at '
+            '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
@@ -294,6 +320,15 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     email = session['email'] if session else req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
+    # Known ahead of ensure_member_labeled, not inferred from its result --
+    # it finds-or-creates, so its return value alone can't tell a brand-new
+    # signup apart from an existing free/newsletter member buying their
+    # first Standard plan. Only checked for 'standard': the only plan here
+    # that should ever get the generic welcome email below (Trial, Student,
+    # trial-upgrade and the team plans each have their own existing
+    # confirmation, or none wanted yet).
+    is_new_standard_signup = req.plan == 'standard' and await find_ghost_member(email, token) is None
+
     # Only strip stray paid labels when this email has never genuinely
     # paid us for real access before -- an existing Ghost member (e.g. a
     # prior free/newsletter signup) buying their first Trial is exactly
@@ -309,6 +344,11 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
             status_code=502,
             detail='Payment verified but member setup failed, contact support',
         )
+
+    if is_new_standard_signup:
+        sent = await send_email(to=email, subject='Welcome to The State of Play', html=_standard_welcome_email_html())
+        if not sent:
+            logger.warning(f'verify-payment: standard welcome email failed to send for {email}')
 
     # Records what Razorpay itself says was charged -- not PLAN_PRICING,
     # which can drift from the actual amount (a discount already applied

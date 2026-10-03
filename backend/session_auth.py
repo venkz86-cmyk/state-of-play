@@ -79,12 +79,13 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier
 from resend_email import send_email
-from email_layout import email_shell
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 JWT_SECRET = os.environ.get('JWT_SECRET', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 SESSION_COOKIE_NAME = 'sop_session'
 SESSION_TTL_DAYS = 60
@@ -406,6 +407,26 @@ async def verify_code(req: VerifyCodeBody, response: Response):
     }
 
 
+def _free_welcome_email_html() -> str:
+    """Sent once, only to a brand-new free signup -- someone re-hitting
+    register-free with an email that already has an account (free or
+    paid) never gets this again, see is_new_signup below."""
+    return email_shell(
+        'You’re <em style="font-style: italic;">in.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>You’re in. Every free story on The State of Play is yours now, the moment it goes up.</p>'
+            '<p>Here’s what’s waiting on the other side when you’re ready: the full archive, priority seats '
+            'at our events, early access to everything new we build before anyone else sees it.</p>'
+            '<p>For now, just go read.</p>'
+            + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
+            + '<p style="color: #555555;">Questions, anything at all — reach me directly at '
+            '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class RegisterFreeBody(BaseModel):
     email: EmailStr
     name: Optional[str] = ''
@@ -459,6 +480,13 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     if not admin_token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
+    # Known ahead of creation, not inferred from the result -- create_ghost_member
+    # falls back to a lookup on Ghost's 422 (already exists), so its return
+    # value alone can't tell a brand-new signup apart from someone re-hitting
+    # this endpoint with an email that already has an account. Only the
+    # former should get the welcome email below.
+    is_new_signup = await find_ghost_member(email, admin_token) is None
+
     # Tagged (rather than the empty label list this used to pass) so an
     # admin cleanup panel can reliably tell a register-free signup apart
     # from every other kind of Ghost member -- there was no way to do
@@ -466,6 +494,11 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     member = await create_ghost_member(email, (req.name or '').strip(), ['email-gate-signup'], admin_token)
     if not member:
         raise HTTPException(status_code=502, detail='Could not create account')
+
+    if is_new_signup:
+        sent = await send_email(to=email, subject='Welcome to The State of Play', html=_free_welcome_email_html())
+        if not sent:
+            logger.warning(f'register-free: welcome email failed to send for {email}')
 
     session_token = _mint_session(email, member.get('id', ''))
     if not session_token:
