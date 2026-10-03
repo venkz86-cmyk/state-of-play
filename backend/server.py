@@ -2491,6 +2491,20 @@ except Exception as _e:
     handle_subscription_webhook_event = None
     clear_grace_period = None
 
+# Mount the one-time-payment annual lifecycle sweep (Oct 2026) -- reminder,
+# grace notice, then downgrade for a Standard/trial-upgrade member who never
+# renews. Separate from razorpay_subscriptions' own grace handling just
+# above, which only covers a real auto-renewing Subscription's failed
+# charge -- a one-time Order never attempts to charge again, so there's no
+# equivalent event to react to; this is the date-driven sweep that covers
+# that gap instead.
+try:
+    from annual_renewal import router as annual_renewal_router, init as annual_renewal_init
+    annual_renewal_init(db)
+    app.include_router(annual_renewal_router)
+except Exception as _e:
+    logging.warning(f"annual_renewal module not mounted: {_e!r}")
+
 # Mount the Student plan application review queue (Sept 2026) -- after
 # admin_auth (for require_admin_key_or_session) and resend_email (for
 # send_email), both already mounted above.
