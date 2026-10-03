@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial
+from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry
 from session_auth import get_current_member
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -241,24 +241,63 @@ async def create_order(req: CreateOrderRequest):
     }
 
 
-def _standard_welcome_email_html() -> str:
+def _standard_welcome_email_html(expiry_date_str: str) -> str:
     """Sent once, only to a brand-new member whose first payment is a
     plain Standard annual signup (plan == 'standard') -- Trial, Student
     and gift recipients each already get their own tailored confirmation
-    elsewhere and should never also get this generic one."""
-    return email_shell(
-        'Welcome, <em style="font-style: italic;">in full.</em>',
+    elsewhere and should never also get this generic one.
+
+    Venkat's own drafted copy. expiry_date_str is this exact payment's
+    computed access-through date (payments.compute_synthetic_expiry,
+    the same number the account page's renewal banner shows) -- a plain
+    Standard signup is a one-time payment, not an auto-renewing
+    subscription, so this deliberately does NOT say "renews" or "cancel
+    any time"; it says what's actually true."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'Thank you for backing independent reporting on Indian sport.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'You’re <em style="font-style: italic;">in.</em>',
         (
             '<p>Dear reader,</p>'
-            '<p>Thank you for subscribing to The State of Play. I don’t take a first year for granted. '
-            'There’s not much track record yet to go on. It’s the reason I get to do this.</p>'
-            '<p>Here’s what that gets you: the full archive, plus priority access to our events. Early '
-            'access to everything new comes with it too, before anyone else sees it.</p>'
-            '<p>Go dig in.</p>'
-            + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
-            + '<p>Thank you</p>'
-            '<p style="color: #555555;">Questions, anything at all. Reach me directly at '
-            '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
+            '<p>Thank you for becoming a paying member. I’m Venkat, and I write The State of Play. This is '
+            'the email I’d send you if we were having coffee: a proper thank you, and a short note on what '
+            'you’ve signed up for.</p>'
+            '<p>The State of Play exists because enough readers decided independent reporting on the '
+            'business of Indian sport was worth paying for. Your subscription pays for the time and the '
+            'travel this reporting takes. It’s also what lets me say no to stories that aren’t ready.</p>'
+            '<p>What you get as a member:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">A deeply reported story every week, usually on Fridays, in '
+            'your inbox and on the site.</li>'
+            '<li style="margin-bottom: 8px;">The full archive, including the older stories on rights, '
+            'ownership and sponsorship.</li>'
+            '<li style="margin-bottom: 8px;">A direct line to me. Reply to any issue or to this email and '
+            'you’re talking to me, not a support desk.</li>'
+            '<li>Priority access to our events, and the ability to gift up to five stories a month to '
+            'anyone, on us.</li>'
+            '</ul>'
+            '<p>A few ways to get started:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            f'<li style="margin-bottom: 8px;">Read the archive. If you only read one older story, make it '
+            f'<a href="{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone" '
+            'style="color: #1A1A1A;">Inside the RCB sale: Birla, Blitzer, Times, Blackstone</a>.</li>'
+            f'<li style="margin-bottom: 8px;">Set up your account and manage your subscription from '
+            f'<a href="{PUBLIC_BASE_URL}/account" style="color: #1A1A1A;">your account page</a>.</li>'
+            '<li>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</li>'
+            '</ul>'
+            f'<p>Your access runs through {expiry_date_str}. This is a one-time payment, not an '
+            'auto-renewing subscription. You’ll get a reminder before it lapses, and you can renew any '
+            'time from your account page.</p>'
+            '<p>One honest note. This is a one-person publication. Some Fridays, flu or a story that isn’t '
+            'ready means an issue arrives late, and I’d rather tell you that than publish something thin. '
+            'You’ll always hear about it from me.</p>'
+            '<p>If you know someone who’d like it, a '
+            f'<a href="{PUBLIC_BASE_URL}/gift" style="color: #1A1A1A;">gift subscription</a> is the nicest '
+            'thing you can do for the publication.</p>'
+            '<p>Thank you for backing this.</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',
     )
@@ -345,22 +384,31 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
             detail='Payment verified but member setup failed, contact support',
         )
 
-    if is_new_standard_signup:
-        sent = await send_email(to=email, subject='Welcome to The State of Play', html=_standard_welcome_email_html())
-        if not sent:
-            logger.warning(f'verify-payment: standard welcome email failed to send for {email}')
-
     # Records what Razorpay itself says was charged -- not PLAN_PRICING,
     # which can drift from the actual amount (a discount already applied
     # at create-order time). Done here,
     # before the trial/trial-upgrade branches below, so a 'trial' payment
     # can also pass its real geo into start_trial(): Razorpay's own
     # currency on the actual charge, not a client-supplied field, decides
-    # IN vs INTL for the trial-upgrade emails later.
+    # IN vs INTL for the trial-upgrade emails later. Also needed before the
+    # welcome email below, which quotes this exact payment's computed
+    # expiry -- the same number the account page's renewal banner shows.
     payment_record = await fetch_and_record(
         _razorpay_client, req.razorpay_payment_id, source='order_verify',
         fallback_email=email, fallback_plan=req.plan,
     )
+
+    if is_new_standard_signup:
+        expiry_dt = compute_synthetic_expiry(payment_record)
+        expiry_date_str = (
+            datetime.fromisoformat(expiry_dt).strftime('%d %B %Y') if expiry_dt else 'a year from today'
+        )
+        sent = await send_email(
+            to=email, subject="You’re in. Welcome to The State of Play",
+            html=_standard_welcome_email_html(expiry_date_str),
+        )
+        if not sent:
+            logger.warning(f'verify-payment: standard welcome email failed to send for {email}')
 
     if req.plan == 'trial':
         country = 'IN' if (payment_record and payment_record.get('currency') == 'INR') else 'INTL'
