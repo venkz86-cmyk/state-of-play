@@ -42,6 +42,7 @@ from tiers import (
     remove_member_label as _tiers_remove_member_label,
 )
 from resend_email import send_email as _send_email
+from email_layout import email_shell, email_cta_button
 from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
@@ -450,55 +451,33 @@ def _nomination_welcome_email_html(nominator_name: str, story_url: str, nominee_
             f'They said: “{html.escape(nominee_context)}”'
             '</p>'
         )
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        f'{html.escape(nominator_name)} put your name <em style="font-style: italic;">forward.</em>'
-        '</h1>'
-        '<p>Dear reader,</p>'
-        f'<p>{html.escape(nominator_name)} thought you should be reading The State of Play, so they put your name forward.</p>'
-        '<p>The State of Play is a weekly reported publication on the business of Indian sport &mdash; franchise valuations, broadcast rights, ownership deals, and the people making the decisions. One properly reported story a week. It’s normally for paying readers.</p>'
-        '<p>You have full access for the next two weeks. Nothing to sign up for, nothing to cancel.</p>'
-        f'<p style="margin: 32px 0;"><a href="{story_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start with this story &rarr;</a></p>'
-        f'{reason_block}'
-        '<p style="color: #555555;">Once you’re in, sign in anytime with just your email (no password) to read anything else on the site &mdash; it’s covered too.</p>'
-        '<p style="margin-top: 32px;">As always, thanks for reading!</p>'
-        '<p>Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
-        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
-        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
-        '</p>'
-        '</div>'
+    return email_shell(
+        f'{html.escape(nominator_name)} put your name <em style="font-style: italic;">forward.</em>',
+        (
+            '<p>Dear reader,</p>'
+            f'<p>{html.escape(nominator_name)} thought you should be reading The State of Play, so they put your name forward.</p>'
+            '<p>The State of Play is a weekly reported publication on the business of Indian sport &mdash; franchise valuations, broadcast rights, ownership deals, and the people making the decisions. One properly reported story a week. It’s normally for paying readers.</p>'
+            '<p>You have full access for the next two weeks. Nothing to sign up for, nothing to cancel.</p>'
+            + email_cta_button('Start with this story &rarr;', story_url)
+            + f'{reason_block}'
+            '<p style="color: #555555;">Once you’re in, sign in anytime with just your email (no password) to read anything else on the site &mdash; it’s covered too.</p>'
+            '<p style="margin-top: 32px;">As always, thanks for reading!</p>'
+        ),
+        compliance_footer=True,
     )
 
 
 def _nomination_expiry_email_html(nominator_name: str) -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your two weeks <em style="font-style: italic;">are up.</em>'
-        '</h1>'
-        '<p>Dear reader,</p>'
-        f'<p>Your fortnight of The State of Play, courtesy of {html.escape(nominator_name)}, has ended.</p>'
-        '<p>An annual subscription is Rs 2,499 + GST &mdash; one reported story a week on the business of Indian sport, plus the full archive.</p>'
-        f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/signup" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Subscribe &rarr;</a></p>'
-        '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
-        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
-        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your two weeks <em style="font-style: italic;">are up.</em>',
+        (
+            '<p>Dear reader,</p>'
+            f'<p>Your fortnight of The State of Play, courtesy of {html.escape(nominator_name)}, has ended.</p>'
+            '<p>An annual subscription is Rs 2,499 + GST &mdash; one reported story a week on the business of Indian sport, plus the full archive.</p>'
+            + email_cta_button('Subscribe &rarr;', f'{PUBLIC_BASE_URL}/signup')
+            + '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
+        ),
+        compliance_footer=True,
     )
 
 

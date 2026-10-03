@@ -74,6 +74,7 @@ from pydantic import BaseModel
 
 from admin_auth import require_admin_key_or_session
 from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
@@ -227,21 +228,13 @@ class DecisionRequest(BaseModel):
 
 def _payment_link_email_html(name: str, pay_url: str) -> str:
     first_name = (name or '').split(' ')[0] or 'there'
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        f'{html.escape(first_name)}, you’re <em style="font-style: italic;">approved.</em>'
-        '</h1>'
-        '<p>Your student ID checked out. Complete your membership below to start reading.</p>'
-        f'<p style="margin: 32px 0;"><a href="{pay_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Complete your membership &rarr;</a></p>'
-        '<p style="color: #555555;">Once you’ve paid, you’re in immediately — every weekly story, the Left Field briefing, and the full archive.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        f'{html.escape(first_name)}, you’re <em style="font-style: italic;">approved.</em>',
+        (
+            '<p>Your student ID checked out. Complete your membership below to start reading.</p>'
+            + email_cta_button('Complete your membership &rarr;', pay_url)
+            + '<p style="color: #555555;">Once you’ve paid, you’re in immediately — every weekly story, the Left Field briefing, and the full archive.</p>'
+        ),
     )
 
 

@@ -92,6 +92,7 @@ from razorpay_subscriptions import SUBSCRIPTION_PLANS as RENEWAL_PLANS
 from tiers import ensure_member_labeled, find_ghost_member, is_genuinely_paid
 from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry
 from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 from session_auth import get_current_member
 
 logger = logging.getLogger(__name__)
@@ -241,21 +242,15 @@ def _gift_direct_email_html(buyer_name: str, personal_note: str, already_subscri
     else:
         headline = f'{buyer} gave you a year of <em style="font-style: italic;">The State of Play.</em>'
         body = f'{html.escape(buyer_name or "A reader")} gave you a full annual membership. Every weekly story, the Left Field briefing, and the complete archive, for the next twelve months. Already paid for, already yours.'
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">{headline}</h1>'
-        '<p>Hello,</p>'
-        f'<p>{body}</p>'
-        f'{note_block}'
-        f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}/login" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start reading &rarr;</a></p>'
-        '<p style="color: #555555;">Sign in anytime with just your email (no password). You\'re already set up.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        headline,
+        (
+            '<p>Hello,</p>'
+            f'<p>{body}</p>'
+            f'{note_block}'
+            + email_cta_button('Start reading &rarr;', f'{PUBLIC_BASE_URL}/login')
+            + '<p style="color: #555555;">Sign in anytime with just your email (no password). You\'re already set up.</p>'
+        ),
     )
 
 
@@ -264,39 +259,21 @@ def _gift_claimed_email_html(redeemer_email: str, redeemer_name: str = '') -> st
     # one (collected right there on the claim form), fall back to just
     # the email if somehow not.
     who = f'{html.escape(redeemer_name)} ({html.escape(redeemer_email)})' if redeemer_name else html.escape(redeemer_email)
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your gift was <em style="font-style: italic;">claimed.</em>'
-        '</h1>'
-        f'<p>{who} just claimed the year you gave them. They\'re all set. Nothing more for you to do.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your gift was <em style="font-style: italic;">claimed.</em>',
+        f'<p>{who} just claimed the year you gave them. They\'re all set. Nothing more for you to do.</p>',
     )
 
 
 def _gift_receipt_email_html(redeem_url: str, code: str) -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your gift is <em style="font-style: italic;">ready to send.</em>'
-        '</h1>'
-        '<p>Thanks for giving a year of The State of Play. Send this link to whoever it\'s for. They redeem it with their own email, whenever they\'re ready:</p>'
-        f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
-        f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
-        '<p style="color: #555555;">Already paid for. This link (or the code) is just how they claim it.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your gift is <em style="font-style: italic;">ready to send.</em>',
+        (
+            '<p>Thanks for giving a year of The State of Play. Send this link to whoever it\'s for. They redeem it with their own email, whenever they\'re ready:</p>'
+            + email_cta_button(redeem_url, redeem_url)
+            + f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
+            '<p style="color: #555555;">Already paid for. This link (or the code) is just how they claim it.</p>'
+        ),
     )
 
 
@@ -591,22 +568,14 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
 def _unclaimed_nudge_email_html(redeem_url: str, code: str) -> str:
     # One neutral line covers all three nudges (day 7, 14, 21) --
     # "a few weeks ago" would just be wrong on the first one.
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your gift is still <em style="font-style: italic;">waiting.</em>'
-        '</h1>'
-        '<p>A little while back you gave a year of The State of Play, but it hasn\'t been claimed yet. Here it is again, in case it got lost:</p>'
-        f'<p style="margin: 32px 0;"><a href="{redeem_url}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">{redeem_url}</a></p>'
-        f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
-        '<p style="color: #555555;">Already paid for. Nothing more to do than pass it along.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your gift is still <em style="font-style: italic;">waiting.</em>',
+        (
+            '<p>A little while back you gave a year of The State of Play, but it hasn\'t been claimed yet. Here it is again, in case it got lost:</p>'
+            + email_cta_button(redeem_url, redeem_url)
+            + f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
+            '<p style="color: #555555;">Already paid for. Nothing more to do than pass it along.</p>'
+        ),
     )
 
 

@@ -44,6 +44,7 @@ from admin_auth import require_admin_key_or_session
 from tiers import find_ghost_member
 from payments import get_last_payment_by_subscription_id
 from resend_email import send_email
+from email_layout import email_shell
 
 logger = logging.getLogger(__name__)
 
@@ -92,21 +93,13 @@ async def _ensure_indexes():
 
 
 def _grace_period_email_html() -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your renewal payment <em style="font-style: italic;">didn’t go through.</em>'
-        '</h1>'
-        '<p>We tried to charge your card for your annual renewal and it didn’t go through. Your access is still active for now.</p>'
-        f'<p>You have {GRACE_PERIOD_DAYS} days to update your payment method before access pauses. Reply to this email or write to '
-        '<a href="mailto:venkat@stateofplay.club" style="color: #A0291C;">venkat@stateofplay.club</a> and we’ll help you sort it out.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your renewal payment <em style="font-style: italic;">didn’t go through.</em>',
+        (
+            '<p>We tried to charge your card for your annual renewal and it didn’t go through. Your access is still active for now.</p>'
+            f'<p>You have {GRACE_PERIOD_DAYS} days to update your payment method before access pauses. Reply to this email or write to '
+            '<a href="mailto:venkat@stateofplay.club" style="color: #A0291C;">venkat@stateofplay.club</a> and we’ll help you sort it out.</p>'
+        ),
     )
 
 
