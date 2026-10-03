@@ -416,11 +416,12 @@ def _free_welcome_email_html() -> str:
         (
             '<p>Dear reader,</p>'
             '<p>You’re in. Every free story on The State of Play is yours now, the moment it goes up.</p>'
-            '<p>Here’s what’s waiting on the other side when you’re ready: the full archive, priority seats '
-            'at our events, early access to everything new we build before anyone else sees it.</p>'
+            '<p>Here’s what’s waiting on the other side when you’re ready: the full archive, plus priority '
+            'seats at our events. You’ll also get early access to everything new we build, before anyone '
+            'else sees it.</p>'
             '<p>For now, just go read.</p>'
             + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
-            + '<p style="color: #555555;">Questions, anything at all — reach me directly at '
+            + '<p style="color: #555555;">Questions, anything at all. Reach me directly at '
             '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',

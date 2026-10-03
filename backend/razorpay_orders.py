@@ -250,14 +250,14 @@ def _standard_welcome_email_html() -> str:
         'Welcome, <em style="font-style: italic;">in full.</em>',
         (
             '<p>Dear reader,</p>'
-            '<p>Thank you for subscribing to The State of Play. I don’t take a first year for granted '
-            '— there’s not much track record yet to go on. It’s the reason I get to do this.</p>'
-            '<p>Here’s what that gets you: the full archive, priority access to our events, and early '
-            'access to everything new before anyone else sees it.</p>'
+            '<p>Thank you for subscribing to The State of Play. I don’t take a first year for granted. '
+            'There’s not much track record yet to go on. It’s the reason I get to do this.</p>'
+            '<p>Here’s what that gets you: the full archive, plus priority access to our events. Early '
+            'access to everything new comes with it too, before anyone else sees it.</p>'
             '<p>Go dig in.</p>'
             + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
             + '<p>Thank you</p>'
-            '<p style="color: #555555;">Questions, anything at all — reach me directly at '
+            '<p style="color: #555555;">Questions, anything at all. Reach me directly at '
             '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',
