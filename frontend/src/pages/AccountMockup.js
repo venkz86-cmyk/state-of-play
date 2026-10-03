@@ -184,15 +184,33 @@ export const AccountMockup = () => {
                 </p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-5">
                   {daysToExpiry < 0
-                    ? "Your last payment covered you through this date, and it's passed. Renew to keep your access, at the renewal rate: ₹2,999 + GST."
-                    : "Your membership doesn't renew on its own yet. Set it up once, at the renewal rate, and it renews automatically every year from here: ₹2,999 + GST."}
+                    ? "Your last payment covered you through this date, and it's passed. Renew to keep your access, at the renewal rate."
+                    : "Your membership doesn't renew on its own yet. Set it up once, at the renewal rate, and it renews automatically every year from here."}
                 </p>
+                {/* Break-up, not just a total — a GST invoice is exactly
+                    what the Billing tool below already offers to send, so
+                    the same reader clearly wants to see base vs. tax, not
+                    one bundled number. */}
+                <div className="border-y border-[var(--rule)] mb-6">
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="font-plex text-sm text-[var(--text-muted)]">Base price</span>
+                    <span className="font-plex text-sm tabular-nums">₹2,999</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5 border-t border-[var(--rule)]">
+                    <span className="font-plex text-sm text-[var(--text-muted)]">GST (18%)</span>
+                    <span className="font-plex text-sm tabular-nums">₹540</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5 border-t border-[var(--rule)]">
+                    <span className="font-plex text-sm font-medium">Total, charged today</span>
+                    <span className="font-plex text-sm font-medium tabular-nums">₹3,539</span>
+                  </div>
+                </div>
                 <SubscriptionCheckoutButton
                   country="IN"
                   buttonLabel="Set up auto-renewal"
                   dataTestId="account-renew"
                   lockedEmail={memberEmail}
-                  disclosureText="₹2,999 + 18% GST = ₹3,539, charged today and automatically every year after."
+                  disclosureText="Same amount, charged automatically every year after."
                   onSuccess={() => {
                     setJustRenewed(true);
                     setTimeout(() => { window.location.reload(); }, 1500);
