@@ -48,13 +48,17 @@ _MASTHEAD_HTML = (
     '</div>'
 )
 
-_SIGNOFF_HTML = (
-    f'<div style="border-top: 1px solid {_RULE}; margin-top: 40px; padding-top: 24px;">'
-    '<p style="margin: 0;">Venkat<br>'
-    f'<span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: {_LABEL};">Editor, The State of Play</span>'
-    '</p>'
-    '</div>'
-)
+_DEFAULT_SIGNOFF_TITLE = 'Editor, The State of Play'
+
+
+def _signoff_html(title: str = _DEFAULT_SIGNOFF_TITLE) -> str:
+    return (
+        f'<div style="border-top: 1px solid {_RULE}; margin-top: 40px; padding-top: 24px;">'
+        '<p style="margin: 0;">Venkat<br>'
+        f'<span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: {_LABEL};">{title}</span>'
+        '</p>'
+        '</div>'
+    )
 
 # CAN-SPAM-style postal disclosure -- opt-in (compliance_footer=True)
 # rather than universal, since only the higher-volume subscriber-facing
@@ -82,19 +86,23 @@ def email_shell(
     body_html: str,
     *,
     signoff: bool = True,
+    signoff_title: str = _DEFAULT_SIGNOFF_TITLE,
     compliance_footer: bool = False,
 ) -> str:
     """headline_html is whatever goes inside the <h1> (an <em>-wrapped
     word or two is the established house style, e.g. "has <em>lapsed</em>.").
     body_html is everything from the greeting (if any) through the last
     paragraph before the sign-off -- callers own their own <p> tags and
-    their own CTA button via email_cta_button() above."""
+    their own CTA button via email_cta_button() above. signoff_title lets
+    a specific email use a different line under "Venkat" (e.g. "Founder
+    and editor" for the more personal annual-renewal note) without
+    changing the other 14 templates that don't pass it."""
     return (
         f'<div style="font-family: {_FONT_BODY}; max-width: 560px; margin: 0 auto; background: {_BG}; padding: 40px 36px; color: {_TEXT}; line-height: 1.7; font-size: 16px;">'
         f'{_MASTHEAD_HTML}'
         f'<h1 style="font-family: {_FONT_HEADLINE}; font-weight: 400; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 24px;">{headline_html}</h1>'
         f'{body_html}'
-        f'{_SIGNOFF_HTML if signoff else ""}'
+        f'{_signoff_html(signoff_title) if signoff else ""}'
         f'{_COMPLIANCE_FOOTER_HTML if compliance_footer else ""}'
         '</div>'
     )

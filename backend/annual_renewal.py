@@ -124,12 +124,25 @@ async def _ensure_indexes():
 
 
 def _reminder_email_html(expiry_date_str: str) -> str:
+    """The personal version of this notice -- Venkat's own words, not
+    boilerplate -- since this is the one email in the whole lifecycle
+    aimed at someone who already chose to pay once and might choose to
+    again, not someone being sold to cold. Deliberately not reused for
+    _grace_email_html below: that one is the practical "your access is
+    about to pause" notice, where restating this would read as padding
+    rather than sincerity."""
     return email_shell(
         'Your membership <em style="font-style: italic;">renews soon.</em>',
         (
-            f'<p>Your annual membership is due on {expiry_date_str}. Renew now to keep every story, the full archive and the Left Field briefing without a gap.</p>'
+            '<p>Dear reader,</p>'
+            '<p>I don’t take it for granted that you paid for this a year ago, before there was much proof it was worth it. '
+            'It’s still the reason I get to do this work. Thank you.</p>'
+            '<p>There’s more reporting I want to do this year than last, and I’d like you there for it.</p>'
+            f'<p>Your year is up on {expiry_date_str}. If you’d like to continue:</p>'
             + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/subscribe')
+            + '<p>Thank you</p>'
         ),
+        signoff_title='Founder and editor,<br>The State of Play',
     )
 
 
