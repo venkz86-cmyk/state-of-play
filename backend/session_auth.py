@@ -410,19 +410,62 @@ async def verify_code(req: VerifyCodeBody, response: Response):
 def _free_welcome_email_html() -> str:
     """Sent once, only to a brand-new free signup -- someone re-hitting
     register-free with an email that already has an account (free or
-    paid) never gets this again, see is_new_signup below."""
-    return email_shell(
+    paid) never gets this again, see is_new_signup below.
+
+    Venkat's own drafted copy, not a generic transactional note -- longer
+    and more personal than the standard-signup welcome deliberately,
+    since a free reader hasn't paid for anything yet and the whole job
+    of this email is to earn a reason to come back: what TSOP actually
+    is, what a free subscriber gets vs. a paying one, three real stories
+    to start with, and a genuine open invitation to just reply."""
+    # Gmail/Apple Mail show this ahead of the subject line in the inbox
+    # list -- hidden in the body itself since email_shell has no
+    # preview-text concept of its own (shared by 14 other templates,
+    # not worth changing there for one email). The zero-width padding
+    # row stops the client falling back to quoting the email's own
+    # visible first line instead.
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'One reported story a week on the business of Indian sport.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
         'You’re <em style="font-style: italic;">in.</em>',
         (
             '<p>Dear reader,</p>'
-            '<p>You’re in. Every free story on The State of Play is yours now, the moment it goes up.</p>'
-            '<p>Here’s what’s waiting on the other side when you’re ready: the full archive, plus priority '
-            'seats at our events. You’ll also get early access to everything new we build, before anyone '
-            'else sees it.</p>'
-            '<p>For now, just go read.</p>'
-            + email_cta_button('Start reading &rarr;', PUBLIC_BASE_URL)
-            + '<p style="color: #555555;">Questions, anything at all. Reach me directly at '
-            '<a href="mailto:venkat@stateofplay.club" style="color: #555555;">venkat@stateofplay.club</a>.</p>'
+            '<p>Thank you for signing up. I’m Venkat, and I write The State of Play.</p>'
+            '<p>It’s a publication about the business of Indian sport: the deals, rights, ownership, money '
+            'and people moving it. I’m a journalist, and every story is reported, not assembled from press '
+            'releases. Recent ones have covered why India is playing a one-off T20 against Japan, and what '
+            'India’s Women’s World Cup win means for the business of the game. Another went inside the '
+            'broadcast economics behind ICC Women’s Cricket.</p>'
+            '<p>Here’s what to expect as a free subscriber:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">Free stories from the archive, and new ones as we publish them.</li>'
+            '<li style="margin-bottom: 8px;"><a href="https://theleftfield.substack.com" style="color: #1A1A1A;">'
+            'The Left Field</a>, our free publication on the business of Indian sport, twice a week, straight '
+            'to your inbox.</li>'
+            '<li>One deeply reported story each week goes to paying members. You’ll see the start of it in '
+            'your inbox, and can read the rest by upgrading.</li>'
+            '</ul>'
+            '<p>If you’d like a place to begin, these three show what the publication does best:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            f'<li style="margin-bottom: 8px;"><a href="{PUBLIC_BASE_URL}/why-india-is-playing-japan" '
+            'style="color: #1A1A1A;">Why India is playing Japan in a one-off T20</a></li>'
+            f'<li style="margin-bottom: 8px;"><a href="{PUBLIC_BASE_URL}/icc-womens-cricket-sanjog-gupta" '
+            'style="color: #1A1A1A;">Inside ICC Women’s Cricket’s rights deal</a></li>'
+            f'<li><a href="{PUBLIC_BASE_URL}/india-world-cup-win-business" style="color: #1A1A1A;">'
+            'The business behind India’s Women’s World Cup win</a></li>'
+            '</ul>'
+            '<p>If you enjoy it and want the full weekly story, you can become a paying member here. It pays '
+            'for the time and independence this kind of reporting needs. No pressure at all. Reading is '
+            'plenty.</p>'
+            + email_cta_button('Become a paying member &rarr;', f'{PUBLIC_BASE_URL}/subscribe')
+            + '<p>Two small requests. If this email lands in Promotions or Spam, drag it to your Primary '
+            'inbox so the next one reaches you. And if something here is useful, pass it to one person who '
+            'should be reading it.</p>'
+            '<p>You can also just reply to this email. It comes to me, and I read everything.</p>'
+            '<p>Thanks for reading,</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',
     )
