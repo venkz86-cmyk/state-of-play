@@ -114,6 +114,7 @@ export const AccountMockup = () => {
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
   const nextCharge = autoRenews && canAccessPremium ? '₹3,539' : '—';
+  const nextChargeDetail = autoRenews && canAccessPremium ? '₹2,999 + ₹540 GST' : null;
 
   return (
     <MockupLayout testId="page-account" seo={{ title: 'Your Account', path: '/account', noindex: true }}>
@@ -151,9 +152,9 @@ export const AccountMockup = () => {
           {[
             ['Plan', planLabel],
             [dateLabel, endDate || '—'],
-            ['Next charge', nextCharge],
+            ['Next charge', nextCharge, nextChargeDetail],
             ['Member since', memberSince || '—'],
-          ].map(([k, v], i) => (
+          ].map(([k, v, detail], i) => (
             <div
               key={k}
               className={`py-6 px-6 ${i > 0 ? 'border-l border-[var(--rule)]' : ''}`}
@@ -161,6 +162,9 @@ export const AccountMockup = () => {
             >
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
               <p className="font-editorial font-medium text-lg lg:text-xl leading-tight">{v}</p>
+              {detail && (
+                <p className="font-plex text-xs text-[var(--text-muted)] mt-1 tabular-nums">{detail}</p>
+              )}
             </div>
           ))}
         </div>
