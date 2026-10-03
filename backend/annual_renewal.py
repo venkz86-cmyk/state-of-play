@@ -139,7 +139,7 @@ def _reminder_email_html(expiry_date_str: str) -> str:
             'It’s still the reason I get to do this work. Thank you.</p>'
             '<p>There’s more reporting I want to do this year than last, and I’d like you there for it.</p>'
             f'<p>Your year is up on {expiry_date_str}. If you’d like to continue:</p>'
-            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/subscribe')
+            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/account')
             + '<p>Thank you</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',
@@ -152,7 +152,7 @@ def _grace_email_html() -> str:
         (
             '<p>Your annual membership was due today and hasn’t been renewed yet. Your access is still active for now.</p>'
             f'<p>You have {GRACE_PERIOD_DAYS} days to renew before access pauses.</p>'
-            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/subscribe')
+            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/account')
         ),
     )
 
