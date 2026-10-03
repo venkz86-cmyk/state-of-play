@@ -73,6 +73,7 @@ from admin_auth import require_admin_key_or_session
 from tiers import list_all_ghost_members
 from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
@@ -123,39 +124,36 @@ async def _ensure_indexes():
 
 
 def _reminder_email_html(expiry_date_str: str) -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your membership <em style="font-style: italic;">renews soon.</em>'
-        '</h1>'
-        f'<p>Your annual membership is due on {expiry_date_str}. Renew now to keep every story, the full archive and the Left Field briefing without a gap.</p>'
-        '<p style="margin: 32px 0;"><a href="https://www.stateofplay.club/subscribe" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Renew your membership &rarr;</a></p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    """The personal version of this notice -- Venkat's own words, not
+    boilerplate -- since this is the one email in the whole lifecycle
+    aimed at someone who already chose to pay once and might choose to
+    again, not someone being sold to cold. Deliberately not reused for
+    _grace_email_html below: that one is the practical "your access is
+    about to pause" notice, where restating this would read as padding
+    rather than sincerity."""
+    return email_shell(
+        'Your membership <em style="font-style: italic;">renews soon.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>I don’t take it for granted that you paid for this a year ago, before there was much proof it was worth it. '
+            'It’s still the reason I get to do this work. Thank you.</p>'
+            '<p>There’s more reporting I want to do this year than last, and I’d like you there for it.</p>'
+            f'<p>Your year is up on {expiry_date_str}. If you’d like to continue:</p>'
+            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/subscribe')
+            + '<p>Thank you</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
     )
 
 
 def _grace_email_html() -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your membership <em style="font-style: italic;">has lapsed.</em>'
-        '</h1>'
-        '<p>Your annual membership was due today and hasn’t been renewed yet. Your access is still active for now.</p>'
-        f'<p>You have {GRACE_PERIOD_DAYS} days to renew before access pauses.</p>'
-        '<p style="margin: 32px 0;"><a href="https://www.stateofplay.club/subscribe" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Renew your membership &rarr;</a></p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your membership <em style="font-style: italic;">has lapsed.</em>',
+        (
+            '<p>Your annual membership was due today and hasn’t been renewed yet. Your access is still active for now.</p>'
+            f'<p>You have {GRACE_PERIOD_DAYS} days to renew before access pauses.</p>'
+            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/subscribe')
+        ),
     )
 
 

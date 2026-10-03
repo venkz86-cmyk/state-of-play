@@ -65,6 +65,7 @@ from pydantic import BaseModel, EmailStr
 from admin_auth import require_admin_key_or_session
 from resend_email import send_email as _send_email
 from tiers import is_paid_from_labels, is_genuinely_paid
+from email_layout import email_shell as _shared_email_shell
 
 logger = logging.getLogger(__name__)
 
@@ -414,29 +415,17 @@ def _aware(dt: Optional[datetime]) -> Optional[datetime]:
 
 
 def _trial_email_shell(headline_html: str, body_html: str) -> str:
-    """Shared chrome for every Trial email -- masthead line, Gloock
-    headline, Left Field Ventures footer -- factored out once the count
-    reached four templates so the visual system can't drift between
-    them. body_html is everything between the greeting and the sign-off;
-    callers own their own <p> tags."""
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        f'<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        f'{headline_html}'
-        '</h1>'
-        '<p>Dear reader,</p>'
-        f'{body_html}'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
-        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
-        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
-        '</p>'
-        '</div>'
+    """Shared chrome for every Trial email -- now the same email_layout
+    shell every other module's emails use too (this function was the
+    first local version of that idea; promoted to email_layout.py so the
+    whole codebase's emails share one visual system, not just this
+    file's four). Kept as a thin wrapper so every call site below stays
+    unchanged. body_html is everything between the greeting and the
+    sign-off; callers own their own <p> tags."""
+    return _shared_email_shell(
+        headline_html,
+        f'<p>Dear reader,</p>{body_html}',
+        compliance_footer=True,
     )
 
 

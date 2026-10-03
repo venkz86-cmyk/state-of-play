@@ -79,6 +79,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier
 from resend_email import send_email
+from email_layout import email_shell
 
 logger = logging.getLogger(__name__)
 
@@ -252,30 +253,18 @@ async def get_current_member(request: Request) -> Optional[dict]:
 
 
 def _code_email_html(code: str) -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.15; margin: 0 0 24px;">'
-        'Your sign-in <em style="font-style: italic;">code.</em>'
-        '</h1>'
-        '<p>Enter this code where you started signing in. It expires in 10 minutes.</p>'
-        '<p style="margin: 32px 0; font-family: ui-monospace, monospace; font-size: 36px; font-weight: 600; letter-spacing: 0.15em; color: #A0291C;">'
-        f'{code}'
-        '</p>'
-        '<p style="color: #555555;">'
-        'If you didn’t request this, you can safely ignore this email — the code simply won’t be used.'
-        '</p>'
-        '<p style="margin-top: 32px;">'
-        'Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '<hr style="border: 0; border-top: 1px solid #E5E2DC; margin: 32px 0 16px;">'
-        '<p style="font-size: 12px; color: #999999; line-height: 1.7;">'
-        'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
-        '</p>'
-        '</div>'
+    return email_shell(
+        'Your sign-in <em style="font-style: italic;">code.</em>',
+        (
+            '<p>Enter this code where you started signing in. It expires in 10 minutes.</p>'
+            '<p style="margin: 32px 0; font-family: ui-monospace, monospace; font-size: 36px; font-weight: 600; letter-spacing: 0.15em; color: #A0291C;">'
+            f'{code}'
+            '</p>'
+            '<p style="color: #555555;">'
+            'If you didn’t request this, you can safely ignore this email — the code simply won’t be used.'
+            '</p>'
+        ),
+        compliance_footer=True,
     )
 
 
