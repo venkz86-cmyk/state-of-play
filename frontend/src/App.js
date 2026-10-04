@@ -20,6 +20,7 @@ import { StudentsMockup as Students } from "./pages/StudentsMockup";
 import { StudentPayMockup as StudentPay } from "./pages/StudentPayMockup";
 import { GiftMockup as Gift } from "./pages/GiftMockup";
 import { GiftRedeemMockup as GiftRedeem } from "./pages/GiftRedeemMockup";
+import { RenewMockup as Renew } from "./pages/RenewMockup";
 import { TrialMockup as Trial } from "./pages/TrialMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
@@ -69,6 +70,7 @@ function Shell() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<MemberDashboard />} />
           <Route path="/account" element={<MemberDashboard />} />
+          <Route path="/renew" element={<Renew />} />
           <Route path="/welcome" element={<MemberDashboard />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

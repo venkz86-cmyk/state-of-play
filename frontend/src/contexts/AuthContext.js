@@ -172,6 +172,33 @@ export const AuthProvider = ({ children }) => {
     return { success: true, member };
   }, []);
 
+  // Renewal magic link: annual_renewal.py's reminder/grace emails embed a
+  // single-purpose token (?t=...) that RenewMockup.js reads off the URL
+  // and hands here -- same shape as registerFree, just exchanging a
+  // mailed token for a session instead of a freshly-typed email.
+  const completeRenewalLink = useCallback(async (token) => {
+    let data;
+    try {
+      const res = await fetch('/api/auth/renewal-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'This link has expired. Request a new sign-in code.' };
+      }
+    } catch (_e) {
+      throw new Error('Could not reach the server. Please try again.');
+    }
+
+    setSessionToken(data.session_token || '');
+    const member = shapeMember(data);
+    setUser(member);
+
+    return { success: true, member };
+  }, []);
+
   // Logout - forget the token locally (that's what actually signs the
   // reader out now) and tell the backend for good measure.
   const logout = useCallback(async () => {
@@ -193,6 +220,7 @@ export const AuthProvider = ({ children }) => {
       requestCode,
       verifyCode,
       registerFree,
+      completeRenewalLink,
       logout,
       canAccessPremium,
       isFreeMember,

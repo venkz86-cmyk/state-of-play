@@ -74,6 +74,7 @@ from tiers import list_all_ghost_members
 from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
+from session_auth import mint_renewal_link_token
 
 logger = logging.getLogger(__name__)
 
@@ -123,36 +124,70 @@ async def _ensure_indexes():
         logger.warning(f'annual_renewal_notices index ensure failed (non-fatal): {e!r}')
 
 
-def _reminder_email_html(expiry_date_str: str) -> str:
+def _reminder_email_html(expiry_date_str: str, renew_url: str) -> str:
     """The personal version of this notice -- Venkat's own words, not
     boilerplate -- since this is the one email in the whole lifecycle
     aimed at someone who already chose to pay once and might choose to
     again, not someone being sold to cold. Deliberately not reused for
     _grace_email_html below: that one is the practical "your access is
     about to pause" notice, where restating this would read as padding
-    rather than sincerity."""
-    return email_shell(
-        'Your membership <em style="font-style: italic;">renews soon.</em>',
+    rather than sincerity.
+
+    renew_url carries a per-subscriber mint_renewal_link_token() --
+    signs the reader straight into /account instead of the generic,
+    same-for-everyone URL this used to link to."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'Thank you for the first. I’d like to earn another.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'A second year of <em style="font-style: italic;">The State of Play.</em>',
         (
             '<p>Dear reader,</p>'
-            '<p>I don’t take it for granted that you paid for this a year ago, before there was much proof it was worth it. '
-            'It’s still the reason I get to do this work. Thank you.</p>'
-            '<p>There’s more reporting I want to do this year than last, and I’d like you there for it.</p>'
-            f'<p>Your year is up on {expiry_date_str}. If you’d like to continue:</p>'
-            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/account')
-            + '<p>Thank you</p>'
+            '<p>A few of you have written to me over the past year, or sent me a text, to say I charge too little '
+            'for The State of Play. I usually laughed it off. But I have thought about those messages a lot.</p>'
+            '<p>You were telling me that the work mattered to you. For someone trying to build a publication on '
+            'his own, that is a lot to hear.</p>'
+            '<p>When you subscribed, there was no first year to look back on. You paid for a promise: independent '
+            'reporting on the business of Indian sport, one deeply reported story at a time. You gave me the '
+            'chance to find out what I could make of it.</p>'
+            '<p>Now there is a year of work to judge.</p>'
+            '<p>We followed the money behind the RCB and Rajasthan Royals sale processes. We looked at the BCCI’s '
+            'title-rights economy and how Agilitas is building a sportswear business. Another traced what growth '
+            'looks like for kabaddi and volleyball. Different stories, same questions underneath: who is paying, '
+            'who owns what, what changes because of it.</p>'
+            '<p>Your subscription paid for the time to keep asking those questions. To make another call. To go '
+            'back over the numbers. To stay with a story when the first explanation did not hold up.</p>'
+            '<p>I am proud of that work. I also know where it fell short.</p>'
+            '<p>Some stories could have been told better. There were Fridays when health or exhaustion meant '
+            'there was no story, or the reporting just wasn’t ready. I want more sources on the record and '
+            'clearer writing. I want more support around the publication, so everything doesn’t depend on one '
+            'person’s bandwidth. Those are things I have to work on.</p>'
+            f'<p>Your first year of membership is coming to an end. As I wrote in September, renewing for another '
+            'twelve months costs ₹2,999 + GST. That is ₹500 more than the introductory price you paid, and '
+            '₹500 less than the new annual price. I wanted to recognise the readers who backed this early.</p>'
+            '<p>Another year gets you the weekly reported story and The Left Field twice a week, plus the full '
+            'archive. The promise stays the same. My job is to do it better.</p>'
+            '<p>I do not assume that because you subscribed once, you will subscribe again. You have a year’s '
+            'work in front of you now. If it has earned a place in your week, I would love to keep writing for '
+            'you.</p>'
+            + email_cta_button('Renew for another year &rarr;', renew_url)
+            + '<p>If the price no longer works for you, there are no hard feelings. And if you have a question, '
+            'or something you want me to do better, reply to this email. It comes to me.</p>'
+            '<p>Thank you for giving The State of Play its first year.</p>'
         ),
         signoff_title='Founder and editor,<br>The State of Play',
     )
 
 
-def _grace_email_html() -> str:
+def _grace_email_html(renew_url: str) -> str:
     return email_shell(
         'Your membership <em style="font-style: italic;">has lapsed.</em>',
         (
             '<p>Your annual membership was due today and hasn’t been renewed yet. Your access is still active for now.</p>'
             f'<p>You have {GRACE_PERIOD_DAYS} days to renew before access pauses.</p>'
-            + email_cta_button('Renew your membership &rarr;', 'https://www.stateofplay.club/account')
+            + email_cta_button('Renew your membership &rarr;', renew_url)
         ),
     )
 
@@ -246,7 +281,9 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
 
         if days_to_expiry <= 0:
             if not notice or not notice.get('grace_sent'):
-                await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html())
+                renewal_token = mint_renewal_link_token(email, member['id'])
+                renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
+                await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
                 await _db.annual_renewal_notices.update_one(
                     {'email': email, 'expiry': expiry_iso},
                     {'$set': {'grace_sent': now}},
@@ -257,7 +294,12 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
 
         if not notice or not notice.get('reminder_sent'):
             expiry_date_str = expiry_dt.strftime('%d %B %Y')
-            await send_email(to=email, subject='Your membership renews soon', html=_reminder_email_html(expiry_date_str))
+            renewal_token = mint_renewal_link_token(email, member['id'])
+            renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
+            await send_email(
+                to=email, subject='A second year of The State of Play',
+                html=_reminder_email_html(expiry_date_str, renew_url),
+            )
             await _db.annual_renewal_notices.update_one(
                 {'email': email, 'expiry': expiry_iso},
                 {'$set': {'reminder_sent': now}},

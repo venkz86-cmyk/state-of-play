@@ -69,11 +69,14 @@ from pydantic import BaseModel, EmailStr
 from tiers import PLAN_LABELS, ensure_member_labeled
 from payments import fetch_and_record
 from subscription_grace import start_grace_period
+from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 router = APIRouter()
 
@@ -161,6 +164,55 @@ async def create_subscription(req: CreateSubscriptionRequest):
     }
 
 
+def _renewal_thank_you_email_html() -> str:
+    """Sent once, right after a real renewal completes -- verify_subscription
+    is only ever called for an existing, lapsing/lapsed Standard member
+    setting up real auto-renewal (SUBSCRIPTION_PLANS has no live 'new'-
+    signup path yet), so every successful call here already IS a renewal;
+    no extra gating needed beyond the call succeeding. Venkat's own
+    drafted copy."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'You’ve seen a full year of the work. You chose a second.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'Thank you for <em style="font-style: italic;">staying.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for renewing.</p>'
+            '<p>When you first subscribed, you were backing a promise. This time you had a full year of the '
+            'work in front of you, the stories that landed and the Fridays that didn’t, and you chose to stay '
+            'anyway. For a one-person publication, that is the strongest vote there is. I don’t take it '
+            'lightly.</p>'
+            '<p>Your renewal pays for the same things it did last year. The time to make one more call. To go '
+            'back over the numbers. To stay with a story until the explanation holds up.</p>'
+            '<p>Here is what the next twelve months look like for you:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">A deeply reported story every week, in your inbox and on the '
+            'site. These usually go out on Fridays.</li>'
+            '<li style="margin-bottom: 8px;">Priority access to our events, and the ability to gift up to '
+            'five stories a month to anyone, on us.</li>'
+            '<li style="margin-bottom: 8px;">The Left Field briefing on Mondays and Wednesdays.</li>'
+            '<li style="margin-bottom: 8px;">The full archive of every reported story, searchable.</li>'
+            '<li>A direct line to me. Reply to this email for any issue. It comes to me, and I read '
+            'everything.</li>'
+            '</ul>'
+            '<p>What stays the same is the promise: independent reporting on the business of Indian sport. '
+            'Who is paying. Who owns what. What changes because of it. What changes is that I intend to do it '
+            'better: clearer writing, more sources on the record, and more support around the publication so '
+            'it doesn’t all rest on one person.</p>'
+            '<p>If a story leaves you with a question, or you know something I should be looking at, write to '
+            'me.</p>'
+            f'<p>Sign in any time with the email you used to subscribe: '
+            f'<a href="{PUBLIC_BASE_URL}/login" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/login</a>.</p>'
+            '<p>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</p>'
+            '<p>Thank you for another year. I’ll try to earn it.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class VerifySubscriptionRequest(BaseModel):
     razorpay_subscription_id: str
     razorpay_payment_id: str
@@ -209,6 +261,10 @@ async def verify_subscription(req: VerifySubscriptionRequest):
         _razorpay_client, req.razorpay_payment_id, source='subscription_verify',
         fallback_email=email, fallback_plan='',
     )
+
+    sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
+    if not sent:
+        logger.warning(f'verify-subscription: renewal thank-you email failed to send for {email}')
 
     return {'verified': True, 'email': email}
 
