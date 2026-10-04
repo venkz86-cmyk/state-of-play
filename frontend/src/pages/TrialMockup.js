@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { trialUpgradePricing, newSignupAnnualPricing } from '../lib/octoberPricing';
+import { trialUpgradePricing, newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPricing';
 import { STORIES_PER_SEASON } from '../lib/season';
 
 const datelineDate = (d = new Date()) =>
@@ -24,9 +24,14 @@ const TRACK = [
   ['Day 30', 'The extras close', 'Anything published after you joined closes with the month. Your original ten never do.'],
 ];
 
-const FAQS = [
+
+// Built per render so the upgrade answer follows the 6 October cutover
+// and the reader's country, like trialUpgradePricing does.
+const buildFaqs = (isIndia) => [
   ['What happens to my ten stories after 30 days?', 'They stay yours, permanently. That never changes, whether you subscribe or not. If you don’t subscribe, your account becomes a free membership, same as anyone who signs up for the Left Field briefing, with the original ten still there whenever you want them. What closes is everything published after you joined. Subscribing picks that back up, plus the rest of the archive.'],
-  ['Can I upgrade before the 30 days are up?', 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before 6 October and it’s ₹2,499 + GST, today’s rate. From 6 October it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'],
+  ['Can I upgrade before the 30 days are up?', isBeforeOctoberCutover()
+    ? 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before 6 October and it’s ₹2,499 + GST, today’s rate. From 6 October it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'
+    : `Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve, at ${isIndia ? '₹2,999 + GST' : '$160'}. That is the renewal rate, lower than the ${isIndia ? '₹3,499 + GST' : '$169'} a new subscriber pays.`],
   ['Does it auto-renew into a subscription?', 'No. It is a one-time payment for thirty days. Nothing renews, nothing charges you again. If you want more after that, you choose it yourself.'],
   ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
 ];
@@ -217,8 +222,16 @@ export const TrialMockup = () => {
             The Left Field briefing is free either way: trial, subscriber, or neither.
           </p>
 
+          {/* The upgrade checkout only works for a signed-in trial member,
+              so only they see it. A signed-out member gets a way in. */}
+          {(user?.tier === 'trial' || !user) && (
           <div className="mt-10 border-t border-[var(--rule)] pt-8 max-w-[520px]">
-            {justUpgraded ? (
+            {!user ? (
+              <p className="font-plex text-[15px] text-[var(--text-muted)]" data-testid="trial-upgrade-signin">
+                <span className="font-editorial font-medium text-lg text-[var(--text)]">Already in The Ten?</span>{' '}
+                <a href="/login" className="text-[var(--accent-burgundy)] underline underline-offset-4">Sign in to upgrade.</a>
+              </p>
+            ) : justUpgraded ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]">
                 You're upgraded. Reloading your account now…
               </p>
@@ -243,6 +256,7 @@ export const TrialMockup = () => {
               </>
             )}
           </div>
+          )}
         </div>
       </section>
 
@@ -251,7 +265,7 @@ export const TrialMockup = () => {
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">Before you start</p>
           <ul>
-            {FAQS.map(([q, a]) => (
+            {buildFaqs(isIndia).map(([q, a]) => (
               <li key={q} className="py-6 border-b border-[var(--rule)]">
                 <p className="font-editorial font-medium text-lg leading-snug mb-2">{q}</p>
                 <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed max-w-[65ch]">{a}</p>

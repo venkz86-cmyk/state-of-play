@@ -557,7 +557,7 @@ def _free_welcome_email_html() -> str:
             '<p>If you enjoy it and want the full weekly story, you can become a paying member here. It pays '
             'for the time and independence this kind of reporting needs. No pressure at all. Reading is '
             'plenty.</p>'
-            + email_cta_button('Become a paying member &rarr;', f'{PUBLIC_BASE_URL}/subscribe')
+            + email_cta_button('Become a paying member &rarr;', f'{PUBLIC_BASE_URL}/signup')
             + '<p>Two small requests. If this email lands in Promotions or Spam, drag it to your Primary '
             'inbox so the next one reaches you. And if something here is useful, pass it to one person who '
             'should be reading it.</p>'

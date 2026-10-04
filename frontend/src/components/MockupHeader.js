@@ -16,7 +16,7 @@ const LOGO_SRC = '/tsop-logo.png';
 
 const NAV = [
   { path: '/', label: 'Home' },
-  { path: '/state-of-play', label: 'The State of Play' },
+  { path: '/state-of-play', label: 'Stories' },
   { path: '/left-field', label: 'The Left Field' },
   { path: '/outfield', label: 'The Outfield' },
   { path: '/teams', label: 'For Teams' },

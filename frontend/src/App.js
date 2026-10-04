@@ -68,6 +68,7 @@ function Shell() {
           <Route path="/outfield" element={<Outfield />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/subscribe" element={<Navigate to="/signup" replace />} />
           <Route path="/dashboard" element={<MemberDashboard />} />
           <Route path="/account" element={<MemberDashboard />} />
           <Route path="/renew" element={<Renew />} />

@@ -17,11 +17,14 @@ export const newSignupAnnualPricing = (isIndia) => {
   if (isBeforeOctoberCutover()) {
     return {
       amount: isIndia ? '₹2,499' : '$120',
+      // GST-inclusive figure actually charged (INTL has no separate total).
+      total: isIndia ? '₹2,949' : '$120',
       note: isIndia ? 'the rate for a new signup, billed once a year · rises to ₹3,499 + GST from 6 October' : 'the rate for a new signup, billed once a year',
     };
   }
   return {
     amount: isIndia ? '₹3,499' : '$169',
+    total: isIndia ? '₹4,129' : '$169',
     note: 'the rate for a new signup, billed once a year',
   };
 };
