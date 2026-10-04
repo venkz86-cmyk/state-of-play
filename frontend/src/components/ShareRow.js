@@ -36,14 +36,16 @@ export const ShareRow = ({ title = '', url, onGiftClick }) => {
   return (
     <div
       data-testid="share-row"
-      className="flex flex-wrap items-center gap-x-2 gap-y-2 font-plex text-[12px] uppercase tracking-[0.08em]"
+      className="flex flex-wrap items-center gap-x-2 gap-y-2 font-plex text-[12px] uppercase tracking-[0.05em] sm:tracking-[0.08em]"
     >
-      <span className="text-[var(--text-label)] mr-2">Share</span>
+      <span className="text-[var(--text-label)] mr-1 sm:mr-2">Share</span>
       {PLATFORMS.map((k, i) => {
         const isLastPlatform = i === PLATFORMS.length - 1;
         const showSeparatorAfter = !isLastPlatform || !!onGiftClick;
         const common =
-          'inline-flex items-center text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200';
+          // uppercase/tracking repeated here: Tailwind's preflight resets
+          // text-transform on <button>, so "Copy link" otherwise breaks case.
+          'inline-flex items-center uppercase tracking-[0.05em] sm:tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors duration-200';
         return (
           <span key={k} className="inline-flex items-center">
             {k === 'copy' ? (
@@ -53,7 +55,13 @@ export const ShareRow = ({ title = '', url, onGiftClick }) => {
                 data-testid="share-copy"
                 className={common}
               >
-                {copied ? 'Copied' : labelFor(k)}
+                {copied ? 'Copied' : (
+                  <>
+                    {/* "Copy" on phones keeps the whole row on one line */}
+                    <span className="sm:hidden">Copy</span>
+                    <span className="hidden sm:inline">{labelFor(k)}</span>
+                  </>
+                )}
               </button>
             ) : (
               <a
@@ -66,7 +74,7 @@ export const ShareRow = ({ title = '', url, onGiftClick }) => {
                 {labelFor(k)}
               </a>
             )}
-            {showSeparatorAfter && <span className="mx-2 text-[var(--text-label)]">·</span>}
+            {showSeparatorAfter && <span className="mx-1.5 sm:mx-2 text-[var(--text-label)]">·</span>}
           </span>
         );
       })}

@@ -37,16 +37,50 @@ const SectionLabel = ({ children, className = '' }) => (
 const TestimonialBlock = () => {
   const [i, setI] = useState(0);
   const t = TESTIMONIALS[i];
+  // Rendered twice: under the label on desktop, under the quote on phones.
+  const controls = (
+    <>
+      <button
+        type="button"
+        onClick={() => setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)}
+        data-testid="testimonial-prev"
+        className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+      >
+        ← Prev
+      </button>
+      <span className="font-plex text-[12px] tabular-nums text-[var(--text-label)]" data-testid="testimonial-count">
+        {i + 1} / {TESTIMONIALS.length}
+      </span>
+      <button
+        type="button"
+        onClick={() => setI((i + 1) % TESTIMONIALS.length)}
+        data-testid="testimonial-next"
+        className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
+      >
+        Next →
+      </button>
+    </>
+  );
   return (
     <section
       data-testid="home-testimonial"
       className="theme-transition w-full"
       style={{ backgroundColor: 'var(--surface)' }}
     >
+      {/* Desktop: label and controls in a narrow left column, quote beside
+          them, so the band has no empty right half. Phones: label, quote,
+          then controls. */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12 lg:py-16">
-        <SectionLabel className="mb-6 block">What readers say</SectionLabel>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-          <div className="lg:col-span-10 max-w-[60ch] border-l-2 border-[var(--accent-burgundy)] pl-6 lg:pl-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6">
+          <div className="lg:col-span-3">
+            <SectionLabel className="block">What readers say</SectionLabel>
+            {TESTIMONIALS.length > 1 && (
+              <div className="hidden lg:flex items-center gap-4 mt-6">
+                {controls}
+              </div>
+            )}
+          </div>
+          <div className="lg:col-span-9 max-w-[60ch] border-l-2 border-[var(--accent-burgundy)] pl-6 lg:pl-8">
             <blockquote className="font-reading italic text-[19px] leading-relaxed text-[var(--text)]">
               {t.quote.map((para, idx) => (
                 <p key={idx} className={idx < t.quote.length - 1 ? 'mb-4' : ''}>
@@ -64,23 +98,8 @@ const TestimonialBlock = () => {
             )}
           </div>
           {TESTIMONIALS.length > 1 && (
-            <div className="lg:col-span-2 flex lg:justify-end items-center gap-4 mt-2 lg:mt-0">
-              <button
-                type="button"
-                onClick={() => setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)}
-                data-testid="testimonial-prev"
-                className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
-              >
-                ← Prev
-              </button>
-              <button
-                type="button"
-                onClick={() => setI((i + 1) % TESTIMONIALS.length)}
-                data-testid="testimonial-next"
-                className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] hover:text-[var(--text)] transition-colors"
-              >
-                Next →
-              </button>
+            <div className="lg:hidden flex items-center gap-4">
+              {controls}
             </div>
           )}
         </div>

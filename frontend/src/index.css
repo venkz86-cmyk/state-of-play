@@ -121,6 +121,15 @@ html, body { transition: background-color 200ms ease, color 200ms ease; }
   /* Gloock has one weight — let browsers fake an italic clause, but never a bold */
   font-synthesis: style;
 }
+
+/* A whole line set in italic (section labels, datelines, pull quotes,
+   the footer tagline) uses Literata's real italic: Gloock's synthesized
+   oblique crowds its letters at these sizes. The italic clause inside a
+   headline (<em> within an h1) keeps Gloock, since it has no
+   .font-editorial class of its own. */
+.font-editorial.italic {
+  font-family: var(--reading-font), 'Source Serif 4', Georgia, serif !important;
+}
 .font-plex {
   font-family: var(--body-font), 'IBM Plex Sans', system-ui, sans-serif !important;
   font-optical-sizing: auto;
