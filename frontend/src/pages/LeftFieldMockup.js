@@ -3,8 +3,85 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { useAuth } from '../contexts/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+const SUBSTACK_URL = 'https://theleftfield.substack.com';
+
+const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
+
+/* Sign-up in two steps. Substack has no supported way for another site to
+   add a subscriber, so: (1) our own form creates a free member here
+   (register-free: free account, signed in, welcome email), then (2)
+   Substack's own embedded form, where the reader enters their email once
+   more and Substack sends The Left Field. A signed-in reader skips (1). */
+const LeftFieldSignup = () => {
+  const { user, registerFree } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle'); // idle | loading
+  const [error, setError] = useState('');
+  const [step, setStep] = useState(null); // null | 'new' | 'existing'
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!isValidEmail(trimmed)) { setError('Enter a valid email address.'); return; }
+    setError('');
+    setStatus('loading');
+    try {
+      const result = await registerFree(trimmed, name.trim());
+      if (result.success) setStep('new');
+      else if (result.exists) setStep('existing');
+      else { setError(result.error); setStatus('idle'); }
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+      setStatus('idle');
+    }
+  };
+
+  const substackStep = (heading, line) => (
+    <div data-testid="leftfield-substack-step">
+      {heading && <p className="font-editorial font-semibold text-2xl mb-2">{heading}</p>}
+      <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed mb-4 max-w-[42ch]">{line}</p>
+      <iframe
+        title="Sign up for The Left Field on Substack"
+        src={`${SUBSTACK_URL}/embed`}
+        className="w-full max-w-[480px] h-[320px] border border-[var(--rule)] bg-white"
+        frameBorder="0"
+        scrolling="no"
+      />
+    </div>
+  );
+
+  if (step === 'new') return substackStep('Last step.', 'Enter your email once more below. Substack sends The Left Field.');
+  if (step === 'existing' || user?.email) {
+    return substackStep(null, 'You already have an account here. Enter your email below to get The Left Field from Substack.');
+  }
+
+  const field = 'w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-muted)] disabled:opacity-60';
+  return (
+    <form onSubmit={onSubmit} className="w-full max-w-[420px]" data-testid="leftfield-signup">
+      <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-4">Get The Left Field free</p>
+      <label htmlFor="lf-name" className="sr-only">Your name (optional)</label>
+      <input id="lf-name" type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={status === 'loading'}
+        placeholder="Your name (optional)" className={`${field} mb-4`} data-testid="leftfield-name" />
+      <label htmlFor="lf-email" className="sr-only">Email</label>
+      <input id="lf-email" type="email" required value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+        disabled={status === 'loading'} placeholder="Email" className={`${field} mb-6`} data-testid="leftfield-email" />
+      <button type="submit" disabled={status === 'loading'} data-testid="leftfield-submit"
+        className="inline-flex items-center justify-center bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-4 text-base tracking-wide transition-colors duration-200 disabled:opacity-60">
+        {status === 'loading' ? 'Please wait…' : 'Sign up free'}
+      </button>
+      <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3">You also get a free account on The State of Play.</p>
+      {error && <p className="font-plex text-sm text-[var(--accent)] mt-3" data-testid="leftfield-error">{error}</p>}
+      <a href={SUBSTACK_URL} target="_blank" rel="noopener noreferrer" data-testid="leftfield-subscribe"
+        className="inline-flex items-center gap-1 font-plex text-[13px] text-[var(--text-muted)] underline underline-offset-4 mt-5 hover:text-[var(--text)]">
+        Or sign up on Substack directly <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+      </a>
+    </form>
+  );
+};
 
 const fmtDate = (iso) =>
   iso
@@ -68,17 +145,8 @@ export const LeftFieldMockup = () => {
               Short, sharp news briefs on the deals and people moving Indian sport. Published twice a week on Substack. Free to read. The on-ramp to the full TSOP desk.
             </p>
           </div>
-          <div className="lg:col-span-4 flex flex-col lg:items-end gap-5">
-            <a
-              href="https://theleftfield.substack.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="leftfield-subscribe"
-              className="inline-flex items-center justify-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-plex font-semibold px-10 py-5 text-base tracking-wide transition-colors duration-200"
-            >
-              Subscribe on Substack
-              <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-            </a>
+          <div className="lg:col-span-4">
+            <LeftFieldSignup />
           </div>
         </div>
       </section>

@@ -554,6 +554,8 @@ def _free_welcome_email_html() -> str:
             f'<li><a href="{PUBLIC_BASE_URL}/india-world-cup-win-business" style="color: #1A1A1A;">'
             'The business behind India’s Women’s World Cup win</a></li>'
             '</ul>'
+            f'<p>More of my picks are on one page: <a href="{PUBLIC_BASE_URL}/start-here" '
+            'style="color: #1A1A1A;">Start here</a>.</p>'
             '<p>If you enjoy it and want the full weekly story, you can become a paying member here. It pays '
             'for the time and independence this kind of reporting needs. No pressure at all. Reading is '
             'plenty.</p>'
@@ -627,6 +629,14 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     # this endpoint with an email that already has an account. Only the
     # former should get the welcome email below.
     is_new_signup = await find_ghost_member(email, admin_token) is None
+
+    # An email that already has an account must never be signed in from
+    # here: nothing on this path proves the person typing it owns it, so
+    # minting a session would let anyone sign in as any member (paid
+    # included) by typing their address. Existing members sign in through
+    # request-code/verify-code, which emails a code first.
+    if not is_new_signup:
+        raise HTTPException(status_code=409, detail='You already have an account with this email.')
 
     # Tagged (rather than the empty label list this used to pass) so an
     # admin cleanup panel can reliably tell a register-free signup apart

@@ -159,7 +159,13 @@ export const AuthProvider = ({ children }) => {
       });
       data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        return { success: false, error: data.detail || 'Could not register. Please try again.' };
+        // 409: the email already has an account, which has to sign in
+        // with an emailed code instead (see session_auth.register_free).
+        return {
+          success: false,
+          exists: res.status === 409,
+          error: data.detail || 'Could not register. Please try again.',
+        };
       }
     } catch (_e) {
       throw new Error('Could not reach the server. Please try again.');
