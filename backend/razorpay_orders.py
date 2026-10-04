@@ -43,15 +43,16 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry
-from session_auth import get_current_member
+from session_auth import get_current_member, _free_welcome_email_html
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
@@ -481,3 +482,36 @@ async def _create_team_account(req: VerifyPaymentRequest, email: str) -> None:
             f'{req.razorpay_payment_id} ({email}): {e!r} -- needs manual '
             f'follow-up in the Corporate Subscriptions Sheet.'
         )
+
+
+class TestWelcomeEmailRequest(BaseModel):
+    template: str  # 'free' | 'standard'
+    to: EmailStr
+
+
+@router.post('/api/admin/test-welcome-email')
+async def test_welcome_email(
+    req: TestWelcomeEmailRequest, _admin: None = Depends(require_admin_key_or_session),
+):
+    """Admin-only. Fires a real send of either welcome email template
+    through the live Resend account, with no Ghost member created and no
+    payment involved -- a one-off way to eyeball a template exactly as
+    it lands in a real inbox (logo, fonts, link rendering) without going
+    through the actual signup/checkout flow it's normally triggered
+    from. 'standard' has no real payment to compute an expiry from, so
+    it quotes a representative date one year out rather than a real
+    member's own."""
+    if req.template == 'free':
+        html = _free_welcome_email_html()
+        subject = 'Welcome to The State of Play'
+    elif req.template == 'standard':
+        sample_expiry = (datetime.now(timezone.utc) + timedelta(days=365)).strftime('%d %B %Y')
+        html = _standard_welcome_email_html(sample_expiry)
+        subject = "You’re in. Welcome to The State of Play"
+    else:
+        raise HTTPException(status_code=400, detail="template must be 'free' or 'standard'")
+
+    sent = await send_email(to=req.to, subject=subject, html=html)
+    if not sent:
+        raise HTTPException(status_code=502, detail='Resend send failed, check server logs')
+    return {'sent': True, 'template': req.template, 'to': req.to}
