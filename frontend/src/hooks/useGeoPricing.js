@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Country detection only. Prices come from lib/octoberPricing.js, which
+// switches at the 6 October cutover; keeping a price here as well is how
+// stale figures crept onto pages before.
 export const useGeoPricing = () => {
   const [pricing, setPricing] = useState({
-    currency: 'INR',
-    symbol: '₹',
-    amount: '2,499',
-    period: '/year',
-    note: '+ GST (for Indian readers)',
     country: 'IN',
     loading: true
   });
@@ -51,21 +49,11 @@ export const useGeoPricing = () => {
         
         if (countryCode === 'IN') {
           setPricing({
-            currency: 'INR',
-            symbol: '₹',
-            amount: '2,499',
-            period: '/year',
-            note: '+ GST (for Indian readers)',
             country: 'IN',
             loading: false
           });
         } else {
           setPricing({
-            currency: 'USD',
-            symbol: '$',
-            amount: '120',
-            period: '/year',
-            note: 'International pricing',
             country: countryCode,
             loading: false
           });
@@ -74,11 +62,6 @@ export const useGeoPricing = () => {
         console.error('Failed to detect location:', error);
         // Default to India pricing if detection fails
         setPricing({
-          currency: 'INR',
-          symbol: '₹',
-          amount: '2,499',
-          period: '/year',
-          note: '+ GST (for Indian readers)',
           country: 'IN',
           loading: false
         });

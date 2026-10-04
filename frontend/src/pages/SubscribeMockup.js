@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
-import { RazorpayButton } from '../components/RazorpayButton';
+import { useAuth } from '../contexts/AuthContext';
+import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
+import { newSignupAnnualPricing } from '../lib/octoberPricing';
 import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
@@ -33,8 +35,12 @@ const FAQS = [
 ];
 
 export const SubscribeMockup = () => {
+  const { user } = useAuth();
   const pricing = useGeoPricing();
+  const isIndia = pricing.country === 'IN';
+  const annual = newSignupAnnualPricing(isIndia);
   const [premium, setPremium] = useState([]);
+  const [justPaidEmail, setJustPaidEmail] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -86,17 +92,17 @@ export const SubscribeMockup = () => {
             <p className="font-editorial italic text-lg text-[var(--text)] mb-3">Annual Membership</p>
             <div className="flex items-end gap-3 mb-2">
               <span className="font-editorial font-semibold tracking-tight text-[3.5rem] lg:text-[5rem] leading-[0.9] text-[var(--text)]">
-                {pricing.country === 'IN' ? '₹2,499' : '$120'}
+                {annual.amount}
               </span>
               <span className="font-plex text-base text-[var(--text-muted)] pb-3">
-                {pricing.country === 'IN' ? '+ 18% GST / year' : '/ year'}
+                {isIndia ? '+ 18% GST / year' : '/ year'}
               </span>
             </div>
-            {pricing.country === 'IN' && (
-              <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">₹2,949 / year total</p>
+            {isIndia && (
+              <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">{annual.total} / year total</p>
             )}
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
-              One payment for the year.{pricing.country === 'IN' ? ' GST-compliant invoice included.' : ''}
+              One payment for the year.{isIndia ? ' GST-compliant invoice included.' : ''}
             </p>
             <p className="font-plex text-sm text-[var(--text-muted)] mt-3">
               Student?{' '}
@@ -105,8 +111,36 @@ export const SubscribeMockup = () => {
               </Link>
             </p>
           </div>
-          <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
-            <RazorpayButton dataTestId="pricing-subscribe" />
+          <div className="lg:col-span-5 flex flex-col gap-3">
+            {justPaidEmail ? (
+              <div data-testid="signup-checkout-success" className="border border-[var(--rule)] p-6">
+                <p className="font-editorial font-medium text-lg mb-2">You're in.</p>
+                <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed">
+                  {user?.email
+                    ? 'Your membership is active. Reloading your account now.'
+                    : `A welcome note is on its way to ${justPaidEmail}. Sign in with that same email to start reading.`}
+                </p>
+              </div>
+            ) : (
+              // The dynamic Orders checkout, so the backend prices it:
+              // the 6 October rate rise applies here on its own, and
+              // verify_payment sends the Standard welcome email.
+              <RazorpayCheckoutButton
+                plan="standard"
+                country={isIndia ? 'IN' : 'INTL'}
+                buttonLabel="Subscribe"
+                dataTestId="pricing-subscribe"
+                lockedEmail={user?.email}
+                onSuccess={(paidEmail) => {
+                  setJustPaidEmail(paidEmail);
+                  // Same as The Ten: a signed-in reader's session still
+                  // holds the pre-payment tier until a full reload.
+                  if (user?.email) {
+                    setTimeout(() => { window.location.href = '/account'; }, 1500);
+                  }
+                }}
+              />
+            )}
             <Link
               to="/login"
               className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors"

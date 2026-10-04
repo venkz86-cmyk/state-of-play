@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Lock } from 'lucide-react';
-import { RazorpayButton } from './RazorpayButton';
+import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
+import { newSignupAnnualPricing } from '../lib/octoberPricing';
 import { useAuth } from '../contexts/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -11,7 +12,8 @@ const API = process.env.REACT_APP_BACKEND_URL;
    Gradient fade eats the last preview paragraph so readers can *see* the
    text end mid-thought. Below that: a solid, high-contrast block with a
    lock icon, unmissable heading, and a primary CTA (Razorpay). Pricing
-   is geo-IP-aware — India (₹2,499 + GST) vs International ($120).
+   is geo-IP-aware and comes from lib/octoberPricing.js, so it switches
+   at the 6 October cutover with the backend.
 
    Readers whose complimentary Sandbox-event access has lapsed (Ghost's
    sandbox-event-comp label, now downgraded to free) get a heading and
@@ -19,7 +21,8 @@ const API = process.env.REACT_APP_BACKEND_URL;
    pitch — same gate, same price, same CTA underneath. */
 export const Paywall = () => {
   const [isIndia, setIsIndia] = useState(true);
-  const { hasExpiredTrial, isLoggedIn } = useAuth();
+  const { hasExpiredTrial, isLoggedIn, user } = useAuth();
+  const [justPaidEmail, setJustPaidEmail] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -37,9 +40,10 @@ export const Paywall = () => {
     return () => { active = false; };
   }, []);
 
+  const annual = newSignupAnnualPricing(isIndia);
   const priceLine = isIndia
-    ? '₹2,499 + 18% GST per year (₹2,949 total)'
-    : '$120 / year';
+    ? `${annual.amount} + 18% GST per year (${annual.total} total)`
+    : `${annual.amount} / year`;
 
   return (
     <section
@@ -113,7 +117,31 @@ export const Paywall = () => {
         >
           Subscribe to continue reading
         </p>
-        <RazorpayButton dataTestId="paywall-subscribe" />
+        {justPaidEmail ? (
+          <div data-testid="paywall-checkout-success" className="border border-[var(--rule)] p-6 max-w-[520px]">
+            <p className="font-editorial font-medium text-lg mb-2">You're in.</p>
+            <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed">
+              {user?.email
+                ? 'Your membership is active. Reloading the story now.'
+                : `A welcome note is on its way to ${justPaidEmail}. Sign in with that same email to read the rest.`}
+            </p>
+          </div>
+        ) : (
+          <RazorpayCheckoutButton
+            plan="standard"
+            country={isIndia ? 'IN' : 'INTL'}
+            buttonLabel="Subscribe"
+            dataTestId="paywall-subscribe"
+            className="max-w-[520px]"
+            lockedEmail={user?.email}
+            onSuccess={(paidEmail) => {
+              setJustPaidEmail(paidEmail);
+              if (user?.email) {
+                setTimeout(() => { window.location.reload(); }, 1500);
+              }
+            }}
+          />
+        )}
 
         {/* Already signed in — the "sign in" link would be confusing, not helpful */}
         {!isLoggedIn && (

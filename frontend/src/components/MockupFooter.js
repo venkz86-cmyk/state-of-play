@@ -3,17 +3,25 @@ import { ArrowUpRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const FOOTER_LINKS = [
-  { label: 'The State of Play', to: '/state-of-play' },
+  { label: 'Stories', to: '/state-of-play' },
   { label: 'The Left Field', to: '/left-field' },
   { label: 'The Outfield', to: '/outfield' },
   { label: 'Archive', to: '/archive' },
   { label: 'About', to: '/about' },
   { label: 'Contact', to: '/contact' },
-  { label: 'Membership', to: '/membership' },
-  { label: 'For Teams', to: '/teams' },
   { label: 'Partnerships', to: '/partnerships' },
   { label: 'Terms of Service', to: '/terms' },
   { label: 'Privacy Policy', to: '/privacy' },
+];
+
+// Every way in, in one place: Students, The Ten and Gift were otherwise
+// reachable only from inside other pages.
+const SUBSCRIBE_LINKS = [
+  { label: 'Annual', to: '/signup' },
+  { label: 'Students', to: '/students' },
+  { label: 'The Ten', to: '/trial' },
+  { label: 'Gift a year', to: '/gift' },
+  { label: 'Teams', to: '/teams' },
 ];
 
 export const MockupFooter = ({ hideHeroCta = false }) => {
@@ -63,7 +71,7 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
           </div>
 
           {/* Links — one plain list, two compact columns instead of one long list */}
-          <ul className="columns-2 gap-x-10 font-plex text-[14px]">
+          <ul className="columns-2 gap-x-10 font-plex text-[14px] md:flex-1">
             {FOOTER_LINKS.map((item) => (
               <li key={item.to} className="mb-3 break-inside-avoid">
                 <Link
@@ -75,6 +83,24 @@ export const MockupFooter = ({ hideHeroCta = false }) => {
               </li>
             ))}
           </ul>
+
+          <div data-testid="mockup-footer-subscribe-group" className="shrink-0">
+            <span className="font-plex text-[10px] tracking-[0.08em] uppercase text-white/50 block mb-4">
+              Subscribe
+            </span>
+            <ul className="font-plex text-[14px]">
+              {SUBSCRIBE_LINKS.map((item) => (
+                <li key={item.to} className="mb-3">
+                  <Link
+                    to={item.to}
+                    className="text-white/80 hover:text-white transition-colors duration-200"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 

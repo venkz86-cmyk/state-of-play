@@ -468,12 +468,21 @@ def _nomination_welcome_email_html(nominator_name: str, story_url: str, nominee_
 
 
 def _nomination_expiry_email_html(nominator_name: str) -> str:
+    # Same cutoff the checkout prices against, so the quoted rate never
+    # disagrees with what /signup charges. Imported here, not at module
+    # level, to keep this module's import graph unchanged.
+    from razorpay_orders import OCT_1_CUTOFF
+    price = (
+        '₹2,499 + GST ($120 outside India)'
+        if datetime.now(timezone.utc) < OCT_1_CUTOFF
+        else '₹3,499 + GST ($169 outside India)'
+    )
     return email_shell(
         'Your two weeks <em style="font-style: italic;">are up.</em>',
         (
             '<p>Dear reader,</p>'
             f'<p>Your fortnight of The State of Play, courtesy of {html.escape(nominator_name)}, has ended.</p>'
-            '<p>An annual subscription is Rs 2,499 + GST &mdash; one reported story a week on the business of Indian sport, plus the full archive.</p>'
+            f'<p>An annual subscription is {price}. One reported story a week on the business of Indian sport, plus the full archive.</p>'
             + email_cta_button('Subscribe &rarr;', f'{PUBLIC_BASE_URL}/signup')
             + '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
         ),

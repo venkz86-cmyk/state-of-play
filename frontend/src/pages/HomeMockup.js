@@ -11,6 +11,7 @@ import { PartnersBlock } from '../components/PartnersBlock';
 import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
 import { seasonLabel } from '../lib/season';
+import { newSignupAnnualPricing } from '../lib/octoberPricing';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -374,10 +375,10 @@ export const HomeMockup = () => {
               </p>
               <div className="flex items-end gap-2 mb-2">
                 <span className="font-editorial font-semibold text-[2.5rem] lg:text-[2.75rem] leading-[0.9] text-[var(--text)]">
-                  {pricing.country === 'IN' ? '₹2,499' : '$120'}
+                  {newSignupAnnualPricing(pricing.country === 'IN').amount}
                 </span>
                 <span className="font-plex text-sm text-[var(--text-muted)] pb-1.5">
-                  {pricing.country === 'IN' ? '+ GST a year (₹2,949 total)' : '/ year'}
+                  {pricing.country === 'IN' ? `+ GST a year (${newSignupAnnualPricing(true).total} total)` : '/ year'}
                 </span>
               </div>
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
