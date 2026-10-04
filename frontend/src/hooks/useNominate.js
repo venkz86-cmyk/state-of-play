@@ -14,7 +14,7 @@ const CONTEXT_MAX = 200;
  * state machine here means we can never let their client-side rules drift.
  *
  * Session-8 additions:
- *   • On mount, fetches GET /api/nominations/quota?subscriber_email=… to
+ *   • On mount, fetches GET /api/nominations/quota (signed-in session) to
  *     surface how many nominations remain this calendar month.
  *   • Handles two new server-side error shapes:
  *       { success: false, error: 'quota_exceeded', … }
@@ -43,9 +43,7 @@ export function useNominate({
   useEffect(() => {
     if (!subscriberEmail || !API) return;
     let alive = true;
-    fetch(
-      `${API}/api/nominations/quota?subscriber_email=${encodeURIComponent(subscriberEmail)}`,
-    )
+    fetch(`${API}/api/nominations/quota`, { headers: authHeader() })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!alive || !data) return;

@@ -176,7 +176,24 @@ def create_ghost_admin_token():
     return token
 
 class MemberVerifyRequest(BaseModel):
-    email: EmailStr
+    # Ignored: the email always comes from the signed-in session (see
+    # _require_session_email). Kept optional so older clients still parse.
+    email: Optional[str] = ''
+
+
+def _require_session_email(http_request: Request) -> str:
+    """The signed-in reader's email, proven by their session token.
+
+    Endpoints that unlock paid content or return member details must take
+    identity from here, never from an email in the request body: nothing
+    proves the person sending a typed email owns it, so trusting one let
+    anyone read the paid archive, or look up any member, by sending a
+    subscriber's address."""
+    from session_auth import _read_session
+    session = _read_session(http_request)
+    if not session or not session.get('email'):
+        raise HTTPException(status_code=401, detail='Sign in to continue.')
+    return session['email'].lower().strip()
 
 class MemberVerifyResponse(BaseModel):
     is_member: bool
@@ -199,8 +216,9 @@ class MemberVerifyResponse(BaseModel):
     tier: str = 'free'
 
 @api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
-async def verify_ghost_member(request: MemberVerifyRequest):
-    """Verify if an email is a Ghost member and their subscription status"""
+async def verify_ghost_member(request: MemberVerifyRequest, http_request: Request):
+    """Verify the signed-in reader's Ghost membership and subscription status"""
+    request.email = _require_session_email(http_request)
     import httpx
     from urllib.parse import quote
     
@@ -288,7 +306,7 @@ class MemberDetailsResponse(BaseModel):
     tier: str = 'free'
 
 @api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
-async def get_member_details(request: MemberVerifyRequest):
+async def get_member_details(request: MemberVerifyRequest, http_request: Request):
     """Get detailed member info including subscription dates.
 
     Paid status hierarchy (canonical):
@@ -298,6 +316,8 @@ async def get_member_details(request: MemberVerifyRequest):
       4. Ghost status == 'paid'|'comped' → manual admin grant
     """
     import httpx
+
+    request.email = _require_session_email(http_request)
 
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail="Admin API not configured")
@@ -471,7 +491,8 @@ async def get_member_details(request: MemberVerifyRequest):
 
 class ArticleContentRequest(BaseModel):
     slug: str
-    email: str
+    # Ignored: identity comes from the signed-in session.
+    email: Optional[str] = ''
 
 class ArticleContentResponse(BaseModel):
     slug: str
@@ -512,10 +533,12 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
     (free or paid) for 'members'-visibility posts, plus the existing
     Trial ("The Ten") carve-out for eligible trial readers.
 
-    Rate-limited per (email, ip) to prevent a leaked subscriber email being
-    used to scrape the entire premium archive.
+    The email is the signed-in session's, never the request body's (see
+    _require_session_email). Still rate-limited per (email, ip).
     """
     import httpx
+
+    request.email = _require_session_email(http_request)
 
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail="Admin API not configured")
