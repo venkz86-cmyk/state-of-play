@@ -102,7 +102,7 @@ export const Paywall = () => {
             : 'The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them.'}
         </p>
 
-        <p className="font-plex text-[15px] leading-[1.65] text-[var(--text)] font-medium mb-1 tabular-nums">
+        <p className="font-plex text-[15px] leading-[1.65] text-[var(--text)] font-medium mb-1">
           {priceLine}
         </p>
         <p

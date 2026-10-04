@@ -13,76 +13,28 @@ const fmtDate = (iso) =>
         .toUpperCase()
     : '';
 
-// Fallback mock items if Substack feed isn't reachable, so the design is reviewable
-const FALLBACK = [
-  {
-    id: 'lf-1',
-    title: 'The IPL’s next media-rights cycle is already being wargamed',
-    subtitle: 'Notes from a week of conversations with broadcasters and bankers ahead of the next bid window.',
-    author: 'The Left Field',
-    created_at: '2026-04-25T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-  {
-    id: 'lf-2',
-    title: 'Why ISL clubs are quietly hiring data leads, and what they’re asked to prove',
-    subtitle: 'A short read on the new headcount appearing in Indian football front offices.',
-    author: 'The Left Field',
-    created_at: '2026-04-18T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-  {
-    id: 'lf-3',
-    title: 'Inside the franchise sale process: a quick primer for first-time bidders',
-    subtitle: 'How financial advisers structure information asymmetry, and why the second offer almost always wins.',
-    author: 'The Left Field',
-    created_at: '2026-04-11T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-  {
-    id: 'lf-4',
-    title: 'Sponsorship math in 2026: the new floor, the new ceiling, the new walkaway',
-    subtitle: 'Where Indian brand budgets are landing this year, and the categories quietly walking away from cricket.',
-    author: 'The Left Field',
-    created_at: '2026-04-04T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-  {
-    id: 'lf-5',
-    title: 'A short note on the BCCI’s commercial committee, and what it actually decides',
-    subtitle: 'Briefly, on the room where the cricket business gets reshaped each quarter.',
-    author: 'The Left Field',
-    created_at: '2026-03-28T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-  {
-    id: 'lf-6',
-    title: 'PE in Indian sport: three theses, two pitfalls, one open question',
-    subtitle: 'A field guide for the funds finally crossing the threshold.',
-    author: 'The Left Field',
-    created_at: '2026-03-21T09:00:00Z',
-    external_url: 'https://theleftfield.substack.com',
-  },
-];
 
 export const LeftFieldMockup = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  // No stand-in briefs when the feed can't load: invented headlines must
+  // never reach a reader. They get a plain link to Substack instead.
+  const [feedFailed, setFeedFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         if (API) {
-          const r = await axios.get(`${API}/api/substack/feed`, { timeout: 5000 });
+          const r = await axios.get(`${API}/api/substack/feed`, { timeout: 15000 });
           if (active && Array.isArray(r.data) && r.data.length > 0) {
             setItems(r.data);
             return;
           }
         }
-        if (active) setItems(FALLBACK);
+        if (active) setFeedFailed(true);
       } catch (e) {
-        if (active) setItems(FALLBACK);
+        if (active) setFeedFailed(true);
       } finally {
         if (active) setLoading(false);
       }
@@ -106,14 +58,14 @@ export const LeftFieldMockup = () => {
             <div className="flex items-center gap-3 mb-5">
               <Overline className="text-[var(--accent)]">— The Left Field —</Overline>
               <span className="h-px w-8 bg-[var(--accent)]/40" />
-              <Overline className="text-[var(--accent)]">Free · Bi-weekly</Overline>
+              <Overline className="text-[var(--accent)]">Free · Twice a week</Overline>
             </div>
             <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[5rem] leading-[1] mb-6">
               The brief on{' '}
               <em className="italic font-normal text-[var(--accent)]">Indian sport, in your inbox.</em>
             </h1>
             <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
-              Short, sharp news briefs on the businesses, deals and people moving Indian sport. Published bi-weekly on Substack. Free to read. The on-ramp to the full TSOP desk.
+              Short, sharp news briefs on the deals and people moving Indian sport. Published twice a week on Substack. Free to read. The on-ramp to the full TSOP desk.
             </p>
           </div>
           <div className="lg:col-span-4 flex flex-col lg:items-end gap-5">
@@ -139,7 +91,7 @@ export const LeftFieldMockup = () => {
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
             <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[var(--text)]">
-              “Six minutes, twice a week. The deals worth knowing about, the small stories that turn into big ones, and the curated pointers we’d send a friend who works in the industry.”
+              “Six minutes, twice a week. The deals worth knowing about and the small stories that turn into big ones.”
             </p>
             <footer className="mt-8 flex items-center gap-3">
               <span className="h-px w-12 bg-[var(--text)]" />
@@ -153,6 +105,20 @@ export const LeftFieldMockup = () => {
       {loading ? (
         <section className="py-20 text-center">
           <Overline>Loading edition…</Overline>
+        </section>
+      ) : feedFailed ? (
+        <section className="border-b border-[var(--rule)]" data-testid="leftfield-feed-fallback">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
+            <p className="font-editorial italic text-xl lg:text-2xl mb-4">The latest briefs are on Substack.</p>
+            <a
+              href="https://theleftfield.substack.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 font-plex text-[11px] tracking-[0.22em] uppercase text-[var(--text)] border-b border-[var(--text)] pb-1 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors duration-200"
+            >
+              Read The Left Field <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </a>
+          </div>
         </section>
       ) : (
         <>
