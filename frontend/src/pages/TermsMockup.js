@@ -5,7 +5,7 @@ const SECTIONS = [
     id: 'membership',
     heading: 'Membership',
     body: [
-      'The State of Play offers annual memberships billed securely through Razorpay. Each membership grants one user access to all paid content, archives, and newsletters. Memberships renew automatically unless cancelled before the renewal date.',
+      'The State of Play offers annual memberships, paid through Razorpay. Each membership gives one reader access to all paid stories and the full archive. A new membership is a single payment for twelve months and does not renew on its own. If you renew from your account, you are charged automatically each year until you cancel. The Ten is a one-time payment for thirty days and never renews.',
     ],
   },
   {
@@ -19,7 +19,7 @@ const SECTIONS = [
     id: 'content-usage',
     heading: 'Content usage',
     body: [
-      'All editorial material, including newsletters, analysis, and reports, is owned by The State of Play. Redistribution, reproduction, or sharing of paid content is not permitted without written consent. Members may share free or public posts with attribution.',
+      'All editorial material, including stories and briefings, is owned by The State of Play. Redistribution, reproduction, or sharing of paid content is not permitted without written consent. Members may share free or public posts with attribution.',
     ],
   },
   {

@@ -262,15 +262,23 @@ export const ArticleMockup = () => {
 
       {/* DATELINE STRIP */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
-        <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
+        {/* Phones: back link on one line, "date · Season" on the next, so
+            neither half wraps into a cramped column of its own. */}
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[var(--text-muted)]">
             <Link to="/" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
               ← The State of Play
             </Link>
-            <span className="mx-2 text-[var(--text-label)]">·</span>
-            {datelineDate(new Date(article.created_at))}
+            <span className="hidden sm:inline">
+              <span className="mx-2 text-[var(--text-label)]">·</span>
+              {datelineDate(new Date(article.created_at))}
+            </span>
           </span>
           <span className="font-plex text-[14px] text-[var(--text-muted)] tabular-nums">
+            <span className="sm:hidden">
+              {datelineDate(new Date(article.created_at))}
+              <span className="mx-2 text-[var(--text-label)]">·</span>
+            </span>
             Season {seasonLabel(editionNo)}
           </span>
         </div>

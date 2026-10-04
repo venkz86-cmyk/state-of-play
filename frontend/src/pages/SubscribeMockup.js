@@ -24,7 +24,7 @@ const BENEFITS = [
   ['The TSOP Transcript', 'Q&As with the people actually running the business of Indian sport.'],
   ['The numbers behind the story', 'IRR models, valuation breakdowns, market sizing.'],
   ['No advertising', 'No sponsored content, no ads. Just journalism.'],
-  ['A direct line to the desk', 'Reply to any newsletter, get a response from Venkat.'],
+  ['A direct line to the desk', 'Reply to any email from The State of Play and Venkat answers.'],
 ];
 
 const FAQS = [

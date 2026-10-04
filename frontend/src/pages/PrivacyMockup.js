@@ -5,7 +5,7 @@ const SECTIONS = [
     id: 'data-collection',
     heading: 'Data collection',
     body: [
-      'We collect your name, email address, and payment confirmation details from Razorpay. This information is necessary to manage your membership, send newsletters, and authenticate access.',
+      'We collect your name, email address, and payment confirmation details from Razorpay. We use this information to run your membership and sign you in. We also use your email address to send you our stories and briefings.',
     ],
   },
   {
