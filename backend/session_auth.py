@@ -79,12 +79,13 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier
 from resend_email import send_email
-from email_layout import email_shell
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 JWT_SECRET = os.environ.get('JWT_SECRET', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 SESSION_COOKIE_NAME = 'sop_session'
 SESSION_TTL_DAYS = 60
@@ -406,6 +407,70 @@ async def verify_code(req: VerifyCodeBody, response: Response):
     }
 
 
+def _free_welcome_email_html() -> str:
+    """Sent once, only to a brand-new free signup -- someone re-hitting
+    register-free with an email that already has an account (free or
+    paid) never gets this again, see is_new_signup below.
+
+    Venkat's own drafted copy, not a generic transactional note -- longer
+    and more personal than the standard-signup welcome deliberately,
+    since a free reader hasn't paid for anything yet and the whole job
+    of this email is to earn a reason to come back: what TSOP actually
+    is, what a free subscriber gets vs. a paying one, three real stories
+    to start with, and a genuine open invitation to just reply."""
+    # Gmail/Apple Mail show this ahead of the subject line in the inbox
+    # list -- hidden in the body itself since email_shell has no
+    # preview-text concept of its own (shared by 14 other templates,
+    # not worth changing there for one email). The zero-width padding
+    # row stops the client falling back to quoting the email's own
+    # visible first line instead.
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'One reported story a week on the business of Indian sport.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'You’re <em style="font-style: italic;">in.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for signing up. I’m Venkat, and I write The State of Play.</p>'
+            '<p>It’s a publication about the business of Indian sport: the deals, rights, ownership, money '
+            'and people moving it. I’m a journalist, and every story is reported, not assembled from press '
+            'releases. Recent ones have covered why India is playing a one-off T20 against Japan, and what '
+            'India’s Women’s World Cup win means for the business of the game. Another went inside the '
+            'broadcast economics behind ICC Women’s Cricket.</p>'
+            '<p>Here’s what to expect as a free subscriber:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">Free stories from the archive, and new ones as we publish them.</li>'
+            '<li style="margin-bottom: 8px;"><a href="https://theleftfield.substack.com" style="color: #1A1A1A;">'
+            'The Left Field</a>, our free publication on the business of Indian sport, twice a week, straight '
+            'to your inbox.</li>'
+            '<li>One deeply reported story each week goes to paying members. You’ll see the start of it in '
+            'your inbox, and can read the rest by upgrading.</li>'
+            '</ul>'
+            '<p>If you’d like a place to begin, these three show what the publication does best:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            f'<li style="margin-bottom: 8px;"><a href="{PUBLIC_BASE_URL}/why-india-is-playing-japan" '
+            'style="color: #1A1A1A;">Why India is playing Japan in a one-off T20</a></li>'
+            f'<li style="margin-bottom: 8px;"><a href="{PUBLIC_BASE_URL}/icc-womens-cricket-sanjog-gupta" '
+            'style="color: #1A1A1A;">Inside ICC Women’s Cricket’s rights deal</a></li>'
+            f'<li><a href="{PUBLIC_BASE_URL}/india-world-cup-win-business" style="color: #1A1A1A;">'
+            'The business behind India’s Women’s World Cup win</a></li>'
+            '</ul>'
+            '<p>If you enjoy it and want the full weekly story, you can become a paying member here. It pays '
+            'for the time and independence this kind of reporting needs. No pressure at all. Reading is '
+            'plenty.</p>'
+            + email_cta_button('Become a paying member &rarr;', f'{PUBLIC_BASE_URL}/subscribe')
+            + '<p>Two small requests. If this email lands in Promotions or Spam, drag it to your Primary '
+            'inbox so the next one reaches you. And if something here is useful, pass it to one person who '
+            'should be reading it.</p>'
+            '<p>You can also just reply to this email. It comes to me, and I read everything.</p>'
+            '<p>Thanks for reading,</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class RegisterFreeBody(BaseModel):
     email: EmailStr
     name: Optional[str] = ''
@@ -459,6 +524,13 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     if not admin_token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
+    # Known ahead of creation, not inferred from the result -- create_ghost_member
+    # falls back to a lookup on Ghost's 422 (already exists), so its return
+    # value alone can't tell a brand-new signup apart from someone re-hitting
+    # this endpoint with an email that already has an account. Only the
+    # former should get the welcome email below.
+    is_new_signup = await find_ghost_member(email, admin_token) is None
+
     # Tagged (rather than the empty label list this used to pass) so an
     # admin cleanup panel can reliably tell a register-free signup apart
     # from every other kind of Ghost member -- there was no way to do
@@ -466,6 +538,11 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     member = await create_ghost_member(email, (req.name or '').strip(), ['email-gate-signup'], admin_token)
     if not member:
         raise HTTPException(status_code=502, detail='Could not create account')
+
+    if is_new_signup:
+        sent = await send_email(to=email, subject='Welcome to The State of Play', html=_free_welcome_email_html())
+        if not sent:
+            logger.warning(f'register-free: welcome email failed to send for {email}')
 
     session_token = _mint_session(email, member.get('id', ''))
     if not session_token:

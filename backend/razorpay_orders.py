@@ -43,18 +43,22 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label
+from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial
-from session_auth import get_current_member
+from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry
+from session_auth import get_current_member, _free_welcome_email_html
+from resend_email import send_email
+from email_layout import email_shell, email_cta_button
+from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 # Same Apps Script the corporate accounts system already runs on
 # (corporate.py, server.py's /invoice/generate-team) -- Team-5/10's
@@ -237,6 +241,69 @@ async def create_order(req: CreateOrderRequest):
     }
 
 
+def _standard_welcome_email_html(expiry_date_str: str) -> str:
+    """Sent once, only to a brand-new member whose first payment is a
+    plain Standard annual signup (plan == 'standard') -- Trial, Student
+    and gift recipients each already get their own tailored confirmation
+    elsewhere and should never also get this generic one.
+
+    Venkat's own drafted copy. expiry_date_str is this exact payment's
+    computed access-through date (payments.compute_synthetic_expiry,
+    the same number the account page's renewal banner shows) -- a plain
+    Standard signup is a one-time payment, not an auto-renewing
+    subscription, so this deliberately does NOT say "renews" or "cancel
+    any time"; it says what's actually true."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'Thank you for backing independent reporting on Indian sport.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'You’re <em style="font-style: italic;">in.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for becoming a paying member. I’m Venkat, and I write The State of Play. This is '
+            'the email I’d send you if we were having coffee: a proper thank you, and a short note on what '
+            'you’ve signed up for.</p>'
+            '<p>The State of Play exists because enough readers decided independent reporting on the '
+            'business of Indian sport was worth paying for. Your subscription pays for the time and the '
+            'travel this reporting takes. It’s also what lets me say no to stories that aren’t ready.</p>'
+            '<p>What you get as a member:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">A deeply reported story every week, usually on Fridays, in '
+            'your inbox and on the site.</li>'
+            '<li style="margin-bottom: 8px;">The full archive, including the older stories on rights, '
+            'ownership and sponsorship.</li>'
+            '<li style="margin-bottom: 8px;">A direct line to me. Reply to any issue or to this email and '
+            'you’re talking to me, not a support desk.</li>'
+            '<li style="margin-bottom: 8px;">Priority access to our events, and the ability to gift up to '
+            'five stories a month to anyone, on us.</li>'
+            '<li>The ability to comment on stories, and talk with other members.</li>'
+            '</ul>'
+            '<p>A few ways to get started:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            f'<li style="margin-bottom: 8px;">Read the archive. If you only read one older story, make it '
+            f'<a href="{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone" '
+            'style="color: #1A1A1A;">Inside the RCB sale: Birla, Blitzer, Times, Blackstone</a>.</li>'
+            f'<li style="margin-bottom: 8px;">Set up your account and manage your subscription from '
+            f'<a href="{PUBLIC_BASE_URL}/account" style="color: #1A1A1A;">your account page</a>.</li>'
+            '<li>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</li>'
+            '</ul>'
+            f'<p>Your access runs through {expiry_date_str}. This is a one-time payment, not an '
+            'auto-renewing subscription. You’ll get a reminder before it lapses, and you can renew any '
+            'time from your account page.</p>'
+            '<p>One honest note. This is a one-person publication. Some Fridays, flu or a story that isn’t '
+            'ready means an issue arrives late, and I’d rather tell you that than publish something thin. '
+            'You’ll always hear about it from me.</p>'
+            '<p>If you know someone who’d like it, a '
+            f'<a href="{PUBLIC_BASE_URL}/gift" style="color: #1A1A1A;">gift subscription</a> is the nicest '
+            'thing you can do for the publication.</p>'
+            '<p>Thank you for backing this.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
@@ -293,6 +360,15 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     email = session['email'] if session else req.email.lower().strip()
     wanted_labels = PLAN_LABELS[req.plan]
 
+    # Known ahead of ensure_member_labeled, not inferred from its result --
+    # it finds-or-creates, so its return value alone can't tell a brand-new
+    # signup apart from an existing free/newsletter member buying their
+    # first Standard plan. Only checked for 'standard': the only plan here
+    # that should ever get the generic welcome email below (Trial, Student,
+    # trial-upgrade and the team plans each have their own existing
+    # confirmation, or none wanted yet).
+    is_new_standard_signup = req.plan == 'standard' and await find_ghost_member(email, token) is None
+
     # Only strip stray paid labels when this email has never genuinely
     # paid us for real access before -- an existing Ghost member (e.g. a
     # prior free/newsletter signup) buying their first Trial is exactly
@@ -315,11 +391,25 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     # before the trial/trial-upgrade branches below, so a 'trial' payment
     # can also pass its real geo into start_trial(): Razorpay's own
     # currency on the actual charge, not a client-supplied field, decides
-    # IN vs INTL for the trial-upgrade emails later.
+    # IN vs INTL for the trial-upgrade emails later. Also needed before the
+    # welcome email below, which quotes this exact payment's computed
+    # expiry -- the same number the account page's renewal banner shows.
     payment_record = await fetch_and_record(
         _razorpay_client, req.razorpay_payment_id, source='order_verify',
         fallback_email=email, fallback_plan=req.plan,
     )
+
+    if is_new_standard_signup:
+        expiry_dt = compute_synthetic_expiry(payment_record)
+        expiry_date_str = (
+            datetime.fromisoformat(expiry_dt).strftime('%d %B %Y') if expiry_dt else 'a year from today'
+        )
+        sent = await send_email(
+            to=email, subject="You’re in. Welcome to The State of Play",
+            html=_standard_welcome_email_html(expiry_date_str),
+        )
+        if not sent:
+            logger.warning(f'verify-payment: standard welcome email failed to send for {email}')
 
     if req.plan == 'trial':
         country = 'IN' if (payment_record and payment_record.get('currency') == 'INR') else 'INTL'
@@ -391,3 +481,36 @@ async def _create_team_account(req: VerifyPaymentRequest, email: str) -> None:
             f'{req.razorpay_payment_id} ({email}): {e!r} -- needs manual '
             f'follow-up in the Corporate Subscriptions Sheet.'
         )
+
+
+class TestWelcomeEmailRequest(BaseModel):
+    template: str  # 'free' | 'standard'
+    to: EmailStr
+
+
+@router.post('/api/admin/test-welcome-email')
+async def test_welcome_email(
+    req: TestWelcomeEmailRequest, _admin: None = Depends(require_admin_key_or_session),
+):
+    """Admin-only. Fires a real send of either welcome email template
+    through the live Resend account, with no Ghost member created and no
+    payment involved -- a one-off way to eyeball a template exactly as
+    it lands in a real inbox (logo, fonts, link rendering) without going
+    through the actual signup/checkout flow it's normally triggered
+    from. 'standard' has no real payment to compute an expiry from, so
+    it quotes a representative date one year out rather than a real
+    member's own."""
+    if req.template == 'free':
+        html = _free_welcome_email_html()
+        subject = 'Welcome to The State of Play'
+    elif req.template == 'standard':
+        sample_expiry = (datetime.now(timezone.utc) + timedelta(days=365)).strftime('%d %B %Y')
+        html = _standard_welcome_email_html(sample_expiry)
+        subject = "You’re in. Welcome to The State of Play"
+    else:
+        raise HTTPException(status_code=400, detail="template must be 'free' or 'standard'")
+
+    sent = await send_email(to=req.to, subject=subject, html=html)
+    if not sent:
+        raise HTTPException(status_code=502, detail='Resend send failed, check server logs')
+    return {'sent': True, 'template': req.template, 'to': req.to}
