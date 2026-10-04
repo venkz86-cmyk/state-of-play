@@ -74,7 +74,7 @@ const persistJustPaidEmail = (email) => {
 };
 
 export const TrialMockup = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
   const checkoutCountry = isIndia ? 'IN' : 'INTL';
@@ -223,8 +223,10 @@ export const TrialMockup = () => {
           </p>
 
           {/* The upgrade checkout only works for a signed-in trial member,
-              so only they see it. A signed-out member gets a way in. */}
-          {(user?.tier === 'trial' || !user) && (
+              so only they see it. A signed-out member gets a way in.
+              Nothing renders until the session check finishes, so a trial
+              member never sees the sign-in line flash first. */}
+          {!authLoading && (user?.tier === 'trial' || !user) && (
           <div className="mt-10 border-t border-[var(--rule)] pt-8 max-w-[520px]">
             {!user ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]" data-testid="trial-upgrade-signin">
