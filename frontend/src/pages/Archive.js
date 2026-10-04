@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 /* =============================================================================
    /archive — chronological index of everything published.
+   /topic/:slug — the same index for one beat, with its own heading and
+   search-engine title (old /archive?tag= links redirect here).
    Loads ALL posts (paginated through Ghost), groups them by month,
    renders a dense, link-only directory. No covers, no excerpts.
    ============================================================================= */
@@ -57,8 +59,10 @@ export const Archive = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all | state-of-play | left-field
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tagSlug = searchParams.get('tag') || '';
+  const [searchParams] = useSearchParams();
+  const { slug } = useParams();
+  const legacyTag = searchParams.get('tag') || '';
+  const tagSlug = slug || '';
 
   useEffect(() => {
     let active = true;
@@ -117,15 +121,17 @@ export const Archive = () => {
     return out;
   }, [filtered]);
 
+  if (!slug && legacyTag) return <Navigate to={`/topic/${legacyTag}`} replace />;
+
   return (
     <MockupLayout
       testId="page-archive"
       seo={
         tagSlug
           ? {
-              title: `${tagName} — Archive`,
-              path: `/archive?tag=${tagSlug}`,
-              description: `Every State of Play and Left Field story filed under ${tagName}.`,
+              title: tagName,
+              path: `/topic/${tagSlug}`,
+              description: `Every story The State of Play has published on ${tagName}.`,
             }
           : { title: 'Archive', path: '/archive', description: 'Browse every dispatch from The State of Play, chronologically: by month, by year.' }
       }
@@ -139,28 +145,27 @@ export const Archive = () => {
               {loading ? 'Loading…' : `${filtered.length} stor${filtered.length === 1 ? 'y' : 'ies'}`}
             </span>
           </div>
-          <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4rem] leading-[1.05] max-w-4xl">
-            Everything we’ve <em className="italic font-normal text-[var(--accent-burgundy)]">put on the record.</em>
-          </h1>
-          <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
-            Indexed by date. The full back catalogue of long-reads and the weekly briefing.
-          </p>
-
-          {/* Tag filter indicator — only shown when arriving via a tag link */}
-          {tagSlug && (
-            <div className="mt-8 flex items-center gap-3" data-testid="archive-tag-filter">
-              <span className="font-plex text-[13px] text-[var(--text-muted)]">
-                Filtered by <span className="text-[var(--text)] font-medium">{tagName}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setSearchParams((p) => { const n = new URLSearchParams(p); n.delete('tag'); return n; })}
-                data-testid="archive-tag-clear"
-                className="font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 hover:decoration-2 transition-all"
-              >
-                Clear
-              </button>
-            </div>
+          {tagSlug ? (
+            <>
+              <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4rem] leading-[1.05] max-w-4xl" data-testid="topic-heading">
+                {tagName}.
+              </h1>
+              <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
+                {!loading && `${filtered.length} ${filtered.length === 1 ? 'story' : 'stories'}, newest first. `}
+                <Link to="/archive" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="topic-all-stories">
+                  All stories
+                </Link>
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4rem] leading-[1.05] max-w-4xl">
+                Everything we’ve <em className="italic font-normal text-[var(--accent-burgundy)]">put on the record.</em>
+              </h1>
+              <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
+                Indexed by date. The full back catalogue of long-reads and the weekly briefing.
+              </p>
+            </>
           )}
 
           {/* Filter tabs */}
@@ -200,7 +205,7 @@ export const Archive = () => {
                 return (
                   <Link
                     key={t.slug}
-                    to={`/archive?tag=${t.slug}`}
+                    to={`/topic/${t.slug}`}
                     data-testid={`archive-topic-${t.slug}`}
                     className="font-plex text-[12px] uppercase tracking-[0.04em] px-3 py-1.5 border transition-colors"
                     style={{

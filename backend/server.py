@@ -2239,6 +2239,7 @@ async def sitemap_xml():
         ("/state-of-play","0.9", "daily"),
         ("/archive",     "0.8", "daily"),
         ("/season-one",  "0.7", "weekly"),
+        ("/start-here",  "0.7", "weekly"),
         ("/left-field",  "0.8", "weekly"),
         ("/outfield",    "0.7", "weekly"),
         ("/about",       "0.6", "monthly"),
@@ -2283,6 +2284,35 @@ async def sitemap_xml():
     for path, prio, freq in static_paths:
         lines.append(
             f'<url><loc>{SITE}{path}</loc><changefreq>{freq}</changefreq><priority>{prio}</priority></url>')
+    # One /topic/ page per beat in use. Mirrors BEAT_TAGS in
+    # frontend/src/pages/Archive.js; entity tags (people, companies) are
+    # left out so the sitemap only lists the beat pages.
+    beat_names = {
+        'Cricket Markets', 'IPL', 'Franchise Valuations', 'Football', 'Media Rights',
+        'Governance', 'Sponsorship', 'Infrastructure', 'Private Equity in Sport',
+        'Sportswear & Apparel', 'Fitness & Wellness', 'Sports-Tech & Booking Platforms',
+        'Fantasy Sports & Gaming', 'Sporting Goods & Equipment',
+    }
+    # Fetched separately from the posts so a failure here can only drop
+    # the topic URLs, never the stories.
+    topic_slugs = []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f"{GHOST_URL}/ghost/api/content/tags/",
+                params={'key': GHOST_CONTENT_API_KEY, 'limit': 'all', 'include': 'count.posts'},
+            )
+            if r.status_code == 200:
+                topic_slugs = sorted(
+                    t['slug'] for t in r.json().get('tags', [])
+                    if t.get('name') in beat_names and t.get('slug')
+                    and ((t.get('count') or {}).get('posts') or 0) > 0
+                )
+    except Exception as e:
+        logger.error(f"sitemap ghost tags fetch failed: {e}")
+    for topic in topic_slugs:
+        lines.append(
+            f'<url><loc>{SITE}/topic/{topic}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>')
     for p in posts:
         slug = p.get('slug')
         if not slug:
