@@ -98,6 +98,12 @@ export const SubscribeMockup = () => {
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
               One payment for the year.{pricing.country === 'IN' ? ' GST-compliant invoice included.' : ''}
             </p>
+            <p className="font-plex text-sm text-[var(--text-muted)] mt-3">
+              Student?{' '}
+              <Link to="/students" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="signup-student-link">
+                Get the same access for ₹1,770 a year.
+              </Link>
+            </p>
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3 lg:items-end">
             <RazorpayButton dataTestId="pricing-subscribe" />

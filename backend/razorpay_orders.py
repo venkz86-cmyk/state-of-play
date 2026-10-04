@@ -135,6 +135,7 @@ PLAN_PRICING = {
     },
     'student': {
         'IN': {'amount': 177000, 'currency': 'INR', 'label': 'Student Membership'},  # ₹1,500 + 18% GST = ₹1,770
+        'INTL': {'amount': 2900, 'currency': 'USD', 'label': 'Student Membership'},  # $29
     },
     'trial-upgrade': {
         'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539 -- new ₹3,499 rate minus the ₹590 trial fee already paid
@@ -305,6 +306,53 @@ def _standard_welcome_email_html(expiry_date_str: str) -> str:
     )
 
 
+def _student_welcome_email_html() -> str:
+    """Sent once, only to a brand-new member whose first payment is the
+    Student plan (plan == 'student') -- gated the same way the Standard
+    welcome is, on genuinely new rather than merely newly-paid, which
+    also stops a retried verify-payment call from sending this twice.
+    Venkat's own drafted copy."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'The weekly story and the full archive, at a student price.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'You’re <em style="font-style: italic;">in.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for becoming a member. I’m Venkat, and I write The State of Play.</p>'
+            '<p>You have the same membership as any annual reader, at a student price. The discount changes '
+            'what you pay, not what you can read. Your membership runs for twelve months.</p>'
+            '<p>The State of Play reports on the business of Indian sport: the deals, the rights, the '
+            'ownership, the money and the people moving it. Your subscription pays for the time and phone '
+            'calls that reporting needs. Thank you for choosing to back it while you’re studying.</p>'
+            '<p>What you get as a member:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">A deeply reported story every week, in your inbox and on the '
+            'site. These usually go out on Fridays.</li>'
+            '<li style="margin-bottom: 8px;">The Left Field briefing twice a week.</li>'
+            '<li style="margin-bottom: 8px;">The full archive of every reported story since launch, '
+            'searchable.</li>'
+            '<li>A direct line to me. Reply to an issue or to this email. It comes to me, and I read '
+            'everything.</li>'
+            '</ul>'
+            '<p>If you only read one older story to begin with, make it the RCB sale story.</p>'
+            + email_cta_button('Read it &rarr;', f'{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone')
+            + f'<p>Sign in with the email you used for your student application: '
+            f'<a href="{PUBLIC_BASE_URL}/login" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/login</a>.</p>'
+            '<p>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</p>'
+            '<p>The student price is for currently enrolled students. We’ll check your student status again '
+            'when it’s time to renew. If you’ve graduated by then, you can move to the annual plan.</p>'
+            '<p>One honest note. This is a one-person publication. Some Fridays, flu or a story that isn’t '
+            'ready means an issue arrives late, and I’d rather tell you than publish something thin. You’ll '
+            'always hear about it from me.</p>'
+            '<p>Thank you for backing this.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
+
+
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
@@ -364,11 +412,12 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     # Known ahead of ensure_member_labeled, not inferred from its result --
     # it finds-or-creates, so its return value alone can't tell a brand-new
     # signup apart from an existing free/newsletter member buying their
-    # first Standard plan. Only checked for 'standard': the only plan here
-    # that should ever get the generic welcome email below (Trial, Student,
+    # first Standard/Student plan. Only checked for 'standard'/'student':
+    # the two plans here that get a generic welcome email below (Trial,
     # trial-upgrade and the team plans each have their own existing
     # confirmation, or none wanted yet).
     is_new_standard_signup = req.plan == 'standard' and await find_ghost_member(email, token) is None
+    is_new_student_signup = req.plan == 'student' and await find_ghost_member(email, token) is None
 
     # Only strip stray paid labels when this email has never genuinely
     # paid us for real access before -- an existing Ghost member (e.g. a
@@ -411,6 +460,14 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         )
         if not sent:
             logger.warning(f'verify-payment: standard welcome email failed to send for {email}')
+
+    if is_new_student_signup:
+        sent = await send_email(
+            to=email, subject="You’re in. Welcome to The State of Play",
+            html=_student_welcome_email_html(),
+        )
+        if not sent:
+            logger.warning(f'verify-payment: student welcome email failed to send for {email}')
 
     if req.plan == 'trial':
         country = 'IN' if (payment_record and payment_record.get('currency') == 'INR') else 'INTL'

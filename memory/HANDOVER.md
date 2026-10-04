@@ -260,7 +260,7 @@ Always prefer `text-[var(--text)]`, `text-[var(--text-muted)]`, `text-[var(--tex
 - Automated dunning emails (30/7 day expiry alerts)
 - Bookmarks / Reading List
 - Series navigation (tag-driven TOC)
-- "Insider Drops" subscriber-only feed
+- "Insider Drops" - two-way (Venkat drops intel, subscribers respond/build on it), not a Ghost article — own data model, parked/unscoped
 - Consolidate `_create_story_token` helper across cold-link + nominations
 - Standalone hex sweep (~30 remaining hardcoded colours without `dark:` pairs)
 - CI/pre-commit hook flagging new hardcoded hex in JSX

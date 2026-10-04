@@ -188,6 +188,33 @@ def _mint_session(email: str, ghost_member_id: str) -> Optional[str]:
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
 
+RENEWAL_LINK_TTL_DAYS = 30
+
+
+def mint_renewal_link_token(email: str, ghost_member_id: str) -> Optional[str]:
+    """A separate, single-purpose JWT for annual_renewal.py's reminder/
+    grace emails -- a per-subscriber link that signs the reader straight
+    into /account, so a renewal nudge doesn't dead-end on a sign-in-code
+    round-trip. Deliberately NOT just _mint_session with a longer/shorter
+    exp: the 'purpose' claim (checked by _read_session below, and again
+    by POST /api/auth/renewal-link) stops this token from being usable
+    as a direct Authorization: Bearer session, so a link mailed out in
+    bulk can only ever do the one thing it was minted for -- exchange
+    itself for a real session via that one endpoint -- not silently
+    double as a long-lived bearer credential in its own right."""
+    if not JWT_SECRET:
+        return None
+    now = int(datetime.now(timezone.utc).timestamp())
+    payload = {
+        'email': email,
+        'ghost_member_id': ghost_member_id,
+        'purpose': 'renewal_link',
+        'iat': now,
+        'exp': now + RENEWAL_LINK_TTL_DAYS * 24 * 60 * 60,
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+
 def _read_session(request: Request) -> Optional[dict]:
     """Bearer token (Authorization header) is the primary mechanism -- it
     doesn't depend on any cookie policy at all (SameSite, a browser's
@@ -206,9 +233,16 @@ def _read_session(request: Request) -> Optional[dict]:
     if not token or not JWT_SECRET:
         return None
     try:
-        return jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
     except Exception:
         return None
+    # A mint_renewal_link_token() JWT carries a 'purpose' claim a real
+    # session token never does -- reject it here so that token can only
+    # ever be spent through POST /api/auth/renewal-link's own exchange,
+    # never presented directly as a session.
+    if payload.get('purpose'):
+        return None
+    return payload
 
 
 async def get_current_member(request: Request) -> Optional[dict]:
@@ -403,6 +437,69 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         # `Authorization: Bearer <token>` on every request from here on --
         # see _read_session's docstring for why that's now the mechanism
         # this actually depends on, not the cookie set above.
+        'session_token': session_token,
+    }
+
+
+class RenewalLinkBody(BaseModel):
+    token: str
+
+
+@router.post('/api/auth/renewal-link')
+async def renewal_link(req: RenewalLinkBody, response: Response):
+    """Exchanges a mint_renewal_link_token() JWT (embedded as ?t=... in
+    annual_renewal.py's reminder/grace emails) for a real session --
+    called by the frontend's /renew page via fetch, not a bare redirect,
+    since the SPA's actual auth state lives in a bearer token read from a
+    JSON response (see AuthContext.js), not a cookie. Returns the exact
+    same shape verify_code does, so the frontend can reuse the same
+    response handling. Re-looks-up the Ghost member fresh rather than
+    trusting the token's own ghost_member_id -- labels can have changed
+    since the link was minted."""
+    if not JWT_SECRET:
+        raise HTTPException(status_code=503, detail='Not configured')
+
+    try:
+        payload = jwt.decode(req.token, JWT_SECRET, algorithms=['HS256'])
+    except Exception:
+        raise HTTPException(status_code=400, detail='This link has expired. Request a new sign-in code.')
+
+    if payload.get('purpose') != 'renewal_link':
+        raise HTTPException(status_code=400, detail='This link has expired. Request a new sign-in code.')
+
+    email = payload.get('email', '')
+    admin_token = _create_ghost_admin_token()
+    member = await find_ghost_member(email, admin_token) if admin_token else None
+    if not member:
+        raise HTTPException(status_code=400, detail='Account no longer found')
+
+    session_token = _mint_session(email, member.get('id', ''))
+    if not session_token:
+        raise HTTPException(status_code=503, detail='Could not create session')
+
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=session_token,
+        max_age=SESSION_TTL_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=True,
+        samesite='none',
+        path='/',
+    )
+
+    label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+    is_paid = await is_genuinely_paid(label_names, member.get('status', 'free'), email)
+
+    return {
+        'email': email,
+        'ghost_member_id': member.get('id', ''),
+        'name': member.get('name', ''),
+        'is_paid': is_paid,
+        'is_free': not is_paid,
+        'trial_expired': 'sandbox-event-comp' in label_names and not is_paid,
+        'tier': resolve_tier(label_names, is_paid),
+        'status': member.get('status', 'free'),
+        'label_names': label_names,
         'session_token': session_token,
     }
 

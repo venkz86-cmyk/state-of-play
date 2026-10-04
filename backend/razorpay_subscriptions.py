@@ -1,29 +1,27 @@
 """
-razorpay_subscriptions.py — real auto-renewing membership, built for the
-Nov 1 2026 pricing transition. Companion to razorpay_orders.py — one-time
-Orders stay the mechanism for Student and Trial; this module is only for
-the ongoing annual membership.
+razorpay_subscriptions.py — real auto-renewing membership, for anyone who
+has ALREADY paid at least once and is renewing. Companion to
+razorpay_orders.py — a brand-new signup always pays through that module's
+plain one-time Orders flow instead (plan='standard'), never touches a
+Subscription object, and makes no promise about what they'll pay next
+year. Renewal price is next year's decision, made at renewal time.
 
-Three signup/renewal cases, one underlying mechanism (a Razorpay
-Subscription with either a deferred or an immediate first charge):
-
-  X — signs up now, before Nov 1: pays today's one-time price through the
-      EXISTING Orders flow (razorpay_orders.py, plan='standard',
-      unchanged — still 294900 paise). Alongside that, a Subscription is
-      created here on the 'existing' (grandfathered) Plan with `start_at`
-      set ~1 year out, so the mandate is authorised today but the first
-      auto-charge, at the grandfathered rate, only happens at their real
-      renewal next year.
-  Y — an existing subscriber renewing right now: a Subscription on the
-      same 'existing' Plan, but `start_at` = now, so the renewal payment
-      itself IS the subscription's first charge, and it recurs from there.
-  Z — signs up from Nov 1 onward: a Subscription on the 'new' Plan,
-      `start_at` = now. No bridge order — there's no old rate to honour.
+Deliberately simple, one case: a subscriber renewing right now pays the
+current renewal rate in ONE Checkout step, and that same payment sets up
+real auto-renewal from this point forward (`start_at` = now, so the
+payment itself is the subscription's first charge). Nothing is deferred,
+nothing bridges two different prices in one signup -- an earlier version
+of this module tried to also handle a brand-new signup being pre-
+authorised today for a *different* price a year out, which needed two
+separate Checkout popups back to back for that one case. Cut, per
+Venkat's call: renewal pricing is only ever shown to an existing
+subscriber in the first place, so there's nothing to pre-promise a new
+signup at all.
 
 Provides:
-  * SUBSCRIPTION_PLANS                     — tier+country -> plan config
-  * POST /api/razorpay/create-subscription — creates the Subscription for
-    X/Y/Z per the above, returns what the frontend needs to open Razorpay
+  * SUBSCRIPTION_PLANS                     — country -> plan config
+  * POST /api/razorpay/create-subscription — creates the renewal
+    Subscription, returns what the frontend needs to open Razorpay
     Checkout in subscription mode (subscription_id, not order_id).
   * POST /api/razorpay/verify-subscription — verifies the checkout
     signature, then finds-or-creates the Ghost member and applies labels,
@@ -36,30 +34,23 @@ Provides:
 
 When a renewal auto-charge fails and Razorpay gives up retrying, it
 sends `subscription.halted` -- Venkat's call: a one-week grace period,
-not an immediate downgrade. `_start_grace_period()` records the halt
-and emails the subscriber once; `subscription-grace/expire-check` (an
-admin-gated sweep, same shape as nominations.py's own expire-check
-endpoints -- wire it to run daily via a Render Cron Job) strips paid
-access from anyone still in the grace collection past their
-`grace_ends_at`. If the subscription successfully charges again before
-that (`subscription.charged`, handled in server.py's main webhook
-branch), `clear_grace_period()` cancels the pending downgrade so the
-sweep doesn't act on stale state.
+not an immediate downgrade. Handled by subscription_grace.py, shared
+with paypal_subscriptions.py so two payment providers can't disagree
+on this policy: start_grace_period() records the halt and emails the
+subscriber once; POST /api/subscriptions/grace/expire-check (an
+admin-gated sweep, wired to run daily via a Render Cron Job) strips
+paid access from anyone still in grace past their `grace_ends_at`. If
+the subscription successfully charges again first (`subscription.
+charged`, handled in server.py's main webhook branch),
+clear_grace_period() cancels the pending downgrade.
 
-Both 'existing' Plan IDs below are real -- IN and INTL renewal (X/Y)
-both work end to end. 'new' (Z, post-Nov-1 fresh signups) is still a
-placeholder; Venkat creates those two Plans in the Razorpay dashboard's
-Subscriptions product and hands back the plan_ids when that's ready.
+Both Plan IDs below are real, created in the Razorpay dashboard --
+IN and INTL renewal both work end to end.
 
-Two things flagged as needing a live test in Razorpay's test mode before
-this goes live, not just a code review: (1) that a `start_at`-deferred
-subscription actually lets the mandate authenticate now while deferring
-the charge, without an unexpected small verification charge landing on
-the customer; (2) the exact SDK method for verifying a subscription
-checkout's signature — this module assumes
-`client.utility.verify_subscription_payment_signature`, mirroring
-`verify_payment_signature` used for Orders, but that name should be
-confirmed against the installed razorpay SDK version before relying on it.
+Confirmed against the installed razorpay SDK (2.0.x, utility/utility.py):
+`client.utility.verify_subscription_payment_signature` exists and takes
+exactly `razorpay_subscription_id`/`razorpay_payment_id`/`razorpay_signature`,
+matching what this module already sends -- no longer a guess.
 
 Dependencies: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (existing, now live),
 GHOST_URL, GHOST_ADMIN_API_KEY (existing).
@@ -68,44 +59,36 @@ from __future__ import annotations
 
 import os
 import logging
-import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 
-import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from admin_auth import require_admin_key_or_session
-from tiers import PLAN_LABELS, ensure_member_labeled, find_ghost_member
-from payments import fetch_and_record, get_last_payment_by_subscription_id
+from tiers import PLAN_LABELS, ensure_member_labeled
+from payments import fetch_and_record
+from subscription_grace import start_grace_period
 from resend_email import send_email
+from email_layout import email_shell, email_cta_button
 
 logger = logging.getLogger(__name__)
 
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
-
-# Same two labels PLAN_LABELS['standard'] grants -- a subscription only
-# ever confers standard-equivalent access (see module docstring), so a
-# grace-period downgrade just reverses exactly that grant, nothing more.
-GRACE_PERIOD_DAYS = 7
-_DOWNGRADE_LABELS = ('paid-via-razorpay', 'premium-subscriber')
+PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 
 router = APIRouter()
 
 # Injected by server.py at mount time — same pattern as razorpay_orders.py.
 _razorpay_client = None
 _recent_payments: Optional[dict] = None
-_db = None
 
 
-def init(razorpay_client, recent_payments: dict, db_handle=None):
-    global _razorpay_client, _recent_payments, _db
+def init(razorpay_client, recent_payments: dict):
+    global _razorpay_client, _recent_payments
     _razorpay_client = razorpay_client
     _recent_payments = recent_payments
-    _db = db_handle
 
 
 def _create_ghost_admin_token() -> Optional[str]:
@@ -122,19 +105,12 @@ def _create_ghost_admin_token() -> Optional[str]:
         return None
 
 
-# tier -> country -> Plan config. 'existing' is the grandfathered rate for
-# anyone who was a member before Nov 1 (X's deferred year-2 billing, and
-# Y's renewal-now billing, both land here). 'new' is Z's rate.
-# plan_id is filled in once Venkat creates these in the Razorpay dashboard.
+# country -> Plan config, the one renewal rate. plan_id is filled in once
+# Venkat creates each Plan in the Razorpay dashboard -- IN already done,
+# INTL still a placeholder.
 SUBSCRIPTION_PLANS = {
-    'existing': {
-        'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
-        'INTL': {'plan_id': 'plan_TZOohCLUkhJAFy', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
-    },
-    'new': {
-        'IN': {'plan_id': '', 'amount': 412900, 'currency': 'INR', 'label': 'Annual Membership'},   # 3,499 + 18% GST = 4,128.82 -> 4,129
-        'INTL': {'plan_id': '', 'amount': 16900, 'currency': 'USD', 'label': 'Annual Membership'},  # $169
-    },
+    'IN': {'plan_id': 'plan_TX2KRKBrC6HNC1', 'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership'},   # 2,999 + 18% GST = 3,538.82 -> 3,539
+    'INTL': {'plan_id': 'plan_TZOohCLUkhJAFy', 'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership'},  # $149
 }
 
 # A Razorpay Subscription needs a finite total_count, not true "forever".
@@ -142,19 +118,13 @@ SUBSCRIPTION_PLANS = {
 TOTAL_COUNT_YEARS = 100
 
 
-
-def _resolve_plan_config(tier: str, country: str) -> Optional[dict]:
-    plans = SUBSCRIPTION_PLANS.get(tier)
-    if not plans:
-        return None
-    geo = country if country in plans else ('IN' if 'IN' in plans else None)
-    return plans.get(geo)
+def _resolve_plan_config(country: str) -> Optional[dict]:
+    geo = country if country in SUBSCRIPTION_PLANS else 'IN'
+    return SUBSCRIPTION_PLANS.get(geo)
 
 
 class CreateSubscriptionRequest(BaseModel):
-    tier: str          # 'existing' | 'new'
     country: str = 'IN'
-    deferred: bool = False  # True for X: mandate now, first charge ~1 year out
 
 
 @router.post('/api/razorpay/create-subscription')
@@ -162,29 +132,25 @@ async def create_subscription(req: CreateSubscriptionRequest):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
-    config = _resolve_plan_config(req.tier, req.country)
+    config = _resolve_plan_config(req.country)
     if not config:
         raise HTTPException(
             status_code=400,
-            detail=f"No pricing configured for tier='{req.tier}' country='{req.country}'",
+            detail=f"No pricing configured for country='{req.country}'",
         )
     if not config['plan_id']:
         raise HTTPException(
             status_code=503,
-            detail=f"Razorpay Plan not yet created for tier='{req.tier}' country='{req.country}'",
+            detail=f"Razorpay Plan not yet created for country='{req.country}'",
         )
 
-    params = {
-        'plan_id': config['plan_id'],
-        'customer_notify': 1,
-        'total_count': TOTAL_COUNT_YEARS,
-        'notes': {'tier': req.tier, 'country': req.country},
-    }
-    if req.deferred:
-        params['start_at'] = int(time.time()) + 365 * 24 * 60 * 60
-
     try:
-        subscription = _razorpay_client.subscription.create(params)
+        subscription = _razorpay_client.subscription.create({
+            'plan_id': config['plan_id'],
+            'customer_notify': 1,
+            'total_count': TOTAL_COUNT_YEARS,
+            'notes': {'country': req.country},
+        })
     except Exception as e:
         logger.error(f'Razorpay subscription creation failed: {e!r}')
         raise HTTPException(status_code=502, detail='Could not create subscription')
@@ -194,10 +160,57 @@ async def create_subscription(req: CreateSubscriptionRequest):
         'amount': config['amount'],
         'currency': config['currency'],
         'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
-        'tier': req.tier,
-        'deferred': req.deferred,
         'label': config['label'],
     }
+
+
+def _renewal_thank_you_email_html() -> str:
+    """Sent once, right after a real renewal completes -- verify_subscription
+    is only ever called for an existing, lapsing/lapsed Standard member
+    setting up real auto-renewal (SUBSCRIPTION_PLANS has no live 'new'-
+    signup path yet), so every successful call here already IS a renewal;
+    no extra gating needed beyond the call succeeding. Venkat's own
+    drafted copy."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'You’ve seen a full year of the work. You chose a second.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + email_shell(
+        'Thank you for <em style="font-style: italic;">staying.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>Thank you for renewing.</p>'
+            '<p>When you first subscribed, you were backing a promise. This time you had a full year of the '
+            'work in front of you, the stories that landed and the Fridays that didn’t, and you chose to stay '
+            'anyway. For a one-person publication, that is the strongest vote there is. I don’t take it '
+            'lightly.</p>'
+            '<p>Your renewal pays for the same things it did last year. The time to make one more call. To go '
+            'back over the numbers. To stay with a story until the explanation holds up.</p>'
+            '<p>Here is what the next twelve months look like for you:</p>'
+            '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            '<li style="margin-bottom: 8px;">A deeply reported story every week, in your inbox and on the '
+            'site. These usually go out on Fridays.</li>'
+            '<li style="margin-bottom: 8px;">Priority access to our events, and the ability to gift up to '
+            'five stories a month to anyone, on us.</li>'
+            '<li style="margin-bottom: 8px;">The Left Field briefing on Mondays and Wednesdays.</li>'
+            '<li style="margin-bottom: 8px;">The full archive of every reported story, searchable.</li>'
+            '<li>A direct line to me. Reply to this email for any issue. It comes to me, and I read '
+            'everything.</li>'
+            '</ul>'
+            '<p>What stays the same is the promise: independent reporting on the business of Indian sport. '
+            'Who is paying. Who owns what. What changes because of it. What changes is that I intend to do it '
+            'better: clearer writing, more sources on the record, and more support around the publication so '
+            'it doesn’t all rest on one person.</p>'
+            '<p>If a story leaves you with a question, or you know something I should be looking at, write to '
+            'me.</p>'
+            f'<p>Sign in any time with the email you used to subscribe: '
+            f'<a href="{PUBLIC_BASE_URL}/login" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/login</a>.</p>'
+            '<p>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</p>'
+            '<p>Thank you for another year. I’ll try to earn it.</p>'
+        ),
+        signoff_title='Founder and editor,<br>The State of Play',
+    )
 
 
 class VerifySubscriptionRequest(BaseModel):
@@ -232,9 +245,8 @@ async def verify_subscription(req: VerifySubscriptionRequest):
 
     email = req.email.lower().strip()
 
-    # Every subscription tier (existing/grandfathered or new) is a full paid
-    # membership product-wise, just at a different price point — same label
-    # set as the one-shot standard plan.
+    # Same full paid membership access as the one-shot standard plan --
+    # just billed on a real recurring schedule instead of once.
     member = await ensure_member_labeled(email, req.name or '', PLAN_LABELS['standard'], token)
     if not member:
         raise HTTPException(
@@ -250,135 +262,11 @@ async def verify_subscription(req: VerifySubscriptionRequest):
         fallback_email=email, fallback_plan='',
     )
 
+    sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
+    if not sent:
+        logger.warning(f'verify-subscription: renewal thank-you email failed to send for {email}')
+
     return {'verified': True, 'email': email}
-
-
-async def _ensure_grace_indexes():
-    if _db is None:
-        return
-    try:
-        await _db.subscription_grace.create_index('subscription_id', unique=True)
-        await _db.subscription_grace.create_index('status')
-        await _db.subscription_grace.create_index('grace_ends_at')
-    except Exception as e:
-        logger.warning(f'subscription_grace index ensure failed (non-fatal): {e!r}')
-
-
-def _grace_period_email_html() -> str:
-    return (
-        '<div style="font-family: \'Schibsted Grotesk\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A; line-height: 1.7; font-size: 16px;">'
-        '<p style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 12px;">'
-        '— The State of Play —'
-        '</p>'
-        '<h1 style="font-family: Gloock, \'Playfair Display\', Georgia, serif; font-weight: 400; font-size: 26px; line-height: 1.25; margin: 0 0 24px;">'
-        'Your renewal payment <em style="font-style: italic;">didn’t go through.</em>'
-        '</h1>'
-        '<p>We tried to charge your card for your annual renewal and it didn’t go through. Your access is still active for now.</p>'
-        f'<p>You have {GRACE_PERIOD_DAYS} days to update your payment method before access pauses. Reply to this email or write to '
-        '<a href="mailto:venkat@stateofplay.club" style="color: #A0291C;">venkat@stateofplay.club</a> and we’ll help you sort it out.</p>'
-        '<p style="margin-top: 32px;">Venkat<br>'
-        '<span style="font-size: 13px; color: #666666;">Editor, The State of Play</span>'
-        '</p>'
-        '</div>'
-    )
-
-
-async def _start_grace_period(subscription_id: str) -> None:
-    if _db is None:
-        logger.error(f'Subscription {subscription_id} halted but no DB configured -- cannot start grace period')
-        return
-    last_payment = await get_last_payment_by_subscription_id(subscription_id)
-    email = (last_payment or {}).get('email') or ''
-    if not email:
-        logger.error(f'Subscription {subscription_id} halted but no payment record found -- cannot start grace period or notify')
-        return
-
-    await _ensure_grace_indexes()
-    now = datetime.now(timezone.utc)
-    result = await _db.subscription_grace.update_one(
-        {'subscription_id': subscription_id},
-        {'$setOnInsert': {
-            'subscription_id': subscription_id,
-            'email': email,
-            'halted_at': now,
-            'grace_ends_at': now + timedelta(days=GRACE_PERIOD_DAYS),
-            'status': 'in_grace',
-        }},
-        upsert=True,
-    )
-    if getattr(result, 'upserted_id', None) is not None:
-        logger.warning(f'Subscription {subscription_id} halted for {email} — {GRACE_PERIOD_DAYS}-day grace period started')
-        await send_email(
-            to=email,
-            subject='Your renewal payment didn’t go through',
-            html=_grace_period_email_html(),
-        )
-    # else: already in grace from an earlier delivery of the same event —
-    # $setOnInsert means the clock isn't reset by a re-delivered webhook.
-
-
-async def clear_grace_period(subscription_id: str) -> None:
-    """Called from server.py's main webhook branch when a previously
-    halted subscription charges successfully again -- cancels the
-    pending downgrade so the sweep below doesn't act on stale state."""
-    if _db is None or not subscription_id:
-        return
-    await _db.subscription_grace.update_one(
-        {'subscription_id': subscription_id, 'status': 'in_grace'},
-        {'$set': {'status': 'resolved'}},
-    )
-
-
-async def _downgrade_member(email: str, token: str) -> bool:
-    """Reverses exactly what a subscription payment granted -- strips
-    'paid-via-razorpay' and 'premium-subscriber' (PLAN_LABELS['standard'])
-    from the member. Removing only one of the two would leave the other
-    still satisfying tiers.is_paid_from_labels(), so access wouldn't
-    actually change."""
-    member = await find_ghost_member(email, token)
-    if not member:
-        return False
-    existing_labels = [(l.get('name') or '') for l in (member.get('labels') or [])]
-    new_labels = [l for l in existing_labels if l not in _DOWNGRADE_LABELS]
-    if new_labels == existing_labels:
-        return True  # already doesn't carry paid access
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.put(
-                f'{GHOST_URL}/ghost/api/admin/members/{member["id"]}/',
-                json={'members': [{'labels': new_labels}]},
-                headers={'Authorization': f'Ghost {token}'},
-            )
-        return r.status_code == 200
-    except Exception as e:
-        logger.warning(f'Grace-period downgrade PUT failed for {email}: {e!r}')
-        return False
-
-
-@router.post('/api/razorpay/subscription-grace/expire-check')
-async def subscription_grace_expire_check(_admin: None = Depends(require_admin_key_or_session)):
-    """Cron sweep (admin-gated, same shape as nominations.py's own
-    expire-check endpoints) -- for every grace record still 'in_grace'
-    past its grace_ends_at, strips paid access from that member. Wire
-    this to run daily via a Render Cron Job (or Apps Script's
-    time-driven trigger, same as the nominations sweeps)."""
-    if _db is None:
-        return {'downgraded_count': 0}
-    token = _create_ghost_admin_token()
-    now = datetime.now(timezone.utc)
-    downgraded_count = 0
-
-    cursor = _db.subscription_grace.find({'status': 'in_grace', 'grace_ends_at': {'$lt': now}})
-    async for record in cursor:
-        email = record.get('email') or ''
-        ok = bool(token and email) and await _downgrade_member(email, token)
-        await _db.subscription_grace.update_one(
-            {'_id': record['_id']},
-            {'$set': {'status': 'downgraded', 'downgraded_at': now, 'downgrade_succeeded': ok}},
-        )
-        if ok:
-            downgraded_count += 1
-    return {'downgraded_count': downgraded_count}
 
 
 async def handle_subscription_webhook_event(event: str, payload: dict) -> None:
@@ -391,7 +279,7 @@ async def handle_subscription_webhook_event(event: str, payload: dict) -> None:
     sub_id = subscription_entity.get('id', 'unknown')
 
     if event == 'subscription.halted':
-        await _start_grace_period(sub_id)
+        await start_grace_period(sub_id)
     elif event in ('subscription.authenticated', 'subscription.cancelled'):
         logger.info(f'Subscription event {event}: {sub_id}')
     else:

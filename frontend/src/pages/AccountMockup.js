@@ -93,9 +93,11 @@ export const AccountMockup = () => {
   const planLabel = details?.tier === 'trial'
     ? 'Trial'
     : canAccessPremium
-      ? (details?.subscription_status === 'nomination'
-          ? 'Trial'
-          : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
+      ? (details?.tier === 'student'
+          ? 'Student'
+          : details?.subscription_status === 'nomination'
+            ? 'Trial'
+            : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
       : 'Free';
 
   // A Razorpay member's own subscription_status now distinguishes a real
@@ -172,8 +174,8 @@ export const AccountMockup = () => {
 
       {/* Renew — a standard annual member still on a one-time payment,
           not yet on real auto-renewal (subscription_status !== 'active').
-          A trial/corporate/comped member never sees this: they either
-          don't hold this tier or renew through their own path. */}
+          A trial/student/corporate/comped member never sees this: they
+          either don't hold this tier or renew through their own path. */}
       {details?.tier === 'standard' && needsManualRenewal && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
           <div className="border-t border-[var(--text)] pt-8 max-w-[520px]">

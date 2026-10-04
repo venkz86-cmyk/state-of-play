@@ -66,7 +66,7 @@ Build a premium content website for sports business intelligence with a focus on
 
 ### Future/Backlog
 - [ ] Bookmarks/Reading list for subscribers
-- [ ] "Insider Drops" - Subscriber-only private intel feed
+- [ ] "Insider Drops" - two-way, not a Ghost article/broadcast: Venkat drops something he's heard, subscribers can respond/help build on it. Own data model (drop + threaded contributions, likely reusing CustomComments-style infra), not the article pipeline. Shape still undefined beyond this — parked, not scoped yet.
 - [ ] Premium design overhaul (when ready)
 
 ### Mockup Redesign (`/mockup/*`) — Editorial Aesthetic
@@ -139,7 +139,7 @@ Build a premium content website for sports business intelligence with a focus on
 ## Pending / Next
 - [ ] Device Lock — limit logins to 2 devices per account
 - [ ] PWA (manifest + service worker)
-- [ ] "Insider Drops" subscriber-only feed
+- [ ] "Insider Drops" - two-way (Venkat drops intel, subscribers build on it), not a Ghost post — see Future/Backlog above for the fuller note
 - [ ] Reading list / bookmarks
 - [ ] Next.js App Router migration
 - [ ] Cleanup: delete orphaned legacy pages (Home.js, ArticlePage.js, Signup.js, etc. — superseded by `*Mockup.js` after the live cut-over). Tracked in `/app/CODE_REVIEW.md` section 19/20.

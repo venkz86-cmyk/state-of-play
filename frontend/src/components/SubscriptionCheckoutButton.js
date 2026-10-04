@@ -73,10 +73,7 @@ export const SubscriptionCheckoutButton = ({
       const subRes = await fetch(`${API}/api/razorpay/create-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // tier is always 'existing' here: this button only ever covers an
-        // existing subscriber renewing right now (case Y in razorpay_
-        // subscriptions.py's own docstring), never a brand-new signup.
-        body: JSON.stringify({ tier: 'existing', country }),
+        body: JSON.stringify({ country }),
       });
       if (!subRes.ok) {
         const body = await subRes.json().catch(() => ({}));
