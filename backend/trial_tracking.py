@@ -65,7 +65,7 @@ from pydantic import BaseModel, EmailStr
 from admin_auth import require_admin_key_or_session
 from resend_email import send_email as _send_email
 from tiers import is_paid_from_labels, is_genuinely_paid
-from email_layout import email_shell as _shared_email_shell
+from email_layout import email_shell as _shared_email_shell, email_cta_button as _shared_email_cta_button
 
 logger = logging.getLogger(__name__)
 
@@ -192,8 +192,8 @@ async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN'
 
     sent = await _send_email(
         to=email,
-        subject='Your ten stories are live',
-        html=_trial_welcome_email_html(),
+        subject='Welcome to The Ten. Start here.',
+        html=_trial_welcome_email_html(record['country']),
     )
     if not sent:
         logger.warning(f'Trial welcome email failed to send for {email}')
@@ -458,18 +458,65 @@ def _trial_upgrade_price_text(country: str) -> str:
     return f'${amount // 100}'
 
 
-def _trial_welcome_email_html() -> str:
+def _trial_price_text(country: str) -> str:
+    """The live Trial price for this reader's geo, resolved through
+    razorpay_orders.py's own pricing config rather than a number
+    hardcoded here -- mirrors _trial_upgrade_price_text's own pattern
+    and reasoning exactly, including the same local-import note (avoids
+    a circular import, since razorpay_orders.py imports start_trial
+    from this module)."""
+    from razorpay_orders import _resolve_plan_config
+    config = _resolve_plan_config('trial', country)
+    amount = config['amount']
+    if config.get('currency') == 'INR':
+        return f'₹{amount // 100:,} all in'
+    return f'${amount // 100}'
+
+
+def _trial_welcome_email_html(country: str = 'IN') -> str:
     """Sent immediately on day 1, from start_trial() itself rather than
     the daily sweep -- there's no "5 days from now" to wait for, the
-    moment to welcome someone is the moment their ten stories unlock."""
-    return _trial_email_shell(
+    moment to welcome someone is the moment their ten stories unlock.
+
+    Venkat's own drafted copy. Bypasses _trial_email_shell (below) and
+    calls _shared_email_shell directly -- the wrapper auto-prepends
+    "Dear reader," and hardcodes the default signoff, but this draft
+    writes its own greeting and wants the same "Founder and editor"
+    signoff the other three welcome emails use, which the wrapper
+    doesn't support overriding."""
+    preheader = (
+        '<div style="display:none;max-height:0;overflow:hidden;">'
+        'Your ten stories are ready. You have thirty days to read everything new, too.</div>'
+        '<div style="display:none;max-height:0;overflow:hidden;">' + ('&nbsp;&zwnj;' * 20) + '</div>'
+    )
+    return preheader + _shared_email_shell(
         'Welcome to <em style="font-style: italic;">The Ten.</em>',
         (
-            '<p>Your ten stories are live, starting now. They\'re the ten most recent State of Play originals at the moment you signed up, and they\'re yours to keep, whatever you decide at the end of the month.</p>'
-            '<p>Stay the full 30 days and everything we publish in that window is yours too, on top of the original ten. That bonus access closes with the trial. The original ten never do.</p>'
-            f'<p style="margin: 32px 0;"><a href="{PUBLIC_BASE_URL}" style="display: inline-block; background: #A0291C; color: #fff; text-decoration: none; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; padding: 14px 28px;">Start reading &rarr;</a></p>'
-            '<p style="color: #555555;">Questions any time, just reply to this email.</p>'
+            '<p>Dear reader,</p>'
+            '<p>Thank you for trying The State of Play. I’m Venkat, and I write it.</p>'
+            '<p>Start with this story: JSW Inspire and the business behind India’s other blue. It follows '
+            'the apparel deal behind the shirts India wears at multi-sport Games, and the sportswear '
+            'business being built around it.</p>'
+            + _shared_email_cta_button('Read it &rarr;', f'{PUBLIC_BASE_URL}/jsw-inspire-indian-olympic-association-asian-games')
+            + '<p>The Ten gives you the ten most recent stories, in full, from the day you join. They stay '
+            'yours after your thirty days are up. You can also read every new story I publish during the '
+            'month. Those usually go out on Fridays.</p>'
+            '<p>At the end of thirty days, access to those new stories closes. Your original ten stay open. '
+            'The Left Field briefing keeps coming twice a week, free.</p>'
+            f'<p>Your {_trial_price_text(country)} payment covers this month. It is a one-time payment, not '
+            'a recurring subscription. You won’t be charged again unless you choose to subscribe.</p>'
+            f'<p>If the reporting earns a place in your week, you can upgrade before the month ends and get '
+            'thirteen months of annual membership for the price of twelve. That opens the full archive and '
+            f'keeps every new story coming. The details are here: '
+            f'<a href="{PUBLIC_BASE_URL}/trial" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/trial</a>.</p>'
+            '<p>For now, read the first story. That’s what this month is for.</p>'
+            f'<p>Sign in with the email you used to join: '
+            f'<a href="{PUBLIC_BASE_URL}/login" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/login</a>.</p>'
+            '<p>Add hello@stateofplay.club to your contacts so the next issue reaches you. And if a story '
+            'leaves you with a question, reply to this email. It comes to me, and I read everything.</p>'
+            '<p>Thanks for reading.</p>'
         ),
+        signoff_title='Founder and editor,<br>The State of Play',
     )
 
 
