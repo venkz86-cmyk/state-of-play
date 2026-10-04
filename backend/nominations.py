@@ -663,14 +663,17 @@ async def nominations_submit(req: NominationSubmit, request: Request):
 
 
 @router.get('/api/nominations/quota')
-async def nominations_quota(subscriber_email: str):
-    """Return the current subscriber's nomination quota state.
+async def nominations_quota(request: Request):
+    """Return the signed-in subscriber's nomination quota state.
 
-    Query param `subscriber_email`. Response:
+    Identity comes from the session, never a query parameter. Response:
       { used: int, quota: int, remaining: int, resets_on: str }
     Fail-open: if Mongo is unavailable, returns full quota available.
     """
-    used = await _count_monthly_nominations(subscriber_email)
+    member = await get_current_member(request)
+    if not member:
+        raise HTTPException(status_code=401, detail='Sign in to continue.')
+    used = await _count_monthly_nominations(member['email'])
     return {
         'used': used,
         'quota': MONTHLY_NOMINATION_QUOTA,

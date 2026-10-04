@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { authHeader } from '../lib/sessionToken';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const MAX_BODY_LENGTH = 2000;
@@ -195,8 +196,8 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
     try {
       const res = await fetch(`${API}/api/comments/${comment.id}/edit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author_email: user.email, body: body.trim() }),
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        body: JSON.stringify({ body: body.trim() }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -285,7 +286,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
   useEffect(() => {
     if (compact || !user?.email || !API) return;
     let active = true;
-    fetch(`${API}/api/comments/my-title?email=${encodeURIComponent(user.email)}`)
+    fetch(`${API}/api/comments/my-title`, { headers: authHeader() })
       .then((r) => r.json())
       .then((data) => {
         if (active && data.title) {
@@ -310,11 +311,10 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
     try {
       const res = await fetch(`${API}/api/comments/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({
           post_slug: postSlug,
           parent_id: parentId || undefined,
-          author_email: user.email,
           author_name: user.name || '',
           author_title: title.trim(),
           body: body.trim(),
@@ -435,8 +435,9 @@ export const CustomComments = ({ postSlug, user }) => {
       setLoading(false);
       return;
     }
-    const qs = user?.email ? `?viewer_email=${encodeURIComponent(user.email)}` : '';
-    fetch(`${API}/api/comments/${postSlug}${qs}`)
+    // A signed-in viewer is identified by the session header, which is how
+    // the server marks their own comments as editable.
+    fetch(`${API}/api/comments/${postSlug}`, { headers: authHeader() })
       .then((r) => r.json())
       .then((data) => {
         if (active) setComments(Array.isArray(data) ? data : []);

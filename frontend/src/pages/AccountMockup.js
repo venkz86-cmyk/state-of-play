@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { authHeader } from '../lib/sessionToken';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -62,8 +63,8 @@ export const AccountMockup = () => {
       try {
         const r = await axios.post(
           `${API}/api/ghost/member-details`,
-          { email: user.email },
-          { timeout: 8000 }
+          {},
+          { timeout: 8000, headers: authHeader() }
         );
         if (active && r.data) setDetails(r.data);
       } catch (e) {

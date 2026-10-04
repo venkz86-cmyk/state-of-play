@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { authHeader } from '../lib/sessionToken';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { newSignupAnnualPricing } from '../lib/octoberPricing';
@@ -39,7 +40,7 @@ export const StudentsMockup = () => {
     if (!user?.email || !API || !isStudent) return;
     (async () => {
       try {
-        const r = await axios.post(`${API}/api/ghost/member-details`, { email: user.email }, { timeout: 8000 });
+        const r = await axios.post(`${API}/api/ghost/member-details`, {}, { timeout: 8000, headers: authHeader() });
         if (active && r.data) setDetails(r.data);
       } catch (e) {
         console.error('Member details failed:', e);

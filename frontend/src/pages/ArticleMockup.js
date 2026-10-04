@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { authHeader } from '../lib/sessionToken';
 import { ghostAPI, fixContentLinks } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupHeader } from '../components/MockupHeader';
@@ -138,8 +139,9 @@ export const ArticleMockup = () => {
       try {
         const r = await axios.post(
           `${API}/api/ghost/article-content`,
-          { slug: article.id, email: user.email },
-          { timeout: 10000 }
+          { slug: article.id },
+          // The server takes the reader from the session, not a typed email.
+          { timeout: 10000, headers: authHeader() }
         );
         if (!active) return;
         if (r.data?.html) {

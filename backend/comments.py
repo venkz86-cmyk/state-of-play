@@ -44,7 +44,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field, EmailStr
 
 from admin_auth import require_admin_key_or_session
@@ -149,9 +149,28 @@ def _serialize(doc: dict, *, viewer_email: Optional[str] = None, include_email: 
 
 
 # ─── Models ──────────────────────────────────────────────────────────────────
+def _session_email(request: Request) -> Optional[str]:
+    """The signed-in reader's email, proven by their session token. Who
+    is commenting always comes from here, never from an email in the
+    request: nothing proves a typed email belongs to the person sending
+    it, so trusting one let anyone post or edit as any member."""
+    from session_auth import _read_session
+    session = _read_session(request)
+    email = (session or {}).get('email')
+    return email.lower().strip() if email else None
+
+
+def _require_session_email(request: Request) -> str:
+    email = _session_email(request)
+    if not email:
+        raise HTTPException(status_code=401, detail='Sign in to comment.')
+    return email
+
+
 class CommentSubmit(BaseModel):
     post_slug: str = Field(..., min_length=1, max_length=300)
-    author_email: EmailStr
+    # Ignored: the commenter is the signed-in session (see _session_email).
+    author_email: Optional[str] = ''
     author_name: str = Field('', max_length=200)
     # Optional context line — "Portfolio Manager, XYZ Capital" — shown next
     # to the name. Same 50-char cap as Ghost's own version of this field.
@@ -167,21 +186,22 @@ class CommentModerate(BaseModel):
 
 
 class CommentEdit(BaseModel):
-    author_email: EmailStr
+    # Ignored: the editor is the signed-in session (see _session_email).
+    author_email: Optional[str] = ''
     body: str = Field(..., min_length=1, max_length=MAX_BODY_LENGTH)
 
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 @router.post('/api/comments/submit')
-async def submit_comment(req: CommentSubmit):
-    """Member-only. Verifies the submitting email against Ghost server-side
-    before accepting — never trusts a client-supplied membership claim.
+async def submit_comment(req: CommentSubmit, request: Request):
+    """Member-only. The commenter is the signed-in session's email,
+    verified as a paid member against Ghost server-side.
     Always lands as status=pending; a human approves before it's public."""
     if _db is None:
         raise HTTPException(status_code=503, detail='Comment store unavailable')
     await ensure_indexes()
 
-    email_norm = req.author_email.lower().strip()
+    email_norm = _require_session_email(request)
     if not await _is_paid_ghost_member(email_norm):
         raise HTTPException(status_code=403, detail='Comments are for subscribers')
 
@@ -223,20 +243,18 @@ async def submit_comment(req: CommentSubmit):
 
 
 @router.post('/api/comments/{comment_id}/edit')
-async def edit_comment(comment_id: str, req: CommentEdit):
+async def edit_comment(comment_id: str, req: CommentEdit, request: Request):
     """A commenter editing their own, already-live comment. Applies
     immediately -- no moderation queue, unlike a brand-new comment. The
     comment already went through review once to get published; an edit
     to it is the author's own prerogative from there, the same way
     Reddit lets you edit a live comment without it vanishing back into
     a mod queue. Ownership is the stored author_email matching the
-    caller's -- the same trust boundary submit_comment already uses (a
-    real, Ghost-verified email), not a separate session token this
-    module has no concept of."""
+    signed-in session's email."""
     if _db is None:
         raise HTTPException(status_code=503, detail='Comment store unavailable')
 
-    email_norm = req.author_email.lower().strip()
+    email_norm = _require_session_email(request)
     doc = await _db.comments.find_one({'comment_id': comment_id})
     if not doc:
         raise HTTPException(status_code=404, detail='Comment not found')
@@ -260,18 +278,19 @@ async def edit_comment(comment_id: str, req: CommentEdit):
 
 
 @router.get('/api/comments/my-title')
-async def get_my_title(email: str):
+async def get_my_title(request: Request):
     """The commenter's own title/affiliation, so the field can be
     pre-filled on any device rather than only remembered per-browser.
     Derived from their most recent comment that set one — no separate
-    profile store needed. Public data (it's shown on every comment they
-    post anyway), so no auth beyond knowing the email.
+    profile store needed. Looked up for the signed-in session's email
+    only, so nobody can tie an email address to a commenter.
     Registered before /api/comments/{slug} for the same route-ordering
     reason as /pending and /approved above."""
-    if _db is None:
+    email = _session_email(request)
+    if _db is None or not email:
         return {'title': ''}
     doc = await _db.comments.find_one(
-        {'author_email': email.lower().strip(), 'author_title': {'$nin': [None, '']}},
+        {'author_email': email, 'author_title': {'$nin': [None, '']}},
         sort=[('created_at', -1)],
     )
     return {'title': (doc or {}).get('author_title', '')}
@@ -326,18 +345,19 @@ async def get_approved_comments(
 
 
 @router.get('/api/comments/{slug}')
-async def get_comments(slug: str, viewer_email: Optional[str] = None):
+async def get_comments(slug: str, request: Request):
     """Public. Approved comments only, oldest first. Never includes any
-    author's raw email (see _serialize) — viewer_email, when passed, only
-    gets back an is_own flag on the caller's own comments, enough for the
-    frontend to show its own Edit button."""
+    author's raw email (see _serialize). A signed-in viewer gets an is_own
+    flag on their own comments, enough for the frontend to show its Edit
+    button; the viewer is the session, never a query parameter, so nobody
+    can map an email address to its comments."""
     if _db is None:
         return []
     cursor = _db.comments.find(
         {'post_slug': slug, 'status': 'approved'}
     ).sort('created_at', 1)
     docs = await cursor.to_list(length=500)
-    viewer_norm = viewer_email.lower().strip() if viewer_email else None
+    viewer_norm = _session_email(request)
     return [_serialize(d, viewer_email=viewer_norm, include_email=False) for d in docs]
 
 
