@@ -283,6 +283,8 @@ def _standard_welcome_email_html(expiry_date_str: str) -> str:
             '</ul>'
             '<p>A few ways to get started:</p>'
             '<ul style="padding-left: 20px; margin: 0 0 20px;">'
+            f'<li style="margin-bottom: 8px;">The stories I’d read first are on one page: '
+            f'<a href="{PUBLIC_BASE_URL}/start-here" style="color: #1A1A1A;">Start here</a>.</li>'
             f'<li style="margin-bottom: 8px;">Read the archive. If you read one older story, make it '
             f'<a href="{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone" '
             'style="color: #1A1A1A;">this</a>: a tick-tock of how a Blitzer-led consortium struck a $1.78 '
@@ -339,6 +341,8 @@ def _student_welcome_email_html() -> str:
             '</ul>'
             '<p>If you only read one older story to begin with, make it the RCB sale story.</p>'
             + email_cta_button('Read it &rarr;', f'{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone')
+            + f'<p>More of my picks are on one page: <a href="{PUBLIC_BASE_URL}/start-here" '
+            'style="color: #1A1A1A;">Start here</a>.</p>'
             + f'<p>Sign in with the email you used for your student application: '
             f'<a href="{PUBLIC_BASE_URL}/login" style="color: #1A1A1A;">{PUBLIC_BASE_URL}/login</a>.</p>'
             '<p>Add hello@stateofplay.club to your contacts so issues stay out of Promotions.</p>'

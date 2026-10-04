@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
@@ -19,6 +20,7 @@ export const EmailGate = () => {
   const [name, setName] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
   const [error, setError] = useState('');
+  const [exists, setExists] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +34,7 @@ export const EmailGate = () => {
     try {
       const result = await registerFree(trimmed, name.trim());
       if (!result.success) {
+        setExists(!!result.exists);
         setError(result.error || 'Could not register. Please try again.');
         setStatus('idle');
       }
@@ -103,7 +106,7 @@ export const EmailGate = () => {
           <input
             type="email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+            onChange={(e) => { setEmail(e.target.value); if (error) { setError(''); setExists(false); } }}
             placeholder="you@yourdomain.com"
             disabled={status === 'loading'}
             data-testid="email-gate-email"
@@ -121,6 +124,12 @@ export const EmailGate = () => {
           {error && (
             <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid="email-gate-error">
               {error}
+              {exists && (
+                <>
+                  {' '}
+                  <Link to="/login" className="underline underline-offset-4" data-testid="email-gate-signin">Sign in</Link>
+                </>
+              )}
             </p>
           )}
         </form>
