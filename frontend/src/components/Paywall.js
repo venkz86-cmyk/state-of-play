@@ -143,6 +143,18 @@ export const Paywall = () => {
           />
         )}
 
+        {/* A cheaper first step for a reader not ready for a year. Hidden
+            from anyone already in The Ten or whose trial has ended. */}
+        {!justPaidEmail && !hasExpiredTrial && user?.tier !== 'trial' && (
+          <p className="font-plex text-[14px] text-[var(--text-muted)] mt-5" data-testid="paywall-the-ten">
+            Not ready for a year?{' '}
+            <Link to="/trial" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+              Start with The Ten
+            </Link>
+            , ten stories for {isIndia ? '₹590' : '$9'}.
+          </p>
+        )}
+
         {/* Already signed in — the "sign in" link would be confusing, not helpful */}
         {!isLoggedIn && (
           <div className="mt-5">
