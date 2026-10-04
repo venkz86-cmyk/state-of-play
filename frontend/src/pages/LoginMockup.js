@@ -88,11 +88,8 @@ export const LoginMockup = () => {
 
         {!codeSent ? (
           <>
-            <p className="font-plex text-sm text-[var(--text-muted)] mb-3">
-              Password-free sign-in for subscribers — nothing to remember.
-            </p>
             <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mb-10 max-w-[45ch] leading-relaxed">
-              Enter the email associated with your subscription. We'll send a sign-in code to your inbox.
+              Enter the email you signed up with and we'll send you a sign-in code. No password needed.
             </p>
 
             <form onSubmit={onRequestCode} className="space-y-7">
@@ -123,7 +120,7 @@ export const LoginMockup = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="login-submit"
-                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60"
               >
                 {submitting ? 'Sending…' : 'Send code'}
               </button>
@@ -173,7 +170,7 @@ export const LoginMockup = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="login-submit"
-                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60"
               >
                 {submitting ? 'Verifying…' : 'Sign in'}
               </button>

@@ -26,7 +26,7 @@ const STORY = [
   ['Founded', 'Bengaluru, 2025'],
   ['Audience', 'Investors, owners, league executives, sports lawyers and global funds'],
   ['Reach', 'India + a growing international subscriber base'],
-  ['Cadence', 'Weekly deep-dives and bi-weekly Left Field briefs'],
+  ['Cadence', 'Weekly deep-dives and Left Field briefs twice a week'],
 ];
 
 export const PartnershipsMockup = () => (
