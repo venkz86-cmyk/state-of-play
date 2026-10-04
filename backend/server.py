@@ -2476,16 +2476,30 @@ try:
 except Exception as _e:
     logging.warning(f"nudge module not mounted: {_e!r}")
 
-# Mount real auto-renewing membership subscriptions (Nov 1 pricing transition)
+# Mount real auto-renewing membership subscriptions (Nov 1 pricing transition).
+# clear_grace_period and the grace-period router itself both moved to
+# subscription_grace.py when the tier concept was cut from
+# razorpay_subscriptions.py -- this mount block previously still imported
+# clear_grace_period from razorpay_subscriptions (no longer exported there)
+# and called the old 3-arg init(), so the whole try block silently failed
+# and neither router ever got mounted at all. Fixed here, and
+# subscription_grace's own router (its /expire-check cron endpoint) is now
+# actually mounted for the first time.
 try:
     from razorpay_subscriptions import (
         router as razorpay_subscriptions_router,
         init as razorpay_subscriptions_init,
         handle_subscription_webhook_event,
+    )
+    from subscription_grace import (
+        router as subscription_grace_router,
+        init as subscription_grace_init,
         clear_grace_period,
     )
-    razorpay_subscriptions_init(razorpay_client, recent_payments, db)
+    razorpay_subscriptions_init(razorpay_client, recent_payments)
+    subscription_grace_init(db)
     app.include_router(razorpay_subscriptions_router)
+    app.include_router(subscription_grace_router)
 except Exception as _e:
     logging.warning(f"razorpay_subscriptions module not mounted: {_e!r}")
     handle_subscription_webhook_event = None
