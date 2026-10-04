@@ -50,7 +50,7 @@ export const PrivacyMockup = () => (
     seo={{ title: 'Privacy', path: '/privacy', description: 'How The State of Play collects, stores, and uses information about its readers and subscribers.' }}
     testId="mockup-privacy"
     kicker="Privacy Policy"
-    updated="04 June 2026"
+    updated="04 October 2026"
     title="Less data, kept carefully."
     subtitle="What we collect, what we don't, and how we use it."
     sections={SECTIONS}

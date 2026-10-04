@@ -54,7 +54,7 @@ export const TermsMockup = () => (
     seo={{ title: 'Terms', path: '/terms', description: 'The State of Play: terms of use, subscription terms, and refund policy.' }}
     testId="mockup-terms"
     kicker="Terms of Service"
-    updated="04 June 2026"
+    updated="04 October 2026"
     title="The terms we operate under."
     subtitle="A short, readable contract between The State of Play and the people who read us."
     sections={SECTIONS}
