@@ -262,7 +262,7 @@ export const LeftFieldMockup = () => {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
           <div className="max-w-[640px]">
             <p className="font-editorial italic text-xl lg:text-[1.5rem] leading-[1.4] text-[var(--text)] mb-5">
-              If the briefs are useful, the full desk goes further. Deal analysis, franchise valuations, the reporting behind the brief.
+              If the briefs are useful, the full desk goes further, with the deal analysis and reporting behind each brief.
             </p>
             <Link
               to="/state-of-play"
