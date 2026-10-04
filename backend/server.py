@@ -2238,6 +2238,7 @@ async def sitemap_xml():
         ("/",            "1.0", "daily"),
         ("/state-of-play","0.9", "daily"),
         ("/archive",     "0.8", "daily"),
+        ("/season-one",  "0.7", "weekly"),
         ("/left-field",  "0.8", "weekly"),
         ("/outfield",    "0.7", "weekly"),
         ("/about",       "0.6", "monthly"),

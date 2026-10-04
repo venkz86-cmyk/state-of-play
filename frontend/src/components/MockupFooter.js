@@ -6,6 +6,7 @@ const FOOTER_LINKS = [
   { label: 'Stories', to: '/state-of-play' },
   { label: 'The Left Field', to: '/left-field' },
   { label: 'The Outfield', to: '/outfield' },
+  { label: 'Season One', to: '/season-one' },
   { label: 'Archive', to: '/archive' },
   { label: 'About', to: '/about' },
   { label: 'Contact', to: '/contact' },

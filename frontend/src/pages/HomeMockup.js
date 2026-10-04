@@ -181,9 +181,13 @@ export const HomeMockup = () => {
           <span className="font-plex text-[14px] font-normal text-[var(--text-muted)]">
             Bengaluru · {datelineDate()}
           </span>
-          <span className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums">
+          <Link
+            to="/season-one"
+            data-testid="home-season-link"
+            className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+          >
             {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season {seasonLabel(editionNo)}
-          </span>
+          </Link>
         </div>
         {!authLoading && !isMember && (
           <p className="font-editorial italic text-[16px] text-[var(--text)] pt-4">

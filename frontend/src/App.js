@@ -22,6 +22,7 @@ import { GiftMockup as Gift } from "./pages/GiftMockup";
 import { GiftRedeemMockup as GiftRedeem } from "./pages/GiftRedeemMockup";
 import { RenewMockup as Renew } from "./pages/RenewMockup";
 import { TrialMockup as Trial } from "./pages/TrialMockup";
+import { SeasonMockup as Season } from "./pages/SeasonMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
 import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
@@ -83,6 +84,7 @@ function Shell() {
           <Route path="/gift" element={<Gift />} />
           <Route path="/gift/redeem" element={<GiftRedeem />} />
           <Route path="/trial" element={<Trial />} />
+          <Route path="/season-one" element={<Season />} />
           <Route path="/teams/manage" element={<TeamsManage />} />
           <Route path="/teams/login" element={<TeamsLogin />} />
           <Route path="/partnerships" element={<Partnerships />} />
