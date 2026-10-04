@@ -411,7 +411,7 @@ export const ArticleMockup = () => {
                 <span key={t.slug || t.name}>
                   {t.slug ? (
                     <Link
-                      to={`/archive?tag=${t.slug}`}
+                      to={`/topic/${t.slug}`}
                       data-testid={`article-tag-${t.slug}`}
                       className="text-[var(--text-label)] underline underline-offset-[4px] decoration-1 hover:text-[var(--accent-burgundy)] transition-colors"
                     >

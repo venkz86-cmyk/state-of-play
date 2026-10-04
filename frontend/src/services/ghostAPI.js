@@ -33,6 +33,9 @@ export const fixContentLinks = (html) => {
 // Publication-routing tags — used internally to sort posts into The State
 // of Play vs The Left Field, not meaningful to a reader as a topic.
 const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'public']);
+// Ghost's own hidden tags (named "#something" in Ghost, slug "hash-something")
+// are editorial plumbing, e.g. #start-here, and never shown to readers.
+const isHiddenTag = (slug) => !slug || INTERNAL_TAGS.has(slug) || slug.startsWith('hash-');
 
 class GhostAPI {
   constructor() {
@@ -197,13 +200,13 @@ class GhostAPI {
       publication: this.getPublicationType(post),
       is_premium: isPremium,
       requires_registration: requiresRegistration,
-      theme: post.primary_tag?.name || post.tags?.[0]?.name || 'Reportage',
+      theme: post.primary_tag?.name || (post.tags || []).find((t) => !isHiddenTag(t.slug))?.name || 'Reportage',
       primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
       tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),
       // Reader-facing topic tags for "Filed under" chips and tag browsing —
       // publication-routing tags excluded, they're plumbing, not a topic.
       tags: (post.tags || [])
-        .filter(t => t.slug && t.name && !INTERNAL_TAGS.has(t.slug))
+        .filter(t => t.name && !isHiddenTag(t.slug))
         .map(t => ({ name: t.name, slug: t.slug })),
       image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
@@ -246,8 +249,8 @@ class GhostAPI {
    */
   async getRelatedPosts(post, limit = 3) {
     if (!post) return [];
-    const meaningfulTags = (post.tag_slugs || []).filter((s) => s && !INTERNAL_TAGS.has(s));
-    const primary = post.primary_tag_slug && !INTERNAL_TAGS.has(post.primary_tag_slug)
+    const meaningfulTags = (post.tag_slugs || []).filter((s) => !isHiddenTag(s));
+    const primary = post.primary_tag_slug && !isHiddenTag(post.primary_tag_slug)
       ? post.primary_tag_slug
       : meaningfulTags[0] || null;
 
