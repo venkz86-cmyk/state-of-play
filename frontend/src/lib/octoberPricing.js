@@ -36,7 +36,7 @@ export const newSignupAnnualPricing = (isIndia) => {
 // existing_reader_rate_until); create_order charges the same rule.
 const EXISTING_READER_RATE_ENDS = new Date('2026-11-01T00:00:00+05:30');
 
-// The window in which signed-out visitors are invited to sign in for it.
+// Between the rate rise and the end of 31 October.
 export const isExistingReaderWindow = () => {
   const now = new Date();
   return now >= OCT_1_CUTOVER && now < EXISTING_READER_RATE_ENDS;
