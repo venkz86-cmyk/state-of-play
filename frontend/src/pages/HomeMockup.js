@@ -410,11 +410,6 @@ export const HomeMockup = () => {
                   {pricing.country === 'IN' ? `+ GST a year (${annual.total} total)` : '/ year'}
                 </span>
               </div>
-              {annual.existingReader && (
-                <p data-testid="home-existing-reader-rate" className="font-plex text-sm font-medium text-[var(--accent-burgundy)] mb-2">
-                  {annual.note}
-                </p>
-              )}
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
                 One deeply reported story a week on the business of Indian sport, plus the full archive.
               </p>
