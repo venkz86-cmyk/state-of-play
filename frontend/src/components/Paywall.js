@@ -40,6 +40,8 @@ export const Paywall = () => {
     return () => { active = false; };
   }, []);
 
+  // A qualifying reader's price (₹2,499 until 31 October) without saying
+  // why: the offer is email-only, explained on /signup where it lands.
   const annual = annualPricingFor(isIndia, user);
   const priceLine = isIndia
     ? `${annual.amount} + 18% GST per year (${annual.total} total)`
@@ -108,7 +110,7 @@ export const Paywall = () => {
         <p
           className="font-plex text-[13px] text-[var(--text-muted)] mb-8"
         >
-          {annual.existingReader ? annual.note : 'Weekly deep-dives · Full archive'}
+          Weekly deep-dives · Full archive
         </p>
 
         <p
