@@ -573,6 +573,10 @@ def _free_welcome_email_html() -> str:
 class RegisterFreeBody(BaseModel):
     email: EmailStr
     name: Optional[str] = ''
+    # Where the sign-up came from (see payments.record_signup).
+    source: Optional[str] = ''
+    ref: Optional[str] = ''
+    landing: Optional[str] = ''
 
 
 @router.post('/api/auth/register-free')
@@ -642,11 +646,16 @@ async def register_free(req: RegisterFreeBody, http_request: Request, response: 
     # admin cleanup panel can reliably tell a register-free signup apart
     # from every other kind of Ghost member -- there was no way to do
     # that before this label existed.
-    member = await create_ghost_member(email, (req.name or '').strip(), ['email-gate-signup'], admin_token)
+    from payments import record_signup, source_label
+    labels = ['email-gate-signup']
+    if source_label(req.source):
+        labels.append(source_label(req.source))
+    member = await create_ghost_member(email, (req.name or '').strip(), labels, admin_token)
     if not member:
         raise HTTPException(status_code=502, detail='Could not create account')
 
     if is_new_signup:
+        await record_signup('free', email, source=req.source, ref=req.ref, landing=req.landing)
         sent = await send_email(to=email, subject='Welcome to The State of Play', html=_free_welcome_email_html())
         if not sent:
             logger.warning(f'register-free: welcome email failed to send for {email}')

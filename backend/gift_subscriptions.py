@@ -90,7 +90,7 @@ from admin_auth import require_admin_key_or_session
 from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS, _resolve_plan_config as _resolve_standard_plan
 from razorpay_subscriptions import SUBSCRIPTION_PLANS as RENEWAL_PLANS
 from tiers import ensure_member_labeled, find_ghost_member, is_genuinely_paid
-from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry, claim_payment
+from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry, claim_payment, record_signup, clean_tag
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 from session_auth import get_current_member
@@ -280,6 +280,8 @@ def _gift_receipt_email_html(redeem_url: str, code: str) -> str:
 class GiftCreateOrderRequest(BaseModel):
     country: str = 'IN'
     recipient_email: Optional[str] = None
+    source: Optional[str] = ''
+    ref: Optional[str] = ''
 
 
 @router.post('/api/gifts/subscription/create-order')
@@ -319,7 +321,8 @@ async def gift_create_order(req: GiftCreateOrderRequest):
             'payment_capture': 1,
             # The recipient is fixed here, with the price it was quoted
             # at; verify uses this, not whatever the browser sends later.
-            'notes': {'plan': 'standard', 'gift': 'true', 'recipient': recipient_email},
+            'notes': {'plan': 'standard', 'gift': 'true', 'recipient': recipient_email,
+                      'source': clean_tag(req.source), 'ref': clean_tag(req.ref)},
         })
     except Exception as e:
         logger.error(f'Razorpay gift order creation failed: {e!r}')
@@ -402,7 +405,12 @@ async def gift_subscription_verify_payment(req: GiftVerifyPaymentRequest, reques
 
     # One payment, one gift (see payments.claim_payment). A retried call
     # gets the original result back instead of a second gift.
-    if await claim_payment(req.razorpay_payment_id, buyer_email, 'gift') == 'repeat':
+    gift_claim = await claim_payment(req.razorpay_payment_id, buyer_email, 'gift')
+    if gift_claim == 'new':
+        await record_signup('gift', buyer_email, source=order_notes.get('source', ''),
+                            ref=order_notes.get('ref', ''), plan='gift',
+                            payment_id=req.razorpay_payment_id)
+    if gift_claim == 'repeat':
         if recipient_email:
             return {'verified': True, 'delivery': 'direct', 'recipient_email': recipient_email, 'already_subscribed': False}
         existing = await _db.gift_subscriptions.find_one({'razorpay_payment_id': req.razorpay_payment_id}) if _db is not None else None

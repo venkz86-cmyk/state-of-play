@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authHeader } from '../lib/sessionToken';
+import { attributionFields } from '../lib/attribution';
 
 /* RazorpayCheckoutButton -- the dynamic Orders API checkout
    (razorpay_orders.py's create-order / verify-payment), opened via
@@ -83,6 +84,9 @@ export const RazorpayCheckoutButton = ({
   // already a paying subscriber (see that module's docstring).
   createOrderEndpoint = '/api/razorpay/create-order',
   extraOrderFields,
+  // Short name for this button, for the admin Sources view
+  // (payments.SIGNUP_SOURCES on the server).
+  source,
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
@@ -105,7 +109,7 @@ export const RazorpayCheckoutButton = ({
       const orderRes = await fetch(`${API}${createOrderEndpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader() },
-        body: JSON.stringify({ plan, country, ...extraOrderFields }),
+        body: JSON.stringify({ plan, country, ...attributionFields(source), ...extraOrderFields }),
       });
       if (!orderRes.ok) {
         const body = await orderRes.json().catch(() => ({}));

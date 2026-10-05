@@ -11,6 +11,7 @@ import { TrialsPanel } from '../components/admin/TrialsPanel';
 import { StudentApplicationsPanel } from '../components/admin/StudentApplicationsPanel';
 import { CorporateAccountsPanel } from '../components/admin/CorporateAccountsPanel';
 import { LinksPanel } from '../components/admin/LinksPanel';
+import { SourcesPanel } from '../components/admin/SourcesPanel';
 import { OverviewPanel } from '../components/admin/OverviewPanel';
 import { FreeRegistrationsPanel } from '../components/admin/FreeRegistrationsPanel';
 
@@ -86,6 +87,7 @@ export const AdminDashboard = () => {
           <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
           <Route path="students" element={<StudentApplicationsPanel onAuthError={onAuthError} />} />
           <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
+          <Route path="sources" element={<SourcesPanel onAuthError={onAuthError} />} />
           <Route path="free-signups" element={<FreeRegistrationsPanel onAuthError={onAuthError} />} />
         </Routes>
       </main>

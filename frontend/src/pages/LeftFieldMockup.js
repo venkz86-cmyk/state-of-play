@@ -30,7 +30,7 @@ const LeftFieldSignup = () => {
     setError('');
     setStatus('loading');
     try {
-      const result = await registerFree(trimmed, name.trim());
+      const result = await registerFree(trimmed, name.trim(), 'left-field-form');
       if (result.success) setStep('new');
       else if (result.exists) setStep('existing');
       else { setError(result.error); setStatus('idle'); }

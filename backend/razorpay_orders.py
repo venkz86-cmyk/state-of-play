@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment
+from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag
 from session_auth import get_current_member, _free_welcome_email_html
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -206,6 +206,10 @@ class CreateOrderRequest(BaseModel):
     # Required for plan='student': the payment token from an approved
     # application's /students/pay link.
     student_token: Optional[str] = None
+    # Where the purchase came from (see payments.record_signup).
+    source: Optional[str] = ''
+    ref: Optional[str] = ''
+    landing: Optional[str] = ''
 
 
 async def _approved_student_application(student_token: Optional[str]) -> Optional[dict]:
@@ -231,6 +235,12 @@ async def create_order(req: CreateOrderRequest, request: Request):
     # is written into the order's notes here, server-side, and
     # verify_payment grants access to that email and that plan only.
     order_notes = {'plan': req.plan}
+    # Carried on the order so verify_payment can record where the buyer
+    # came from. Razorpay limits notes to 256 characters each.
+    for key, value in (('source', clean_tag(req.source)), ('ref', clean_tag(req.ref)),
+                       ('landing', (req.landing or '')[:200])):
+        if value:
+            order_notes[key] = value
     if req.plan == 'student':
         application = await _approved_student_application(req.student_token)
         if not application or not application.get('email'):
@@ -470,7 +480,9 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
 
     # One payment, one account (see payments.claim_payment).
     is_repeat = await claim_payment(req.razorpay_payment_id, email, 'order') == 'repeat'
-    wanted_labels = PLAN_LABELS[req.plan]
+    wanted_labels = list(PLAN_LABELS[req.plan])
+    if source_label(order_notes.get('source')):
+        wanted_labels.append(source_label(order_notes.get('source')))
 
     # Known ahead of ensure_member_labeled, not inferred from its result --
     # it finds-or-creates, so its return value alone can't tell a brand-new
@@ -511,6 +523,14 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         _razorpay_client, req.razorpay_payment_id, source='order_verify',
         fallback_email=email, fallback_plan=req.plan,
     )
+
+    if not is_repeat:
+        await record_signup(
+            'paid', email, source=order_notes.get('source', ''), ref=order_notes.get('ref', ''),
+            plan=req.plan, amount=(payment_record or {}).get('amount'),
+            currency=(payment_record or {}).get('currency') or '', payment_id=req.razorpay_payment_id,
+            landing=order_notes.get('landing', ''),
+        )
 
     if is_new_standard_signup:
         expiry_dt = compute_synthetic_expiry(payment_record)

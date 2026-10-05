@@ -126,6 +126,7 @@ export const SubscribeMockup = () => {
               // the 6 October rate rise applies here on its own, and
               // verify_payment sends the Standard welcome email.
               <RazorpayCheckoutButton
+                source="signup-page"
                 plan="standard"
                 country={isIndia ? 'IN' : 'INTL'}
                 buttonLabel="Subscribe"

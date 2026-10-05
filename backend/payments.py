@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -407,6 +408,115 @@ def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
         return (paid_at + timedelta(days=cycle_days)).isoformat()
     except (ValueError, TypeError):
         return None
+
+
+# ─── Where members come from ────────────────────────────────────────────────
+# Every sign-up and checkout button on the site sends a short name for
+# itself (`source`), and the site passes along the first ?ref= tag the
+# visitor arrived with (`ref`, kept 30 days in their browser). Both are
+# recorded here, in the `signups` collection, once per new free member or
+# new payment, and summarised by GET /api/admin/attribution.
+
+# The buttons that exist. Only these become Ghost labels (source-<name>),
+# so a made-up value can't fill Ghost with junk labels; anything else is
+# still recorded here, as given.
+SIGNUP_SOURCES = {
+    'story-email-gate', 'left-field-form', 'signup-page', 'paywall',
+    'trial-page', 'trial-via-paywall', 'trial-upgrade-page', 'account-ten-panel',
+    'student-pay-link', 'gift-page', 'teams-page',
+}
+_TAG_CLEAN = re.compile(r'[^a-z0-9-]+')
+
+
+def clean_tag(value, max_len: int = 40) -> str:
+    """Lowercase, letters/digits/hyphens only, so 'LinkedIn ' and
+    'linkedin' count as one source."""
+    value = _TAG_CLEAN.sub('-', (value or '').strip().lower()).strip('-')
+    return value[:max_len]
+
+
+def source_label(source) -> Optional[str]:
+    cleaned = clean_tag(source)
+    return f'source-{cleaned}' if cleaned in SIGNUP_SOURCES else None
+
+
+async def record_signup(
+    kind: str, email: str, source: str = '', ref: str = '', plan: str = '',
+    amount=None, currency: str = '', payment_id: str = '', landing: str = '',
+) -> None:
+    """kind: 'free' (new free member), 'paid' (a new membership payment)
+    or 'gift' (a gift bought). Never raises: tracking must not break a
+    sign-up or a payment."""
+    if _db is None:
+        return
+    try:
+        await _db.signups.insert_one({
+            'kind': kind,
+            'email': (email or '').lower().strip(),
+            'source': clean_tag(source) or 'unknown',
+            'ref': clean_tag(ref) or 'direct',
+            'plan': plan or '',
+            'amount': amount,
+            'currency': currency or '',
+            'payment_id': payment_id or '',
+            'landing': (landing or '')[:200],
+            'created_at': datetime.now(timezone.utc),
+        })
+    except Exception as e:
+        logger.warning(f'record_signup failed (non-fatal) for {email!r}: {e!r}')
+
+
+def _week_start(dt: datetime) -> str:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    monday = (dt - timedelta(days=dt.weekday())).date()
+    return monday.isoformat()
+
+
+def summarise_signups(docs: list) -> dict:
+    """Weekly counts, newest week first, plus totals for the window."""
+    def blank():
+        return {'free': 0, 'paid': 0, 'gift': 0,
+                'free_by_source': {}, 'paid_by_plan': {}, 'paid_by_source': {}, 'by_ref': {}}
+
+    def add(bucket, d):
+        kind = d.get('kind') if d.get('kind') in ('free', 'paid', 'gift') else 'free'
+        bucket[kind] += 1
+        src, ref = d.get('source') or 'unknown', d.get('ref') or 'direct'
+        if kind == 'free':
+            bucket['free_by_source'][src] = bucket['free_by_source'].get(src, 0) + 1
+        else:
+            plan = 'gift' if kind == 'gift' else (d.get('plan') or 'unknown')
+            bucket['paid_by_plan'][plan] = bucket['paid_by_plan'].get(plan, 0) + 1
+            bucket['paid_by_source'][src] = bucket['paid_by_source'].get(src, 0) + 1
+        r = bucket['by_ref'].setdefault(ref, {'free': 0, 'paid': 0})
+        r['free' if kind == 'free' else 'paid'] += 1
+
+    weeks, totals = {}, blank()
+    for d in docs:
+        created = d.get('created_at')
+        if not isinstance(created, datetime):
+            continue
+        add(weeks.setdefault(_week_start(created), blank()), d)
+        add(totals, d)
+    return {
+        'weeks': [{'week_start': k, **v} for k, v in sorted(weeks.items(), reverse=True)],
+        'totals': totals,
+    }
+
+
+@router.get('/api/admin/attribution')
+async def attribution_summary(
+    weeks: int = 8,
+    _admin: None = Depends(require_admin_key_or_session),
+):
+    """Where new members and payments came from, week by week."""
+    if _db is None:
+        return summarise_signups([])
+    weeks = max(1, min(weeks, 52))
+    since = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    docs = await _db.signups.find({'created_at': {'$gte': since}}).to_list(length=20000)
+    return summarise_signups(docs)
 
 
 @router.get('/api/admin/payments')

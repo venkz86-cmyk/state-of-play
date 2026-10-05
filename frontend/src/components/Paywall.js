@@ -128,6 +128,7 @@ export const Paywall = () => {
           </div>
         ) : (
           <RazorpayCheckoutButton
+            source="paywall"
             plan="standard"
             country={isIndia ? 'IN' : 'INTL'}
             buttonLabel="Subscribe"
@@ -148,7 +149,7 @@ export const Paywall = () => {
         {!justPaidEmail && !hasExpiredTrial && user?.tier !== 'trial' && (
           <p className="font-plex text-[14px] text-[var(--text-muted)] mt-5" data-testid="paywall-the-ten">
             Not ready for a year?{' '}
-            <Link to="/trial" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+            <Link to="/trial?via=paywall" className="text-[var(--accent-burgundy)] underline underline-offset-4">
               Start with The Ten
             </Link>
             , ten stories for {isIndia ? '₹590' : '$9'}.

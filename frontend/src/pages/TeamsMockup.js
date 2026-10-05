@@ -79,6 +79,7 @@ export const TeamsMockup = () => {
                     />
                     {companyName.trim() && (
                       <RazorpayCheckoutButton
+                        source="teams-page"
                         plan={p.id}
                         country="IN"
                         buttonLabel={`Pay for ${p.name}`}

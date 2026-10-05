@@ -104,6 +104,7 @@ export const StudentPayMockup = () => {
               Your student ID checked out. Complete your membership below to start reading.
             </p>
             <RazorpayCheckoutButton
+              source="student-pay-link"
               plan="student"
               country={info.country}
               // The server sells the Student price only against an
