@@ -29,6 +29,31 @@ export const newSignupAnnualPricing = (isIndia) => {
   };
 };
 
+// The existing-reader rate: free members who joined before 6 October
+// can still buy the annual membership at ₹2,499 + GST / $120 until
+// 31 October, once signed in. The backend decides who qualifies and
+// sends it as early_rate_until on /api/auth/me (session_auth.py's
+// existing_reader_rate_until); create_order charges the same rule.
+const EXISTING_READER_RATE_ENDS = new Date('2026-11-01T00:00:00+05:30');
+
+// The window in which signed-out visitors are invited to sign in for it.
+export const isExistingReaderWindow = () => {
+  const now = new Date();
+  return now >= OCT_1_CUTOVER && now < EXISTING_READER_RATE_ENDS;
+};
+
+export const annualPricingFor = (isIndia, user) => {
+  if (user?.early_rate_until && isExistingReaderWindow()) {
+    return {
+      amount: isIndia ? '₹2,499' : '$120',
+      total: isIndia ? '₹2,949' : '$120',
+      note: 'Your rate as an existing reader, until 31 October.',
+      existingReader: true,
+    };
+  }
+  return newSignupAnnualPricing(isIndia);
+};
+
 // Through 5 October, upgrading from The Ten costs exactly today's
 // direct-signup rate -- no discount for the ₹590/$9 trial fee already
 // paid (Venkat's explicit call). From 6 October, the new higher

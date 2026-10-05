@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout } from '../components/MockupLayout';
 
@@ -8,6 +8,11 @@ const datelineDate = (d = new Date()) =>
 
 export const LoginMockup = () => {
   const navigate = useNavigate();
+  // Where to go after signing in: ?next= when it's a page on this site
+  // (a single leading slash, so //evil.com can't sneak through), else the account.
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get('next') || '';
+  const next = /^\/(?![/\\])/.test(nextParam) ? nextParam : '/account';
   const { requestCode, verifyCode, isLoggedIn, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -15,10 +20,10 @@ export const LoginMockup = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // If already signed in, send straight to /account
+  // If already signed in, go straight on (to ?next= or /account)
   useEffect(() => {
-    if (!loading && isLoggedIn) navigate('/account', { replace: true });
-  }, [loading, isLoggedIn, navigate]);
+    if (!loading && isLoggedIn) navigate(next, { replace: true });
+  }, [loading, isLoggedIn, navigate, next]);
 
   const sendCode = async () => {
     if (!email.trim()) return;
@@ -57,7 +62,7 @@ export const LoginMockup = () => {
     try {
       const result = await verifyCode(email.trim(), code.trim());
       if (result.success) {
-        navigate('/account', { replace: true });
+        navigate(next, { replace: true });
       } else {
         setError(result.error || 'Incorrect code. Please try again.');
       }

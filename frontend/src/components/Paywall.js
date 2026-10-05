@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Lock } from 'lucide-react';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
-import { newSignupAnnualPricing } from '../lib/octoberPricing';
+import { annualPricingFor } from '../lib/octoberPricing';
 import { useAuth } from '../contexts/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -40,7 +40,7 @@ export const Paywall = () => {
     return () => { active = false; };
   }, []);
 
-  const annual = newSignupAnnualPricing(isIndia);
+  const annual = annualPricingFor(isIndia, user);
   const priceLine = isIndia
     ? `${annual.amount} + 18% GST per year (${annual.total} total)`
     : `${annual.amount} / year`;
@@ -108,7 +108,7 @@ export const Paywall = () => {
         <p
           className="font-plex text-[13px] text-[var(--text-muted)] mb-8"
         >
-          Weekly deep-dives · Full archive
+          {annual.existingReader ? annual.note : 'Weekly deep-dives · Full archive'}
         </p>
 
         <p
