@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { authHeader } from '../lib/sessionToken';
 
 /* RazorpayCheckoutButton -- the dynamic Orders API checkout
    (razorpay_orders.py's create-order / verify-payment), opened via
@@ -99,9 +100,11 @@ export const RazorpayCheckoutButton = ({
     try {
       await loadCheckoutScript();
 
+      // The session goes with both calls: the server prices and grants
+      // some plans (The Ten upgrade) only to the signed-in member.
       const orderRes = await fetch(`${API}${createOrderEndpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({ plan, country, ...extraOrderFields }),
       });
       if (!orderRes.ok) {
@@ -126,7 +129,7 @@ export const RazorpayCheckoutButton = ({
           try {
             const verifyRes = await fetch(`${API}${verifyEndpoint}`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...authHeader() },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,

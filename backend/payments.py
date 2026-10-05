@@ -75,6 +75,49 @@ async def _ensure_indexes():
         logger.warning(f'payments index ensure failed (non-fatal): {e!r}')
 
 
+async def claim_payment(payment_id: str, email: str, kind: str) -> str:
+    """Binds one Razorpay payment to the one account (and one kind of
+    grant: 'order', 'gift' or 'subscription') it paid for, so a payment
+    can only ever grant access once.
+
+    The verify-* endpoints are called from the browser with Razorpay's
+    order/payment ids and signature. That signature proves the payment
+    happened, but nothing stopped the same three values being sent
+    again with a different email, giving any number of accounts access
+    off one payment. Returns 'new' the first time, 'repeat' when the same
+    payment comes back for the same account and kind (a retried call;
+    callers skip the welcome email), and raises 409 for anything else.
+
+    Fails open if Mongo is unavailable: blocking a real buyer who just
+    paid is worse than the replay window during an outage."""
+    if _db is None or not payment_id:
+        logger.error(f'claim_payment: no store, not recording {payment_id!r}')
+        return 'new'
+    email = (email or '').lower().strip()
+    try:
+        await _db.payment_grants.create_index('payment_id', unique=True)
+    except Exception as e:
+        logger.warning(f'payment_grants index ensure failed (non-fatal): {e!r}')
+    try:
+        await _db.payment_grants.insert_one({
+            'payment_id': payment_id, 'email': email, 'kind': kind,
+            'created_at': datetime.now(timezone.utc),
+        })
+        return 'new'
+    except Exception as e:
+        existing = await _db.payment_grants.find_one({'payment_id': payment_id})
+        if not existing:
+            logger.error(f'claim_payment: insert failed for {payment_id!r}: {e!r}')
+            return 'new'
+        if existing.get('email') == email and existing.get('kind') == kind:
+            return 'repeat'
+        logger.warning(
+            f'claim_payment: payment {payment_id!r} already used for '
+            f'{existing.get("email")!r}/{existing.get("kind")!r}, refused for {email!r}/{kind!r}'
+        )
+        raise HTTPException(status_code=409, detail='This payment has already been used.')
+
+
 def _iso(dt) -> Optional[str]:
     """Motor/MongoDB returns naive datetimes by default (a UTC value with
     no tzinfo attached) unless the client was created with tz_aware=True

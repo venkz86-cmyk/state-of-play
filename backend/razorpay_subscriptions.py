@@ -63,11 +63,11 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled
-from payments import fetch_and_record
+from payments import fetch_and_record, claim_payment
 from subscription_grace import start_grace_period
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -222,7 +222,7 @@ class VerifySubscriptionRequest(BaseModel):
 
 
 @router.post('/api/razorpay/verify-subscription')
-async def verify_subscription(req: VerifySubscriptionRequest):
+async def verify_subscription(req: VerifySubscriptionRequest, request: Request):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
@@ -243,7 +243,14 @@ async def verify_subscription(req: VerifySubscriptionRequest):
     if not token:
         raise HTTPException(status_code=503, detail='Failed to create Ghost admin token')
 
-    email = req.email.lower().strip()
+    # The signed-in member renewing, when there is one (renewals start
+    # from the account page); a typed email only for an anonymous checkout.
+    from session_auth import get_current_member
+    session = await get_current_member(request)
+    email = session['email'] if session else req.email.lower().strip()
+
+    # One payment, one account (see payments.claim_payment).
+    is_repeat = await claim_payment(req.razorpay_payment_id, email, 'subscription') == 'repeat'
 
     # Same full paid membership access as the one-shot standard plan --
     # just billed on a real recurring schedule instead of once.
@@ -262,9 +269,10 @@ async def verify_subscription(req: VerifySubscriptionRequest):
         fallback_email=email, fallback_plan='',
     )
 
-    sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
-    if not sent:
-        logger.warning(f'verify-subscription: renewal thank-you email failed to send for {email}')
+    if not is_repeat:
+        sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
+        if not sent:
+            logger.warning(f'verify-subscription: renewal thank-you email failed to send for {email}')
 
     return {'verified': True, 'email': email}
 

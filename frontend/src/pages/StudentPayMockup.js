@@ -106,6 +106,9 @@ export const StudentPayMockup = () => {
             <RazorpayCheckoutButton
               plan="student"
               country={info.country}
+              // The server sells the Student price only against an
+              // approved application's token.
+              extraOrderFields={{ student_token: token }}
               buttonLabel="Complete your membership"
               dataTestId="students-pay-checkout"
               lockedEmail={info.email}

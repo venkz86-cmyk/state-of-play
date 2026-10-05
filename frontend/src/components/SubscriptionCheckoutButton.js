@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { authHeader } from '../lib/sessionToken';
 
 /* SubscriptionCheckoutButton -- the real recurring-Annual checkout
    razorpay_subscriptions.py has had a backend for since before this
@@ -72,7 +73,7 @@ export const SubscriptionCheckoutButton = ({
 
       const subRes = await fetch(`${API}/api/razorpay/create-subscription`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({ country }),
       });
       if (!subRes.ok) {
@@ -95,7 +96,7 @@ export const SubscriptionCheckoutButton = ({
           try {
             const verifyRes = await fetch(`${API}/api/razorpay/verify-subscription`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...authHeader() },
               body: JSON.stringify({
                 razorpay_subscription_id: response.razorpay_subscription_id,
                 razorpay_payment_id: response.razorpay_payment_id,

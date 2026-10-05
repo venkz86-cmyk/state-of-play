@@ -968,6 +968,11 @@ async def cold_link_event(req: ColdLinkEvent):
     doc = await _db.story_tokens.find_one({'token_id': req.token_id}, {'_id': 0})
     if not doc:
         return {'success': True, 'persisted': False, 'reason': 'not_found'}
+    # This endpoint is public: anyone holding a shared link can call it.
+    # Only a live, not-yet-converted link counts, so a conversion (and its
+    # Slack ping) is recorded once rather than on every repeat call.
+    if doc.get('status') != 'active':
+        return {'success': True, 'persisted': False, 'reason': doc.get('status') or 'inactive'}
 
     update = {'$inc': {f'events.{req.event_type}': 1}}
     if req.event_type in ('signup_free', 'signup_paid'):

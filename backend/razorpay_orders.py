@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry
+from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment
 from session_auth import get_current_member, _free_welcome_email_html
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -203,12 +203,45 @@ def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
 class CreateOrderRequest(BaseModel):
     plan: str
     country: str = 'IN'
+    # Required for plan='student': the payment token from an approved
+    # application's /students/pay link.
+    student_token: Optional[str] = None
+
+
+async def _approved_student_application(student_token: Optional[str]) -> Optional[dict]:
+    """The approved, not-yet-paid application a /students/pay token
+    belongs to, or None. The Student price is only for applicants whose
+    ID Venkat checked by hand, so it can only be bought through one."""
+    if not student_token:
+        return None
+    import student_applications
+    if student_applications._db is None:
+        return None
+    return await student_applications._db.student_applications.find_one(
+        {'payment_token': student_token, 'status': 'approved'}
+    )
 
 
 @router.post('/api/razorpay/create-order')
-async def create_order(req: CreateOrderRequest):
+async def create_order(req: CreateOrderRequest, request: Request):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
+
+    # Discounted plans are only sold to the people they're for. The buyer
+    # is written into the order's notes here, server-side, and
+    # verify_payment grants access to that email and that plan only.
+    order_notes = {'plan': req.plan}
+    if req.plan == 'student':
+        application = await _approved_student_application(req.student_token)
+        if not application or not application.get('email'):
+            raise HTTPException(status_code=403, detail='This student link is invalid or has expired.')
+        order_notes['email'] = application['email'].lower().strip()
+        order_notes['student_token'] = req.student_token
+    elif req.plan == 'trial-upgrade':
+        member = await get_current_member(request)
+        if not member or member.get('tier') != 'trial':
+            raise HTTPException(status_code=403, detail='Sign in with the account you joined The Ten with to upgrade.')
+        order_notes['email'] = member['email'].lower().strip()
 
     config = _resolve_plan_config(req.plan, req.country)
     if not config:
@@ -219,7 +252,7 @@ async def create_order(req: CreateOrderRequest):
 
     amount = config['amount']
     label = config['label']
-    notes = {'plan': req.plan}
+    notes = order_notes
 
     try:
         order = _razorpay_client.order.create({
@@ -389,9 +422,6 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     if not _razorpay_client:
         raise HTTPException(status_code=503, detail='Razorpay not configured')
 
-    if req.plan not in PLAN_LABELS:
-        raise HTTPException(status_code=400, detail=f"Unknown plan '{req.plan}'")
-
     try:
         _razorpay_client.utility.verify_payment_signature({
             'razorpay_order_id': req.razorpay_order_id,
@@ -402,6 +432,28 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         logger.warning(f'Razorpay signature verification failed for order={req.razorpay_order_id}')
         raise HTTPException(status_code=400, detail='Payment signature verification failed')
 
+    # The signature proves this order was paid; the order itself says what
+    # it was for. Its notes were written by create_order, server-side, so
+    # the plan comes from there, never from the browser: trusting req.plan
+    # let a ₹590 The Ten payment be verified as a full annual or team plan.
+    try:
+        order = _razorpay_client.order.fetch(req.razorpay_order_id)
+    except Exception as e:
+        logger.error(f'verify-payment: order.fetch failed for {req.razorpay_order_id}: {e!r}')
+        raise HTTPException(status_code=502, detail='Could not confirm the order with Razorpay')
+    order_notes = order.get('notes') or {}
+    if isinstance(order_notes, list):  # Razorpay returns [] for empty notes
+        order_notes = {}
+    order_plan = order_notes.get('plan') or ''
+    if order_notes.get('gift') == 'true' or order_plan not in PLAN_LABELS:
+        raise HTTPException(status_code=400, detail='This order is not for a membership')
+    if req.plan != order_plan:
+        logger.warning(
+            f'verify-payment: plan mismatch for order={req.razorpay_order_id}: '
+            f'client said {req.plan!r}, order is {order_plan!r}'
+        )
+        raise HTTPException(status_code=400, detail='This payment does not match the plan requested')
+
     if not GHOST_ADMIN_API_KEY:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
@@ -411,6 +463,13 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
 
     session = await get_current_member(request)
     email = session['email'] if session else req.email.lower().strip()
+    # Student and The Ten upgrade orders were sold to one specific person
+    # (see create_order); they're granted to that person only.
+    if order_notes.get('email'):
+        email = order_notes['email'].lower().strip()
+
+    # One payment, one account (see payments.claim_payment).
+    is_repeat = await claim_payment(req.razorpay_payment_id, email, 'order') == 'repeat'
     wanted_labels = PLAN_LABELS[req.plan]
 
     # Known ahead of ensure_member_labeled, not inferred from its result --
@@ -420,8 +479,8 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     # the two plans here that get a generic welcome email below (Trial,
     # trial-upgrade and the team plans each have their own existing
     # confirmation, or none wanted yet).
-    is_new_standard_signup = req.plan == 'standard' and await find_ghost_member(email, token) is None
-    is_new_student_signup = req.plan == 'student' and await find_ghost_member(email, token) is None
+    is_new_standard_signup = not is_repeat and req.plan == 'standard' and await find_ghost_member(email, token) is None
+    is_new_student_signup = not is_repeat and req.plan == 'student' and await find_ghost_member(email, token) is None
 
     # Only strip stray paid labels when this email has never genuinely
     # paid us for real access before -- an existing Ghost member (e.g. a
@@ -489,8 +548,19 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     if _recent_payments is not None:
         _recent_payments[email] = datetime.now(timezone.utc)
 
-    if req.plan in TEAM_SEATS:
+    # A retried verify for the same payment must not set up a second team.
+    if req.plan in TEAM_SEATS and not is_repeat:
         await _create_team_account(req, email)
+
+    # Close the student link once it has been paid for, server-side,
+    # rather than relying on the browser's mark-paid call.
+    if order_notes.get('student_token'):
+        import student_applications
+        if student_applications._db is not None:
+            await student_applications._db.student_applications.update_one(
+                {'payment_token': order_notes['student_token'], 'status': 'approved'},
+                {'$set': {'status': 'paid', 'paid_at': datetime.now(timezone.utc)}},
+            )
 
     return {'verified': True, 'email': email, 'plan': req.plan}
 

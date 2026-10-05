@@ -90,7 +90,7 @@ from admin_auth import require_admin_key_or_session
 from razorpay_orders import _create_ghost_admin_token, PLAN_LABELS, _resolve_plan_config as _resolve_standard_plan
 from razorpay_subscriptions import SUBSCRIPTION_PLANS as RENEWAL_PLANS
 from tiers import ensure_member_labeled, find_ghost_member, is_genuinely_paid
-from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry
+from payments import record_payment, reassign_payment_email, get_last_payment_for_email, compute_synthetic_expiry, claim_payment
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 from session_auth import get_current_member
@@ -317,7 +317,9 @@ async def gift_create_order(req: GiftCreateOrderRequest):
             'amount': amount,
             'currency': currency,
             'payment_capture': 1,
-            'notes': {'plan': 'standard', 'gift': 'true'},
+            # The recipient is fixed here, with the price it was quoted
+            # at; verify uses this, not whatever the browser sends later.
+            'notes': {'plan': 'standard', 'gift': 'true', 'recipient': recipient_email},
         })
     except Exception as e:
         logger.error(f'Razorpay gift order creation failed: {e!r}')
@@ -365,6 +367,20 @@ async def gift_subscription_verify_payment(req: GiftVerifyPaymentRequest, reques
         logger.warning(f'Gift payment signature verification failed for order={req.razorpay_order_id}')
         raise HTTPException(status_code=400, detail='Payment signature verification failed')
 
+    # Only an order made by gift_create_order can become a gift: the
+    # signature alone proves *an* order was paid, and before this check a
+    # ₹590 The Ten order could be verified here as a year's gift.
+    try:
+        order = _razorpay_client.order.fetch(req.razorpay_order_id)
+    except Exception as e:
+        logger.error(f'gift verify: order.fetch failed for {req.razorpay_order_id}: {e!r}')
+        raise HTTPException(status_code=502, detail='Could not confirm the order with Razorpay')
+    order_notes = order.get('notes') or {}
+    if isinstance(order_notes, list):
+        order_notes = {}
+    if order_notes.get('gift') != 'true' or order_notes.get('plan') != 'standard':
+        raise HTTPException(status_code=400, detail='This order is not a gift')
+
     token = _create_ghost_admin_token()
     if not token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
@@ -376,8 +392,24 @@ async def gift_subscription_verify_payment(req: GiftVerifyPaymentRequest, reques
     session = await get_current_member(request)
     buyer_email = session['email'] if session else req.email.lower().strip()
     buyer_name = req.name or ''
-    recipient_email = (req.recipient_email or '').strip().lower()
+    # Orders created before the recipient was recorded on the order have
+    # no 'recipient' note; those fall back to the request's.
+    if 'recipient' in order_notes:
+        recipient_email = (order_notes.get('recipient') or '').strip().lower()
+    else:
+        recipient_email = (req.recipient_email or '').strip().lower()
     personal_note = (req.personal_note or '').strip()
+
+    # One payment, one gift (see payments.claim_payment). A retried call
+    # gets the original result back instead of a second gift.
+    if await claim_payment(req.razorpay_payment_id, buyer_email, 'gift') == 'repeat':
+        if recipient_email:
+            return {'verified': True, 'delivery': 'direct', 'recipient_email': recipient_email, 'already_subscribed': False}
+        existing = await _db.gift_subscriptions.find_one({'razorpay_payment_id': req.razorpay_payment_id}) if _db is not None else None
+        if existing:
+            code = existing['code']
+            return {'verified': True, 'delivery': 'code', 'code': code,
+                    'redeem_url': f'{PUBLIC_BASE_URL}/gift/redeem?code={code.lower()}'}
 
     if recipient_email:
         # Checked BEFORE ensure_member_labeled grants them the labels
@@ -488,14 +520,25 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
         raise HTTPException(status_code=503, detail='Not configured')
 
     code = _normalize_code(req.code)
-    gift = await _db.gift_subscriptions.find_one({'code': code})
+    # Claimed atomically: checking the status and then updating it later
+    # let two simultaneous redeems of one code both succeed.
+    gift = await _db.gift_subscriptions.find_one_and_update(
+        {'code': code, 'status': 'unredeemed'},
+        {'$set': {'status': 'redeeming'}},
+    )
     if not gift:
+        if await _db.gift_subscriptions.find_one({'code': code}):
+            raise HTTPException(status_code=409, detail='This gift has already been redeemed.')
         raise HTTPException(status_code=404, detail='This gift link is invalid.')
-    if gift.get('status') != 'unredeemed':
-        raise HTTPException(status_code=409, detail='This gift has already been redeemed.')
+
+    async def _release():
+        await _db.gift_subscriptions.update_one(
+            {'code': code, 'status': 'redeeming'}, {'$set': {'status': 'unredeemed'}},
+        )
 
     token = _create_ghost_admin_token()
     if not token:
+        await _release()
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
 
     session = await get_current_member(request)
@@ -510,6 +553,7 @@ async def gift_subscription_redeem(req: RedeemGiftRequest, request: Request):
 
     member = await ensure_member_labeled(email, req.name or '', PLAN_LABELS['standard'], token)
     if not member:
+        await _release()
         raise HTTPException(
             status_code=502,
             detail='Could not set up your account, contact support',
