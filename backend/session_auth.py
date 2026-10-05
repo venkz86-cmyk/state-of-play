@@ -77,7 +77,8 @@ import jwt
 from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
 
-from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier
+from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier, is_paid_from_labels
+from payments import has_paid_beyond_trial
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 
@@ -95,6 +96,48 @@ MAX_ATTEMPTS = 5
 router = APIRouter()
 
 _db = None
+
+# The existing-reader rate. From 6 October a new annual membership costs
+# ₹3,499 + GST ($169). Free members who joined before then, and have
+# never paid for a membership, can still buy one at the old ₹2,499 + GST
+# ($120) until 31 October, once signed in. EXISTING_READER_JOINED_BEFORE
+# is the same instant as razorpay_orders.OCT_1_CUTOFF (that module
+# imports this one, so it can't be imported from there).
+IST = timezone(timedelta(hours=5, minutes=30))
+EXISTING_READER_JOINED_BEFORE = datetime(2026, 10, 6, tzinfo=IST)
+EXISTING_READER_RATE_ENDS = datetime(2026, 11, 1, tzinfo=IST)
+EXISTING_READER_RATE_LAST_DAY = '2026-10-31'
+
+
+def _now() -> datetime:
+    return datetime.now(IST)
+
+
+def _ghost_time(value) -> Optional[datetime]:
+    """Ghost's created_at ('2026-03-01T10:00:00.000Z') as a datetime."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+
+async def existing_reader_rate_until(member: dict, label_names: list, is_paid: bool, email: str) -> Optional[str]:
+    """'2026-10-31' if this Ghost member can buy the annual membership at
+    the old rate today, else None. The one check both the site (to show
+    the price) and create_order (to charge it) use."""
+    now = _now()
+    if not (EXISTING_READER_JOINED_BEFORE <= now < EXISTING_READER_RATE_ENDS):
+        return None
+    if is_paid or is_paid_from_labels(label_names) or resolve_tier(label_names, is_paid) != 'free':
+        return None
+    joined = _ghost_time(member.get('created_at'))
+    if not joined or joined >= EXISTING_READER_JOINED_BEFORE:
+        return None
+    if await has_paid_beyond_trial(email):
+        return None
+    return EXISTING_READER_RATE_LAST_DAY
 
 # register-free is the one endpoint here that creates a brand-new Ghost
 # member from an unverified email with zero round-trip (see its own
@@ -284,6 +327,9 @@ async def get_current_member(request: Request) -> Optional[dict]:
         'tier': resolve_tier(label_names, is_paid),
         'status': member.get('status', 'free'),
         'label_names': label_names,
+        # Set only for a free member who qualifies for the existing-reader
+        # rate (see existing_reader_rate_until).
+        'early_rate_until': await existing_reader_rate_until(member, label_names, is_paid, session['email']),
     }
 
 
@@ -433,6 +479,7 @@ async def verify_code(req: VerifyCodeBody, response: Response):
         'tier': resolve_tier(label_names, is_paid),
         'status': member.get('status', 'free'),
         'label_names': label_names,
+        'early_rate_until': await existing_reader_rate_until(member, label_names, is_paid, email),
         # The frontend stores this and sends it back as
         # `Authorization: Bearer <token>` on every request from here on --
         # see _read_session's docstring for why that's now the mechanism

@@ -5,7 +5,7 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { newSignupAnnualPricing } from '../lib/octoberPricing';
+import { annualPricingFor, isExistingReaderWindow } from '../lib/octoberPricing';
 import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
@@ -35,10 +35,13 @@ const FAQS = [
 ];
 
 export const SubscribeMockup = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
-  const annual = newSignupAnnualPricing(isIndia);
+  const annual = annualPricingFor(isIndia, user);
+  // Signed-out visitors may be free readers who still qualify for the
+  // existing-reader rate; they have to sign in for the site to know.
+  const showSignInForRate = !authLoading && !user && isExistingReaderWindow();
   const [premium, setPremium] = useState([]);
   const [justPaidEmail, setJustPaidEmail] = useState(null);
 
@@ -100,6 +103,19 @@ export const SubscribeMockup = () => {
             </div>
             {isIndia && (
               <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">{annual.total} / year total</p>
+            )}
+            {annual.existingReader && (
+              <p data-testid="signup-existing-reader-rate" className="font-plex text-[14px] font-medium text-[var(--accent-burgundy)] mb-3">
+                {annual.note}
+              </p>
+            )}
+            {showSignInForRate && (
+              <p data-testid="signup-existing-reader-signin" className="font-plex text-[14px] text-[var(--text)] mb-3 max-w-[55ch]">
+                Joined as a free reader before 6 October?{' '}
+                <Link to="/login?next=/signup" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+                  Sign in to subscribe at {isIndia ? '₹2,499 + GST' : '$120'} until 31 October.
+                </Link>
+              </p>
             )}
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
               One payment for the year.{isIndia ? ' GST-compliant invoice included.' : ''}

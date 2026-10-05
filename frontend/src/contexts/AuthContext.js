@@ -25,6 +25,9 @@ const shapeMember = (data) => ({
   // ArticleMockup.js uses this to know when to attempt the trial-
   // specific content check instead of just showing the paywall.
   tier: data.tier || 'free',
+  // '2026-10-31' when this free member can still subscribe at the old
+  // annual rate (see lib/octoberPricing.js's annualPricingFor).
+  early_rate_until: data.early_rate_until || null,
 });
 
 export const AuthProvider = ({ children }) => {

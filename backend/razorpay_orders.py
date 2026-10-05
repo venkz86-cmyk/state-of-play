@@ -260,6 +260,18 @@ async def create_order(req: CreateOrderRequest, request: Request):
             detail=f"No pricing configured for plan='{req.plan}' country='{req.country}'",
         )
 
+    # A signed-in free member who joined before 6 October keeps the old
+    # annual price until 31 October (session_auth.existing_reader_rate_until).
+    # The order is tied to their account, so the price can't be passed on.
+    if req.plan == 'standard':
+        member = await get_current_member(request)
+        if member and member.get('early_rate_until'):
+            plans = PLAN_PRICING['standard']
+            old = plans.get(req.country, plans['IN'])
+            config = {**old, 'label': 'Annual Membership (existing reader rate)'}
+            order_notes['rate'] = 'existing-reader'
+            order_notes['email'] = member['email'].lower().strip()
+
     amount = config['amount']
     label = config['label']
     notes = order_notes

@@ -11,7 +11,7 @@ import { PartnersBlock } from '../components/PartnersBlock';
 import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
 import { seasonLabel } from '../lib/season';
-import { newSignupAnnualPricing } from '../lib/octoberPricing';
+import { annualPricingFor } from '../lib/octoberPricing';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -115,8 +115,9 @@ export const HomeMockup = () => {
   const [editionNo, setEditionNo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
-  const { canAccessPremium, loading: authLoading } = useAuth();
+  const { canAccessPremium, loading: authLoading, user } = useAuth();
   const pricing = useGeoPricing();
+  const annual = annualPricingFor(pricing.country === 'IN', user);
 
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
@@ -403,12 +404,17 @@ export const HomeMockup = () => {
               </p>
               <div className="flex items-end gap-2 mb-2">
                 <span className="font-editorial font-semibold text-[2.5rem] lg:text-[2.75rem] leading-[0.9] text-[var(--text)]">
-                  {newSignupAnnualPricing(pricing.country === 'IN').amount}
+                  {annual.amount}
                 </span>
                 <span className="font-plex text-sm text-[var(--text-muted)] pb-1.5">
-                  {pricing.country === 'IN' ? `+ GST a year (${newSignupAnnualPricing(true).total} total)` : '/ year'}
+                  {pricing.country === 'IN' ? `+ GST a year (${annual.total} total)` : '/ year'}
                 </span>
               </div>
+              {annual.existingReader && (
+                <p data-testid="home-existing-reader-rate" className="font-plex text-sm font-medium text-[var(--accent-burgundy)] mb-2">
+                  {annual.note}
+                </p>
+              )}
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
                 One deeply reported story a week on the business of Indian sport, plus the full archive.
               </p>
