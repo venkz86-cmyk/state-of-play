@@ -95,7 +95,7 @@ export const ArticleMockup = () => {
         setRelated(rel);
         // Same real edition count HomeMockup.js uses for its own dateline
         // -- so the two never disagree on which season it is.
-        const count = await ghostAPI.getPostCount();
+        const count = await ghostAPI.getSeasonStoryCount();
         if (active && count > 0) setEditionNo(count);
       } catch (e) {
         console.error(e);
