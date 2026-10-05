@@ -184,9 +184,11 @@ export const HomeMockup = () => {
           <Link
             to="/season-one"
             data-testid="home-season-link"
-            className="font-plex text-[14px] font-normal text-[var(--text-muted)] tabular-nums hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+            className="font-plex text-[14px] font-normal text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
           >
-            {editionNo ? `No.\u00A0${editionNo}` : 'No.\u00A042'} · Season {seasonLabel(editionNo)}
+            {/* Tabular figures on the number only: on the whole line they
+                widen the full stop and render "No . 8". */}
+            No.{'\u00A0'}<span className="tabular-nums">{editionNo || 42}</span> · Season {seasonLabel(editionNo)}
           </Link>
         </div>
         {!authLoading && !isMember && (

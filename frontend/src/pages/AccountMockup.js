@@ -26,7 +26,7 @@ const longDate = (iso) =>
 
 export const AccountMockup = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, loading, logout, canAccessPremium } = useAuth();
+  const { user, isLoggedIn, loading, canAccessPremium } = useAuth();
   const pricing = useGeoPricing();
   const [recent, setRecent] = useState([]);
   const [saved, setSaved] = useState([]);
@@ -118,6 +118,28 @@ export const AccountMockup = () => {
   const memberSince = longDate(details?.subscription_start || details?.created_at);
   const nextCharge = autoRenews && canAccessPremium ? '₹3,539' : '—';
   const nextChargeDetail = autoRenews && canAccessPremium ? '₹2,999 + ₹540 GST' : null;
+  // Most members paid once: for them the third tile says how renewal
+  // works instead of showing an empty "Next charge". The reminder timing
+  // is annual_renewal.py's REMINDER_DAYS_BEFORE.
+  const paidOnce = canAccessPremium && details?.subscription_status === 'one_time';
+  const renewalTile = paidOnce
+    ? ['Renewal', 'Not automatic', 'We email you 14 days before it ends.']
+    : ['Next charge', nextCharge, nextChargeDetail];
+
+  // The member's real last payment, not a fixed price: students, renewals,
+  // teams and new signups all pay different amounts.
+  const formatAmount = (amount, currency) => {
+    if (amount == null) return '';
+    const units = amount / 100;
+    return currency === 'USD'
+      ? `$${units.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+      : `₹${units.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  };
+  const billingLine = !canAccessPremium
+    ? 'No active subscription.'
+    : details?.last_payment_amount != null
+      ? `Last payment ${longDate(details.last_payment_date)} · ${formatAmount(details.last_payment_amount, details.last_payment_currency)} · Razorpay.`
+      : 'No payment on file.';
 
   return (
     <MockupLayout testId="page-account" seo={{ title: 'Your Account', path: '/account', noindex: true }}>
@@ -137,16 +159,6 @@ export const AccountMockup = () => {
             Your reading list, billing and preferences live here.
           </p>
         </div>
-        <div className="lg:col-span-4 lg:text-right">
-          <button
-            type="button"
-            onClick={logout}
-            data-testid="account-signout"
-            className="font-plex text-sm text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 transition-all"
-          >
-            Sign out
-          </button>
-        </div>
       </section>
 
       {/* Stat strip — Fix 22: solid 1px var(--rule) dividers */}
@@ -155,18 +167,25 @@ export const AccountMockup = () => {
           {[
             ['Plan', planLabel],
             [dateLabel, endDate || '—'],
-            ['Next charge', nextCharge, nextChargeDetail],
+            renewalTile,
             ['Member since', memberSince || '—'],
           ].map(([k, v, detail], i) => (
             <div
               key={k}
-              className={`py-6 px-6 ${i > 0 ? 'border-l border-[var(--rule)]' : ''}`}
-              style={{ borderLeftWidth: i > 0 ? '1px' : 0 }}
+              // Phones show two columns, desktop four: only tiles that sit
+              // to the right of another get a left border, and the second
+              // row on phones gets a top border instead.
+              className={[
+                'py-6 px-6 border-[var(--rule)]',
+                i % 2 === 1 ? 'border-l' : '',
+                i >= 2 ? 'border-t md:border-t-0' : '',
+                i === 2 ? 'md:border-l' : '',
+              ].join(' ')}
             >
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
               <p className="font-editorial font-medium text-lg lg:text-xl leading-tight">{v}</p>
               {detail && (
-                <p className="font-plex text-xs text-[var(--text-muted)] mt-1 tabular-nums">{detail}</p>
+                <p className="font-plex text-xs text-[var(--text-muted)] mt-1">{detail}</p>
               )}
             </div>
           ))}
@@ -340,9 +359,7 @@ export const AccountMockup = () => {
               },
               {
                 title: 'Billing',
-                desc: canAccessPremium
-                  ? `Last invoice ${memberSince || '—'} · ₹2,949 · Razorpay.`
-                  : 'No active subscription.',
+                desc: billingLine,
                 cta: 'Need GST invoice? Download',
                 onClick: canAccessPremium ? () => setInvoiceOpen(true) : null,
                 href: canAccessPremium ? null : '#',
@@ -351,7 +368,7 @@ export const AccountMockup = () => {
                 title: 'Insider Drops · Soon',
                 desc: 'Subscriber-only feed of deal whispers and short notes.',
                 cta: 'Notify me',
-                href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%20%E2%80%94%20notify%20me',
+                href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%3A%20notify%20me',
               },
             ].map(({ title, desc, cta, href, onClick }) => (
               <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[var(--rule)]">

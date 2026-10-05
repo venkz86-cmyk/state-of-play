@@ -302,8 +302,15 @@ class MemberDetailsResponse(BaseModel):
     subscription_end: Optional[str] = None
     subscription_status: Optional[str] = None
     avatar_image: Optional[str] = None
+    # Kept for response shape; always None. Ghost's member note is for
+    # the admin, never sent to the member's own page.
     note: Optional[str] = None
     tier: str = 'free'
+    # The member's most recent real payment, for the account page's
+    # Billing line. Amount in the smallest unit (paise / cents).
+    last_payment_amount: Optional[int] = None
+    last_payment_currency: Optional[str] = None
+    last_payment_date: Optional[str] = None
 
 @api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
 async def get_member_details(request: MemberVerifyRequest, http_request: Request):
@@ -378,6 +385,7 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     subscription_start = None
                     subscription_end = None
                     subscription_status = None
+                    last_payment = None
 
                     if is_trial_member:
                         # Deliberately left None -- AccountMockup.js's own
@@ -475,8 +483,10 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         subscription_end=subscription_end,
                         subscription_status=subscription_status,
                         avatar_image=member.get('avatar_image'),
-                        note=member.get('note'),
                         tier=resolve_tier(label_names, is_paid),
+                        last_payment_amount=(last_payment or {}).get('amount'),
+                        last_payment_currency=(last_payment or {}).get('currency'),
+                        last_payment_date=(last_payment or {}).get('razorpay_created_at'),
                     )
                 else:
                     return MemberDetailsResponse(
