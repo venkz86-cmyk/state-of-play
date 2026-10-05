@@ -5,7 +5,7 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { annualPricingFor, isExistingReaderWindow } from '../lib/octoberPricing';
+import { annualPricingFor } from '../lib/octoberPricing';
 import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
@@ -35,13 +35,13 @@ const FAQS = [
 ];
 
 export const SubscribeMockup = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
+  // A signed-in free reader who joined before 6 October sees the
+  // existing-reader rate. It is offered by email only (to free members,
+  // linking to /login?next=/signup), never advertised to signed-out visitors.
   const annual = annualPricingFor(isIndia, user);
-  // Signed-out visitors may be free readers who still qualify for the
-  // existing-reader rate; they have to sign in for the site to know.
-  const showSignInForRate = !authLoading && !user && isExistingReaderWindow();
   const [premium, setPremium] = useState([]);
   const [justPaidEmail, setJustPaidEmail] = useState(null);
 
@@ -107,14 +107,6 @@ export const SubscribeMockup = () => {
             {annual.existingReader && (
               <p data-testid="signup-existing-reader-rate" className="font-plex text-[14px] font-medium text-[var(--accent-burgundy)] mb-3">
                 {annual.note}
-              </p>
-            )}
-            {showSignInForRate && (
-              <p data-testid="signup-existing-reader-signin" className="font-plex text-[14px] text-[var(--text)] mb-3 max-w-[55ch]">
-                Joined as a free reader before 6 October?{' '}
-                <Link to="/login?next=/signup" className="text-[var(--accent-burgundy)] underline underline-offset-4">
-                  Sign in to subscribe at {isIndia ? '₹2,499 + GST' : '$120'} until 31 October.
-                </Link>
               </p>
             )}
             <p className="font-plex text-sm text-[var(--text-muted)] max-w-[55ch]">
