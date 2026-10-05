@@ -30,11 +30,11 @@ const STORY = [
 ];
 
 export const PartnershipsMockup = () => (
-  <MockupLayout testId="mockup-partnerships" seo={{ title: 'Partnerships', path: '/partnerships', description: 'Partner with The State of Play. Sponsorship, branded content, and bespoke editorial collaborations across our subscriber base.' }}>
+  <MockupLayout testId="mockup-partnerships" seo={{ title: 'Partnerships', path: '/partnerships', description: 'Partner with The State of Play: a small number of partners each year, alongside an audience of investors and executives in Indian sport.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1 md:gap-0 border-b border-[var(--rule)] pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Partnerships</Overline>
-        <span className="font-plex text-[14px] text-[var(--text-muted)]">For brands, funds and federations</span>
+        <span className="font-plex text-[14px] text-[var(--text-muted)]">For brands and funds</span>
       </div>
     </div>
 
@@ -51,7 +51,7 @@ export const PartnershipsMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— The audience —</Overline>
+          <Overline className="block mb-3">The audience</Overline>
           <p className="font-plex text-[15px] leading-[1.6] text-[var(--text-muted)] max-w-[40ch]">
             We do not publish ads. We work with a small number of partners each year. Volume is intentionally low; relevance is the only metric we care about.
           </p>
@@ -71,7 +71,7 @@ export const PartnershipsMockup = () => (
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8">
-        <Overline className="block mb-6">— Partner tiers —</Overline>
+        <Overline className="block mb-6">Partner tiers</Overline>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-10">
           {TIERS.map((t, i) => (
             <div key={t.name} data-testid={`partner-tier-${i}`}>
@@ -90,14 +90,14 @@ export const PartnershipsMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— Get in touch —</Overline>
+          <Overline className="block mb-3">Get in touch</Overline>
         </div>
         <div className="lg:col-span-8 max-w-[55ch]">
           <h2 className="font-editorial font-semibold text-[28px] leading-snug mb-4">
             A short note is enough.
           </h2>
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)] mb-6">
-            Tell us who you are, what you’re trying to reach, and the cycle you have in mind. We’ll come back within a week with a tier that fits, or with a candid no.
+            Tell us who you are and the cycle you have in mind. We’ll come back within a week with a tier that fits, or with a candid no.
           </p>
           <a
             href="mailto:prerna@stateofplay.club?subject=Partnerships"

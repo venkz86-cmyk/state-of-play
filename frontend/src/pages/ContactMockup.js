@@ -1,10 +1,10 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const DESKS = [
-  ['Memberships', 'Account, billing, GST invoices', 'venkat@stateofplay.club'],
-  ['Editorial', 'Tips, leads, corrections', 'venkat@stateofplay.club'],
+  ['Memberships', 'Account and GST invoices', 'venkat@stateofplay.club'],
+  ['Editorial', 'Tips and corrections', 'venkat@stateofplay.club'],
   ['Group / Corporate', 'Team subscriptions, multi-seat plans', 'prerna@stateofplay.club'],
-  ['Partnerships & Press', 'Sponsorships, interviews, speaking', 'venkat@stateofplay.club'],
+  ['Partnerships & Press', 'Sponsorships and speaking', 'venkat@stateofplay.club'],
 ];
 
 const ADDRESS_LINES = [
@@ -15,7 +15,7 @@ const ADDRESS_LINES = [
 ];
 
 export const ContactMockup = () => (
-  <MockupLayout testId="mockup-contact" seo={{ title: 'Contact', path: '/contact', description: 'Get in touch with The State of Play for editorial pitches, corporate enquiries, and partnerships.' }}>
+  <MockupLayout testId="mockup-contact" seo={{ title: 'Contact', path: '/contact', description: 'Get in touch with The State of Play about memberships or partnerships.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Contact</Overline>
@@ -29,7 +29,7 @@ export const ContactMockup = () => (
         Write to us.
       </h1>
       <p className="font-reading italic text-[18px] md:text-[20px] leading-[1.5] text-[var(--text-muted)] max-w-[55ch]">
-        For questions about your membership, collaborations, or editorial queries, write to{' '}
+        For membership or editorial questions, write to{' '}
         <a href="mailto:venkat@stateofplay.club" className="not-italic text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
           venkat@stateofplay.club
         </a>.
@@ -38,7 +38,7 @@ export const ContactMockup = () => (
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8">
-        <Overline className="block mb-6">— Desks —</Overline>
+        <Overline className="block mb-6">Desks</Overline>
         <ul className="border-t border-[var(--rule)]">
           {DESKS.map(([desk, role, email]) => (
             <li key={desk} className="grid grid-cols-12 gap-4 py-5 border-b border-[var(--rule)] items-baseline">
@@ -65,7 +65,7 @@ export const ContactMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— Group & corporate —</Overline>
+          <Overline className="block mb-3">Group & corporate</Overline>
         </div>
         <div className="lg:col-span-8 max-w-[60ch]">
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)]">
@@ -78,11 +78,11 @@ export const ContactMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— Partnerships, press, speaking —</Overline>
+          <Overline className="block mb-3">Partnerships and press</Overline>
         </div>
         <div className="lg:col-span-8 max-w-[60ch]">
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)] mb-3">
-            You can also reach out for press, partnerships, or speaking requests. We typically respond within two working days.
+            You can also write for press or partnership requests. We typically respond within two working days.
           </p>
           <p className="font-plex text-[15px] leading-[1.7] text-[var(--text-muted)]">
             Please note that The State of Play does not accept sponsored editorial content or unsolicited story pitches.
@@ -94,7 +94,7 @@ export const ContactMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-32">
       <div className="border-t border-[var(--rule)] pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-4">
-          <Overline className="block mb-3">— Registered office —</Overline>
+          <Overline className="block mb-3">Registered office</Overline>
         </div>
         <div className="lg:col-span-8 max-w-[60ch]">
           <address className="font-plex text-[15px] leading-[1.8] text-[var(--text)] not-italic">

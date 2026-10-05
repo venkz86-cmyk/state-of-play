@@ -5,10 +5,10 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 const COVERAGE = [
   ['Cricket Markets', 'Franchise valuations, IPL economics, M&A, media rights.'],
   ['Football', 'ISL, federation, club ownership, broadcast.'],
-  ['Media Rights', 'Broadcasting deals, streaming wars, viewership.'],
+  ['Media Rights', 'Broadcasting deals and streaming wars.'],
   ['Governance', 'BCCI, IOA, federations and sports policy.'],
-  ['Sponsorship', 'Brand deals, endorsements, activation strategies.'],
-  ['Infrastructure', 'Stadiums, facilities and real estate in sport.'],
+  ['Sponsorship', 'Brand deals and endorsements.'],
+  ['Infrastructure', 'Stadiums and real estate in sport.'],
 ];
 
 const READERS = [
@@ -21,7 +21,7 @@ const READERS = [
 ];
 
 export const AboutMockup = () => (
-  <MockupLayout testId="mockup-about" seo={{ title: 'About', path: '/about', description: 'About The State of Play, a sports business publication out of Bengaluru. Reportage, analysis, and intelligence on the people, money, and decisions shaping Indian sport.' }}>
+  <MockupLayout testId="mockup-about" seo={{ title: 'About', path: '/about', description: 'About The State of Play, a sports business publication out of Bengaluru, reporting on the money and the people shaping Indian sport.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
@@ -35,7 +35,7 @@ export const AboutMockup = () => (
         How sport actually works.
       </h1>
       <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
-        The State of Play is a subscription-only publication providing in-depth, original insight into the business of sport, with sharp reporting, analysis and a distinct editorial voice grounded in India.
+        The State of Play is a subscription-only publication providing in-depth, original insight into the business of sport, with sharp reporting and a distinct editorial voice grounded in India.
       </p>
     </section>
 
@@ -49,7 +49,7 @@ export const AboutMockup = () => (
           In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained reporting on how sport actually works.
         </p>
         <p>
-          The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition on how money, power and strategy are reordering Indian sport, and what those shifts mean for the wider sporting economy.
+          The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition on how money and power are reordering Indian sport, and what those shifts mean for the wider sporting economy.
         </p>
       </div>
     </section>
@@ -74,7 +74,7 @@ export const AboutMockup = () => (
         <div className="lg:col-span-4">
           <p className="font-editorial italic text-lg mb-3">Our readers</p>
           <p className="font-plex text-sm text-[var(--text-muted)] max-w-[40ch] leading-relaxed">
-            Indian sport is no longer a local story. International funds, families and franchises are evaluating Indian sport as a serious asset class. They read us first.
+            Indian sport is no longer a local story. International funds and franchises are evaluating Indian sport as a serious asset class. They read us first.
           </p>
         </div>
         <div className="lg:col-span-8">

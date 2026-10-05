@@ -407,7 +407,7 @@ export const HomeMockup = () => {
                 </span>
               </div>
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
-                One deeply reported story a week on the business of Indian sport, the full archive, and every Left Field briefing.
+                One deeply reported story a week on the business of Indian sport, plus the full archive.
               </p>
             </div>
             <Link

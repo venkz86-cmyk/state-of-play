@@ -22,15 +22,15 @@ const BENEFITS = [
   ['The full archive', 'Every premium story since launch, searchable and always available.'],
   ['First on the big deals', 'The desk reports major transactions and announcements before anyone else covers them properly.'],
   ['The TSOP Transcript', 'Q&As with the people actually running the business of Indian sport.'],
-  ['The numbers behind the story', 'IRR models, valuation breakdowns, market sizing.'],
+  ['The numbers behind the story', 'IRR models and valuation breakdowns.'],
   ['No advertising', 'No sponsored content, no ads. Just journalism.'],
   ['A direct line to the desk', 'Reply to any email from The State of Play and Venkat answers.'],
 ];
 
 const FAQS = [
   ['What sports do you cover?', 'The full business of Indian sport: cricket, football, kabaddi, badminton, hockey, motorsport, emerging leagues, private equity deals, media rights, sports tech, governance and regulatory developments.'],
-  ['How is this different from The Left Field?', 'The Left Field is a free news brief. TSOP is original, reported, long-form analysis, plus exclusive interviews, investigations and data breakdowns.'],
-  ['What happens after I subscribe?', 'Your account is created automatically after payment via Razorpay. Check your email for a verification link and you’ll have immediate access.'],
+  ['How is this different from The Left Field?', 'The Left Field is a free news brief. TSOP is original, reported long-form analysis, plus exclusive interviews and data breakdowns.'],
+  ['What happens after I subscribe?', 'Your account is set up the moment your payment goes through. Sign in with the same email and we send you a code.'],
   ['How long is the subscription?', 'Annual. 12 months from purchase. You’ll receive a renewal reminder before it expires.'],
 ];
 
@@ -52,7 +52,7 @@ export const SubscribeMockup = () => {
   }, []);
 
   return (
-    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play, India\'s sports business publication. Premium reportage, member benefits, and a private subscriber community.' }}>
+    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play, India’s sports business publication: one reported story a week and the full archive.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
@@ -68,7 +68,7 @@ export const SubscribeMockup = () => {
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
-            Original reporting on the business of Indian sport: the deals, the valuations and the people making them. Delivered weekly.
+            Original reporting on the business of Indian sport: the deals and the people making them. Delivered weekly.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">

@@ -198,7 +198,7 @@ export const GiftRedeemMockup = () => {
               </p>
             )}
             <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-8">
-              Already paid for — just tell us where to set up your account.
+              Already paid for. Tell us where to set up your account.
             </p>
 
             <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your name</p>

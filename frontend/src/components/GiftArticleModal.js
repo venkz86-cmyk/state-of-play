@@ -156,7 +156,7 @@ export const GiftArticleModal = ({
                 className="font-plex text-[14px] lg:text-[15px] leading-[1.55] text-[var(--text-muted)] mt-3 max-w-[52ch]"
                 data-testid="gift-modal-subheading"
               >
-                Copy the link or send it on WhatsApp. Anyone can read the full story free for the next 72 hours — no sign-up needed on their end.
+                Copy the link or send it on WhatsApp. Anyone can read the full story free for the next 72 hours, with no sign-up on their end.
               </DialogDescription>
             </>
           ) : (

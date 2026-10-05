@@ -33,7 +33,7 @@ export const GiftMockup = () => {
   const gstTotal = isBeforeOctoberCutover() ? '₹2,949' : '₹4,129';
 
   return (
-    <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', description: 'Give someone a year of The State of Play — reported stories on the business of Indian sport, delivered weekly.' }}>
+    <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', description: 'Give someone a year of The State of Play: reported stories on the business of Indian sport, delivered weekly.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Give a subscription</Overline>
@@ -46,7 +46,7 @@ export const GiftMockup = () => {
           Give someone a year of <em className="italic font-normal">The State of Play.</em>
         </h1>
         <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed mb-3">
-          Every weekly story, the Left Field briefing and the full archive, on you. Same price as subscribing for yourself.
+          Every weekly story and the full archive, on you. Same price as subscribing for yourself.
         </p>
         <p className="font-plex text-sm text-[var(--text-muted)]">
           Already have a gift code?{' '}
@@ -72,7 +72,7 @@ export const GiftMockup = () => {
               <div>
                 <p className="font-editorial italic text-lg mb-3">Paid. Here's their link.</p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-4">
-                  We've also emailed this to you as a backup. Send it to whoever it's for — they redeem it with their own email, whenever they're ready.
+                  We've also emailed this to you as a backup. Send it to whoever it's for. They redeem it with their own email, whenever they're ready.
                 </p>
                 <p className="font-plex text-base border-b border-[var(--rule)] py-3 break-all" data-testid="gift-result-code">
                   {result.redeem_url}
