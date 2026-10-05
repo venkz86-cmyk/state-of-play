@@ -3,18 +3,19 @@ import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
-import { STORIES_PER_SEASON } from '../lib/season';
+import { STORIES_PER_SEASON, isSeasonStory } from '../lib/season';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 const pad = (n) => String(n).padStart(2, '0');
 
-/* Season One: every story so far, numbered in publishing order, with an
-   empty numbered slot for each one still to come. Counted live from Ghost,
-   the same count the homepage dateline ("No. X · Season One") uses, so
-   the two always agree. The first STORIES_PER_SEASON stories, oldest
-   first, are the season. */
+/* Season One: every story so far, numbered in publishing order and
+   listed newest first, with a progress strip showing the slots still to
+   come. The season is the first STORIES_PER_SEASON season stories
+   (lib/season.js's isSeasonStory: not the welcome note, nothing tagged
+   #not-season), the same rule the homepage's "No. X · Season One" count
+   uses, so the two always agree. */
 export const SeasonMockup = () => {
   const { canAccessPremium } = useAuth();
   const [stories, setStories] = useState([]);
@@ -25,7 +26,10 @@ export const SeasonMockup = () => {
     (async () => {
       const all = await ghostAPI.getAllPosts();
       if (!active) return;
-      const oldestFirst = [...all].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      // Numbered in publishing order (No. 01 is the first season story);
+      // the welcome note and anything tagged #not-season don't count.
+      const oldestFirst = all.filter(isSeasonStory)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       setStories(oldestFirst.slice(0, STORIES_PER_SEASON));
       setLoading(false);
     })();
@@ -92,37 +96,28 @@ export const SeasonMockup = () => {
           <Overline>Loading the season…</Overline>
         ) : (
           <ol className="border-t border-[var(--text)]">
-            {slots.map((s, i) => (
-              <li key={s ? s.id : `slot-${i}`} className="border-b border-[var(--rule)]">
-                {s ? (
-                  <Link
-                    to={`/${s.id}`}
-                    data-testid="season-story"
-                    className="group grid grid-cols-12 gap-x-4 lg:gap-x-10 gap-y-1 items-baseline py-5"
-                  >
-                    <span className="col-span-2 lg:col-span-1 font-plex text-[12px] tracking-[0.08em] text-[var(--text-label)]">
-                      No.&nbsp;<span className="tabular-nums">{pad(i + 1)}</span>
-                    </span>
-                    <h2 className="col-span-10 lg:col-span-7 font-editorial font-medium text-lg lg:text-xl leading-snug text-[var(--text)] group-hover:text-[var(--accent-burgundy)] transition-colors duration-200">
-                      {s.title}
-                    </h2>
-                    <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)]">
-                      {s.theme}{s.is_premium ? '' : ' · Free'}
-                    </span>
-                    <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto lg:text-right font-plex text-[12px] text-[var(--text-label)]">
-                      {longDate(s.created_at)}
-                    </span>
-                  </Link>
-                ) : (
-                  <div className="grid grid-cols-12 gap-x-4 lg:gap-x-10 items-baseline py-5" data-testid="season-slot">
-                    <span className="col-span-2 lg:col-span-1 font-plex text-[12px] tracking-[0.08em] text-[var(--text-label)]">
-                      No.&nbsp;<span className="tabular-nums">{pad(i + 1)}</span>
-                    </span>
-                    <span className="col-span-10 lg:col-span-11 font-editorial italic text-lg text-[var(--text-label)]">
-                      To come
-                    </span>
-                  </div>
-                )}
+            {/* Newest first, so the page doubles as the season's archive.
+                Each story keeps its season number. */}
+            {stories.map((s, i) => ({ s, no: i + 1 })).reverse().map(({ s, no }) => (
+              <li key={s.id} className="border-b border-[var(--rule)]">
+                <Link
+                  to={`/${s.id}`}
+                  data-testid="season-story"
+                  className="group grid grid-cols-12 gap-x-4 lg:gap-x-10 gap-y-1 items-baseline py-5"
+                >
+                  <span className="col-span-2 lg:col-span-1 font-plex text-[12px] tracking-[0.08em] text-[var(--text-label)]">
+                    No.&nbsp;<span className="tabular-nums">{pad(no)}</span>
+                  </span>
+                  <h2 className="col-span-10 lg:col-span-7 font-editorial font-medium text-lg lg:text-xl leading-snug text-[var(--text)] group-hover:text-[var(--accent-burgundy)] transition-colors duration-200">
+                    {s.title}
+                  </h2>
+                  <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)]">
+                    {s.theme}{s.is_premium ? '' : ' · Free'}
+                  </span>
+                  <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto lg:text-right font-plex text-[12px] text-[var(--text-label)]">
+                    {longDate(s.created_at)}
+                  </span>
+                </Link>
               </li>
             ))}
           </ol>

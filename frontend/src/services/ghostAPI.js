@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { NOT_SEASON_FILTER } from '../lib/season';
 
 const GHOST_URL = process.env.REACT_APP_GHOST_URL;
 const GHOST_CONTENT_KEY = process.env.REACT_APP_GHOST_CONTENT_API_KEY;
@@ -94,19 +95,32 @@ class GhostAPI {
   }
 
   // Total post count — used for the dateline edition number ("No. X")
-  async getPostCount() {
+  async getPostCount(filter = '') {
     try {
       const params = new URLSearchParams({
         key: GHOST_CONTENT_KEY,
         limit: 1,
         fields: 'id',
       });
+      if (filter) params.set('filter', filter);
       const response = await axios.get(`${this.contentURL}/posts/?${params}`);
       return response.data?.meta?.pagination?.total ?? 0;
     } catch (error) {
       console.error('Ghost post count error:', error);
       return 0;
     }
+  }
+
+  // Season stories published so far: every post, minus the ones
+  // lib/season.js leaves out (the welcome note, anything tagged
+  // #not-season). Feeds the "No. X · Season One" datelines. Returns 0 if
+  // Ghost can't be reached, so callers hide the number.
+  async getSeasonStoryCount() {
+    const [total, excluded] = await Promise.all([
+      this.getPostCount(),
+      this.getPostCount(NOT_SEASON_FILTER),
+    ]);
+    return total > 0 ? Math.max(0, total - excluded) : 0;
   }
 
   // Get single post by slug

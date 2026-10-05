@@ -127,7 +127,7 @@ export const HomeMockup = () => {
       try {
         const [posts, count] = await Promise.all([
           ghostAPI.getPosts({ limit: 20 }),
-          ghostAPI.getPostCount(),
+          ghostAPI.getSeasonStoryCount(),
         ]);
         if (!active) return;
         setArticles(posts);
@@ -188,7 +188,10 @@ export const HomeMockup = () => {
           >
             {/* Tabular figures on the number only: on the whole line they
                 widen the full stop and render "No . 8". */}
-            No.{'\u00A0'}<span className="tabular-nums">{editionNo || 42}</span> · Season {seasonLabel(editionNo)}
+            {editionNo ? (
+              <>No.{'\u00A0'}<span className="tabular-nums">{editionNo}</span> · </>
+            ) : null}
+            Season {seasonLabel(editionNo)}
           </Link>
         </div>
         {!authLoading && !isMember && (
