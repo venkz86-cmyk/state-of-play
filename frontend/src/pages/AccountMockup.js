@@ -122,8 +122,16 @@ export const AccountMockup = () => {
   // works instead of showing an empty "Next charge". The reminder timing
   // is annual_renewal.py's REMINDER_DAYS_BEFORE.
   const paidOnce = canAccessPremium && details?.subscription_status === 'one_time';
+  // What renewing costs, in the currency the member last paid in: the
+  // renewal rate (razorpay_subscriptions.SUBSCRIPTION_PLANS) or, for
+  // students, the student price (razorpay_orders.PLAN_PRICING['student']).
+  const paidInUsd = details?.last_payment_currency === 'USD';
+  const isStudent = details?.tier === 'student';
+  const renewalPrice = isStudent
+    ? (paidInUsd ? ['$29 a year', null] : ['₹1,770 a year', '₹1,500 + ₹270 GST'])
+    : (paidInUsd ? ['$149 a year', null] : ['₹3,539 a year', '₹2,999 + ₹540 GST']);
   const renewalTile = paidOnce
-    ? ['Renewal', 'Not automatic', 'We email you 14 days before it ends.']
+    ? ['Renewal', renewalPrice[0], [renewalPrice[1], 'Not automatic. We email you 14 days before it ends.'].filter(Boolean)]
     : ['Next charge', nextCharge, nextChargeDetail];
 
   // The member's real last payment, not a fixed price: students, renewals,
@@ -184,9 +192,9 @@ export const AccountMockup = () => {
             >
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
               <p className="font-editorial font-medium text-lg lg:text-xl leading-tight">{v}</p>
-              {detail && (
-                <p className="font-plex text-xs text-[var(--text-muted)] mt-1">{detail}</p>
-              )}
+              {detail && [].concat(detail).map((line) => (
+                <p key={line} className="font-plex text-xs text-[var(--text-muted)] mt-1">{line}</p>
+              ))}
             </div>
           ))}
         </div>
