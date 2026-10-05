@@ -53,7 +53,7 @@ const Sched = ({ rows }) => (
 );
 
 export const OutfieldMockup = () => (
-  <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'Outfield, a weekly read on the lateral edges of sport. Culture, identity, and the stories beyond the scoreboard.' }}>
+  <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'The Outfield: The State of Play’s in-person events on the business of Indian sport. Small rooms, off the record.' }}>
     <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>
@@ -64,17 +64,17 @@ export const OutfieldMockup = () => (
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
       <Overline className="mb-4 block">In person</Overline>
       <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
-        Three rooms. No stage. No slides.
+        Three rooms. No stage.
       </h1>
       <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
-        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Roundtable is a conversation. Speakeasy is a room. Sandbox is a game. All in person, all off the record.
+        The State of Play covers the business of Indian sport. The Outfield is where that community meets in person. Each one is in person and off the record.
       </p>
     </section>
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
       <div className="border-t border-[var(--text)] pt-8 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-12">
         <div data-testid="outfield-roundtables">
-          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">01 — Quarterly subscriber discussions</Overline>
+          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Quarterly subscriber discussions</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Roundtables.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-6 max-w-[50ch]">
             Closed-door. Ninety minutes. We take a Friday story and go deeper with the protagonist. What couldn’t fit in 1,500 words. What has developed since.
@@ -90,10 +90,10 @@ export const OutfieldMockup = () => (
         </div>
 
         <div data-testid="outfield-speakeasies" className="lg:border-l lg:border-[var(--rule)]/15 lg:pl-12">
-          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">02 — Premium off-record gatherings</Overline>
+          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Premium off-record gatherings</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Speakeasy.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-6 max-w-[50ch]">
-            Each speaker gets 20–30 minutes for a fireside chat. Forward-looking topics. After the chats, Q&A, a short pub quiz, then networking. One drink on the house.
+            Each speaker gets 20–30 minutes for a fireside chat. Forward-looking topics. Q&A follows the chats, and the evening ends with a short pub quiz. One drink on the house.
           </p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-6 mb-6 font-plex text-sm">
             <li><span className="text-[var(--text-muted)]">Size · </span>30 people, 3 CXOs</li>
@@ -106,10 +106,10 @@ export const OutfieldMockup = () => (
         </div>
 
         <div data-testid="outfield-sandbox" className="lg:border-l lg:border-[var(--rule)]/15 lg:pl-12">
-          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">03 — Weekend experiential first-contact</Overline>
+          <Overline className="!normal-case !tracking-normal !text-sm block mb-3">Weekend experiential first-contact</Overline>
           <h2 className="font-editorial font-medium text-2xl lg:text-[2rem] mb-4">The Sandbox.</h2>
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-4 max-w-[50ch]">
-            Twenty to thirty people spend an hour as someone they aren’t: a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport, actual pricing, actual deal structure, actual leverage points. Nobody’s reading from a script.
+            Twenty to thirty people spend an hour as someone they aren’t: a broadcaster, a PE fund, a league office, a franchise fighting for its own turf. The mechanics come straight from real transactions in Indian sport, actual pricing and actual deal structure. Nobody’s reading from a script.
           </p>
           <p className="font-editorial italic text-base text-[var(--text)] leading-relaxed mb-6 max-w-[50ch]">
             Sports business is easier to argue about than to feel. Sandbox is where you feel it.
@@ -130,7 +130,7 @@ export const OutfieldMockup = () => (
       <div className="border-t border-[var(--text)] pt-8">
         <blockquote className="max-w-[60ch] border-l border-[var(--accent)] pl-6">
           <p className="font-editorial italic text-xl lg:text-[1.75rem] leading-[1.25] text-[var(--text)]">
-            No stages. No panels. No 500-person halls. Small rooms force depth. The Chatham House rule encourages honesty. This is where the real conversations happen.
+            No stages and no 500-person halls. Small rooms force depth. The Chatham House rule encourages honesty. This is where the real conversations happen.
           </p>
         </blockquote>
       </div>
@@ -145,7 +145,7 @@ export const OutfieldMockup = () => (
     {false && (
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12" data-testid="outfield-attendees-say">
         <div className="border-t border-[var(--text)] pt-8">
-          <Overline className="block mb-6">— What attendees say —</Overline>
+          <Overline className="block mb-6">What attendees say</Overline>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
             {[
               { quote: '__attendee quote 1__', name: '—', title: '—' },

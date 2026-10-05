@@ -58,7 +58,7 @@ const friendlyError = (raw) => {
 // ─── Empty-state / error block ───────────────────────────────────────────────
 const Notice = ({ title, body }) => (
   <section className="max-w-[480px] mx-auto px-6 pt-20 pb-32 text-center">
-    <Overline className="block mb-8">— The State of Play —</Overline>
+    <Overline className="block mb-8">The State of Play</Overline>
     <h1 className="font-editorial font-semibold text-[1.75rem] leading-snug mb-5 text-[var(--text)]">
       {title}
     </h1>

@@ -76,7 +76,7 @@ export const StudentPayMockup = () => {
       <MockupLayout testId="page-students-pay-invalid" hideFooterHeroCta>
         <Notice
           title="This link isn’t valid."
-          body="If you were recently approved for the Student plan, check your email for the most recent message from Venkat. If you think this is a mistake, write to venkat@stateofplay.club."
+          body="If you were recently approved for the Student plan, check your email for the most recent message from us. If you think this is a mistake, write to venkat@stateofplay.club."
         />
       </MockupLayout>
     );
@@ -96,7 +96,7 @@ export const StudentPayMockup = () => {
 
         {paid ? (
           <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed" data-testid="students-pay-success">
-            Payment received. Every weekly story, the Left Field briefing, and the full archive are yours now — sign in with {info.email} whenever you're ready.
+            Payment received. Every weekly story and the full archive are yours now. Sign in with {info.email} whenever you're ready.
           </p>
         ) : (
           <>

@@ -97,7 +97,7 @@ export const TrialMockup = () => {
 
       {/* Hero */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-12">
-        <Overline className="mb-4 block">— The State of Play —</Overline>
+        <Overline className="mb-4 block">The State of Play</Overline>
         <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
           Ten stories.<br />Thirty days.<br /><em className="italic font-normal">{isIndia ? '₹500.' : '$9.'}</em>
         </h1>
@@ -211,7 +211,7 @@ export const TrialMockup = () => {
               </div>
               <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">{newSignupAnnualPricing(isIndia).note}</p>
               <ul className="space-y-2.5">
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Everything, every week, all year</li>
+                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Every story, all year</li>
                 <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Full archive, searchable</li>
                 <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Comments and nominating other readers</li>
                 <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Direct line to the desk</li>
@@ -219,7 +219,7 @@ export const TrialMockup = () => {
             </div>
           </div>
           <p className="font-plex text-sm text-[var(--text-muted)] mt-8">
-            The Left Field briefing is free either way: trial, subscriber, or neither.
+            The Left Field briefing is free whether you subscribe or not.
           </p>
 
           {/* The upgrade checkout only works for a signed-in trial member,

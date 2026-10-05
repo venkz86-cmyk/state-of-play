@@ -119,7 +119,7 @@ export const TeamsLogin = () => {
           </>
         ) : (
           <div data-testid="teams-login-confirmation">
-            <Overline className="block mb-8">— Sent —</Overline>
+            <Overline className="block mb-8">Sent</Overline>
             <h1 className="font-editorial font-semibold tracking-tight text-[1.75rem] sm:text-[2rem] leading-[1.15] mb-5">
               Check your inbox.
             </h1>

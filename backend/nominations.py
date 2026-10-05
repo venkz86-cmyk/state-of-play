@@ -456,11 +456,11 @@ def _nomination_welcome_email_html(nominator_name: str, story_url: str, nominee_
         (
             '<p>Dear reader,</p>'
             f'<p>{html.escape(nominator_name)} thought you should be reading The State of Play, so they put your name forward.</p>'
-            '<p>The State of Play is a weekly reported publication on the business of Indian sport &mdash; franchise valuations, broadcast rights, ownership deals, and the people making the decisions. One properly reported story a week. It’s normally for paying readers.</p>'
+            '<p>The State of Play is a weekly reported publication on the business of Indian sport: franchise valuations, broadcast rights, ownership deals and the people making the decisions. One properly reported story a week. It’s normally for paying readers.</p>'
             '<p>You have full access for the next two weeks. Nothing to sign up for, nothing to cancel.</p>'
             + email_cta_button('Start with this story &rarr;', story_url)
             + f'{reason_block}'
-            '<p style="color: #555555;">Once you’re in, sign in anytime with just your email (no password) to read anything else on the site &mdash; it’s covered too.</p>'
+            '<p style="color: #555555;">Once you’re in, sign in anytime with your email (no password) to read anything else on the site. That’s covered too.</p>'
             '<p style="margin-top: 32px;">As always, thanks for reading!</p>'
         ),
         compliance_footer=True,
@@ -1216,7 +1216,7 @@ def _attribution_block(token_doc: dict) -> str:
         return f"""
         <aside class="tsop-attribution" data-kind="gift">
           <p class="tsop-attribution__hed">A State of Play subscriber unlocked this story for you.</p>
-          <p>Access on this browser ends {html.escape(expiry_str)}. Reported intelligence on the business of Indian sport &mdash; no noise, no aggregation, just reporting.</p>
+          <p>Access on this browser ends {html.escape(expiry_str)}. Reported intelligence on the business of Indian sport. No aggregation, only reporting.</p>
           <a class="tsop-attribution__cta" href="{cta}">Read The State of Play every week &rarr;</a>
           <p class="tsop-attribution__links"><a href="{tlf_cta}">Get The Left Field free</a> &middot; <a href="{signin_cta}">Already a member? Sign in</a></p>
         </aside>
@@ -1258,7 +1258,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     # WhatsApp previews see -- gift-specific for gift links, per the
     # brief's WhatsApp-friendly-metadata section. `title`/`excerpt` stay
     # the real article title/standfirst shown on the page itself.
-    page_title = f'{title} — gifted by a State of Play reader' if is_gift else f'{title} — The State of Play'
+    page_title = f'{title} · gifted by a State of Play reader' if is_gift else f'{title} · The State of Play'
     excerpt = html.escape((post.get('custom_excerpt') or post.get('excerpt') or '')[:200])
     meta_description = html.escape(
         'A State of Play subscriber has unlocked this story for you. Read it free for a limited time.'

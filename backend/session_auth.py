@@ -296,7 +296,7 @@ def _code_email_html(code: str) -> str:
             f'{code}'
             '</p>'
             '<p style="color: #555555;">'
-            'If you didn’t request this, you can safely ignore this email — the code simply won’t be used.'
+            'If you didn’t request this, ignore this email. The code won’t be used.'
             '</p>'
         ),
         compliance_footer=True,

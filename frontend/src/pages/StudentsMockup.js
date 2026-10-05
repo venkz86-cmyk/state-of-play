@@ -16,7 +16,7 @@ const longDate = (iso) =>
 
 const HOW_IT_WORKS = [
   ['Apply', 'Submit the form with your name, college and a photo of your current student ID.'],
-  ['We verify', 'Venkat checks the ID by hand.'],
+  ['We verify', 'We check the ID by hand.'],
   ['Pay and start reading', 'Once approved, you get a payment link by email. Pay it and you\'re in: every story, the whole archive.'],
 ];
 
@@ -67,7 +67,7 @@ export const StudentsMockup = () => {
           Every weekly story and the full archive, at a student price. Verification is manual and by ID, so the price stays real for the people it's for.
         </p>
         <p className="font-plex text-base text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
-          The weekly story, the Left Field briefing on Mondays and Wednesdays, and the full archive. Same as the annual plan.
+          Every weekly story and the full archive. Same as the annual plan.
         </p>
       </section>
 

@@ -108,7 +108,7 @@ export const Paywall = () => {
         <p
           className="font-plex text-[13px] text-[var(--text-muted)] mb-8"
         >
-          Weekly deep-dives · Full archive · Member events
+          Weekly deep-dives · Full archive
         </p>
 
         <p

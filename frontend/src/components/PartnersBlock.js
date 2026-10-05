@@ -43,7 +43,7 @@ export const PartnersBlock = ({
       {variant === 'tiers' ? (
         <div className="border-t border-[var(--rule)] pt-8">
           {showHeader && (
-            <Overline className="block mb-6">— Current partners —</Overline>
+            <Overline className="block mb-6">Current partners</Overline>
           )}
           <PartnerGrid />
           {showFooterCTA && (

@@ -47,12 +47,12 @@ export const FeedMockup = () => {
       {/* Section header */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-24">
-          <Overline className="text-[var(--accent)] mb-5 block">— The State of Play —</Overline>
+          <Overline className="text-[var(--accent)] mb-5 block">The State of Play</Overline>
           <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4.5rem] leading-[1] max-w-4xl">
             The week, <em className="italic font-normal text-[var(--accent)]">on the record.</em>
           </h1>
           <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
-            Long-form reportage and analysis on the businesses, deals and people moving Indian sport. Updated each Friday. Read in any order.
+            Long-form reportage on the deals and people moving Indian sport. Updated each Friday.
           </p>
         </div>
       </section>

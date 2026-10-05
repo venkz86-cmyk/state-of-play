@@ -127,13 +127,13 @@ export const LeftFieldMockup = () => {
   const list = items.slice(5);
 
   return (
-    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: "The Left Field, The State of Play's free companion newsletter. Sport, identity, and the cultural undercurrent." }}>
+    <MockupLayout testId="mockup-leftfield" hideFooterHeroCta seo={{ title: 'Left Field', path: '/left-field', description: 'The Left Field: free news briefs on the deals and people moving Indian sport, twice a week.' }}>
       {/* Hero */}
       <section className="border-b border-[var(--rule)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-8">
             <div className="flex items-center gap-3 mb-5">
-              <Overline className="text-[var(--accent)]">— The Left Field —</Overline>
+              <Overline className="text-[var(--accent)]">The Left Field</Overline>
               <span className="h-px w-8 bg-[var(--accent)]/40" />
               <Overline className="text-[var(--accent)]">Free · Twice a week</Overline>
             </div>
@@ -155,7 +155,7 @@ export const LeftFieldMockup = () => {
       <section className="border-b border-[var(--rule)] bg-[var(--surface)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
-            <Overline className="text-[var(--accent)]">— What it is —</Overline>
+            <Overline className="text-[var(--accent)]">What it is</Overline>
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
             <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[var(--text)]">
@@ -247,7 +247,7 @@ export const LeftFieldMockup = () => {
               </div>
 
                 <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[var(--rule)]">
-                  <Overline className="text-[var(--accent)] mb-8 block">— Recent briefs —</Overline>
+                  <Overline className="text-[var(--accent)] mb-8 block">Recent briefs</Overline>
                   <ul>
                     {grid.map((p, i) => (
                       <li
@@ -285,7 +285,7 @@ export const LeftFieldMockup = () => {
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
                 <div className="flex items-end justify-between mb-12">
                   <div>
-                    <Overline className="text-[var(--accent)] mb-3 block">— The archive —</Overline>
+                    <Overline className="text-[var(--accent)] mb-3 block">The archive</Overline>
                     <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
                       Earlier briefs.
                     </h2>

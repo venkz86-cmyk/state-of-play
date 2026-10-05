@@ -2,19 +2,24 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
+import { isBeforeOctoberCutover } from '../lib/octoberPricing';
 
-const PLANS = [
-  {
-    id: 'team-5',
-    name: 'Team-5',
-    body: '₹10,000 + GST a year (₹11,800 total). Five seats, ₹2,000 + GST each. Five separate subscriptions would cost ₹12,495. You save ₹2,495.',
-  },
-  {
-    id: 'team-10',
-    name: 'Team-10',
-    body: '₹20,000 + GST a year (₹23,600 total). Ten seats, ₹2,000 + GST each. Ten separate subscriptions would cost ₹24,990. You save ₹4,990.',
-  },
-];
+// "Separate subscriptions" compares against the new-signup rate before
+// GST, which rises at the 6 October cutover (lib/octoberPricing.js):
+// ₹2,499 a seat until then, ₹3,499 from then.
+const teamPlans = () => {
+  const perSeat = isBeforeOctoberCutover() ? 2499 : 3499;
+  const inr = (n) => `₹${n.toLocaleString('en-IN')}`;
+  const plan = (id, name, seats, word) => {
+    const price = seats * 2000;
+    const separate = seats * perSeat;
+    return {
+      id, name,
+      body: `${inr(price)} + GST a year (${inr(Math.round(price * 1.18))} total). ${word} seats, ₹2,000 + GST each. ${word} separate subscriptions would cost ${inr(separate)}. You save ${inr(separate - price)}.`,
+    };
+  };
+  return [plan('team-5', 'Team-5', 5, 'Five'), plan('team-10', 'Team-10', 10, 'Ten')];
+};
 
 export const TeamsMockup = () => {
   const [paidPlan, setPaidPlan] = useState(null);
@@ -42,16 +47,16 @@ export const TeamsMockup = () => {
             A client asks what a franchise is worth, mid-pitch, with no time to reconstruct the deal history from press releases and old decks. By the time it reaches a general business publication, your team already needs a view.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            I write The State of Play, a weekly reported publication on the business of Indian sport: franchise valuations, media rights, ownership. One deeply reported story a week. No scores, no opinion, no noise. In its first year, 360 readers have chosen to pay for it. The reporting has been cited by <em>Bloomberg</em>, <em>SportBusiness</em>, <em>ESPNcricinfo</em>, <em>The Athletic</em> and <em>SportsPro</em>.
+            I write The State of Play, a weekly reported publication on the business of Indian sport: franchise valuations and media rights. One deeply reported story a week. No scores and no noise. In its first year, 360 readers have chosen to pay for it. The reporting has been cited by <em>Bloomberg</em>, <em>SportBusiness</em>, <em>ESPNcricinfo</em>, <em>The Athletic</em> and <em>SportsPro</em>.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             The desks that read it work in consulting, law, agencies, broadcast, funds and franchises. They use it to brief a colleague before a client meeting, find the deal context behind an announcement, check what was reported about a franchise, a rights cycle or an owner, and give analysts and associates the same starting point. When the meeting starts, everyone in the room has the same facts. That's the whole product.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            A team plan puts the weekly story, the twice-weekly Left Field briefings and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes. Nothing to re-sign, nothing lost when someone leaves.
+            A team plan puts the weekly story and the full searchable archive in front of everyone on the desk who needs it. Each person gets their own sign-in. One administrator adds or removes people as the team changes. Nothing to re-sign, nothing lost when someone leaves.
           </p>
           <div data-testid="teams-pricing" className="space-y-8">
-            {PLANS.map((p) => (
+            {teamPlans().map((p) => (
               <div key={p.id}>
                 <p className="font-editorial font-medium text-lg mb-1">{p.name}</p>
                 <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] mb-3">
@@ -59,7 +64,7 @@ export const TeamsMockup = () => {
                 </p>
                 {paidPlan === p.id ? (
                   <p className="font-plex text-sm text-[var(--text-muted)] border-b border-[var(--rule)] py-3 max-w-[480px]">
-                    Paid. Check your email — your team dashboard link is on its way.
+                    Paid. Your team dashboard link is on its way to your inbox.
                   </p>
                 ) : openPlan === p.id ? (
                   <div className="max-w-[480px]">

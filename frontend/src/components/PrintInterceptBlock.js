@@ -251,10 +251,10 @@ export const PrintInterceptBlock = ({
       <aside
         className="tsop-print-only"
         role="region"
-        aria-label="Print intercept — nominate a reader instead"
+        aria-label="Print intercept: nominate a reader instead"
         data-testid="print-intercept-block"
       >
-        <p className="tsop-print-only__mast">— The State of Play —</p>
+        <p className="tsop-print-only__mast">The State of Play</p>
 
         {isPaidSubscriber && quota && typeof quota.remaining === 'number' && !blocked && !submitted && (
           <p

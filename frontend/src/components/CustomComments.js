@@ -340,7 +340,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
   if (submitted) {
     return (
       <p className="font-plex text-[13px] text-[var(--text-muted)]" data-testid="comment-submitted">
-        Submitted — it'll show up here once it's been reviewed.{' '}
+        Submitted. It will show up here once it’s been reviewed.{' '}
         <button
           type="button"
           onClick={() => setSubmitted(false)}

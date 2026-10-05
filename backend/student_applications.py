@@ -233,7 +233,7 @@ def _payment_link_email_html(name: str, pay_url: str) -> str:
         (
             '<p>Your student ID checked out. Complete your membership below to start reading.</p>'
             + email_cta_button('Complete your membership &rarr;', pay_url)
-            + '<p style="color: #555555;">Once you’ve paid, you’re in immediately — every weekly story, the Left Field briefing, and the full archive.</p>'
+            + '<p style="color: #555555;">Once you’ve paid, you’re in immediately, with every weekly story and the full archive.</p>'
         ),
     )
 
@@ -262,7 +262,7 @@ async def approve_student_application(
     pay_url = f'{PUBLIC_BASE_URL}/students/pay?token={payment_token}'
     sent = await send_email(
         to=application['email'],
-        subject='You’re approved — complete your Student membership',
+        subject='You’re approved: complete your Student membership',
         html=_payment_link_email_html(application.get('name', ''), pay_url),
     )
     if not sent:

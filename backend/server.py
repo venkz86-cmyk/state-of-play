@@ -1956,7 +1956,7 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
         "razorpay_ref": rzp_ref,
         "taxable_value": taxable_value,
         "tax": tax,
-        "description_override": f"The State of Play \u2014 {plan_name} ({account.get('seats') or '—'} seats, annual)",
+        "description_override": f"The State of Play: {plan_name} ({account.get('seats') or '—'} seats, annual)",
     })
 
     safe_num = invoice_number.replace("/", "-")

@@ -177,7 +177,7 @@ export const LoginMockup = () => {
 
               <div className="space-y-2">
                 <p className="font-plex text-sm text-[var(--text-muted)]">
-                  Check promotions or spam — codes usually arrive in under a minute.
+                  Check promotions or spam. Codes usually arrive in under a minute.
                 </p>
                 <p className="font-plex text-sm text-[var(--text-muted)]">
                   Didn't get it?{' '}
