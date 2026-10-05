@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 const TABS = [
   { to: '/admin/dashboard', label: 'Overview', end: true },
   { to: '/admin/dashboard/subscribers', label: 'Subscribers' },
+  { to: '/admin/dashboard/sources', label: 'Sources' },
   { to: '/admin/dashboard/renewals', label: 'Renewals' },
   { to: '/admin/dashboard/comments', label: 'Comments' },
   { to: '/admin/dashboard/nominated', label: 'Nominated readers' },

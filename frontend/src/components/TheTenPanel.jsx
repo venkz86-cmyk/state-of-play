@@ -216,6 +216,7 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
               {trialUpgradePricing(country === 'IN').blurb}
             </p>
             <RazorpayCheckoutButton
+              source="account-ten-panel"
               plan="trial-upgrade"
               country={country}
               buttonLabel="Upgrade to annual"

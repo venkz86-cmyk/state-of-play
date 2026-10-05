@@ -1,5 +1,7 @@
 import "@/index.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { captureRef } from "./lib/attribution";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MockupBackToTop } from "./components/MockupBackToTop";
@@ -58,6 +60,8 @@ function AdminArea() {
 }
 
 function Shell() {
+  const location = useLocation();
+  useEffect(() => { captureRef(location.search, location.pathname); }, [location.search, location.pathname]);
   return (
     <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
       <main className="flex-grow">

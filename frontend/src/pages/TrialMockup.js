@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -75,6 +76,9 @@ const persistJustPaidEmail = (email) => {
 
 export const TrialMockup = () => {
   const { user, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  // The paywall's "Start with The Ten" line links here with ?via=paywall.
+  const trialSource = searchParams.get('via') === 'paywall' ? 'trial-via-paywall' : 'trial-page';
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
   const checkoutCountry = isIndia ? 'IN' : 'INTL';
@@ -138,6 +142,7 @@ export const TrialMockup = () => {
               <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">₹590 total</p>
             )}
             <RazorpayCheckoutButton
+              source={trialSource}
               plan="trial"
               country={checkoutCountry}
               buttonLabel="Start The Ten"
@@ -244,6 +249,7 @@ export const TrialMockup = () => {
                   {trialUpgradePricing(isIndia).blurb}
                 </p>
                 <RazorpayCheckoutButton
+                  source="trial-upgrade-page"
                   plan="trial-upgrade"
                   country={isIndia ? 'IN' : 'INTL'}
                   buttonLabel="Upgrade to annual"

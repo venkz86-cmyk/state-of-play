@@ -148,6 +148,7 @@ export const GiftMockup = () => {
               )}
 
               <RazorpayCheckoutButton
+                source="gift-page"
                 plan="standard"
                 country={isIndia ? 'IN' : 'INTL'}
                 buttonLabel={recipientEmail ? 'Gift now' : 'Pay and get a link'}

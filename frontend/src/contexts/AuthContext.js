@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { attributionFields } from '../lib/attribution';
 import { getSessionToken, setSessionToken, authHeader } from '../lib/sessionToken';
 
 const AuthContext = createContext();
@@ -149,13 +150,13 @@ export const AuthProvider = ({ children }) => {
   // trip entirely -- the email just typed in IS the new account, and
   // session_auth.py's /register-free mints a session immediately. Used
   // by EmailGate.js to unlock a 'members'-visibility story on the spot.
-  const registerFree = useCallback(async (email, name = '') => {
+  const registerFree = useCallback(async (email, name = '', source = '') => {
     let data;
     try {
       const res = await fetch('/api/auth/register-free', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ email, name, ...attributionFields(source) }),
       });
       data = await res.json().catch(() => ({}));
       if (!res.ok) {

@@ -32,7 +32,7 @@ export const EmailGate = () => {
     setError('');
     setStatus('loading');
     try {
-      const result = await registerFree(trimmed, name.trim());
+      const result = await registerFree(trimmed, name.trim(), 'story-email-gate');
       if (!result.success) {
         setExists(!!result.exists);
         setError(result.error || 'Could not register. Please try again.');
