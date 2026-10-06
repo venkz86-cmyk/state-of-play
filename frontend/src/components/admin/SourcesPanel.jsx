@@ -14,6 +14,7 @@ const SOURCE_LABEL = {
   'trial-upgrade-page': 'The Ten upgrade, /trial page',
   'account-ten-panel': 'The Ten upgrade, account page',
   'account-renew': 'Renew, account page',
+  'renew-page': 'Renew, /renew letter',
   'student-pay-link': 'Student pay link',
   'gift-page': 'Gift page',
   'teams-page': 'Teams page',

@@ -11,13 +11,8 @@ import { getReadingHistory, clearReadingHistory } from '../components/ReadingHis
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 import { TheTenPanel } from '../components/TheTenPanel';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { daysUntil } from '../lib/format';
+import { renewalOffer } from '../lib/renewal';
 
-// When the Renew block appears: 30 days before the end of the member's
-// year, or after it. A renewal is one payment and its year starts when
-// the current one ends (payments.renewal_access_from), so renewing early
-// costs nothing; this only keeps the block out of the way until then.
-const RENEWAL_WINDOW_DAYS = 30;
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -107,12 +102,8 @@ export const AccountMockup = () => {
   // subscription_id on their last payment, not a blanket assumption.
   // Stripe-billed Ghost subscriptions still show as 'active' too.
   const autoRenews = details?.subscription_status === 'active';
-  const daysToExpiry = daysUntil(details?.subscription_end);
-  // Within the renewal window (or already past it) -- offer to renew.
-  // Not simply "not auto-renewing yet," or this would charge someone
-  // with months of paid access left the moment they open their account.
-  const needsManualRenewal = details?.subscription_status === 'one_time'
-    && daysToExpiry !== null && daysToExpiry <= RENEWAL_WINDOW_DAYS;
+  // Whether to show the Renew block (lib/renewal.js).
+  const renewal = renewalOffer(details);
   const dateLabel = autoRenews ? 'Renews' : 'Expires';
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
@@ -204,15 +195,12 @@ export const AccountMockup = () => {
         </div>
       </section>
 
-      {/* Renew: a standard annual member on a one-time payment, within
-          RENEWAL_WINDOW_DAYS of the end of their year or past it, or a
-          former member whose grace week has passed ('lapsed'). One
-          payment (plan 'renewal'), in the currency they last paid in;
-          the new year starts when the current one ends. A trial/student/
-          corporate/comped member never sees this: they renew through
-          their own path. */}
-      {((details?.tier === 'standard' && needsManualRenewal)
-        || (details?.tier === 'free' && details?.subscription_status === 'lapsed')) && (
+      {/* Renew: see lib/renewal.js for who sees it. One payment (plan
+          'renewal'), in the currency they last paid in; the new year
+          starts when the current one ends. A trial/student/corporate/
+          comped member never sees this: they renew through their own
+          path. */}
+      {renewal && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
           <div className="border-t border-[var(--text)] pt-8 max-w-[520px]">
             {justRenewed ? (
@@ -222,10 +210,10 @@ export const AccountMockup = () => {
             ) : (
               <>
                 <p className="font-editorial italic text-lg mb-1">
-                  {daysToExpiry < 0 ? 'Your membership has lapsed' : 'Time to renew'}
+                  {renewal.lapsed ? 'Your membership has lapsed' : 'Time to renew'}
                 </p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-5">
-                  {daysToExpiry < 0
+                  {renewal.lapsed
                     ? `Your year ended on ${endDate}. Renew now and your next year starts today.`
                     : `Your year ends on ${endDate}. Renew now and your next year starts that day, so renewing early costs you nothing.`}
                 </p>
