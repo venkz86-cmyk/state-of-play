@@ -226,12 +226,15 @@ class DecisionRequest(BaseModel):
     country: Optional[str] = None  # 'IN' | 'INTL' -- required for approve
 
 
-def _payment_link_email_html(name: str, pay_url: str) -> str:
+def _payment_link_email_html(name: str, pay_url: str, country: str = 'IN') -> str:
     first_name = (name or '').split(' ')[0] or 'there'
+    # Same figures razorpay_orders.PLAN_PRICING['student'] charges.
+    price = '$29' if country == 'INTL' else '₹1,770 (₹1,500 + GST)'
     return email_shell(
         f'{html.escape(first_name)}, you’re <em style="font-style: italic;">approved.</em>',
         (
-            '<p>Your student ID checked out. Complete your membership below to start reading.</p>'
+            f'<p>Your student ID checked out. A year of The State of Play costs you {price}, in one payment. '
+            'Complete your membership below to start reading.</p>'
             + email_cta_button('Complete your membership &rarr;', pay_url)
             + '<p style="color: #555555;">Once you’ve paid, you’re in immediately, with every weekly story and the full archive.</p>'
         ),
@@ -263,7 +266,7 @@ async def approve_student_application(
     sent = await send_email(
         to=application['email'],
         subject='You’re approved: complete your Student membership',
-        html=_payment_link_email_html(application.get('name', ''), pay_url),
+        html=_payment_link_email_html(application.get('name', ''), pay_url, req.country),
     )
     if not sent:
         raise HTTPException(
