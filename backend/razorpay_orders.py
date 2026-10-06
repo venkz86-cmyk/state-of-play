@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email
+from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email
 from session_auth import get_current_member, _free_welcome_email_html
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -516,15 +516,19 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     if source_label(order_notes.get('source')):
         wanted_labels.append(source_label(order_notes.get('source')))
 
-    # Known ahead of ensure_member_labeled, not inferred from its result --
-    # it finds-or-creates, so its return value alone can't tell a brand-new
-    # signup apart from an existing free/newsletter member buying their
-    # first Standard/Student plan. Only checked for 'standard'/'student':
-    # the two plans here that get a generic welcome email below (Trial,
-    # trial-upgrade and the team plans each have their own existing
-    # confirmation, or none wanted yet).
-    is_new_standard_signup = not is_repeat and req.plan == 'standard' and await find_ghost_member(email, token) is None
-    is_new_student_signup = not is_repeat and req.plan == 'student' and await find_ghost_member(email, token) is None
+    # The welcome email goes with someone's first membership payment,
+    # whether or not they already had a free account. (It used to check
+    # "no Ghost member yet", but Razorpay's webhook usually creates the
+    # member a few seconds before this runs, so nobody got it.) This
+    # payment is left out of the check because the webhook may have
+    # recorded it already. Only 'standard'/'student' get these emails
+    # (Trial, trial-upgrade and the team plans have their own, or none).
+    first_membership_payment = (
+        not is_repeat and req.plan in ('standard', 'student')
+        and not await has_paid_before(email, req.razorpay_payment_id)
+    )
+    is_new_standard_signup = first_membership_payment and req.plan == 'standard'
+    is_new_student_signup = first_membership_payment and req.plan == 'student'
 
     # Only strip stray paid labels when this email has never genuinely
     # paid us for real access before -- an existing Ghost member (e.g. a

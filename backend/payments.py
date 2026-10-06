@@ -394,6 +394,20 @@ async def get_last_payment_for_email(email: str) -> Optional[dict]:
     }
 
 
+async def has_paid_before(email: str, exclude_payment_id: str = '') -> bool:
+    """True if this email has a real, non-Trial payment on the ledger
+    other than exclude_payment_id. verify_payment uses it to decide
+    whether this is someone's first membership payment (and so gets the
+    welcome email): Razorpay's webhook often records the same payment a
+    few seconds before verify runs, so that payment has to be left out."""
+    if _db is None:
+        return False
+    query = {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}}
+    if exclude_payment_id:
+        query['payment_id'] = {'$ne': exclude_payment_id}
+    return await _db.payments.find_one(query) is not None
+
+
 async def has_paid_beyond_trial(email: str) -> bool:
     """True if this email has a real, non-Trial payment on our own
     ledger -- used to gate ensure_member_labeled's stray-paid-label
