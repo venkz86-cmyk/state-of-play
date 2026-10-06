@@ -10,13 +10,13 @@ import { GiftArticleModal } from '../components/GiftArticleModal';
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 import { TheTenPanel } from '../components/TheTenPanel';
-import { SubscriptionCheckoutButton } from '../components/SubscriptionCheckoutButton';
+import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { daysUntil } from '../lib/format';
 
-// A renewal charges the current rate immediately -- it must only be
-// offered once someone is actually close to (or past) their real
-// expiry, never mid-cycle, or "set up auto-renewal" would silently
-// double-charge someone with months of paid access left.
+// When the Renew block appears: 30 days before the end of the member's
+// year, or after it. A renewal is one payment and its year starts when
+// the current one ends (payments.renewal_access_from), so renewing early
+// costs nothing; this only keeps the block out of the way until then.
 const RENEWAL_WINDOW_DAYS = 30;
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -116,8 +116,9 @@ export const AccountMockup = () => {
   const dateLabel = autoRenews ? 'Renews' : 'Expires';
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
-  const nextCharge = autoRenews && canAccessPremium ? '₹3,539' : '—';
-  const nextChargeDetail = autoRenews && canAccessPremium ? '₹2,999 + ₹540 GST' : null;
+  const paidInUsd = details?.last_payment_currency === 'USD';
+  const nextCharge = autoRenews && canAccessPremium ? (paidInUsd ? '$149' : '₹3,539') : '—';
+  const nextChargeDetail = autoRenews && canAccessPremium && !paidInUsd ? '₹2,999 + ₹540 GST' : null;
   // Most members paid once: for them the third tile says how renewal
   // works instead of showing an empty "Next charge". The reminder timing
   // is annual_renewal.py's REMINDER_DAYS_BEFORE.
@@ -125,13 +126,16 @@ export const AccountMockup = () => {
   // What renewing costs, in the currency the member last paid in: the
   // renewal rate (razorpay_subscriptions.SUBSCRIPTION_PLANS) or, for
   // students, the student price (razorpay_orders.PLAN_PRICING['student']).
-  const paidInUsd = details?.last_payment_currency === 'USD';
   const isStudent = details?.tier === 'student';
   const renewalPrice = isStudent
     ? (paidInUsd ? ['$29 a year', null] : ['₹1,770 a year', '₹1,500 + ₹270 GST'])
     : (paidInUsd ? ['$149 a year', null] : ['₹3,539 a year', '₹2,999 + ₹540 GST']);
+  // Students renew through a fresh ID check, not the reminder emails.
+  const renewalNote = isStudent
+    ? 'Not automatic. We\'ll be in touch before it ends.'
+    : 'Not automatic. We email you 14 days before it ends.';
   const renewalTile = paidOnce
-    ? ['Renewal', renewalPrice[0], [renewalPrice[1], 'Not automatic. We email you 14 days before it ends.'].filter(Boolean)]
+    ? ['Renewal', renewalPrice[0], [renewalPrice[1], renewalNote].filter(Boolean)]
     : ['Next charge', nextCharge, nextChargeDetail];
 
   // The member's real last payment, not a fixed price: students, renewals,
@@ -200,16 +204,20 @@ export const AccountMockup = () => {
         </div>
       </section>
 
-      {/* Renew — a standard annual member still on a one-time payment,
-          not yet on real auto-renewal (subscription_status !== 'active').
-          A trial/student/corporate/comped member never sees this: they
-          either don't hold this tier or renew through their own path. */}
-      {details?.tier === 'standard' && needsManualRenewal && (
+      {/* Renew: a standard annual member on a one-time payment, within
+          RENEWAL_WINDOW_DAYS of the end of their year or past it, or a
+          former member whose grace week has passed ('lapsed'). One
+          payment (plan 'renewal'), in the currency they last paid in;
+          the new year starts when the current one ends. A trial/student/
+          corporate/comped member never sees this: they renew through
+          their own path. */}
+      {((details?.tier === 'standard' && needsManualRenewal)
+        || (details?.tier === 'free' && details?.subscription_status === 'lapsed')) && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
           <div className="border-t border-[var(--text)] pt-8 max-w-[520px]">
             {justRenewed ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]">
-                You're set up for auto-renewal. Reloading your account…
+                You've renewed. Reloading your account…
               </p>
             ) : (
               <>
@@ -218,14 +226,15 @@ export const AccountMockup = () => {
                 </p>
                 <p className="font-plex text-sm text-[var(--text-muted)] mb-5">
                   {daysToExpiry < 0
-                    ? "Your last payment covered you through this date, and it's passed. Renew to keep your access, at the renewal rate."
-                    : "Your membership doesn't renew on its own yet. Set it up once, at the renewal rate, and it renews automatically every year from here."}
+                    ? `Your year ended on ${endDate}. Renew now and your next year starts today.`
+                    : `Your year ends on ${endDate}. Renew now and your next year starts that day, so renewing early costs you nothing.`}
                 </p>
                 {/* Break-up, not just a total — a GST invoice is exactly
                     what the Billing tool below already offers to send, so
                     the same reader clearly wants to see base vs. tax, not
                     one bundled number. */}
                 <div className="border-y border-[var(--rule)] mb-6">
+                  {!paidInUsd && (<>
                   <div className="flex items-center justify-between py-2.5">
                     <span className="font-plex text-sm text-[var(--text-muted)]">Base price</span>
                     <span className="font-plex text-sm tabular-nums">₹2,999</span>
@@ -234,17 +243,20 @@ export const AccountMockup = () => {
                     <span className="font-plex text-sm text-[var(--text-muted)]">GST (18%)</span>
                     <span className="font-plex text-sm tabular-nums">₹540</span>
                   </div>
-                  <div className="flex items-center justify-between py-2.5 border-t border-[var(--rule)]">
-                    <span className="font-plex text-sm font-medium">Total, charged today</span>
-                    <span className="font-plex text-sm font-medium tabular-nums">₹3,539</span>
+                  </>)}
+                  <div className={`flex items-center justify-between py-2.5${paidInUsd ? '' : ' border-t border-[var(--rule)]'}`}>
+                    <span className="font-plex text-sm font-medium">Total</span>
+                    <span className="font-plex text-sm font-medium tabular-nums">{paidInUsd ? '$149' : '₹3,539'}</span>
                   </div>
                 </div>
-                <SubscriptionCheckoutButton
-                  country="IN"
-                  buttonLabel="Set up auto-renewal"
+                <RazorpayCheckoutButton
+                  plan="renewal"
+                  source="account-renew"
+                  country={paidInUsd ? 'INTL' : 'IN'}
+                  buttonLabel="Renew for a year"
                   dataTestId="account-renew"
                   lockedEmail={memberEmail}
-                  disclosureText="Same amount, charged automatically every year after."
+                  disclosureText="One payment. Nothing renews on its own."
                   onSuccess={() => {
                     setJustRenewed(true);
                     setTimeout(() => { window.location.reload(); }, 1500);

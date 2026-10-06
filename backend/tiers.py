@@ -148,6 +148,10 @@ PLAN_LABELS = {
     'standard': ['paid-via-razorpay', 'premium-subscriber'],
     'student': ['paid-via-razorpay', 'tier-student'],
     'trial': ['tier-trial'],
+    # A one-payment renewal by an existing annual member: same access as
+    # 'standard'. Its year starts when their current one ends
+    # (payments.renewal_access_from).
+    'renewal': ['paid-via-razorpay', 'premium-subscriber'],
     # Same paid access as 'standard', at the same price as a normal
     # renewal -- kept as its own plan (not reused from 'standard') purely
     # so this specific label lets the thirteen-months-for-twelve bonus

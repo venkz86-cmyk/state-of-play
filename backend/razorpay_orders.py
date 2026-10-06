@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag
+from payments import fetch_and_record, has_paid_beyond_trial, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email
 from session_auth import get_current_member, _free_welcome_email_html
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -140,6 +140,14 @@ PLAN_PRICING = {
     'trial-upgrade': {
         'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (upgrade from The Ten)'},  # ₹2,999 + 18% GST = ₹3,539 -- new ₹3,499 rate minus the ₹590 trial fee already paid
         'INTL': {'amount': 16000, 'currency': 'USD', 'label': 'Annual Membership (upgrade from The Ten)'},  # $169 new-signup rate minus the $9 trial fee = $160
+    },
+    # A one-payment renewal by an existing annual member, at the renewal
+    # rate (the same figures as razorpay_subscriptions.SUBSCRIPTION_PLANS).
+    # The new year starts when the current one ends, so renewing early
+    # costs nothing (payments.renewal_access_from). Nothing auto-renews.
+    'renewal': {
+        'IN': {'amount': 353900, 'currency': 'INR', 'label': 'Annual Membership (renewal)'},   # ₹2,999 + 18% GST = ₹3,539
+        'INTL': {'amount': 14900, 'currency': 'USD', 'label': 'Annual Membership (renewal)'},  # $149
     },
     # Team-5/Team-10: replaces the static Razorpay Payment Links (opening
     # in a new tab -- "ugly," Venkat's own words) with the site's own
@@ -251,6 +259,18 @@ async def create_order(req: CreateOrderRequest, request: Request):
         member = await get_current_member(request)
         if not member or member.get('tier') != 'trial':
             raise HTTPException(status_code=403, detail='Sign in with the account you joined The Ten with to upgrade.')
+        order_notes['email'] = member['email'].lower().strip()
+    elif req.plan == 'renewal':
+        # Only for someone who has paid for a membership before: an annual
+        # member near (or past) the end of their year. Students renew
+        # through their own ID check, and The Ten has its own upgrade.
+        member = await get_current_member(request)
+        if not member or member.get('tier') in ('student', 'trial', 'nomination') \
+                or not await has_paid_beyond_trial(member['email']):
+            raise HTTPException(status_code=403, detail='Sign in with the account your membership is on to renew.')
+        last_payment = await get_last_payment_for_email(member['email'])
+        if last_payment and last_payment.get('subscription_id'):
+            raise HTTPException(status_code=409, detail='Your membership already renews automatically.')
         order_notes['email'] = member['email'].lower().strip()
 
     config = _resolve_plan_config(req.plan, req.country)
@@ -563,6 +583,12 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
         )
         if not sent:
             logger.warning(f'verify-payment: student welcome email failed to send for {email}')
+
+    if req.plan == 'renewal' and not is_repeat:
+        from razorpay_subscriptions import _renewal_thank_you_email_html
+        sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
+        if not sent:
+            logger.warning(f'verify-payment: renewal thank-you email failed to send for {email}')
 
     if req.plan == 'trial':
         country = 'IN' if (payment_record and payment_record.get('currency') == 'INR') else 'INTL'
