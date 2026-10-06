@@ -113,7 +113,9 @@ export const StudentPayMockup = () => {
               buttonLabel="Complete your membership"
               dataTestId="students-pay-checkout"
               lockedEmail={info.email}
-              disclosureText="Annual membership at the student price. Renews at the same price each year for as long as you're studying."
+              disclosureText={info.country === 'INTL'
+                ? "$29 a year, in one payment. Renew at the same price while you're still studying."
+                : "₹1,770 a year (₹1,500 + GST), in one payment. Renew at the same price while you're still studying."}
               onSuccess={onPaymentSuccess}
             />
           </>
