@@ -47,7 +47,7 @@ export const TeamsMockup = () => {
             A client asks what a franchise is worth, mid-pitch, with no time to reconstruct the deal history from press releases and old decks. By the time it reaches a general business publication, your team already needs a view.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
-            I write The State of Play, a weekly reported publication on the business of Indian sport: franchise valuations and media rights. One deeply reported story a week. No scores and no noise. In its first year, 360 readers have chosen to pay for it. The reporting has been cited by <em>Bloomberg</em>, <em>SportBusiness</em>, <em>ESPNcricinfo</em>, <em>The Athletic</em> and <em>SportsPro</em>.
+            I write The State of Play, a weekly reported publication on the business of Indian sport: franchise valuations and media rights. One deeply reported story a week. No scores and no noise. In its first year, more than 375 readers have chosen to pay for it. The reporting has been cited by <em>Bloomberg</em>, <em>SportBusiness</em>, <em>ESPNcricinfo</em>, <em>The Athletic</em> and <em>SportsPro</em>.
           </p>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             The desks that read it work in consulting, law, agencies, broadcast, funds and franchises. They use it to brief a colleague before a client meeting, find the deal context behind an announcement, check what was reported about a franchise, a rights cycle or an owner, and give analysts and associates the same starting point. When the meeting starts, everyone in the room has the same facts. That's the whole product.
