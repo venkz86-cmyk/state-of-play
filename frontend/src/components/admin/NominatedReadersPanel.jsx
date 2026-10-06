@@ -3,17 +3,30 @@ import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatDate, daysUntil } from '../../lib/format';
+import { BulkEmailControls, RowSendButton, daysSince } from './BulkEmailControls';
 
-const FILTERS = ['active', 'expired', 'all'];
+const FILTERS = ['active', 'expired', 'all', 'nudge'];
+const FILTER_LABEL = { nudge: 'Expired, not subscribed' };
+const NUDGE_ENDPOINT = '/api/admin/nominations/nudge';
 
 export const NominatedReadersPanel = ({ onAuthError }) => {
   const [filter, setFilter] = useState('active');
   const [grants, setGrants] = useState(null);
   const [error, setError] = useState('');
   const [busyEmail, setBusyEmail] = useState(null);
+  const [gapDays, setGapDays] = useState(30);
+  const [sendResult, setSendResult] = useState(null);
 
+  // 'nudge' lists nominees whose two weeks ended and who never paid
+  // (GET /api/admin/nominations/nudge-candidates), with a send button.
   const load = async (statusFilter) => {
     try {
+      if (statusFilter === 'nudge') {
+        const data = await adminFetch('/api/admin/nominations/nudge-candidates');
+        if (data.gap_days) setGapDays(data.gap_days);
+        setGrants((data.nominees || []).map((n) => ({ ...n, status: 'expired' })));
+        return;
+      }
       const data = await adminFetch(`/api/admin/nominations/access?status_filter=${statusFilter}`);
       setGrants(data.grants);
     } catch (e) {
@@ -46,6 +59,32 @@ export const NominatedReadersPanel = ({ onAuthError }) => {
   }
 
   const readCount = grants.filter((g) => g.has_read).length;
+
+  const nudgeColumns = [
+    { key: 'nominee_name', label: 'Nominee', sortable: true, render: (g) => g.nominee_name || g.nominee_email },
+    { key: 'nominee_email', label: 'Email', sortable: true },
+    { key: 'nominator_name', label: 'Nominated by', sortable: true, render: (g) => g.nominator_name || '—' },
+    { key: 'expires_at', label: 'Two weeks ended', sortable: true, align: 'right', render: (g) => formatDate(g.expires_at) },
+    {
+      key: 'nudge_sent', label: 'Last nudged', sortable: true, align: 'right',
+      render: (g) => (g.nudge_sent ? `${formatDate(g.nudge_sent)} (${daysSince(g.nudge_sent)}d ago)` : 'Never'),
+    },
+    {
+      key: 'actions', label: '', align: 'right',
+      render: (g) => {
+        const d = daysSince(g.nudge_sent);
+        if (d != null && d < gapDays) return <span className="font-plex text-[12px] text-[var(--text-muted)]">Nudged</span>;
+        return (
+          <RowSendButton endpoint={NUDGE_ENDPOINT} email={g.nominee_email} label="Nudge"
+            onSent={() => load('nudge')} onAuthError={onAuthError} setResult={setSendResult} />
+        );
+      },
+    },
+  ];
+  const due = grants.filter((g) => {
+    const d = daysSince(g.nudge_sent);
+    return d == null || d >= gapDays;
+  });
 
   const columns = [
     { key: 'nominee_name', label: 'Nominee', sortable: true, render: (g) => g.nominee_name || g.nominee_email },
@@ -80,12 +119,14 @@ export const NominatedReadersPanel = ({ onAuthError }) => {
 
   return (
     <div>
-      <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-6">
-        <KPITile label={`${filter[0].toUpperCase()}${filter.slice(1)} grants`} value={grants.length} />
-        <KPITile label="Have read their story" value={readCount} bordered />
-      </div>
+      {filter !== 'nudge' && (
+        <div className="border-y border-[var(--rule)] grid grid-cols-2 mb-6">
+          <KPITile label={`${filter[0].toUpperCase()}${filter.slice(1)} grants`} value={grants.length} />
+          <KPITile label="Have read their story" value={readCount} bordered />
+        </div>
+      )}
 
-      <div className="flex gap-6 mb-6">
+      <div className="flex flex-wrap gap-6 mb-6">
         {FILTERS.map((f) => (
           <button
             key={f}
@@ -97,13 +138,32 @@ export const NominatedReadersPanel = ({ onAuthError }) => {
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
-            {f}
+            {FILTER_LABEL[f] || f}
           </button>
         ))}
       </div>
 
+      {filter === 'nudge' && (
+        <>
+          <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4 max-w-[70ch]">
+            Nominees whose two weeks ended and who haven't bought anything since. The nudge offers the annual
+            membership at ₹3,499 + GST ($169). Nobody gets it twice within {gapDays} days.
+          </p>
+          <BulkEmailControls
+            endpoint={NUDGE_ENDPOINT}
+            emails={due.map((g) => g.nominee_email)}
+            allLabel={(n) => `Nudge all ${n}`}
+            confirmText={(n) => `Send the nudge to ${n} ${n === 1 ? 'person' : 'people'}?`}
+            onSent={() => load('nudge')}
+            onAuthError={onAuthError}
+            result={sendResult}
+            setResult={setSendResult}
+          />
+        </>
+      )}
+
       <DataTable
-        columns={columns}
+        columns={filter === 'nudge' ? nudgeColumns : columns}
         rows={grants}
         rowKey={(g) => g.nominee_email}
         searchKeys={['nominee_name', 'nominee_email', 'nominator_name']}
