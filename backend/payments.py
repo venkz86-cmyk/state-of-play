@@ -298,6 +298,8 @@ async def get_subscriber_payment_summaries() -> dict:
             'amount': doc.get('amount'),
             'currency': doc.get('currency'),
             'plan': doc.get('plan'),
+            # annual_renewal.py skips auto-renewing members by this.
+            'subscription_id': doc.get('subscription_id') or '',
             'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
             'access_from': _iso(doc.get('access_from')),
         }

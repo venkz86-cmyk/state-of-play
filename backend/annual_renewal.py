@@ -61,16 +61,18 @@ GHOST_URL, GHOST_ADMIN_API_KEY (existing).
 from __future__ import annotations
 
 import os
+import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import httpx
 import jwt
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
-from tiers import list_all_ghost_members
+from tiers import list_all_ghost_members, is_paid_from_labels
 from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -211,6 +213,165 @@ async def _downgrade_member(member_id: str, existing_labels: list[str], token: s
     except Exception as e:
         logger.warning(f'Annual-renewal downgrade PUT failed for member {member_id}: {e!r}')
         return False
+
+
+# ─── Lapsed members, emailed by hand from the admin dashboard ────────────────
+# Members whose year has ended (and grace week passed) and who haven't
+# renewed. The sweep above never writes to them again; this lets Venkat
+# send a renewal note from the Renewals panel, at most once every
+# LAPSED_EMAIL_GAP_DAYS per person.
+LAPSED_EMAIL_GAP_DAYS = 30
+SEND_CAP = 100
+SEND_PAUSE_SECONDS = 0.5
+RENEW_PAGE = 'https://www.stateofplay.club/renew'
+
+
+def _lapsed_email_html(end_date_str: str, renew_url: str) -> str:
+    return email_shell(
+        'Your first year <em style="font-style: italic;">has ended.</em>',
+        (
+            '<p>Dear reader,</p>'
+            f'<p>Your membership ended on {end_date_str}. Thank you for that year.</p>'
+            '<p>You backed The State of Play before there was much to judge it by. I haven’t forgotten that.</p>'
+            '<p>If you’d like a second year, it costs ₹2,999 + GST (₹3,539 in all), or $149 outside India. '
+            'That is the renewal rate, ₹500 less than what new readers now pay. Your new year starts the day '
+            'you renew.</p>'
+            + email_cta_button('Renew for another year &rarr;', renew_url)
+            + '<p style="color: #555555;">The button signs you in and takes you to a short note I wrote for '
+            'readers at the end of their first year.</p>'
+            '<p>If it isn’t for you right now, no hard feelings. Reply and tell me why, if you like. I read '
+            'everything.</p>'
+        ),
+        compliance_footer=True,
+    )
+
+
+def _as_utc(value) -> Optional[datetime]:
+    if not value:
+        return None
+    dt = datetime.fromisoformat(value) if isinstance(value, str) else value
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+async def _lapsed_rows(token: str) -> dict:
+    """{email: row} for every former annual member whose year has ended,
+    who has no paid access now and hasn't renewed. Same exclusions as the
+    sweep: not Trial/Student, not a team, not auto-renewing."""
+    members = await list_all_ghost_members(token)
+    payment_summaries = await get_subscriber_payment_summaries()
+    now = datetime.now(timezone.utc)
+    rows = {}
+    for member in members:
+        email = (member.get('email') or '').lower().strip()
+        if not email:
+            continue
+        lower_labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
+        if is_paid_from_labels(lower_labels) or member.get('status') in ('paid', 'comped'):
+            continue
+        if any(l in _EXCLUDED_LABELS for l in lower_labels):
+            continue
+        if any(l.startswith(('corp-', 'team-')) for l in lower_labels):
+            continue
+        summary = payment_summaries.get(email)
+        last_payment = summary.get('last_payment') if summary else None
+        if not last_payment or last_payment.get('subscription_id'):
+            continue
+        if last_payment.get('plan') in ('trial', 'student'):
+            continue
+        expiry_iso = compute_synthetic_expiry(last_payment)
+        expiry_dt = _as_utc(expiry_iso)
+        if not expiry_dt or expiry_dt >= now:
+            continue
+        rows[email] = {
+            'email': email,
+            'name': member.get('name') or '',
+            'ghost_member_id': member.get('id', ''),
+            'expiry': expiry_iso,
+            'last_payment': last_payment,
+            'last_emailed': None,
+            'lapsed_sent': None,
+        }
+    if rows and _db is not None:
+        async for notice in _db.annual_renewal_notices.find({'email': {'$in': list(rows)}}):
+            row = rows.get(notice.get('email'))
+            if not row:
+                continue
+            for key in ('reminder_sent', 'grace_sent', 'lapsed_sent'):
+                sent = _as_utc(notice.get(key))
+                if sent and (row['last_emailed'] is None or sent > _as_utc(row['last_emailed'])):
+                    row['last_emailed'] = sent.isoformat()
+                if key == 'lapsed_sent' and sent and notice.get('expiry') == row['expiry']:
+                    row['lapsed_sent'] = sent.isoformat()
+    return rows
+
+
+@router.get('/api/admin/annual-renewal/lapsed')
+async def list_lapsed_members(_admin: None = Depends(require_admin_key_or_session)):
+    token = _create_ghost_admin_token()
+    if not token:
+        return {'members': [], 'error': 'Ghost Admin API not configured'}
+    rows = await _lapsed_rows(token)
+    members = sorted(rows.values(), key=lambda r: r['expiry'], reverse=True)
+    for r in members:
+        r.pop('ghost_member_id', None)
+    return {'members': members, 'count': len(members), 'gap_days': LAPSED_EMAIL_GAP_DAYS}
+
+
+class SendBody(BaseModel):
+    emails: list[EmailStr] = []
+    test_to: Optional[EmailStr] = None
+
+
+@router.post('/api/admin/annual-renewal/send-lapsed')
+async def send_lapsed_emails(body: SendBody, _admin: None = Depends(require_admin_key_or_session)):
+    """Emails the lapsed-member note to each address that still qualifies
+    (re-checked here, not trusted from the dashboard) and hasn't had it in
+    the last LAPSED_EMAIL_GAP_DAYS. test_to sends one sample and records
+    nothing."""
+    if body.test_to:
+        sample_end = (datetime.now(timezone.utc) - timedelta(days=5)).strftime('%d %B %Y')
+        ok = await send_email(
+            to=body.test_to, subject='[Test] Your first year of The State of Play',
+            html=_lapsed_email_html(sample_end, RENEW_PAGE),
+        )
+        return {'sent': 1 if ok else 0, 'skipped': [], 'test': True}
+
+    if _db is None:
+        return {'sent': 0, 'skipped': [], 'error': 'Database not configured'}
+    token = _create_ghost_admin_token()
+    if not token:
+        return {'sent': 0, 'skipped': [], 'error': 'Ghost Admin API not configured'}
+    await _ensure_indexes()
+    rows = await _lapsed_rows(token)
+    now = datetime.now(timezone.utc)
+    sent, skipped = 0, []
+    for raw in list(dict.fromkeys(e.lower().strip() for e in body.emails))[:SEND_CAP]:
+        row = rows.get(raw)
+        if not row:
+            skipped.append({'email': raw, 'reason': 'No longer lapsed (renewed, or not an annual member)'})
+            continue
+        last = _as_utc(row['lapsed_sent'])
+        if last and now - last < timedelta(days=LAPSED_EMAIL_GAP_DAYS):
+            skipped.append({'email': raw, 'reason': f'Emailed {(now - last).days} days ago'})
+            continue
+        renewal_token = mint_renewal_link_token(raw, row['ghost_member_id'])
+        renew_url = f'{RENEW_PAGE}?t={renewal_token}&ref=lapsed-email' if renewal_token else f'{RENEW_PAGE}?ref=lapsed-email'
+        end_str = _as_utc(row['expiry']).strftime('%d %B %Y')
+        ok = await send_email(
+            to=raw, subject='Your first year of The State of Play',
+            html=_lapsed_email_html(end_str, renew_url),
+        )
+        if not ok:
+            skipped.append({'email': raw, 'reason': 'Email failed to send'})
+            continue
+        await _db.annual_renewal_notices.update_one(
+            {'email': raw, 'expiry': row['expiry']},
+            {'$set': {'lapsed_sent': now}},
+            upsert=True,
+        )
+        sent += 1
+        await asyncio.sleep(SEND_PAUSE_SECONDS)
+    return {'sent': sent, 'skipped': skipped}
 
 
 @router.post('/api/admin/annual-renewal/sweep')

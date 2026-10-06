@@ -23,6 +23,7 @@ Dependencies:
 from __future__ import annotations
 
 import os
+import asyncio
 import logging
 import uuid
 import html
@@ -40,6 +41,7 @@ from tiers import (
     find_ghost_member as _tiers_find_ghost_member,
     add_member_label as _tiers_add_member_label,
     remove_member_label as _tiers_remove_member_label,
+    is_paid_from_labels as _tiers_is_paid_from_labels,
 )
 from resend_email import send_email as _send_email
 from email_layout import email_shell, email_cta_button
@@ -484,7 +486,24 @@ def _nomination_expiry_email_html(nominator_name: str) -> str:
             f'<p>Your fortnight of The State of Play, courtesy of {html.escape(nominator_name)}, has ended.</p>'
             f'<p>An annual subscription is {price}. One reported story a week on the business of Indian sport, plus the full archive.</p>'
             + email_cta_button('Subscribe &rarr;', f'{PUBLIC_BASE_URL}/signup')
-            + '<p style="color: #555555;">If it wasn’t for you, no hard feelings, and you won’t hear from me again.</p>'
+            + '<p style="color: #555555;">If it wasn’t for you, no hard feelings.</p>'
+        ),
+        compliance_footer=True,
+    )
+
+
+def _nomination_nudge_email_html(nominator_name: str, nominated_on_str: str) -> str:
+    """Sent by hand from the admin dashboard (Nominated Readers panel) to
+    a nominee whose two weeks ended without them subscribing."""
+    return email_shell(
+        'A year of <em style="font-style: italic;">The State of Play.</em>',
+        (
+            '<p>Dear reader,</p>'
+            f'<p>On {nominated_on_str}, {html.escape(nominator_name)} put your name forward for two weeks of '
+            'The State of Play.</p>'
+            '<p>If those two weeks were useful, a year costs ₹3,499 + GST, or $169 outside India. You get the '
+            'reported story every Friday and the full archive.</p>'
+            + email_cta_button('Subscribe for a year &rarr;', f'{PUBLIC_BASE_URL}/signup?ref=nominee-nudge')
         ),
         compliance_footer=True,
     )
@@ -1080,6 +1099,97 @@ async def list_nomination_access(
             'has_read': bool(open_count),
         })
     return {'grants': grants, 'count': len(grants)}
+
+
+NUDGE_GAP_DAYS = 30
+NUDGE_CAP = 100
+NUDGE_PAUSE_SECONDS = 0.5
+
+
+async def _nudge_candidates() -> dict:
+    """{nominee_email: row} for nominees whose two weeks ran out (not
+    revoked early) and who have never paid for anything, The Ten included.
+    nudge_sent records the last nudge; the 30-day gap is applied by the
+    caller so the dashboard can still show who was nudged recently."""
+    if _db is None:
+        return {}
+    admin_token = _create_ghost_admin_token()
+    rows = {}
+    async for record in _db.nomination_access.find({'status': 'expired'}):
+        email = (record.get('nominee_email') or '').lower().strip()
+        if not email or record.get('revoked_early') or email in rows:
+            continue
+        if await _db.payments.find_one({'email': email}):
+            continue
+        if admin_token:
+            member = await _tiers_find_ghost_member(email, admin_token)
+            labels = [(l.get('name') or '').lower() for l in ((member or {}).get('labels') or [])]
+            if member and (_tiers_is_paid_from_labels(labels) or 'tier-trial' in labels
+                           or member.get('status') in ('paid', 'comped')):
+                continue
+        rows[email] = {
+            'nominee_email': email,
+            'nominee_name': record.get('nominee_name'),
+            'nominator_name': record.get('nominator_name'),
+            'started_at': _iso(record.get('started_at')),
+            'expires_at': _iso(record.get('expires_at')),
+            'nudge_sent': _iso(record.get('nudge_sent')),
+            '_id': record['_id'],
+        }
+    return rows
+
+
+@router.get('/api/admin/nominations/nudge-candidates')
+async def list_nudge_candidates(_admin: None = Depends(require_admin_key_or_session)):
+    rows = sorted((await _nudge_candidates()).values(), key=lambda r: r['expires_at'] or '', reverse=True)
+    for r in rows:
+        r.pop('_id', None)
+    return {'nominees': rows, 'count': len(rows), 'gap_days': NUDGE_GAP_DAYS}
+
+
+class NudgeBody(BaseModel):
+    emails: list[EmailStr] = []
+    test_to: Optional[EmailStr] = None
+
+
+@router.post('/api/admin/nominations/nudge')
+async def nudge_nominees(body: NudgeBody, _admin: None = Depends(require_admin_key_or_session)):
+    """Emails the nominee nudge to each address that still qualifies
+    (re-checked here) and hasn't had one in the last NUDGE_GAP_DAYS.
+    test_to sends one sample and records nothing."""
+    if body.test_to:
+        ok = await _send_email(
+            to=body.test_to, subject='[Test] A year of The State of Play',
+            html=_nomination_nudge_email_html('A State of Play reader', _utcnow().strftime('%d %B %Y')),
+        )
+        return {'sent': 1 if ok else 0, 'skipped': [], 'test': True}
+    if _db is None:
+        return {'sent': 0, 'skipped': [], 'error': 'Database not configured'}
+    rows = await _nudge_candidates()
+    now = _utcnow()
+    sent, skipped = 0, []
+    for email in list(dict.fromkeys(e.lower().strip() for e in body.emails))[:NUDGE_CAP]:
+        row = rows.get(email)
+        if not row:
+            skipped.append({'email': email, 'reason': 'Subscribed, still in their two weeks, or not a nominee'})
+            continue
+        last = row['nudge_sent'] and datetime.fromisoformat(row['nudge_sent'])
+        if last and now - last < timedelta(days=NUDGE_GAP_DAYS):
+            skipped.append({'email': email, 'reason': f'Nudged {(now - last).days} days ago'})
+            continue
+        started = row['started_at'] and datetime.fromisoformat(row['started_at'])
+        nominated_on = started.strftime('%d %B %Y') if started else 'a recent day'
+        ok = await _send_email(
+            to=email, subject='A year of The State of Play',
+            html=_nomination_nudge_email_html(row['nominator_name'] or 'a State of Play reader', nominated_on),
+        )
+        if not ok:
+            skipped.append({'email': email, 'reason': 'Email failed to send'})
+            continue
+        await _db.nomination_access.update_one({'_id': row['_id']}, {'$set': {'nudge_sent': now}})
+        sent += 1
+        await asyncio.sleep(NUDGE_PAUSE_SECONDS)
+    return {'sent': sent, 'skipped': skipped}
 
 
 @router.post('/api/admin/nominations/access/{nominee_email}/revoke')
