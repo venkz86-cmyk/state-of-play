@@ -13,6 +13,7 @@ const SOURCE_LABEL = {
   'trial-via-paywall': '/trial, via the paywall line',
   'trial-upgrade-page': 'The Ten upgrade, /trial page',
   'account-ten-panel': 'The Ten upgrade, account page',
+  'account-renew': 'Renew, account page',
   'student-pay-link': 'Student pay link',
   'gift-page': 'Gift page',
   'teams-page': 'Teams page',
@@ -20,7 +21,7 @@ const SOURCE_LABEL = {
 };
 const PLAN_LABEL = {
   standard: 'Annual', trial: 'The Ten', 'trial-upgrade': 'The Ten upgrade',
-  student: 'Student', 'team-5': 'Team-5', 'team-10': 'Team-10', gift: 'Gift',
+  renewal: 'Renewal', student: 'Student', 'team-5': 'Team-5', 'team-10': 'Team-10', gift: 'Gift',
 };
 const WEEK_OPTIONS = [4, 8, 26];
 

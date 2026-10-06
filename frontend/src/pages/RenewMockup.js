@@ -9,13 +9,19 @@ import { useAuth } from '../contexts/AuthContext';
 // AuthContext's completeRenewalLink, then lands on the already-built
 // renewal banner on /account, signed in. On an expired/invalid token,
 // doesn't dead-end -- the normal sign-in-code path at /login is always
-// one click away.
+// one click away. Opened without a link, it sends a signed-in member
+// to their account and anyone else to sign in first.
 
 export const RenewMockup = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('t');
   const navigate = useNavigate();
-  const { completeRenewalLink } = useAuth();
+  const { completeRenewalLink, isLoggedIn, loading } = useAuth();
+
+  useEffect(() => {
+    if (token || loading) return;
+    navigate(isLoggedIn ? '/account' : '/login?next=/account', { replace: true });
+  }, [token, loading, isLoggedIn, navigate]);
 
   const [status, setStatus] = useState(() => (token ? 'loading' : 'missing'));
   const [error, setError] = useState('');
@@ -44,7 +50,7 @@ export const RenewMockup = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (status === 'loading') {
+  if (status === 'loading' || status === 'missing') {
     return (
       <MockupLayout testId="page-renew-loading" hideFooterHeroCta seo={{ title: 'Renew Your Membership', path: '/renew' }}>
         <div className="max-w-[480px] mx-auto px-6 py-32 text-center">
@@ -62,9 +68,7 @@ export const RenewMockup = () => {
           That link didn't <em className="italic font-normal">work.</em>
         </h1>
         <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed mb-8" data-testid="renew-error">
-          {status === 'missing'
-            ? "This page needs a link from your renewal email, not a bare visit."
-            : error}
+          {error}
         </p>
         <Link
           to="/login"

@@ -468,6 +468,16 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     elif status == 'comped':
                         subscription_start = member.get('created_at')
                         subscription_status = 'comped'
+                    elif not is_paid and await has_paid_beyond_trial(member.get('email') or request.email):
+                        # A former annual member whose year (and grace
+                        # week) has passed, so their paid labels are gone.
+                        # 'lapsed' lets the account page offer the renewal
+                        # rate (razorpay_orders' 'renewal' plan) instead
+                        # of sending them to the new-signup price.
+                        last_payment = await get_last_payment_for_email(member.get('email') or request.email)
+                        if last_payment and not last_payment.get('subscription_id'):
+                            subscription_status = 'lapsed'
+                            subscription_end = compute_synthetic_expiry(last_payment)
 
                     # Surface the canonical paid status to the client
                     canonical_status = 'paid' if has_razorpay_label else status

@@ -160,6 +160,7 @@ async def record_payment(
     name: str = '',
     razorpay_created_at_unix: Optional[int] = None,
     raw_notes: Optional[dict] = None,
+    access_from: Optional[datetime] = None,
 ) -> bool:
     """Upserts on payment_id. Returns True if this call was the one that
     actually inserted the row (a genuinely new payment), False if the
@@ -177,6 +178,13 @@ async def record_payment(
         datetime.fromtimestamp(razorpay_created_at_unix, tz=timezone.utc)
         if razorpay_created_at_unix else datetime.now(timezone.utc)
     )
+    # A renewal's year starts when the current one ends, not on the day
+    # it was paid, so renewing early never costs the member days they
+    # already paid for. Worked out here, before this payment is inserted,
+    # so the verify endpoint and the webhook (whichever records it first)
+    # agree. The charge date itself stays in razorpay_created_at.
+    if plan == 'renewal' and access_from is None:
+        access_from = await renewal_access_from(email, razorpay_created_at)
 
     doc = {
         'payment_id': payment_id,
@@ -193,6 +201,8 @@ async def record_payment(
         'razorpay_created_at': razorpay_created_at,
         'raw_notes': raw_notes or {},
     }
+    if access_from is not None:
+        doc['access_from'] = access_from
     try:
         result = await _db.payments.update_one(
             {'payment_id': payment_id},
@@ -247,6 +257,19 @@ async def fetch_and_record(
     }
 
 
+async def renewal_access_from(email: str, paid_at: datetime) -> datetime:
+    """When a renewal paid at paid_at starts: the end of the member's
+    current year if that's still ahead, otherwise the payment date."""
+    current_end_iso = compute_synthetic_expiry(await get_last_payment_for_email(email))
+    if current_end_iso:
+        current_end = datetime.fromisoformat(current_end_iso)
+        if current_end.tzinfo is None:
+            current_end = current_end.replace(tzinfo=timezone.utc)
+        if current_end > paid_at:
+            return current_end
+    return paid_at
+
+
 async def get_subscriber_payment_summaries() -> dict:
     """{email: {last_payment: {...}, first_payment: {...}, total_paid:
     {INR: int, USD: int}, payment_count: int}}. The two currencies are
@@ -276,6 +299,7 @@ async def get_subscriber_payment_summaries() -> dict:
             'currency': doc.get('currency'),
             'plan': doc.get('plan'),
             'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+            'access_from': _iso(doc.get('access_from')),
         }
         if email not in summaries:
             summaries[email] = {
@@ -364,6 +388,7 @@ async def get_last_payment_for_email(email: str) -> Optional[dict]:
         'plan': doc.get('plan'),
         'subscription_id': doc.get('subscription_id') or '',
         'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+        'access_from': _iso(doc.get('access_from')),
     }
 
 
@@ -396,10 +421,13 @@ TRIAL_UPGRADE_BONUS_DAYS = 30
 
 
 def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
-    if not last_payment or not last_payment.get('razorpay_created_at'):
+    # A renewal counts from access_from (the end of the year before it),
+    # everything else from the payment date.
+    start = (last_payment or {}).get('access_from') or (last_payment or {}).get('razorpay_created_at')
+    if not start:
         return None
     try:
-        paid_at = datetime.fromisoformat(last_payment['razorpay_created_at'])
+        paid_at = datetime.fromisoformat(start) if isinstance(start, str) else start
         if paid_at.tzinfo is None:
             paid_at = paid_at.replace(tzinfo=timezone.utc)
         cycle_days = SYNTHETIC_CYCLE_DAYS
@@ -422,7 +450,7 @@ def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
 # still recorded here, as given.
 SIGNUP_SOURCES = {
     'story-email-gate', 'left-field-form', 'signup-page', 'paywall',
-    'trial-page', 'trial-via-paywall', 'trial-upgrade-page', 'account-ten-panel',
+    'trial-page', 'trial-via-paywall', 'trial-upgrade-page', 'account-ten-panel', 'account-renew',
     'student-pay-link', 'gift-page', 'teams-page',
 }
 _TAG_CLEAN = re.compile(r'[^a-z0-9-]+')
