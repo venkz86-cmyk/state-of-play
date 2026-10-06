@@ -115,7 +115,7 @@ export const SubscribeMockup = () => {
             <p className="font-plex text-sm text-[var(--text-muted)] mt-3">
               Student?{' '}
               <Link to="/students" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="signup-student-link">
-                Get the same access for ₹1,770 a year.
+                Get the same access for {isIndia ? '₹1,770' : '$29'} a year.
               </Link>
             </p>
           </div>
