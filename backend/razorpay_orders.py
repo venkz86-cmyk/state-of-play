@@ -46,7 +46,7 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
+from tiers import PLAN_LABELS, PAID_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
@@ -292,9 +292,17 @@ async def create_order(req: CreateOrderRequest, request: Request):
         # payment on file but do carry the paid labels. Students renew
         # through their own ID check, and The Ten has its own upgrade.
         member = await get_current_member(request)
+        # A complimentary year renews at this rate; a shorter
+        # complimentary membership (complimentary.py) doesn't, so someone
+        # whose only access is one is sent to the new-reader price.
+        grant = await complimentary_grant_for(member['email']) if member else None
+        year_grant = bool(grant) and (grant.get('months') or 12) == 12
+        labels = (member.get('label_names') or []) if member else []
+        complimentary_only = 'complimentary' in labels and not any(
+            l in PAID_LABELS for l in labels if l != 'complimentary')
         if not member or member.get('tier') in ('student', 'trial', 'nomination') or not (
-            member.get('tier') == 'standard' or await has_paid_beyond_trial(member['email'])
-            or await complimentary_grant_for(member['email'])
+            (member.get('tier') == 'standard' and not complimentary_only)
+            or await has_paid_beyond_trial(member['email']) or year_grant
         ):
             raise HTTPException(status_code=403, detail='Sign in with the account your membership is on to renew.')
         last_payment = await get_last_payment_for_email(member['email'])
