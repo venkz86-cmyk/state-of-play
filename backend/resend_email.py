@@ -36,6 +36,29 @@ RESEND_API_URL = 'https://api.resend.com/emails'
 
 router = APIRouter()
 
+# Failed sends are kept (email_failures) so the dashboard's Today page can
+# list them; a welcome or renewal email that never went out used to be
+# visible only in Render's logs.
+_db = None
+
+
+def init(db_handle):
+    global _db
+    _db = db_handle
+
+
+async def _record_failure(to: str, subject: str, reason: str) -> None:
+    if _db is None:
+        return
+    try:
+        from datetime import datetime, timezone
+        await _db.email_failures.insert_one({
+            'to': (to or '').lower().strip(), 'subject': subject, 'reason': reason[:300],
+            'at': datetime.now(timezone.utc), 'dismissed': False,
+        })
+    except Exception as e:
+        logger.warning(f'could not record the failed send: {e!r}')
+
 
 async def send_email(
     to: str,
@@ -73,12 +96,14 @@ async def send_email(
             )
         if resp.status_code >= 400:
             logger.warning(f'Resend send failed: {resp.status_code} {resp.text[:400]!r}')
+            await _record_failure(to, subject, f'Resend said {resp.status_code}: {resp.text[:200]}')
             return False
         data = resp.json()
         logger.info(f'Resend email sent to {to}: id={data.get("id")}')
         return True
     except Exception as e:
         logger.warning(f'Resend send error: {e!r}')
+        await _record_failure(to, subject, f'Could not reach Resend: {e!r}')
         return False
 
 

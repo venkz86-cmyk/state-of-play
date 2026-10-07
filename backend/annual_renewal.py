@@ -511,6 +511,18 @@ async def annual_renewal_sweep(
 
     result = {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
               'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'dry_run': dry_run}
+    if not dry_run:
+        # The dashboard's Today page shows the last run, and flags it when
+        # the nightly one hasn't happened (the cron has failed silently
+        # before, when its admin key was missing).
+        try:
+            await _db.renewal_runs.insert_one({
+                'ran_at': now, 'checked': checked, 'reminded': reminded,
+                'grace_started': grace_started, 'downgraded': downgraded,
+                'downgraded_still_comped': still_comped,
+            })
+        except Exception as e:
+            logger.warning(f'could not record the renewal run: {e!r}')
     if dry_run or details:
         by_date = lambda rows: sorted(rows, key=lambda r: r['year_ends'])
         result.update(letter=by_date(letter), lapsed_note=by_date(lapsed_note), downgrade=by_date(downgrade))

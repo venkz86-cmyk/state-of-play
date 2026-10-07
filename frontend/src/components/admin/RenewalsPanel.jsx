@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DataTable } from './DataTable';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, daysUntil } from '../../lib/format';
@@ -21,7 +22,11 @@ const FILTERS = [
 export const RenewalsPanel = ({ onAuthError }) => {
   const [subscribers, setSubscribers] = useState(null);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('next30');
+  // ?tab=lapsed or ?tab=sweep opens that tab (links from Today).
+  const [params] = useSearchParams();
+  const [filter, setFilter] = useState(() => (
+    FILTERS.some((f) => f.key === params.get('tab')) ? params.get('tab') : 'next30'
+  ));
   // Former members whose year ended and who haven't renewed, from
   // GET /api/admin/annual-renewal/lapsed (only loaded on that tab).
   const [lapsed, setLapsed] = useState(null);

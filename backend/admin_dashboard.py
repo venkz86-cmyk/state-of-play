@@ -347,6 +347,147 @@ def _within_days(computed_expiry: Optional[str], days: int, now: datetime) -> bo
     return now <= exp_dt <= now + timedelta(days=days)
 
 
+# ─── Today: what the overview adds for the Today page ───────────────────────
+IST = timezone(timedelta(hours=5, minutes=30))
+ANNUAL_PLANS = ('standard', 'renewal', 'trial-upgrade', 'unknown')
+GRACE_DAYS = 7
+# The nightly renewal run is at 4:10am IST; more than this since the last
+# one means it didn't happen.
+RENEWAL_RUN_OVERDUE_HOURS = 26
+
+
+def _utc(value) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value) if isinstance(value, str) else value
+    except (ValueError, TypeError):
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+async def _renewals_this_month(now: datetime) -> dict:
+    """This calendar month (IST) from the payments ledger: every annual
+    year that ends this month, and what happened to it. A later payment by
+    the same email counts as renewed; otherwise it's still to come, in its
+    grace week, or lapsed. Collected is this month's renewal payments."""
+    local = now.astimezone(IST)
+    start = local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = (start + timedelta(days=32)).replace(day=1)
+    out = {'month': start.strftime('%B'), 'due': 0, 'renewed': 0, 'upcoming': 0,
+           'in_grace': 0, 'lapsed': 0, 'collected': {'INR': 0, 'USD': 0}}
+    if _db is None:
+        return out
+    by_email: dict = {}
+    async for doc in _db.payments.find({'plan': {'$in': list(ANNUAL_PLANS)}}):
+        email = (doc.get('email') or '').lower().strip()
+        if email:
+            by_email.setdefault(email, []).append(doc)
+    for docs in by_email.values():
+        docs.sort(key=lambda d: _utc(d.get('razorpay_created_at')) or now)
+        for i, doc in enumerate(docs):
+            paid_at = _utc(doc.get('razorpay_created_at'))
+            if doc.get('plan') == 'renewal' and paid_at and start <= paid_at < end:
+                currency = doc.get('currency')
+                if currency in out['collected']:
+                    out['collected'][currency] += doc.get('amount') or 0
+            if doc.get('subscription_id'):
+                continue
+            year_ends = _utc(compute_synthetic_expiry({
+                'plan': doc.get('plan'), 'razorpay_created_at': doc.get('razorpay_created_at'),
+                'access_from': doc.get('access_from'),
+            }))
+            if not year_ends or not (start <= year_ends < end):
+                continue
+            out['due'] += 1
+            if i < len(docs) - 1:
+                out['renewed'] += 1
+            elif year_ends > now:
+                out['upcoming'] += 1
+            elif now - year_ends <= timedelta(days=GRACE_DAYS):
+                out['in_grace'] += 1
+            else:
+                out['lapsed'] += 1
+    return out
+
+
+async def _last_renewal_run(now: datetime) -> dict:
+    run = None
+    if _db is not None:
+        try:
+            async for doc in _db.renewal_runs.find({}).sort('ran_at', -1).limit(1):
+                run = doc
+        except Exception as e:
+            logger.warning(f'overview renewal run lookup failed (non-fatal): {e!r}')
+    if not run:
+        return {'ran_at': None, 'overdue': True}
+    ran_at = _utc(run.get('ran_at'))
+    return {
+        'ran_at': ran_at.isoformat() if ran_at else None,
+        'overdue': not ran_at or now - ran_at > timedelta(hours=RENEWAL_RUN_OVERDUE_HOURS),
+        'reminded': run.get('reminded', 0), 'grace_started': run.get('grace_started', 0),
+        'downgraded': run.get('downgraded', 0), 'checked': run.get('checked', 0),
+    }
+
+
+def _comps_to_remove(rows: list, now: datetime) -> list:
+    """Former annual members past their grace week who are still comped in
+    Ghost, so they keep reading until the comp comes off by hand."""
+    out = []
+    for r in rows:
+        last = r.get('last_payment')
+        if r.get('ghost_status') != 'comped' or is_paid_from_labels(r.get('label_names') or []):
+            continue
+        if not last or last.get('subscription_id') or last.get('plan') in ('trial', 'student'):
+            continue
+        year_ends = _utc(compute_synthetic_expiry(last))
+        if year_ends and now - year_ends > timedelta(days=GRACE_DAYS):
+            out.append({'email': r['email'], 'name': r['name'], 'year_ended': year_ends.isoformat()})
+    return sorted(out, key=lambda x: x['year_ended'])
+
+
+def _unmatched_payments(rows: list, summaries: dict) -> list:
+    """Payments whose email has no Ghost account: usually someone who paid
+    with a different email than the one they read with (Tools → Link a
+    payment email). Gifts and team plans are bought for other people, so
+    they're left out."""
+    ghost_emails = {r['email'] for r in rows}
+    out = []
+    for email, summary in summaries.items():
+        last = summary.get('last_payment') or {}
+        plan = last.get('plan') or ''
+        if email in ghost_emails or plan == 'gift' or plan.startswith('team'):
+            continue
+        out.append({'email': email, 'plan': plan, 'amount': last.get('amount'),
+                    'currency': last.get('currency'), 'paid_at': last.get('razorpay_created_at')})
+    return sorted(out, key=lambda x: x['paid_at'] or '', reverse=True)
+
+
+async def _recent_email_failures(now: datetime) -> list:
+    out = []
+    if _db is None:
+        return out
+    try:
+        async for doc in _db.email_failures.find(
+            {'dismissed': False, 'at': {'$gte': now - timedelta(days=14)}}
+        ).sort('at', -1).limit(50):
+            at = _utc(doc.get('at'))
+            out.append({'id': str(doc.get('_id')), 'to': doc.get('to'), 'subject': doc.get('subject'),
+                        'reason': doc.get('reason'), 'at': at.isoformat() if at else None})
+    except Exception as e:
+        logger.warning(f'overview email failures lookup failed (non-fatal): {e!r}')
+    return out
+
+
+@router.post('/api/admin/email-failures/dismiss')
+async def dismiss_email_failures(_admin: None = Depends(require_admin_key_or_session)):
+    """Clears the failed-email list on Today once Venkat has dealt with it."""
+    if _db is None:
+        return {'dismissed': 0}
+    result = await _db.email_failures.update_many({'dismissed': False}, {'$set': {'dismissed': True}})
+    return {'dismissed': getattr(result, 'modified_count', 0)}
+
+
 @router.get('/api/admin/overview')
 async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
     """Cheap aggregate counts over data every earlier phase already built
@@ -355,6 +496,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
     what did they pay, what's expiring, what needs attention today."""
     now = datetime.now(timezone.utc)
     rows = await _build_subscriber_rows()
+    payment_summaries = await get_subscriber_payment_summaries()
 
     paid_rows = [r for r in rows if r['is_paid']]
     converted_from_free_rows = [r for r in rows if r['converted_from_free']]
@@ -399,6 +541,16 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
         except Exception as e:
             logger.warning(f'overview active_trials count failed (non-fatal): {e!r}')
 
+    pending_students = 0
+    if _db is not None:
+        try:
+            pending_students = await _db.student_applications.count_documents({'status': 'pending'})
+        except Exception as e:
+            logger.warning(f'overview pending_students count failed (non-fatal): {e!r}')
+    comps_to_remove = _comps_to_remove(rows, now)
+    unmatched = _unmatched_payments(rows, payment_summaries)
+    email_failures = await _recent_email_failures(now)
+
     corporate_accounts = 0
     try:
         corporate_accounts = len(await fetch_corporate_accounts())
@@ -436,7 +588,15 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
                 for r in ghost_downgraded_rows[:25]
             ],
             'pending_comments': pending_comments,
+            'pending_students': pending_students,
+            'comps_to_remove': comps_to_remove[:50],
+            'comps_to_remove_count': len(comps_to_remove),
+            'unmatched_payments': unmatched[:50],
+            'unmatched_payments_count': len(unmatched),
+            'email_failures': email_failures,
         },
+        'renewal_run': await _last_renewal_run(now),
+        'renewals_month': await _renewals_this_month(now),
     }
 
 
