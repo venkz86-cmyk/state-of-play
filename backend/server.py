@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 
 from tiers import resolve_tier, is_genuinely_paid, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
-from payments import get_last_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial
+from payments import get_last_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial, complimentary_grant_for
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -407,6 +407,13 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     )
                     if comped_razorpay_member:
                         subscriptions = []
+                    # A complimentary year (complimentary.py) shows as
+                    # that, with its own end date, instead of Ghost's comp
+                    # (which would read as "Renews" with a next charge).
+                    grant = await complimentary_grant_for(member_email)
+                    complimentary_now = bool(grant) and 'complimentary' in label_names and not has_razorpay_label
+                    if complimentary_now:
+                        subscriptions = []
 
                     # Resolve dates with the right source:
                     subscription_start = None
@@ -425,6 +432,11 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         # notion of Trial's 30-day cycle at all) would
                         # only ever be wrong for this tier.
                         pass
+                    elif complimentary_now:
+                        subscription_status = 'complimentary'
+                        granted_at, ends_at = grant.get('granted_at'), grant.get('ends_at')
+                        subscription_start = _utc_iso(granted_at)
+                        subscription_end = _utc_iso(ends_at)
                     elif subscriptions:
                         sub = subscriptions[0]
                         subscription_start = sub.get('start_date') or sub.get('created_at')
@@ -505,6 +517,13 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         if last_payment and not last_payment.get('subscription_id'):
                             subscription_status = 'lapsed'
                             subscription_end = compute_synthetic_expiry(last_payment)
+                    elif not is_paid and grant and grant.get('ends_at'):
+                        # A complimentary year that has ended: the account
+                        # page offers the renewal rate, as for a former
+                        # paying member.
+                        ends_at = grant['ends_at']
+                        subscription_status = 'lapsed'
+                        subscription_end = _utc_iso(ends_at)
 
                     # Surface the canonical paid status to the client
                     canonical_status = 'paid' if has_razorpay_label else status
@@ -535,6 +554,13 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
     except Exception as e:
         logger.error(f"Ghost member details error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+def _utc_iso(value):
+    """Mongo hands datetimes back without a timezone; they're UTC."""
+    if not hasattr(value, 'isoformat'):
+        return value
+    return (value if value.tzinfo else value.replace(tzinfo=timezone.utc)).isoformat()
+
 
 class ArticleContentRequest(BaseModel):
     slug: str
@@ -2506,6 +2532,14 @@ except Exception as _e:
 # Script/MailApp for anything new that needs reliable, visible delivery;
 # corporate subs' Sheets/Slack/Gmail-draft machinery stays on Apps Script,
 # untouched — this is scoped to email-sending only).
+# Complimentary annual memberships Venkat gives by hand (Admin → Tools).
+try:
+    from complimentary import router as complimentary_router, init as complimentary_init
+    complimentary_init(db)
+    app.include_router(complimentary_router)
+except Exception as _e:
+    logging.warning(f"complimentary module not mounted: {_e!r}")
+
 try:
     from resend_email import router as resend_email_router, init as resend_email_init
     resend_email_init(db)

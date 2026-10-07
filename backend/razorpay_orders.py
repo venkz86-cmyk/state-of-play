@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email
+from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
@@ -294,6 +294,7 @@ async def create_order(req: CreateOrderRequest, request: Request):
         member = await get_current_member(request)
         if not member or member.get('tier') in ('student', 'trial', 'nomination') or not (
             member.get('tier') == 'standard' or await has_paid_beyond_trial(member['email'])
+            or await complimentary_grant_for(member['email'])
         ):
             raise HTTPException(status_code=403, detail='Sign in with the account your membership is on to renew.')
         last_payment = await get_last_payment_for_email(member['email'])

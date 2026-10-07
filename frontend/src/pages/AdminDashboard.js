@@ -16,6 +16,7 @@ import { FreeRegistrationsPanel } from '../components/admin/FreeRegistrationsPan
 import { LinkPaymentEmail } from '../components/admin/LinkPaymentEmail';
 import { LeftFieldReadersPanel } from '../components/admin/LeftFieldReadersPanel';
 import { BackfillPanel } from '../components/admin/BackfillPanel';
+import { ComplimentaryPanel } from '../components/admin/ComplimentaryPanel';
 
 const todayLine = () =>
   new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -75,7 +76,8 @@ export const AdminDashboard = () => {
             <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
             <Route path="sources" element={<SourcesPanel onAuthError={onAuthError} />} />
             <Route path="free-signups" element={<FreeRegistrationsPanel onAuthError={onAuthError} />} />
-            <Route path="tools" element={<Navigate to="link-email" replace />} />
+            <Route path="tools" element={<Navigate to="complimentary" replace />} />
+            <Route path="tools/complimentary" element={<ComplimentaryPanel onAuthError={onAuthError} />} />
             <Route path="tools/link-email" element={<LinkPaymentEmail onAuthError={onAuthError} />} />
             <Route path="tools/left-field" element={<LeftFieldReadersPanel onAuthError={onAuthError} />} />
             <Route path="tools/import" element={<BackfillPanel onAuthError={onAuthError} />} />

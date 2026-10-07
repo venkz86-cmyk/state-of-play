@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
@@ -28,6 +28,7 @@ export const RenewMockup = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('t');
   const { user, loading, completeRenewalLink } = useAuth();
+  const navigate = useNavigate();
   const [linkStatus, setLinkStatus] = useState(token ? 'loading' : 'none');
   const [linkError, setLinkError] = useState('');
   const [details, setDetails] = useState(null);
@@ -43,6 +44,9 @@ export const RenewMockup = () => {
         if (cancelled) return;
         if (result.success) {
           setLinkStatus('done');
+          // The complimentary-year letter links here with next=account:
+          // the renewal offer is on their account page, not this letter.
+          if (searchParams.get('next') === 'account') navigate('/account', { replace: true });
         } else {
           setLinkError(result.error);
           setLinkStatus('failed');

@@ -1,6 +1,7 @@
 import { daysUntil } from './format';
 
-// When a member can renew: an annual member on a one-time payment within
+// When a member can renew: an annual member on a one-time payment (or a
+// complimentary year) within
 // RENEWAL_WINDOW_DAYS of the end of their year (or past it), or a former
 // member whose grace week has passed (member-details reports 'lapsed').
 // A renewal is one payment (razorpay_orders' 'renewal' plan) and its year
@@ -15,7 +16,7 @@ export const renewalOffer = (details) => {
   if (!details) return null;
   const days = daysUntil(details.subscription_end);
   const inWindow = details.tier === 'standard'
-    && details.subscription_status === 'one_time'
+    && ['one_time', 'complimentary'].includes(details.subscription_status)
     && days !== null && days <= RENEWAL_WINDOW_DAYS;
   const lapsed = details.tier === 'free' && details.subscription_status === 'lapsed';
   if (!inWindow && !lapsed) return null;

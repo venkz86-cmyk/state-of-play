@@ -260,17 +260,38 @@ async def fetch_and_record(
     }
 
 
+async def complimentary_grant_for(email: str) -> Optional[dict]:
+    """The complimentary year Venkat gave this email, if any
+    (complimentary.py writes these; one record per email). Kept here, not
+    in complimentary.py, because tiers imports this module and
+    complimentary imports tiers."""
+    if _db is None or not email:
+        return None
+    try:
+        return await _db.complimentary_grants.find_one({'email': email.lower().strip()})
+    except Exception as e:
+        logger.warning(f'complimentary grant lookup failed: {e!r}')
+        return None
+
+
+def _aware(value) -> Optional[datetime]:
+    if not value:
+        return None
+    dt = datetime.fromisoformat(value) if isinstance(value, str) else value
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 async def renewal_access_from(email: str, paid_at: datetime) -> datetime:
     """When a renewal paid at paid_at starts: the end of the member's
-    current year if that's still ahead, otherwise the payment date."""
-    current_end_iso = compute_synthetic_expiry(await get_last_payment_for_email(email))
-    if current_end_iso:
-        current_end = datetime.fromisoformat(current_end_iso)
-        if current_end.tzinfo is None:
-            current_end = current_end.replace(tzinfo=timezone.utc)
-        if current_end > paid_at:
-            return current_end
-    return paid_at
+    current year if that's still ahead, otherwise the payment date. The
+    current year is their last payment's, or a complimentary year's when
+    that ends later."""
+    ends = [_aware(compute_synthetic_expiry(await get_last_payment_for_email(email)))]
+    grant = await complimentary_grant_for(email)
+    if grant:
+        ends.append(_aware(grant.get('ends_at')))
+    later = [end for end in ends if end and end > paid_at]
+    return max(later) if later else paid_at
 
 
 async def get_subscriber_payment_summaries() -> dict:
