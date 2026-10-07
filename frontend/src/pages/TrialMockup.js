@@ -77,8 +77,11 @@ const persistJustPaidEmail = (email) => {
 export const TrialMockup = () => {
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
-  // The paywall's "Start with The Ten" line links here with ?via=paywall.
-  const trialSource = searchParams.get('via') === 'paywall' ? 'trial-via-paywall' : 'trial-page';
+  // The "Start with The Ten" lines on the paywall, the homepage and
+  // /signup link here with ?via=, so the Sources panel can tell them apart.
+  const trialSource = {
+    paywall: 'trial-via-paywall', home: 'trial-via-home', signup: 'trial-via-signup',
+  }[searchParams.get('via')] || 'trial-page';
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
   const checkoutCountry = isIndia ? 'IN' : 'INTL';

@@ -177,14 +177,23 @@ export const RazorpayCheckoutButton = ({
     <div className={className} data-testid={dataTestId}>
       {!hideEmailField && (
         <div className="mb-5">
-          <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</p>
+          {/* A real <label> for the input, so screen readers announce it
+              (the same pattern as /left-field's form). With a signed-in
+              account there's no input, so it stays a plain heading. */}
+          {lockedEmail ? (
+            <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</p>
+          ) : (
+            <label htmlFor={`${dataTestId}-email-input`} className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Email</label>
+          )}
           {lockedEmail ? (
             <p className="font-plex text-lg text-[var(--text-muted)] border-b border-[var(--rule)] py-3">
               Using your account: <span className="text-[var(--text)]">{lockedEmail}</span>
             </p>
           ) : (
             <input
+              id={`${dataTestId}-email-input`}
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
               placeholder="you@yourdomain.com"

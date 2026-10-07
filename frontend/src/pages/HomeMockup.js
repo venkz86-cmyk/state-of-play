@@ -413,6 +413,17 @@ export const HomeMockup = () => {
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
                 One deeply reported story a week on the business of Indian sport, plus the full archive.
               </p>
+              {/* The Ten as a smaller first step, same line as the paywall's.
+                  Not for anyone already in it or whose trial has ended. */}
+              {user?.tier !== 'trial' && !user?.trial_expired && (
+                <p className="font-plex text-[14px] text-[var(--text-muted)] mt-3" data-testid="home-the-ten">
+                  Not ready for a year?{' '}
+                  <Link to="/trial?via=home" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+                    Start with The Ten
+                  </Link>
+                  , ten stories for {pricing.country === 'IN' ? '₹590' : '$9'}.
+                </p>
+              )}
             </div>
             <Link
               to="/signup"
