@@ -136,6 +136,12 @@ export const RenewalsPanel = ({ onAuthError }) => {
       },
       { key: 'expiry', label: 'Year ended', sortable: true, align: 'right', render: (r) => formatDate(r.expiry) },
       {
+        key: 'still_comped', label: 'Ghost', sortable: true,
+        render: (r) => (r.still_comped
+          ? <span className="font-plex text-[12px] text-[var(--accent-burgundy)]">Still comped</span>
+          : <span className="font-plex text-[12px] text-[var(--text-muted)]">Free</span>),
+      },
+      {
         key: 'last_emailed', label: 'Last emailed', sortable: true, align: 'right',
         render: (r) => (r.last_emailed ? `${formatDate(r.last_emailed)} (${daysSince(r.last_emailed)}d ago)` : 'Never'),
       },
@@ -158,6 +164,12 @@ export const RenewalsPanel = ({ onAuthError }) => {
           Former annual members whose year has ended and who haven't renewed. The note offers ₹2,999 + GST ($149)
           and links to their own /renew page. Nobody gets it twice within {gapDays} days.
         </p>
+        {lapsed.some((m) => m.still_comped) && (
+          <p data-testid="lapsed-still-comped" className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-4 max-w-[70ch]">
+            {lapsed.filter((m) => m.still_comped).length} of them are still comped in Ghost, so they can still read
+            every story and stay on Ghost's paid list. Remove the comp in Ghost to end their access.
+          </p>
+        )}
         <BulkEmailControls
           endpoint={LAPSED_ENDPOINT}
           emails={due.map((m) => m.email)}

@@ -394,6 +394,19 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     # member so the date/status branches below (display
                     # only) never read a stray comp subscription either.
                     subscriptions = [] if is_trial_member else native_subscriptions
+                    # A Razorpay member Venkat has comped in Ghost (to keep
+                    # Ghost's free/paid lists right) carries a $0
+                    # "Complimentary" subscription too. Their real year
+                    # comes from the Razorpay payment, so read the ledger
+                    # for them, not the comp -- otherwise the account page
+                    # says "Renews" with a next charge, and never offers
+                    # the one-payment renewal.
+                    member_email = member.get('email') or request.email
+                    comped_razorpay_member = status == 'comped' and not is_trial_member and (
+                        has_razorpay_label or await has_paid_beyond_trial(member_email)
+                    )
+                    if comped_razorpay_member:
+                        subscriptions = []
 
                     # Resolve dates with the right source:
                     subscription_start = None
@@ -417,7 +430,7 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         subscription_start = sub.get('start_date') or sub.get('created_at')
                         subscription_end = sub.get('current_period_end')
                         subscription_status = sub.get('status', 'active')
-                    elif has_razorpay_label:
+                    elif has_razorpay_label or comped_razorpay_member:
                         # Razorpay subscriber: derive the cycle from their actual
                         # last real payment (not member.created_at -- the Ghost
                         # signup date can predate a real payment, e.g. a free
