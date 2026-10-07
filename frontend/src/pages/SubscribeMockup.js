@@ -118,6 +118,17 @@ export const SubscribeMockup = () => {
                 Get the same access for {isIndia ? '₹1,770' : '$29'} a year.
               </Link>
             </p>
+            {/* The Ten as a smaller first step, same line as the paywall's.
+                Not for anyone already in it or whose trial has ended. */}
+            {user?.tier !== 'trial' && !user?.trial_expired && (
+              <p className="font-plex text-sm text-[var(--text-muted)] mt-3" data-testid="signup-the-ten">
+                Not ready for a year?{' '}
+                <Link to="/trial?via=signup" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+                  Start with The Ten
+                </Link>
+                , ten stories for {isIndia ? '₹590' : '$9'}.
+              </p>
+            )}
           </div>
           <div className="lg:col-span-5 flex flex-col gap-3">
             {justPaidEmail ? (

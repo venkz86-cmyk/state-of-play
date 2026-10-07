@@ -466,7 +466,7 @@ def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
 # still recorded here, as given.
 SIGNUP_SOURCES = {
     'story-email-gate', 'left-field-form', 'signup-page', 'paywall',
-    'trial-page', 'trial-via-paywall', 'trial-upgrade-page', 'account-ten-panel', 'account-renew', 'renew-page',
+    'trial-page', 'trial-via-paywall', 'trial-via-home', 'trial-via-signup', 'trial-upgrade-page', 'account-ten-panel', 'account-renew', 'renew-page',
     'student-pay-link', 'gift-page', 'teams-page',
 }
 _TAG_CLEAN = re.compile(r'[^a-z0-9-]+')

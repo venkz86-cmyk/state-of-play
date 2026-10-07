@@ -8,28 +8,24 @@ export const MockupBackToTop = () => {
   const [show, setShow] = useState(false);
   // Hidden while the footer is on screen: the button is fixed bottom-right
   // and would otherwise sit on the colophon's "stateofplay.club" line.
+  // Checked on every scroll rather than with an observer attached once,
+  // because some pages (the homepage) render their footer only after
+  // their stories load, so it isn't there yet when the route changes.
   const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 600);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return undefined;
-    let observer;
-    // Each page renders its own footer, so re-attach on every route change,
-    // after the new page has mounted.
-    setFooterVisible(false);
-    const id = window.setTimeout(() => {
+    const update = () => {
+      setShow(window.scrollY > 600);
       const footer = document.querySelector('[data-testid="mockup-footer"]');
-      if (!footer) return;
-      observer = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
-      observer.observe(footer);
-    }, 0);
-    return () => { window.clearTimeout(id); if (observer) observer.disconnect(); };
+      setFooterVisible(!!footer && footer.getBoundingClientRect().top < window.innerHeight);
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
   }, [pathname]);
 
   if (!show || footerVisible) return null;

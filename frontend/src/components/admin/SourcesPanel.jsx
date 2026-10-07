@@ -11,6 +11,8 @@ const SOURCE_LABEL = {
   paywall: 'Paywall Subscribe button',
   'trial-page': '/trial page',
   'trial-via-paywall': '/trial, via the paywall line',
+  'trial-via-home': '/trial, via the homepage line',
+  'trial-via-signup': '/trial, via the /signup line',
   'trial-upgrade-page': 'The Ten upgrade, /trial page',
   'account-ten-panel': 'The Ten upgrade, account page',
   'account-renew': 'Renew, account page',

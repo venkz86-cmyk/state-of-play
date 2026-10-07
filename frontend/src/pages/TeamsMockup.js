@@ -4,18 +4,20 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { isBeforeOctoberCutover } from '../lib/octoberPricing';
 
-// "Separate subscriptions" compares against the new-signup rate before
-// GST, which rises at the 6 October cutover (lib/octoberPricing.js):
-// ₹2,499 a seat until then, ₹3,499 from then.
+// "Separate subscriptions" compares GST-inclusive totals on both sides:
+// what Razorpay charges one new annual member (₹2,949 until the
+// 6 October cutover, ₹4,129 from then; lib/octoberPricing.js) times the
+// seats, against the team plan's own total.
 const teamPlans = () => {
-  const perSeat = isBeforeOctoberCutover() ? 2499 : 3499;
+  const perSeatTotal = isBeforeOctoberCutover() ? 2949 : 4129;
   const inr = (n) => `₹${n.toLocaleString('en-IN')}`;
   const plan = (id, name, seats, word) => {
     const price = seats * 2000;
-    const separate = seats * perSeat;
+    const total = Math.round(price * 1.18);
+    const separate = seats * perSeatTotal;
     return {
       id, name,
-      body: `${inr(price)} + GST a year (${inr(Math.round(price * 1.18))} total). ${word} seats, ₹2,000 + GST each. ${word} separate subscriptions would cost ${inr(separate)}. You save ${inr(separate - price)}.`,
+      body: `${inr(price)} + GST a year (${inr(total)} total). ${word} seats, ₹2,000 + GST each. ${word} separate subscriptions would cost ${inr(separate)} with GST. You save ${inr(separate - total)}.`,
     };
   };
   return [plan('team-5', 'Team-5', 5, 'Five'), plan('team-10', 'Team-10', 10, 'Ten')];
