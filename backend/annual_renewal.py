@@ -378,28 +378,50 @@ async def send_lapsed_emails(body: SendBody, _admin: None = Depends(require_admi
 
 
 @router.post('/api/admin/annual-renewal/sweep')
-async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_session)):
+async def annual_renewal_sweep(
+    dry_run: bool = False, details: bool = False,
+    _admin: None = Depends(require_admin_key_or_session),
+):
     """Daily cron sweep. For every standard-equivalent, one-time-payment
     member (carries 'premium-subscriber', last payment has no
-    subscription_id, not Trial/Student/corp/a native Ghost subscription):
-    sends the day -14 reminder once, the day 0 grace-start notice once,
-    and silently strips paid access once past the end of grace. Reports
-    what it did; safe to re-run as often as the cron schedule likes."""
+    subscription_id, not Trial/Student/corp, not billed by Ghost itself):
+    sends the renewal letter once from 14 days before their year ends,
+    the short lapsed note once from day 0 (or the letter, if they never
+    had it), and strips paid labels once past the grace week. Safe to
+    re-run as often as the cron schedule likes.
+
+    dry_run=true (the dashboard's Preview) sends nothing and changes
+    nothing; it returns who would get what, so Venkat can check before
+    sending. The people behind each count are listed only for a preview
+    or with details=true (the dashboard): the nightly cron prints this
+    response into Render's logs, which shouldn't hold member emails."""
+    empty = {'checked': 0, 'reminded': 0, 'grace_started': 0, 'downgraded': 0,
+             'downgraded_still_comped': 0, 'dry_run': dry_run,
+             'letter': [], 'lapsed_note': [], 'downgrade': []}
     if _db is None:
-        return {'checked': 0, 'reminded': 0, 'grace_started': 0, 'downgraded': 0}
+        return empty
     await _ensure_indexes()
     token = _create_ghost_admin_token()
     if not token:
-        return {
-            'checked': 0, 'reminded': 0, 'grace_started': 0, 'downgraded': 0,
-            'error': 'Ghost Admin API not configured',
-        }
+        return {**empty, 'error': 'Ghost Admin API not configured'}
 
     members = await list_all_ghost_members(token)
     payment_summaries = await get_subscriber_payment_summaries()
     now = datetime.now(timezone.utc)
 
     checked = reminded = grace_started = downgraded = still_comped = 0
+    letter, lapsed_note, downgrade = [], [], []
+
+    async def send_letter(email, member, expiry_dt, expiry_iso, fields):
+        renewal_token = mint_renewal_link_token(email, member['id'])
+        renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
+        await send_email(
+            to=email, subject='A second year of The State of Play',
+            html=_reminder_email_html(expiry_dt.strftime('%d %B %Y'), renew_url),
+        )
+        await _db.annual_renewal_notices.update_one(
+            {'email': email, 'expiry': expiry_iso}, {'$set': fields}, upsert=True,
+        )
 
     for member in members:
         email = (member.get('email') or '').lower().strip()
@@ -436,16 +458,21 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
         days_to_expiry = (expiry_dt - now).total_seconds() / 86400
         if days_to_expiry > REMINDER_DAYS_BEFORE:
             continue  # not due for any notice yet
+        person = {
+            'email': email, 'name': member.get('name') or '', 'year_ends': expiry_iso,
+            'days': round(days_to_expiry, 1), 'still_comped': member.get('status') == 'comped',
+        }
 
         if days_to_expiry <= -GRACE_PERIOD_DAYS:
             if 'paid-via-razorpay' in lower_labels:
-                ok = await _downgrade_member(member['id'], label_names, token)
+                ok = True if dry_run else await _downgrade_member(member['id'], label_names, token)
                 if ok:
                     downgraded += 1
+                    downgrade.append(person)
                     # Ghost's 'comped' status also grants access on the
                     # site, so until Venkat removes the comp they keep
                     # reading. Listed on the Renewals panel's Lapsed tab.
-                    if member.get('status') == 'comped':
+                    if person['still_comped']:
                         still_comped += 1
             continue
 
@@ -457,45 +484,34 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
             # less than 14 days before its year ended) gets the letter in
             # place of the short lapsed note: one email, not two.
             if not notice or not (notice.get('reminder_sent') or notice.get('grace_sent')):
-                renewal_token = mint_renewal_link_token(email, member['id'])
-                renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
-                await send_email(
-                    to=email, subject='A second year of The State of Play',
-                    html=_reminder_email_html(expiry_dt.strftime('%d %B %Y'), renew_url),
-                )
-                await _db.annual_renewal_notices.update_one(
-                    {'email': email, 'expiry': expiry_iso},
-                    {'$set': {'reminder_sent': now, 'grace_sent': now}},
-                    upsert=True,
-                )
+                if not dry_run:
+                    await send_letter(email, member, expiry_dt, expiry_iso, {'reminder_sent': now, 'grace_sent': now})
                 reminded += 1
+                letter.append(person)
                 continue
             if not notice.get('grace_sent'):
-                renewal_token = mint_renewal_link_token(email, member['id'])
-                renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
-                await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
-                await _db.annual_renewal_notices.update_one(
-                    {'email': email, 'expiry': expiry_iso},
-                    {'$set': {'grace_sent': now}},
-                    upsert=True,
-                )
+                if not dry_run:
+                    renewal_token = mint_renewal_link_token(email, member['id'])
+                    renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
+                    await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
+                    await _db.annual_renewal_notices.update_one(
+                        {'email': email, 'expiry': expiry_iso},
+                        {'$set': {'grace_sent': now}},
+                        upsert=True,
+                    )
                 grace_started += 1
+                lapsed_note.append(person)
             continue
 
         if not notice or not notice.get('reminder_sent'):
-            expiry_date_str = expiry_dt.strftime('%d %B %Y')
-            renewal_token = mint_renewal_link_token(email, member['id'])
-            renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
-            await send_email(
-                to=email, subject='A second year of The State of Play',
-                html=_reminder_email_html(expiry_date_str, renew_url),
-            )
-            await _db.annual_renewal_notices.update_one(
-                {'email': email, 'expiry': expiry_iso},
-                {'$set': {'reminder_sent': now}},
-                upsert=True,
-            )
+            if not dry_run:
+                await send_letter(email, member, expiry_dt, expiry_iso, {'reminder_sent': now})
             reminded += 1
+            letter.append(person)
 
-    return {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
-            'downgraded': downgraded, 'downgraded_still_comped': still_comped}
+    result = {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
+              'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'dry_run': dry_run}
+    if dry_run or details:
+        by_date = lambda rows: sorted(rows, key=lambda r: r['year_ends'])
+        result.update(letter=by_date(letter), lapsed_note=by_date(lapsed_note), downgrade=by_date(downgrade))
+    return result
