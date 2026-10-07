@@ -87,18 +87,26 @@ export const RazorpayCheckoutButton = ({
   // Short name for this button, for the admin Sources view
   // (payments.SIGNUP_SOURCES on the server).
   source,
+  // Set when the page promised a special rate (e.g. 'existing-reader' on
+  // /signup?offer=left-field). If the order comes back without it, the
+  // payment form doesn't open; rateMismatch is shown instead, with a
+  // button to go ahead at the order's own price.
+  expectedRate,
+  rateMismatch,
 }) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading
   const [error, setError] = useState('');
+  const [mismatch, setMismatch] = useState(false);
 
-  const startCheckout = async () => {
+  const startCheckout = async (acceptFullPrice = false) => {
     const trimmedEmail = (hideEmailField || lockedEmail) ? (lockedEmail || '').trim().toLowerCase() : email.trim().toLowerCase();
     if (!isValidEmail(trimmedEmail)) {
       setError('Enter a valid email address.');
       return;
     }
     setError('');
+    setMismatch(false);
     setStatus('loading');
 
     try {
@@ -109,13 +117,20 @@ export const RazorpayCheckoutButton = ({
       const orderRes = await fetch(`${API}${createOrderEndpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader() },
-        body: JSON.stringify({ plan, country, ...attributionFields(source), ...extraOrderFields }),
+        // email only matters to the server when nobody is signed in (a
+        // typed-email rate like the Left Field offer); a session wins.
+        body: JSON.stringify({ plan, country, email: trimmedEmail, ...attributionFields(source), ...extraOrderFields }),
       });
       if (!orderRes.ok) {
         const body = await orderRes.json().catch(() => ({}));
         throw new Error(body.detail || 'Could not start checkout. Please try again.');
       }
       const order = await orderRes.json();
+      if (expectedRate && order.rate !== expectedRate && !acceptFullPrice) {
+        setMismatch(true);
+        setStatus('idle');
+        return;
+      }
 
       const rzp = new window.Razorpay({
         key: order.key_id,
@@ -195,7 +210,7 @@ export const RazorpayCheckoutButton = ({
               type="email"
               autoComplete="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+              onChange={(e) => { setEmail(e.target.value); if (error) setError(''); if (mismatch) setMismatch(false); }}
               placeholder="you@yourdomain.com"
               disabled={status === 'loading'}
               data-testid={`${dataTestId}-email`}
@@ -206,7 +221,7 @@ export const RazorpayCheckoutButton = ({
       )}
       <button
         type="button"
-        onClick={startCheckout}
+        onClick={() => startCheckout()}
         disabled={status === 'loading'}
         data-testid={`${dataTestId}-submit`}
         className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 disabled:opacity-60"
@@ -218,6 +233,20 @@ export const RazorpayCheckoutButton = ({
         <p className="font-plex text-[13px] text-[var(--text-muted)] mt-3 max-w-[50ch]">
           {disclosureText}
         </p>
+      )}
+      {mismatch && rateMismatch && (
+        <div className="mt-4 max-w-[50ch]" data-testid={`${dataTestId}-rate-mismatch`}>
+          <p className="font-plex text-sm text-[var(--accent-burgundy)] mb-3">{rateMismatch.message}</p>
+          <button
+            type="button"
+            onClick={() => startCheckout(true)}
+            disabled={status === 'loading'}
+            data-testid={`${dataTestId}-full-price`}
+            className="font-plex text-sm text-[var(--text)] underline underline-offset-4 disabled:opacity-60"
+          >
+            {rateMismatch.buttonLabel}
+          </button>
+        </div>
       )}
       {error && (
         <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>

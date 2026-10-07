@@ -17,6 +17,7 @@ const SOURCE_LABEL = {
   'account-ten-panel': 'The Ten upgrade, account page',
   'account-renew': 'Renew, account page',
   'renew-page': 'Renew, /renew letter',
+  'left-field-offer': 'Left Field offer, /signup?offer=left-field',
   'student-pay-link': 'Student pay link',
   'gift-page': 'Gift page',
   'teams-page': 'Teams page',

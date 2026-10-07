@@ -54,6 +54,17 @@ export const annualPricingFor = (isIndia, user) => {
   return newSignupAnnualPricing(isIndia);
 };
 
+// The same rate for Left Field readers on Substack who signed up before
+// 6 October, shown only on /signup?offer=left-field. The backend checks
+// the email typed at checkout against the uploaded Substack list
+// (session_auth.early_rate_for_email) and charges the rate only then.
+export const leftFieldOfferPricing = (isIndia) => ({
+  amount: isIndia ? '₹2,499' : '$120',
+  total: isIndia ? '₹2,949' : '$120',
+  note: 'Your rate as a Left Field reader, until 31 October. Use the email The Left Field comes to.',
+  existingReader: true,
+});
+
 // Through 5 October, upgrading from The Ten costs exactly today's
 // direct-signup rate -- no discount for the ₹590/$9 trial fee already
 // paid (Venkat's explicit call). From 6 October, the new higher
