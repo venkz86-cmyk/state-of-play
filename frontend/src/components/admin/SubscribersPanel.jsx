@@ -7,7 +7,7 @@ import { useCountDelta } from '../../lib/useCountDelta';
 
 const TIER_LABEL = {
   standard: 'Annual', student: 'Student', trial: 'Trial',
-  nomination: 'Nominated', comped: 'Comped', free: 'Free',
+  nomination: 'Nominated', comped: 'Comped', complimentary: 'Complimentary', free: 'Free',
 };
 
 const expiryTone = (row) => {
@@ -26,6 +26,7 @@ const FILTERS = [
   { value: 'trial', label: 'Trial' },
   { value: 'nomination', label: 'Nominated' },
   { value: 'comped', label: 'Comped' },
+  { value: 'complimentary', label: 'Complimentary' },
   { value: 'standard', label: 'Annual' },
 ];
 

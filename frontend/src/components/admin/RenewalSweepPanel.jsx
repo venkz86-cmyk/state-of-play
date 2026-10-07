@@ -16,7 +16,15 @@ const whenLabel = (days) => {
 };
 
 const columns = [
-  { key: 'name', label: 'Name', sortable: true, render: (r) => r.name || '—' },
+  {
+    key: 'name', label: 'Name', sortable: true,
+    render: (r) => (
+      <>
+        {r.name || '—'}
+        {r.complimentary && <span className="text-[var(--text-muted)]"> · complimentary</span>}
+      </>
+    ),
+  },
   { key: 'email', label: 'Email', sortable: true },
   {
     key: 'year_ends', label: 'Year ends', sortable: true, align: 'right',

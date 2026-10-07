@@ -234,6 +234,13 @@ async def _build_subscriber_rows() -> list[dict]:
     payment_summaries = await get_subscriber_payment_summaries()
     trial_map, nomination_map = await _load_trial_and_nomination_maps()
     corp_renewal_map, corp_name_map = await _load_corporate_maps()
+    grant_map = {}
+    if _db is not None:
+        try:
+            async for g in _db.complimentary_grants.find({}):
+                grant_map[g['email']] = g
+        except Exception as e:
+            logger.warning(f'complimentary grants load failed (non-fatal): {e!r}')
 
     rows = []
     for member in members:
@@ -271,6 +278,14 @@ async def _build_subscriber_rows() -> list[dict]:
             ghost_subscription_expires,
             corp_renewal_map.get(corp_account_id) if corp_account_id else None,
         )
+
+        # A complimentary year (complimentary.py): its own end date.
+        grant = grant_map.get(email)
+        if grant and 'complimentary' in label_names and 'paid-via-razorpay' not in label_names:
+            tier = 'complimentary'
+            grant_end = _utc(grant.get('ends_at'))
+            if grant_end:
+                computed_expiry, expiry_source = grant_end.isoformat(), 'complimentary'
 
         expired_but_still_paid = False
         if paid and computed_expiry:

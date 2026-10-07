@@ -77,6 +77,7 @@ from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 from session_auth import mint_renewal_link_token
+from complimentary import complimentary_sweep
 
 logger = logging.getLogger(__name__)
 
@@ -508,6 +509,19 @@ async def annual_renewal_sweep(
                 await send_letter(email, member, expiry_dt, expiry_iso, {'reminder_sent': now})
             reminded += 1
             letter.append(person)
+
+    # Complimentary years (complimentary.py) end the same way, with their
+    # own letter in place of the paying members' one.
+    try:
+        comp = await complimentary_sweep(
+            now, dry_run, token, reminder_days=REMINDER_DAYS_BEFORE, grace_days=GRACE_PERIOD_DAYS,
+            mint_link=mint_renewal_link_token, notices=_db.annual_renewal_notices,
+        )
+        letter += comp['letter']; lapsed_note += comp['lapsed_note']; downgrade += comp['downgrade']
+        reminded += len(comp['letter']); grace_started += len(comp['lapsed_note'])
+        downgraded += len(comp['downgrade'])
+    except Exception as e:
+        logger.warning(f'complimentary sweep failed: {e!r}')
 
     result = {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
               'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'dry_run': dry_run}

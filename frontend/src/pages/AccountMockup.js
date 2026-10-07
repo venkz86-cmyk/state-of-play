@@ -93,7 +93,8 @@ export const AccountMockup = () => {
           ? 'Student'
           : details?.subscription_status === 'nomination'
             ? 'Trial'
-            : details?.subscription_status === 'comped' ? 'Comped' : 'Annual')
+            : details?.subscription_status === 'comped' ? 'Comped'
+              : details?.subscription_status === 'complimentary' ? 'Complimentary' : 'Annual')
       : 'Free';
 
   // A Razorpay member's own subscription_status now distinguishes a real
@@ -104,7 +105,8 @@ export const AccountMockup = () => {
   const autoRenews = details?.subscription_status === 'active';
   // Whether to show the Renew block (lib/renewal.js).
   const renewal = renewalOffer(details);
-  const dateLabel = autoRenews ? 'Renews' : 'Expires';
+  const complimentary = details?.subscription_status === 'complimentary';
+  const dateLabel = autoRenews ? 'Renews' : complimentary ? 'Ends' : 'Expires';
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
   const paidInUsd = details?.last_payment_currency === 'USD';
@@ -113,7 +115,8 @@ export const AccountMockup = () => {
   // Most members paid once: for them the third tile says how renewal
   // works instead of showing an empty "Next charge". The reminder timing
   // is annual_renewal.py's REMINDER_DAYS_BEFORE.
-  const paidOnce = canAccessPremium && details?.subscription_status === 'one_time';
+  // A complimentary year (complimentary.py) renews the same way.
+  const paidOnce = canAccessPremium && (details?.subscription_status === 'one_time' || complimentary);
   // What renewing costs, in the currency the member last paid in: the
   // renewal rate (razorpay_subscriptions.SUBSCRIPTION_PLANS) or, for
   // students, the student price (razorpay_orders.PLAN_PRICING['student']).
