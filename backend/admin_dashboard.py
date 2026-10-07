@@ -631,3 +631,63 @@ async def delete_free_registration(
     if not await delete_ghost_member(req.member_id, token):
         raise HTTPException(status_code=502, detail='Could not delete member')
     return {'deleted': True, 'email': member.get('email')}
+
+
+# The Left Field offer list (payments.import_left_field_readers) minus
+# everyone who is or was a TSOP subscriber, so the ₹2,499 Left Field rate
+# can't become a cheaper way back in than the ₹2,999 renewal. Checkout
+# refuses them the rate anyway (session_auth.early_rate_for_email); this
+# keeps the list itself, and its numbers, true.
+LEFT_FIELD_GHOST_JOINED_BEFORE = datetime(2026, 10, 6, tzinfo=timezone(timedelta(hours=5, minutes=30)))
+
+
+def _is_tsop_subscriber(member: dict) -> bool:
+    label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+    is_paid = member.get('status') in ('paid', 'comped') or is_paid_from_labels(label_names)
+    return is_paid or resolve_tier(label_names, is_paid) != 'free'
+
+
+@router.post('/api/admin/left-field-readers/audit')
+async def audit_left_field_readers(_admin: None = Depends(require_admin_key_or_session)):
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+
+    members = await list_all_ghost_members(token)
+    ghost = {(m.get('email') or '').lower().strip(): m for m in members}
+    subscribers = {e for e, m in ghost.items() if e and _is_tsop_subscriber(m)}
+    # Anyone who has paid for more than The Ten, current or lapsed.
+    async for doc in _db.payments.find({'plan': {'$ne': 'trial'}}, {'email': 1}):
+        if doc.get('email'):
+            subscribers.add(doc['email'].lower().strip())
+
+    listed = []
+    async for doc in _db.left_field_readers.find({}, {'email': 1}):
+        if doc.get('email'):
+            listed.append(doc['email'])
+    to_remove = [e for e in listed if e in subscribers]
+    if to_remove:
+        await _db.left_field_readers.delete_many({'email': {'$in': to_remove}})
+
+    remaining = [e for e in listed if e not in subscribers]
+    ghost_free_early = 0
+    for e in remaining:
+        joined = ghost.get(e, {}).get('created_at')
+        try:
+            joined_at = datetime.fromisoformat(str(joined).replace('Z', '+00:00')) if joined else None
+        except ValueError:
+            joined_at = None
+        if joined_at and joined_at < LEFT_FIELD_GHOST_JOINED_BEFORE:
+            ghost_free_early += 1
+    result = {
+        'checked': len(listed),
+        'removed_subscribers': len(to_remove),
+        'total': len(remaining),
+        'ghost_free_before_cutover': ghost_free_early,
+        'ghost_free_after_cutover': sum(1 for e in remaining if e in ghost) - ghost_free_early,
+        'substack_only': sum(1 for e in remaining if e not in ghost),
+    }
+    logger.info(f'left-field audit: {result}')
+    return result

@@ -755,26 +755,33 @@ def parse_left_field_export(text: str) -> dict:
     'date_column': name or None} from a Substack subscriber CSV. The
     email column is whichever header contains 'email'; the signup date
     is the first header that looks like one ('created', 'subscri…',
-    'date'), if any. Rows dated on or after 6 October are left out."""
+    'date'), if any. Rows dated on or after 6 October are left out, and
+    so are rows whose source column says 'import': readers brought into
+    Substack from Ghost, who are TSOP's own readers ('imported')."""
     rows = list(csv.reader(io.StringIO(text or '')))
     if not rows:
-        return {'readers': [], 'too_recent': 0, 'date_column': None}
+        return {'readers': [], 'too_recent': 0, 'date_column': None, 'imported': [], 'source_column': None}
     headers = [h.strip().lower() for h in rows[0]]
     email_col = next((i for i, h in enumerate(headers) if 'email' in h and 'disabled' not in h), None)
     if email_col is None:
         # A bare list of emails with no header row.
         email_col, data = 0, rows
-        date_col = None
+        date_col = source_col = None
     else:
         data = rows[1:]
-        date_col = next((i for i, h in enumerate(headers) if i != email_col and any(
+        source_col = next((i for i, h in enumerate(headers) if i != email_col and 'source' in h), None)
+        date_col = next((i for i, h in enumerate(headers) if i not in (email_col, source_col) and any(
             k in h for k in ('created', 'subscri', 'date', 'joined', 'start'))), None)
-    readers, seen, too_recent = [], set(), 0
+    readers, seen, too_recent, imported = [], set(), 0, []
     for row in data:
         if email_col >= len(row):
             continue
         email = row[email_col].lower().strip()
         if not _EMAIL_RE.match(email) or email in seen:
+            continue
+        if source_col is not None and source_col < len(row) and 'import' in row[source_col].lower():
+            seen.add(email)
+            imported.append(email)
             continue
         joined = _parse_export_date(row[date_col]) if date_col is not None and date_col < len(row) else None
         if joined and joined >= LEFT_FIELD_JOINED_BEFORE:
@@ -782,8 +789,9 @@ def parse_left_field_export(text: str) -> dict:
             continue
         seen.add(email)
         readers.append((email, joined))
-    return {'readers': readers, 'too_recent': too_recent,
-            'date_column': rows[0][date_col].strip() if date_col is not None else None}
+    return {'readers': readers, 'too_recent': too_recent, 'imported': imported,
+            'date_column': rows[0][date_col].strip() if date_col is not None else None,
+            'source_column': rows[0][source_col].strip() if source_col is not None else None}
 
 
 async def is_left_field_reader(email: str) -> bool:
@@ -802,12 +810,18 @@ async def import_left_field_readers(
     _admin: None = Depends(require_admin_key_or_session),
 ):
     """Adds the readers in a Substack export to the list. Uploading a
-    newer export later only adds the emails not already on it."""
+    newer export later only adds the emails not already on it. Readers
+    the export marks as imported (from Ghost) are taken off the list,
+    which also cleans up an upload made before this check existed."""
     if _db is None:
         raise HTTPException(status_code=503, detail='Not configured')
     parsed = parse_left_field_export(req.csv)
-    if not parsed['readers']:
+    if not parsed['readers'] and not parsed['imported']:
         raise HTTPException(status_code=400, detail='No email addresses found in that file.')
+    imported_removed = 0
+    if parsed['imported']:
+        result = await _db.left_field_readers.delete_many({'email': {'$in': parsed['imported']}})
+        imported_removed = getattr(result, 'deleted_count', 0) or 0
     existing = set()
     async for doc in _db.left_field_readers.find({}, {'email': 1}):
         existing.add(doc.get('email'))
@@ -823,12 +837,16 @@ async def import_left_field_readers(
             logger.warning(f'left-field import: some rows not inserted: {e!r}')
     total = len(existing) + len(new_docs)
     logger.info(f'left-field import: {len(new_docs)} added, {len(parsed["readers"]) - len(new_docs)} '
-                f'already listed, {parsed["too_recent"]} too recent; {total} on the list')
+                f'already listed, {parsed["too_recent"]} too recent, {len(parsed["imported"])} imported from Ghost '
+                f'in the file ({imported_removed} taken off the list); {total} on the list')
     return {
         'added': len(new_docs),
         'already_listed': len(parsed['readers']) - len(new_docs),
         'too_recent': parsed['too_recent'],
         'date_column': parsed['date_column'],
+        'imported': len(parsed['imported']),
+        'imported_removed': imported_removed,
+        'source_column': parsed['source_column'],
         'total': total,
     }
 
