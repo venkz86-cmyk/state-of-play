@@ -261,12 +261,16 @@ async def create_order(req: CreateOrderRequest, request: Request):
             raise HTTPException(status_code=403, detail='Sign in with the account you joined The Ten with to upgrade.')
         order_notes['email'] = member['email'].lower().strip()
     elif req.plan == 'renewal':
-        # Only for someone who has paid for a membership before: an annual
-        # member near (or past) the end of their year. Students renew
+        # For an annual member near (or past) the end of their year: someone
+        # with a membership payment on file, or a current annual member.
+        # The second covers members who paid through the old Razorpay
+        # payment links before the payments ledger existed, so have no
+        # payment on file but do carry the paid labels. Students renew
         # through their own ID check, and The Ten has its own upgrade.
         member = await get_current_member(request)
-        if not member or member.get('tier') in ('student', 'trial', 'nomination') \
-                or not await has_paid_beyond_trial(member['email']):
+        if not member or member.get('tier') in ('student', 'trial', 'nomination') or not (
+            member.get('tier') == 'standard' or await has_paid_beyond_trial(member['email'])
+        ):
             raise HTTPException(status_code=403, detail='Sign in with the account your membership is on to renew.')
         last_payment = await get_last_payment_for_email(member['email'])
         if last_payment and last_payment.get('subscription_id'):
