@@ -433,7 +433,9 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         # only ever be wrong for this tier.
                         pass
                     elif complimentary_now:
-                        subscription_status = 'complimentary'
+                        # 'complimentary_short' (a month to six months)
+                        # ends with the new-reader price, not the renewal.
+                        subscription_status = 'complimentary' if (grant.get('months') or 12) == 12 else 'complimentary_short'
                         granted_at, ends_at = grant.get('granted_at'), grant.get('ends_at')
                         subscription_start = _utc_iso(granted_at)
                         subscription_end = _utc_iso(ends_at)
@@ -517,7 +519,7 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         if last_payment and not last_payment.get('subscription_id'):
                             subscription_status = 'lapsed'
                             subscription_end = compute_synthetic_expiry(last_payment)
-                    elif not is_paid and grant and grant.get('ends_at'):
+                    elif not is_paid and grant and grant.get('ends_at') and (grant.get('months') or 12) == 12:
                         # A complimentary year that has ended: the account
                         # page offers the renewal rate, as for a former
                         # paying member.

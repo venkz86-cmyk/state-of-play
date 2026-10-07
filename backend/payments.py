@@ -188,6 +188,12 @@ async def record_payment(
     # agree. The charge date itself stays in razorpay_created_at.
     if plan == 'renewal' and access_from is None:
         access_from = await renewal_access_from(email, razorpay_created_at)
+    # A year bought during a complimentary membership starts when that
+    # ends (the shorter ones' ending letter says so).
+    elif plan == 'standard' and access_from is None:
+        grant_end = _grant_end_during(await complimentary_grant_for(email), razorpay_created_at)
+        if grant_end:
+            access_from = grant_end
 
     doc = {
         'payment_id': payment_id,
@@ -281,15 +287,25 @@ def _aware(value) -> Optional[datetime]:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+def _grant_end_during(grant: Optional[dict], paid_at: datetime) -> Optional[datetime]:
+    """The end of a complimentary membership that was running when this
+    payment was made, else None (an old payment imported later must not
+    be pushed past a comp given after it)."""
+    if not grant:
+        return None
+    granted, ends = _aware(grant.get('granted_at')), _aware(grant.get('ends_at'))
+    if granted and ends and granted <= paid_at < ends:
+        return ends
+    return None
+
+
 async def renewal_access_from(email: str, paid_at: datetime) -> datetime:
     """When a renewal paid at paid_at starts: the end of the member's
     current year if that's still ahead, otherwise the payment date. The
     current year is their last payment's, or a complimentary year's when
     that ends later."""
-    ends = [_aware(compute_synthetic_expiry(await get_last_payment_for_email(email)))]
-    grant = await complimentary_grant_for(email)
-    if grant:
-        ends.append(_aware(grant.get('ends_at')))
+    ends = [_aware(compute_synthetic_expiry(await get_last_payment_for_email(email))),
+            _grant_end_during(await complimentary_grant_for(email), paid_at)]
     later = [end for end in ends if end and end > paid_at]
     return max(later) if later else paid_at
 

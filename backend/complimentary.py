@@ -47,6 +47,31 @@ LABEL = 'complimentary'
 YEAR_DAYS = 365
 ENDING_SOON_DAYS = 30
 SIGN_IN_URL = 'https://www.stateofplay.club/login'
+SIGNUP_URL = 'https://www.stateofplay.club/signup?ref=complimentary'
+# The lengths Venkat can give, in months. A year ends with the ₹2,999
+# renewal offer; the shorter ones end with the new-reader price, and a
+# month gets its ending letter 7 days out instead of 14.
+LENGTHS = {1: 'month', 3: 'three months', 6: 'six months', 12: 'year'}
+SHORT_LETTER_DAYS = 7
+
+
+def months_of(grant: dict) -> int:
+    return grant.get('months') or 12
+
+
+def add_length(start: datetime, months: int) -> datetime:
+    """A year is 365 days, like a paid one; shorter lengths are calendar
+    months (7 Oct + 3 months = 7 Jan, 31 Jan + 1 month = 28 Feb)."""
+    if months == 12:
+        return start + timedelta(days=YEAR_DAYS)
+    month_index = start.month - 1 + months
+    year, month = start.year + month_index // 12, month_index % 12 + 1
+    for day in (start.day, 30, 29, 28):
+        try:
+            return start.replace(year=year, month=month, day=day)
+        except ValueError:
+            continue
+    return start + timedelta(days=30 * months)
 
 
 def init(db_handle):
@@ -84,13 +109,26 @@ def long_date(dt: datetime) -> str:
 
 # ─── Emails (Venkat's copy, proofread) ──────────────────────────────────────
 
-def welcome_email_html(name: str, ends_at: datetime, note: str = '') -> str:
+WELCOME_LINE = {
+    1: 'I’ve set up a complimentary month of The State of Play for you.',
+    3: 'I’ve set up three complimentary months of The State of Play for you.',
+    6: 'I’ve set up six complimentary months of The State of Play for you.',
+    12: 'I’ve set up a complimentary year of The State of Play for you.',
+}
+WELCOME_SUBJECT = {1: 'A month', 3: 'Three months', 6: 'Six months', 12: 'A year'}
+
+
+def welcome_subject(months: int = 12) -> str:
+    return f'{WELCOME_SUBJECT[months]} of The State of Play'
+
+
+def welcome_email_html(name: str, ends_at: datetime, note: str = '', months: int = 12) -> str:
     personal = f'<p>{escape(note.strip())}</p>' if note and note.strip() else ''
     return email_shell(
-        'A year of <em style="font-style: italic;">The State of Play.</em>',
+        f'{WELCOME_SUBJECT[months]} of <em style="font-style: italic;">The State of Play.</em>',
         (
             f'<p>Dear {escape(first_name(name))},</p>'
-            '<p>I’ve set up a complimentary year of The State of Play for you.</p>'
+            f'<p>{WELCOME_LINE[months]}</p>'
             '<p>You’ll receive one reported story a week about the business of Indian sport, usually on '
             'Fridays, with access to the full archive whenever you want to catch up.</p>'
             + personal
@@ -115,6 +153,36 @@ def ending_email_html(name: str, ends_at: datetime, renew_url: str) -> str:
             '<p>The link below signs you in and takes you to your account, where you can renew. Renew before '
             f'{end} and the new year starts when this one ends.</p>'
             + email_cta_button('Renew for a second year &rarr;', renew_url)
+        ),
+    )
+
+
+NEW_READER_PRICE = ('a year of The State of Play is ₹3,499 + GST (₹4,129 in all), or $169 outside India.')
+
+
+def short_ending_email_html(name: str, ends_at: datetime, months: int) -> str:
+    end = long_date(ends_at)
+    period = 'The month I gave you ends' if months == 1 else f'The {LENGTHS[months]} I gave you end'
+    return email_shell(
+        f'Your complimentary membership <em style="font-style: italic;">ends on {end}.</em>',
+        (
+            f'<p>Dear {escape(first_name(name))},</p>'
+            f'<p>{period} on {end}.</p>'
+            f'<p>If you’d like to keep reading, {NEW_READER_PRICE}</p>'
+            f'<p>Subscribe before {end} and your year starts when this one ends.</p>'
+            + email_cta_button('Subscribe for a year &rarr;', SIGNUP_URL)
+        ),
+    )
+
+
+def short_ended_email_html(name: str) -> str:
+    return email_shell(
+        'Your complimentary membership <em style="font-style: italic;">has ended.</em>',
+        (
+            f'<p>Dear {escape(first_name(name))},</p>'
+            '<p>Your complimentary membership ended today, and you can still read everything for seven more '
+            f'days. After that, {NEW_READER_PRICE}</p>'
+            + email_cta_button('Subscribe for a year &rarr;', SIGNUP_URL)
         ),
     )
 
@@ -158,6 +226,7 @@ class GrantRequest(BaseModel):
     email: str
     name: str = ''
     note: str = ''
+    months: int = 12
 
 
 def _status(grant: dict, now: datetime, renewed: bool) -> str:
@@ -190,6 +259,8 @@ async def grant_complimentary_year(req: GrantRequest, _admin: None = Depends(req
     email = (req.email or '').lower().strip()
     if '@' not in email or '.' not in email.split('@')[-1] or ' ' in email:
         raise HTTPException(status_code=400, detail='Enter a valid email address.')
+    if req.months not in LENGTHS:
+        raise HTTPException(status_code=400, detail='Choose a month, three months, six months or a year.')
     token = _create_ghost_admin_token()
     if not token:
         raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
@@ -202,26 +273,27 @@ async def grant_complimentary_year(req: GrantRequest, _admin: None = Depends(req
     now = datetime.now(timezone.utc)
     existing = await _db.complimentary_grants.find_one({'email': email})
     current_end = _aware(existing.get('ends_at')) if existing else None
-    # Giving a second year extends the first instead of overlapping it.
+    # Giving more time extends what they have instead of overlapping it.
     start = current_end if current_end and current_end > now else now
-    ends_at = start + timedelta(days=YEAR_DAYS)
+    ends_at = add_length(start, req.months)
 
     ghost_comp = await _set_ghost_comp(member['id'], ends_at, token)
-    entry = {'granted_at': now, 'ends_at': ends_at, 'note': req.note.strip()}
+    entry = {'granted_at': now, 'ends_at': ends_at, 'months': req.months, 'note': req.note.strip()}
     await _db.complimentary_grants.update_one(
         {'email': email},
         {'$set': {'email': email, 'name': name, 'ends_at': ends_at, 'ghost_comp': ghost_comp,
-                  'ghost_member_id': member['id'], 'last_granted_at': now},
+                  'ghost_member_id': member['id'], 'last_granted_at': now, 'months': req.months},
          '$setOnInsert': {'granted_at': now},
          '$push': {'history': entry}},
         upsert=True,
     )
     sent = await send_email(
-        to=email, subject='A year of The State of Play',
-        html=welcome_email_html(name, ends_at, req.note),
+        to=email, subject=welcome_subject(req.months),
+        html=welcome_email_html(name, ends_at, req.note, req.months),
     )
     logger.info(f'complimentary: {email} until {ends_at.date()} (ghost comp {ghost_comp}, email {sent})')
     return {'email': email, 'name': name, 'ends_at': ends_at.isoformat(), 'ghost_comp': ghost_comp,
+            'months': req.months,
             'email_sent': sent, 'extended': bool(current_end and current_end > now)}
 
 
@@ -239,6 +311,7 @@ async def list_complimentary_years(_admin: None = Depends(require_admin_key_or_s
             'granted_at': _aware(g.get('granted_at')).isoformat() if g.get('granted_at') else None,
             'ends_at': ends_at.isoformat() if ends_at else None,
             'ghost_comp': bool(g.get('ghost_comp')), 'status': _status(g, now, renewed),
+            'months': months_of(g), 'length': LENGTHS.get(months_of(g), 'year'),
         })
     grants.sort(key=lambda g: g['ends_at'] or '')
     return {'grants': grants}
@@ -262,11 +335,13 @@ async def complimentary_sweep(now: datetime, dry_run: bool, token: str, *, remin
         if not ends_at:
             continue
         days = (ends_at - now).total_seconds() / 86400
-        if days > reminder_days:
+        months = months_of(g)
+        if days > (SHORT_LETTER_DAYS if months == 1 else reminder_days):
             continue
         renewed = await _renewed_since(email, g.get('last_granted_at') or g.get('granted_at'))
         person = {'email': email, 'name': g.get('name') or '', 'year_ends': ends_at.isoformat(),
-                  'days': round(days, 1), 'still_comped': False, 'complimentary': True}
+                  'days': round(days, 1), 'still_comped': False, 'complimentary': True,
+                  'length': LENGTHS.get(months, 'year')}
 
         if days <= -grace_days:
             # The label comes off even after a renewal: their paid labels
@@ -290,8 +365,12 @@ async def complimentary_sweep(now: datetime, dry_run: bool, token: str, *, remin
                 continue
             out['letter'].append(person)
             if not dry_run:
-                await send_email(to=email, subject=f'Your year of The State of Play ends on {long_date(ends_at)}',
-                                 html=ending_email_html(g.get('name') or '', ends_at, renew_url))
+                if months == 12:
+                    await send_email(to=email, subject=f'Your year of The State of Play ends on {long_date(ends_at)}',
+                                     html=ending_email_html(g.get('name') or '', ends_at, renew_url))
+                else:
+                    await send_email(to=email, subject=f'Your complimentary membership ends on {long_date(ends_at)}',
+                                     html=short_ending_email_html(g.get('name') or '', ends_at, months))
                 await notices.update_one({'email': email, 'expiry': expiry_iso},
                                          {'$set': {'reminder_sent': now}}, upsert=True)
             continue
@@ -299,8 +378,12 @@ async def complimentary_sweep(now: datetime, dry_run: bool, token: str, *, remin
             continue
         out['lapsed_note'].append(person)
         if not dry_run:
-            from annual_renewal import _grace_email_html
-            await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
+            if months == 12:
+                from annual_renewal import _grace_email_html
+                await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
+            else:
+                await send_email(to=email, subject='Your complimentary membership has ended',
+                                 html=short_ended_email_html(g.get('name') or ''))
             await notices.update_one({'email': email, 'expiry': expiry_iso},
                                      {'$set': {'grace_sent': now}}, upsert=True)
     return out

@@ -11,10 +11,19 @@ const STATUS_TONE = {
   renewed: 'var(--accent-blue)', ended: 'var(--text-muted)',
 };
 
+// The lengths complimentary.py accepts, in months.
+const LENGTHS = [
+  { months: 12, label: 'A year', phrase: 'a year' },
+  { months: 6, label: 'Six months', phrase: 'six months' },
+  { months: 3, label: 'Three months', phrase: 'three months' },
+  { months: 1, label: 'A month', phrase: 'a month' },
+];
+
 const columns = [
   { key: 'name', label: 'Name', sortable: true, render: (r) => r.name || '—' },
   { key: 'email', label: 'Email', sortable: true },
-  { key: 'ends_at', label: 'Year ends', sortable: true, align: 'right', render: (r) => formatDate(r.ends_at) },
+  { key: 'length', label: 'Length', sortable: true, render: (r) => r.length || 'year' },
+  { key: 'ends_at', label: 'Ends', sortable: true, align: 'right', render: (r) => formatDate(r.ends_at) },
   {
     key: 'status', label: 'Status', sortable: true,
     render: (r) => <span style={{ color: STATUS_TONE[r.status] }}>{r.status}</span>,
@@ -27,6 +36,8 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
+  const [months, setMonths] = useState(12);
+  const length = LENGTHS.find((l) => l.months === months);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -46,12 +57,12 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
   const give = async (e) => {
     e.preventDefault();
     const who = name.trim() || email.trim();
-    if (!window.confirm(`Give ${who} a year of The State of Play and send them your note?`)) return;
+    if (!window.confirm(`Give ${who} ${length.phrase} of The State of Play and send them your note?`)) return;
     setBusy(true); setError(''); setResult(null);
     try {
       const data = await adminFetch('/api/admin/complimentary', {
         method: 'POST',
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), note: note.trim() }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), note: note.trim(), months }),
       });
       setResult(data);
       setName(''); setEmail(''); setNote('');
@@ -82,6 +93,24 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
               className={`${field} mt-1 normal-case tracking-normal`} data-testid="comp-email" />
           </label>
         </div>
+        <fieldset className="mb-6">
+          <legend className={`${label} mb-2`}>How long</legend>
+          <div className="flex flex-wrap gap-2" data-testid="comp-length">
+            {LENGTHS.map((l) => (
+              <button
+                key={l.months} type="button" onClick={() => setMonths(l.months)}
+                aria-pressed={months === l.months} data-testid={`comp-length-${l.months}`}
+                className={`font-plex text-[13px] px-4 h-9 border transition-colors ${
+                  months === l.months
+                    ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]'
+                    : 'border-[var(--rule)] text-[var(--text-muted)] hover:text-[var(--text)]'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
         <label className={`${label} mb-6`}>
           A line from you (optional)
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={400}
@@ -89,12 +118,14 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
             className={`${field} mt-1 normal-case tracking-normal resize-y`} data-testid="comp-note" />
         </label>
         <p className="font-plex text-[13px] text-[var(--text-muted)] mb-5">
-          They can read everything straight away, for 365 days. If they already have a complimentary year, this adds
-          a year to it.
+          They can read everything straight away, for {length.phrase}. If they already have a complimentary
+          membership, this adds to it. {months === 12
+            ? 'At the end they’re offered the ₹2,999 renewal.'
+            : 'At the end they’re offered a year at the new-reader price, ₹3,499 + GST.'}
         </p>
         <button type="submit" disabled={busy} data-testid="comp-submit"
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-11 px-6 disabled:opacity-50">
-          {busy ? 'Giving…' : 'Give a year'}
+          {busy ? 'Giving…' : `Give ${length.phrase}`}
         </button>
         {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)] mt-4">{error}</p>}
         {result && (
@@ -114,15 +145,15 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
         )}
       </form>
 
-      <p className="section-label text-[var(--text-label)] block mb-3">Complimentary years</p>
+      <p className="section-label text-[var(--text-label)] block mb-3">Complimentary memberships</p>
       {grants === null ? (
         <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>
       ) : (
         <DataTable columns={columns} rows={grants} rowKey={(r) => r.email} emptyMessage="None given yet." />
       )}
       <p className="font-plex text-[13px] text-[var(--text-muted)] mt-4 max-w-[64ch]">
-        Fourteen days before a year ends they get a note with the ₹2,999 renewal offer, then the lapsed note on the
-        day. A week later their access ends, unless they’ve renewed.
+        Before it ends they get a note with the offer: 14 days before, or 7 for a month. Another note follows on the
+        day, and a week later their access ends unless they’ve paid.
       </p>
     </div>
   );

@@ -94,7 +94,7 @@ export const AccountMockup = () => {
           : details?.subscription_status === 'nomination'
             ? 'Trial'
             : details?.subscription_status === 'comped' ? 'Comped'
-              : details?.subscription_status === 'complimentary' ? 'Complimentary' : 'Annual')
+              : ['complimentary', 'complimentary_short'].includes(details?.subscription_status) ? 'Complimentary' : 'Annual')
       : 'Free';
 
   // A Razorpay member's own subscription_status now distinguishes a real
@@ -106,7 +106,10 @@ export const AccountMockup = () => {
   // Whether to show the Renew block (lib/renewal.js).
   const renewal = renewalOffer(details);
   const complimentary = details?.subscription_status === 'complimentary';
-  const dateLabel = autoRenews ? 'Renews' : complimentary ? 'Ends' : 'Expires';
+  // A shorter complimentary membership (a month to six months) ends with
+  // a year at the new-reader price, not the renewal rate.
+  const complimentaryShort = details?.subscription_status === 'complimentary_short';
+  const dateLabel = autoRenews ? 'Renews' : (complimentary || complimentaryShort) ? 'Ends' : 'Expires';
   const endDate = longDate(details?.subscription_end);
   const memberSince = longDate(details?.subscription_start || details?.created_at);
   const paidInUsd = details?.last_payment_currency === 'USD';
@@ -128,9 +131,11 @@ export const AccountMockup = () => {
   const renewalNote = isStudent
     ? 'Not automatic. We\'ll be in touch before it ends.'
     : 'Not automatic. We email you 14 days before it ends.';
-  const renewalTile = paidOnce
-    ? ['Renewal', renewalPrice[0], [renewalPrice[1], renewalNote].filter(Boolean)]
-    : ['Next charge', nextCharge, nextChargeDetail];
+  const renewalTile = complimentaryShort
+    ? ['Then', paidInUsd ? '$169 a year' : '₹4,129 a year', [paidInUsd ? null : '₹3,499 + ₹630 GST', 'Not automatic. We email you before it ends.'].filter(Boolean)]
+    : paidOnce
+      ? ['Renewal', renewalPrice[0], [renewalPrice[1], renewalNote].filter(Boolean)]
+      : ['Next charge', nextCharge, nextChargeDetail];
 
   // The member's real last payment, not a fixed price: students, renewals,
   // teams and new signups all pay different amounts.
