@@ -4,7 +4,6 @@ import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, daysUntil } from '../../lib/format';
 import { useCountDelta } from '../../lib/useCountDelta';
-import { LinkPaymentEmail } from './LinkPaymentEmail';
 
 const TIER_LABEL = {
   standard: 'Annual', student: 'Student', trial: 'Trial',
@@ -50,8 +49,6 @@ export const SubscribersPanel = ({ onAuthError }) => {
   const [driftOnly, setDriftOnly] = useState(false);
   const [downgradedOnly, setDowngradedOnly] = useState(false);
 
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => {
     let active = true;
     (async () => {
@@ -64,7 +61,7 @@ export const SubscribersPanel = ({ onAuthError }) => {
       }
     })();
     return () => { active = false; };
-  }, [onAuthError, reloadKey]);
+  }, [onAuthError]);
 
   const onRowClick = async (row) => {
     const key = row.email;
@@ -136,7 +133,6 @@ export const SubscribersPanel = ({ onAuthError }) => {
 
   return (
     <div>
-      <LinkPaymentEmail onAuthError={onAuthError} onLinked={() => setReloadKey((k) => k + 1)} />
       <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-6">
         <KPITile
           label="Total members"

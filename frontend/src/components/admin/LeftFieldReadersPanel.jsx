@@ -68,11 +68,8 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
   };
 
   return (
-    <div className="border border-[var(--rule)] p-6 max-w-[480px] mt-6" data-testid="left-field-readers">
-      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
-        Left Field readers
-      </p>
-      <p className="font-plex text-[13px] text-[var(--text-muted)] mb-3">
+    <div className="max-w-[640px]" data-testid="left-field-readers">
+      <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
         Upload the subscriber export from Substack (Settings → Exports). Readers who signed up before 6 October can
         then subscribe at ₹2,499 + GST until 31 October through stateofplay.club/signup?offer=left-field. Uploading a
         newer export only adds the new emails.
@@ -106,8 +103,8 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
         </p>
       )}
       {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-3">{error}</p>}
-      <div className="flex flex-wrap gap-x-6 gap-y-3">
-      <label className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 cursor-pointer">
+      <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
+        <label className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 cursor-pointer">
         {busy ? 'Working…' : 'Upload Substack export →'}
         <input type="file" accept=".csv,text/csv,text/plain" onChange={upload} disabled={busy} className="sr-only" data-testid="left-field-file" />
       </label>
