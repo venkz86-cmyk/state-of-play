@@ -40,20 +40,16 @@ export const BackfillPanel = ({ onAuthError }) => {
   };
 
   return (
-    <div className="border border-[var(--rule)] p-6 max-w-[480px]">
-      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
-        Historical payments
-      </p>
+    <div className="max-w-[640px]" data-testid="import-past-payments">
       {status?.last_run_at ? (
-        <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4">
-          Last run {formatDateTime(status.last_run_at)} — {status.recorded ?? 0} recorded,{' '}
+        <p className="font-plex text-[14px] text-[var(--text)] mb-5">
+          Last run {formatDateTime(status.last_run_at)}: {status.recorded ?? 0} added,{' '}
           {status.skipped_existing ?? 0} already known
           {status.unmatched_email_count ? `, ${status.unmatched_email_count} with no email` : ''}.
         </p>
       ) : (
-        <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4">
-          Never run. Only sees whichever mode (test or live) Razorpay's configured keys are in — pulls what's already
-          there, safe to re-run any time.
+        <p className="font-plex text-[14px] text-[var(--text)] mb-5">
+          Never run. It reads whichever Razorpay mode (test or live) the site's keys are in.
         </p>
       )}
       {error && (
@@ -65,7 +61,7 @@ export const BackfillPanel = ({ onAuthError }) => {
         disabled={running}
         className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60"
       >
-        {running ? 'Running…' : 'Run backfill →'}
+        {running ? 'Importing…' : 'Import past payments →'}
       </button>
     </div>
   );

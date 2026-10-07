@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate } from '../../lib/format';
-import { BackfillPanel } from './BackfillPanel';
-import { LeftFieldReadersPanel } from './LeftFieldReadersPanel';
 
 // Phase 6, the checkpoint the whole build was aimed at: one page that
 // answers "who's subscribed, what did they pay, what's expiring, what
@@ -42,123 +40,122 @@ export const OverviewPanel = ({ onAuthError }) => {
 
   const attentionItems = [
     attention.pending_comments > 0 && {
-      key: 'comments',
-      text: `${attention.pending_comments} comment${attention.pending_comments === 1 ? '' : 's'} waiting on review`,
-      path: 'comments',
+      key: 'comments', count: attention.pending_comments, path: 'comments',
+      text: `${attention.pending_comments === 1 ? 'comment' : 'comments'} waiting for review`,
     },
     attention.expired_but_still_paid.length > 0 && {
-      key: 'expired',
-      text: `${kpis.expired_but_still_paid} subscriber${kpis.expired_but_still_paid === 1 ? '' : 's'} carrying a paid label past their computed expiry`,
-      path: 'subscribers',
+      key: 'expired', count: kpis.expired_but_still_paid, path: 'subscribers',
+      text: `${kpis.expired_but_still_paid === 1 ? 'member' : 'members'} still labelled paid after their year ended`,
     },
     attention.expiring_7d.length > 0 && {
-      key: 'expiring',
-      text: `${attention.expiring_7d.length} subscriber${attention.expiring_7d.length === 1 ? '' : 's'} expiring within 7 days`,
-      path: 'renewals',
+      key: 'expiring', count: attention.expiring_7d.length, path: 'renewals',
+      text: `${attention.expiring_7d.length === 1 ? 'member whose year ends' : 'members whose year ends'} in the next 7 days`,
     },
     attention.ghost_status_downgraded.length > 0 && {
-      key: 'ghost-downgraded',
-      text: `${kpis.ghost_status_downgraded} paying subscriber${kpis.ghost_status_downgraded === 1 ? '' : 's'} downgraded to Ghost's free status`,
-      path: 'subscribers',
+      key: 'ghost-downgraded', count: kpis.ghost_status_downgraded, path: 'subscribers',
+      text: `paying ${kpis.ghost_status_downgraded === 1 ? 'member' : 'members'} Ghost shows as free`,
     },
   ].filter(Boolean);
 
+  const num = (n) => (n ?? 0).toLocaleString('en-IN');
+  const label = 'section-label text-[var(--text-label)] block mb-3';
+
   return (
-    <div>
-      <h2 className="font-editorial font-semibold text-[22px] leading-tight mb-6">
-        Signed in.
-      </h2>
+    <div data-testid="admin-today">
+      <section className="mb-12" data-testid="today-needs-you">
+        <p className={label}>Needs you</p>
+        {attentionItems.length === 0 ? (
+          <p className="font-plex text-[15px] text-[var(--text-muted)] border-y border-[var(--rule)] py-5">
+            Nothing needs you today.
+          </p>
+        ) : (
+          <ul className="border-t border-[var(--rule)]">
+            {attentionItems.map((item) => (
+              <li key={item.key} className="border-b border-[var(--rule)]">
+                <button
+                  type="button"
+                  onClick={() => goTo(item.path)}
+                  className="w-full flex items-center gap-5 py-4 text-left group"
+                >
+                  <span className="font-editorial text-[32px] leading-none text-[var(--accent-burgundy)] tabular-nums min-w-[2.5ch]">
+                    {item.count}
+                  </span>
+                  <span className="font-plex text-[15px] flex-1">{item.text}</span>
+                  <span className="font-plex text-[13px] text-[var(--text-muted)] group-hover:text-[var(--accent-burgundy)] shrink-0">
+                    Open →
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-8">
-        <KPITile label="Subscribers" value={kpis.total_subscribers} sublabel={`${kpis.paid} paid, ${kpis.free} free`} />
-        <KPITile label="Revenue, 30 days" value={`${formatCurrency(kpis.revenue_30d.INR, 'INR')} / ${formatCurrency(kpis.revenue_30d.USD, 'USD')}`} bordered />
-        <KPITile label="Revenue, 365 days" value={`${formatCurrency(kpis.revenue_365d.INR, 'INR')} / ${formatCurrency(kpis.revenue_365d.USD, 'USD')}`} bordered />
-        <KPITile label="Corporate accounts" value={kpis.corporate_accounts} bordered />
-      </div>
-      <div className="border-b border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-8">
-        <KPITile label="Active trials" value={kpis.active_trials} />
-        <KPITile label="Active nominations" value={kpis.active_nominations} bordered />
-        <KPITile label="Expiring in 30 days" value={kpis.expiring_30d} bordered />
-        <KPITile
-          label="Paid but past expiry"
-          value={kpis.expired_but_still_paid}
-          bordered
-          accent={kpis.expired_but_still_paid > 0}
-        />
-      </div>
-      <div className="border-b border-[var(--rule)] grid grid-cols-2 md:grid-cols-4 mb-8">
-        <KPITile
-          label="Free readers who converted"
-          value={kpis.free_to_paid_conversions}
-          sublabel="signed up free, later paid"
-        />
-      </div>
-
-      <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
-        Needs attention
-      </p>
-      {attentionItems.length === 0 ? (
-        <p className="font-plex text-[14px] text-[var(--text-muted)] mb-10">
-          Nothing needs your attention right now.
-        </p>
-      ) : (
-        <ul className="mb-10">
-          {attentionItems.map((item) => (
-            <li key={item.key} className="border-b border-[var(--rule)] py-3 flex items-center justify-between gap-4">
-              <span className="font-plex text-[14px]">{item.text}</span>
-              <button
-                type="button"
-                onClick={() => goTo(item.path)}
-                className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 shrink-0"
-              >
-                Review →
-              </button>
-            </li>
+      <section className="mb-6" data-testid="today-numbers">
+        <p className={label}>The numbers</p>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-px bg-[var(--rule)] border border-[var(--rule)]">
+          {[
+            ['Subscribers', num(kpis.total_subscribers), `${num(kpis.paid)} paid, ${num(kpis.free)} free`],
+            ['Revenue, 30 days', formatCurrency(kpis.revenue_30d.INR, 'INR'), `and ${formatCurrency(kpis.revenue_30d.USD, 'USD')}`],
+            ['Revenue, 365 days', formatCurrency(kpis.revenue_365d.INR, 'INR'), `and ${formatCurrency(kpis.revenue_365d.USD, 'USD')}`],
+            ['Expiring in 30 days', num(kpis.expiring_30d), 'annual members'],
+          ].map(([name, value, sub]) => (
+            <div key={name} className="bg-[var(--bg)] p-4 sm:p-5 lg:p-6 min-w-0">
+              <p className="font-plex text-[13px] text-[var(--text-muted)] mb-2">{name}</p>
+              <p className="font-editorial text-[22px] sm:text-[26px] lg:text-[30px] leading-none tabular-nums">{value}</p>
+              {sub && <p className="font-plex text-[12px] text-[var(--text-muted)] mt-2">{sub}</p>}
+            </div>
           ))}
-        </ul>
-      )}
+        </div>
+      </section>
+
+      <details className="mb-12 group" data-testid="today-more">
+        <summary className="cursor-pointer list-none font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--text)] py-2 select-none">
+          <span className="group-open:hidden">More numbers ↓</span>
+          <span className="hidden group-open:inline">Fewer numbers ↑</span>
+        </summary>
+        <div className="border-y border-[var(--rule)] grid grid-cols-2 md:grid-cols-5 mt-3">
+          <KPITile label="Corporate accounts" value={kpis.corporate_accounts} />
+          <KPITile label="In The Ten" value={kpis.active_trials} bordered />
+          <KPITile label="Nominated now" value={kpis.active_nominations} bordered />
+          <KPITile label="Paid but past expiry" value={kpis.expired_but_still_paid} bordered accent={kpis.expired_but_still_paid > 0} />
+          <KPITile label="Free readers who paid" value={kpis.free_to_paid_conversions} sublabel="signed up free, later paid" bordered />
+        </div>
+      </details>
 
       {attention.expired_but_still_paid.length > 0 && (
-        <div className="mb-10">
-          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
-            Paid label, expiry already passed
-          </p>
+        <section className="mb-10">
+          <p className={label}>Labelled paid, year already ended</p>
           <ul>
             {attention.expired_but_still_paid.map((r) => (
-              <li key={r.email} className="border-b border-[var(--rule)] py-2 flex items-center justify-between gap-4">
-                <span className="font-plex text-[13px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
+              <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
                 <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">{formatDate(r.computed_expiry)} · {r.expiry_source}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
 
       {attention.ghost_status_downgraded.length > 0 && (
-        <div className="mb-10">
-          <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-3">
-            Paid label, Ghost's own status shows free
-          </p>
-          <p className="font-plex text-[13px] text-[var(--text-muted)] mb-3">
-            Ghost's own complimentary-subscription grant expired on its own clock, unrelated to
-            the paid-via-razorpay label -- these readers still have full site access, but restore
-            their Ghost status by hand to the date shown.
+        <section className="mb-10">
+          <p className={label}>Paying, but Ghost shows free</p>
+          <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
+            Ghost's own comp ran out on its own clock. They still read everything on the site. Restore their Ghost
+            status by hand to the date shown.
           </p>
           <ul>
             {attention.ghost_status_downgraded.map((r) => (
-              <li key={r.email} className="border-b border-[var(--rule)] py-2 flex items-center justify-between gap-4">
-                <span className="font-plex text-[13px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
+              <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
                 <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">
                   restore to {r.restore_to_date ? formatDate(r.restore_to_date) : 'unknown (no payment on record)'}
                 </span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
-
-      <BackfillPanel onAuthError={onAuthError} />
-      <LeftFieldReadersPanel onAuthError={onAuthError} />
     </div>
   );
 };

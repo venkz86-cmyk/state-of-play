@@ -36,12 +36,10 @@ export const LinkPaymentEmail = ({ onAuthError, onLinked }) => {
   const field = 'bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[13px] py-1 w-[240px] focus:outline-none focus:border-[var(--accent-burgundy)]';
 
   return (
-    <form onSubmit={link} data-testid="link-payment-email" className="border-y border-[var(--rule)] py-5 mb-6">
-      <p className="font-editorial italic text-lg mb-1">Link a payment email</p>
-      <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4 max-w-[70ch]">
-        For someone who paid in Razorpay with a different email than the one they sign in with. Their payments
-        move onto their account, so their renewal date and emails work. If nothing is found, run the import of
-        past payments on the Overview tab first.
+    <form onSubmit={link} data-testid="link-payment-email" className="max-w-[720px]">
+      <p className="font-plex text-[14px] text-[var(--text-muted)] mb-6 max-w-[64ch]">
+        Their payments move onto their account, so their renewal date and emails work. If nothing is found, run
+        Import past payments first.
       </p>
       <div className="flex flex-wrap items-end gap-6">
         <label className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
@@ -64,7 +62,7 @@ export const LinkPaymentEmail = ({ onAuthError, onLinked }) => {
         <div data-testid="link-result" className="font-plex text-[13px] mt-3">
           {result.moved
             ? <p>Moved {result.moved} payment{result.moved === 1 ? '' : 's'} onto {account.trim().toLowerCase()}:</p>
-            : <p className="text-[var(--accent-burgundy)]">No payments found under {paidWith.trim().toLowerCase()}. Run the import of past payments on the Overview tab, then try again.</p>}
+            : <p className="text-[var(--accent-burgundy)]">No payments found under {paidWith.trim().toLowerCase()}. Run Import past payments (under Tools), then try again.</p>}
           {(result.payments || []).map((p) => (
             <p key={p.payment_id} className="text-[var(--text-muted)]">
               {formatDate(p.razorpay_created_at)} · {formatCurrency(p.amount, p.currency)} · {PLAN_LABEL[p.plan] || p.plan || 'Unknown plan'}
