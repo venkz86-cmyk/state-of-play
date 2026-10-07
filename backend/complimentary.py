@@ -90,12 +90,14 @@ def welcome_email_html(name: str, ends_at: datetime, note: str = '') -> str:
         'A year of <em style="font-style: italic;">The State of Play.</em>',
         (
             f'<p>Dear {escape(first_name(name))},</p>'
-            '<p>I’ve given you a year of The State of Play: one reported story a week on the business of '
-            'Indian sport, usually on Fridays, and the full archive.</p>'
+            '<p>I’ve set up a complimentary year of The State of Play for you.</p>'
+            '<p>You’ll receive one reported story a week about the business of Indian sport, usually on '
+            'Fridays, with access to the full archive whenever you want to catch up.</p>'
             + personal
-            + '<p>To start reading, sign in at stateofplay.club with this email address. We send you a code, so '
-            f'there’s no password to remember. Your year runs until {long_date(ends_at)}, and nothing is charged, '
-            'now or later.</p>'
+            + '<p>To start reading, go to stateofplay.club and sign in with this email address. We’ll send you a '
+            'one-time code, so there is no password to remember.</p>'
+            f'<p>Your complimentary membership runs until {long_date(ends_at)}. Nothing will be charged, now or '
+            'later.</p>'
             + email_cta_button('Start reading &rarr;', SIGN_IN_URL)
         ),
     )
