@@ -452,7 +452,25 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
         notice = await _db.annual_renewal_notices.find_one({'email': email, 'expiry': expiry_iso})
 
         if days_to_expiry <= 0:
-            if not notice or not notice.get('grace_sent'):
+            # Someone in their grace week who never got the renewal letter
+            # (the first renewals, before this sweep ran, or a payment made
+            # less than 14 days before its year ended) gets the letter in
+            # place of the short lapsed note: one email, not two.
+            if not notice or not (notice.get('reminder_sent') or notice.get('grace_sent')):
+                renewal_token = mint_renewal_link_token(email, member['id'])
+                renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
+                await send_email(
+                    to=email, subject='A second year of The State of Play',
+                    html=_reminder_email_html(expiry_dt.strftime('%d %B %Y'), renew_url),
+                )
+                await _db.annual_renewal_notices.update_one(
+                    {'email': email, 'expiry': expiry_iso},
+                    {'$set': {'reminder_sent': now, 'grace_sent': now}},
+                    upsert=True,
+                )
+                reminded += 1
+                continue
+            if not notice.get('grace_sent'):
                 renewal_token = mint_renewal_link_token(email, member['id'])
                 renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
                 await send_email(to=email, subject='Your membership has lapsed', html=_grace_email_html(renew_url))
