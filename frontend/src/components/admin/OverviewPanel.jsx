@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
-import { formatCurrency, formatDate } from '../../lib/format';
+import { formatCurrency, formatDate, formatDateTime } from '../../lib/format';
 
 // Phase 6, the checkpoint the whole build was aimed at: one page that
 // answers "who's subscribed, what did they pay, what's expiring, what
@@ -36,6 +36,8 @@ export const OverviewPanel = ({ onAuthError }) => {
   }
 
   const { kpis, attention } = data;
+  const run = data.renewal_run || { overdue: false };
+  const month = data.renewals_month;
   const goTo = (path) => navigate(`/admin/dashboard/${path}`);
 
   const attentionItems = [
@@ -55,7 +57,43 @@ export const OverviewPanel = ({ onAuthError }) => {
       key: 'ghost-downgraded', count: kpis.ghost_status_downgraded, path: 'subscribers',
       text: `paying ${kpis.ghost_status_downgraded === 1 ? 'member' : 'members'} Ghost shows as free`,
     },
+    attention.pending_students > 0 && {
+      key: 'students', count: attention.pending_students, path: 'students',
+      text: `student ${attention.pending_students === 1 ? 'application' : 'applications'} waiting for you`,
+    },
+    attention.comps_to_remove_count > 0 && {
+      key: 'comps', count: attention.comps_to_remove_count, path: 'renewals?tab=lapsed',
+      text: `lapsed ${attention.comps_to_remove_count === 1 ? 'member is' : 'members are'} still comped in Ghost`,
+    },
+    attention.unmatched_payments_count > 0 && {
+      key: 'unmatched', count: attention.unmatched_payments_count, path: 'tools/link-email',
+      text: `${attention.unmatched_payments_count === 1 ? 'payment' : 'payments'} with no Ghost account to match`,
+    },
+    (attention.email_failures || []).length > 0 && {
+      key: 'emails', count: attention.email_failures.length, anchor: 'today-email-failures',
+      text: `${attention.email_failures.length === 1 ? 'email' : 'emails'} that failed to send`,
+    },
   ].filter(Boolean);
+  if (run.overdue) {
+    attentionItems.unshift({
+      key: 'run', count: '!', path: 'renewals?tab=sweep', alert: true,
+      text: run.ran_at
+        ? `The nightly renewal run hasn’t happened since ${formatDateTime(run.ran_at)}. Check the cron on Render, or send from Renewal emails.`
+        : 'No renewal run on record yet. Check the cron on Render, or send from Renewal emails.',
+    });
+  }
+  const open = (item) => {
+    if (item.anchor) document.getElementById(item.anchor)?.scrollIntoView({ behavior: 'smooth' });
+    else goTo(item.path);
+  };
+  const clearFailures = async () => {
+    try {
+      await adminFetch('/api/admin/email-failures/dismiss', { method: 'POST' });
+      setData((d) => ({ ...d, attention: { ...d.attention, email_failures: [] } }));
+    } catch (e) {
+      if (e instanceof AdminAuthError) onAuthError?.();
+    }
+  };
 
   const num = (n) => (n ?? 0).toLocaleString('en-IN');
   const label = 'section-label text-[var(--text-label)] block mb-3';
@@ -74,13 +112,14 @@ export const OverviewPanel = ({ onAuthError }) => {
               <li key={item.key} className="border-b border-[var(--rule)]">
                 <button
                   type="button"
-                  onClick={() => goTo(item.path)}
+                  onClick={() => open(item)}
+                  data-testid={`needs-${item.key}`}
                   className="w-full flex items-center gap-5 py-4 text-left group"
                 >
                   <span className="font-editorial text-[32px] leading-none text-[var(--accent-burgundy)] tabular-nums min-w-[2.5ch]">
                     {item.count}
                   </span>
-                  <span className="font-plex text-[15px] flex-1">{item.text}</span>
+                  <span className={`font-plex text-[15px] flex-1 ${item.alert ? 'font-medium text-[var(--accent-burgundy)]' : ''}`}>{item.text}</span>
                   <span className="font-plex text-[13px] text-[var(--text-muted)] group-hover:text-[var(--accent-burgundy)] shrink-0">
                     Open →
                   </span>
@@ -90,6 +129,43 @@ export const OverviewPanel = ({ onAuthError }) => {
           </ul>
         )}
       </section>
+
+      {run.ran_at && !run.overdue && (
+        <p className="font-plex text-[14px] text-[var(--text-muted)] -mt-8 mb-12" data-testid="today-renewal-run">
+          Last renewal run, {formatDateTime(run.ran_at)}: {run.reminded} renewal{' '}
+          {run.reminded === 1 ? 'letter' : 'letters'}, {run.grace_started} lapsed{' '}
+          {run.grace_started === 1 ? 'note' : 'notes'}, {run.downgraded} paid{' '}
+          {run.downgraded === 1 ? 'label' : 'labels'} removed.
+        </p>
+      )}
+
+      {month && month.due > 0 && (
+        <section className="mb-12" data-testid="today-renewals">
+          <p className={label}>Renewals in {month.month}</p>
+          <div className="border border-[var(--rule)] p-5 lg:p-6">
+            <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2 mb-4">
+              <p className="font-editorial text-[30px] leading-none tabular-nums">
+                {month.renewed} <span className="text-[var(--text-muted)] text-[20px]">of {month.due} renewed</span>
+              </p>
+              <p className="font-plex text-[14px] text-[var(--text-muted)]">
+                {formatCurrency(month.collected.INR, 'INR')}
+                {month.collected.USD ? ` and ${formatCurrency(month.collected.USD, 'USD')}` : ''} collected
+              </p>
+            </div>
+            <div className="flex h-2 mb-4 bg-[var(--surface)]" aria-hidden="true">
+              {[['renewed', 'var(--accent-blue)'], ['upcoming', 'var(--rule)'], ['in_grace', 'var(--accent-burgundy)'], ['lapsed', 'var(--text-muted)']].map(([k, color]) => (
+                month[k] > 0 && <span key={k} style={{ width: `${(month[k] / month.due) * 100}%`, background: color }} />
+              ))}
+            </div>
+            <ul className="flex flex-wrap gap-x-6 gap-y-1 font-plex text-[13px] text-[var(--text-muted)]">
+              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--accent-blue)]" />{month.renewed} renewed</li>
+              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--rule)]" />{month.upcoming} still to come</li>
+              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--accent-burgundy)]" />{month.in_grace} in their grace week</li>
+              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--text-muted)]" />{month.lapsed} lapsed</li>
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="mb-6" data-testid="today-numbers">
         <p className={label}>The numbers</p>
@@ -131,6 +207,66 @@ export const OverviewPanel = ({ onAuthError }) => {
               <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
                 <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">{formatDate(r.computed_expiry)} · {r.expiry_source}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(attention.comps_to_remove || []).length > 0 && (
+        <section className="mb-10" data-testid="today-comps">
+          <p className={label}>Still comped in Ghost, grace week over</p>
+          <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
+            Their year ended more than seven days ago and they haven’t renewed. Remove the comp in Ghost when you’re ready.
+          </p>
+          <ul>
+            {attention.comps_to_remove.map((r) => (
+              <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
+                <span className="font-plex text-[13px] text-[var(--text-muted)]">year ended {formatDate(r.year_ended)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(attention.unmatched_payments || []).length > 0 && (
+        <section className="mb-10" data-testid="today-unmatched">
+          <p className={label}>Payments with no Ghost account</p>
+          <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
+            Usually someone who paid with a different email than the one they read with. Find their account email and
+            use <button type="button" onClick={() => goTo('tools/link-email')} className="underline underline-offset-4 hover:text-[var(--accent-burgundy)]">Link a payment email</button>.
+          </p>
+          <ul>
+            {attention.unmatched_payments.map((r) => (
+              <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="font-plex text-[14px]">{r.email}</span>
+                <span className="font-plex text-[13px] text-[var(--text-muted)]">
+                  {r.paid_at ? formatDate(r.paid_at) : ''}{r.amount ? ` · ${formatCurrency(r.amount, r.currency)}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(attention.email_failures || []).length > 0 && (
+        <section className="mb-10" id="today-email-failures" data-testid="today-email-failures">
+          <div className="flex items-baseline justify-between gap-4">
+            <p className={label}>Emails that failed to send, last 14 days</p>
+            <button type="button" onClick={clearFailures} data-testid="clear-email-failures"
+              className="font-plex text-[13px] text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] shrink-0">
+              Clear the list
+            </button>
+          </div>
+          <ul>
+            {attention.email_failures.map((f) => (
+              <li key={f.id} className="border-b border-[var(--rule)] py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                  <span className="font-plex text-[14px]">{f.subject} <span className="text-[var(--text-muted)]">to {f.to}</span></span>
+                  <span className="font-plex text-[13px] text-[var(--text-muted)]">{f.at ? formatDateTime(f.at) : ''}</span>
+                </div>
+                <p className="font-plex text-[12px] text-[var(--text-muted)] mt-1 break-words">{f.reason}</p>
               </li>
             ))}
           </ul>

@@ -2507,7 +2507,8 @@ except Exception as _e:
 # corporate subs' Sheets/Slack/Gmail-draft machinery stays on Apps Script,
 # untouched — this is scoped to email-sending only).
 try:
-    from resend_email import router as resend_email_router
+    from resend_email import router as resend_email_router, init as resend_email_init
+    resend_email_init(db)
     app.include_router(resend_email_router)
 except Exception as _e:
     logging.warning(f"resend_email module not mounted: {_e!r}")
