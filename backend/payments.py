@@ -36,6 +36,8 @@ server.py already has.
 from __future__ import annotations
 
 import asyncio
+import csv
+import io
 import logging
 import re
 from datetime import datetime, timedelta, timezone
@@ -72,6 +74,7 @@ async def _ensure_indexes():
         await _db.payments.create_index('payment_id', unique=True)
         await _db.payments.create_index('email')
         await _db.payments.create_index('razorpay_created_at')
+        await _db.left_field_readers.create_index('email', unique=True)
     except Exception as e:
         logger.warning(f'payments index ensure failed (non-fatal): {e!r}')
 
@@ -467,7 +470,7 @@ def compute_synthetic_expiry(last_payment: Optional[dict]) -> Optional[str]:
 SIGNUP_SOURCES = {
     'story-email-gate', 'left-field-form', 'signup-page', 'paywall',
     'trial-page', 'trial-via-paywall', 'trial-via-home', 'trial-via-signup', 'trial-upgrade-page', 'account-ten-panel', 'account-renew', 'renew-page',
-    'student-pay-link', 'gift-page', 'teams-page',
+    'student-pay-link', 'gift-page', 'teams-page', 'left-field-offer',
 }
 _TAG_CLEAN = re.compile(r'[^a-z0-9-]+')
 
@@ -716,6 +719,131 @@ async def link_payment_email(
                       'razorpay_created_at': _iso(doc.get('razorpay_created_at'))})
     logger.info(f'link-email: moved {len(moved)} payment(s) from {paid_with!r} to {account!r}')
     return {'moved': len(moved), 'payments': moved}
+
+
+# The Left Field's readers on Substack, uploaded from Substack's subscriber
+# export. Readers who signed up before 6 October get the existing-reader
+# rate until 31 October like Ghost's own free readers do
+# (session_auth.existing_reader_rate_until), most of them without a Ghost
+# account to sign in with.
+LEFT_FIELD_JOINED_BEFORE = datetime(2026, 10, 6, tzinfo=timezone(timedelta(hours=5, minutes=30)))
+_DATE_FORMATS = ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M',
+                 '%m/%d/%Y', '%d/%m/%Y', '%b %d, %Y', '%B %d, %Y', '%d %b %Y', '%d %B %Y')
+
+
+def _parse_export_date(value: str) -> Optional[datetime]:
+    value = (value or '').strip()
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        parsed = None
+        for fmt in _DATE_FORMATS:
+            try:
+                parsed = datetime.strptime(value, fmt)
+                break
+            except ValueError:
+                continue
+    if parsed and parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def parse_left_field_export(text: str) -> dict:
+    """{'readers': [(email, subscribed_at or None)], 'too_recent': n,
+    'date_column': name or None} from a Substack subscriber CSV. The
+    email column is whichever header contains 'email'; the signup date
+    is the first header that looks like one ('created', 'subscri…',
+    'date'), if any. Rows dated on or after 6 October are left out."""
+    rows = list(csv.reader(io.StringIO(text or '')))
+    if not rows:
+        return {'readers': [], 'too_recent': 0, 'date_column': None}
+    headers = [h.strip().lower() for h in rows[0]]
+    email_col = next((i for i, h in enumerate(headers) if 'email' in h and 'disabled' not in h), None)
+    if email_col is None:
+        # A bare list of emails with no header row.
+        email_col, data = 0, rows
+        date_col = None
+    else:
+        data = rows[1:]
+        date_col = next((i for i, h in enumerate(headers) if i != email_col and any(
+            k in h for k in ('created', 'subscri', 'date', 'joined', 'start'))), None)
+    readers, seen, too_recent = [], set(), 0
+    for row in data:
+        if email_col >= len(row):
+            continue
+        email = row[email_col].lower().strip()
+        if not _EMAIL_RE.match(email) or email in seen:
+            continue
+        joined = _parse_export_date(row[date_col]) if date_col is not None and date_col < len(row) else None
+        if joined and joined >= LEFT_FIELD_JOINED_BEFORE:
+            too_recent += 1
+            continue
+        seen.add(email)
+        readers.append((email, joined))
+    return {'readers': readers, 'too_recent': too_recent,
+            'date_column': rows[0][date_col].strip() if date_col is not None else None}
+
+
+async def is_left_field_reader(email: str) -> bool:
+    if _db is None or not email:
+        return False
+    return await _db.left_field_readers.find_one({'email': email.lower().strip()}) is not None
+
+
+class LeftFieldImportRequest(BaseModel):
+    csv: str
+
+
+@router.post('/api/admin/left-field-readers/import')
+async def import_left_field_readers(
+    req: LeftFieldImportRequest,
+    _admin: None = Depends(require_admin_key_or_session),
+):
+    """Adds the readers in a Substack export to the list. Uploading a
+    newer export later only adds the emails not already on it."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    parsed = parse_left_field_export(req.csv)
+    if not parsed['readers']:
+        raise HTTPException(status_code=400, detail='No email addresses found in that file.')
+    existing = set()
+    async for doc in _db.left_field_readers.find({}, {'email': 1}):
+        existing.add(doc.get('email'))
+    now = datetime.now(timezone.utc)
+    new_docs = [{'email': e, 'subscribed_at': joined, 'imported_at': now}
+                for e, joined in parsed['readers'] if e not in existing]
+    if new_docs:
+        try:
+            await _db.left_field_readers.insert_many(new_docs, ordered=False)
+        except Exception as e:
+            # Only a duplicate from two uploads at once can land here
+            # (unique index on email); every other row still went in.
+            logger.warning(f'left-field import: some rows not inserted: {e!r}')
+    total = len(existing) + len(new_docs)
+    logger.info(f'left-field import: {len(new_docs)} added, {len(parsed["readers"]) - len(new_docs)} '
+                f'already listed, {parsed["too_recent"]} too recent; {total} on the list')
+    return {
+        'added': len(new_docs),
+        'already_listed': len(parsed['readers']) - len(new_docs),
+        'too_recent': parsed['too_recent'],
+        'date_column': parsed['date_column'],
+        'total': total,
+    }
+
+
+@router.get('/api/admin/left-field-readers/status')
+async def left_field_readers_status(_admin: None = Depends(require_admin_key_or_session)):
+    if _db is None:
+        return {'total': 0, 'last_import_at': None}
+    total, last = 0, None
+    async for doc in _db.left_field_readers.find({}, {'imported_at': 1}):
+        total += 1
+        when = doc.get('imported_at')
+        if when and (last is None or when > last):
+            last = when
+    return {'total': total, 'last_import_at': _iso(last)}
 
 
 @router.get('/api/admin/payments/backfill/status')

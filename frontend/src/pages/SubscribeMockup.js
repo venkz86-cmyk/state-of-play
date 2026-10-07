@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { annualPricingFor } from '../lib/octoberPricing';
+import { annualPricingFor, isExistingReaderWindow, leftFieldOfferPricing } from '../lib/octoberPricing';
 import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
@@ -41,7 +41,15 @@ export const SubscribeMockup = () => {
   // A signed-in free reader who joined before 6 October sees the
   // existing-reader rate. It is offered by email only (to free members,
   // linking to /login?next=/signup), never advertised to signed-out visitors.
-  const annual = annualPricingFor(isIndia, user);
+  const memberRate = annualPricingFor(isIndia, user);
+  // Left Field readers on Substack arrive from the offer link in The Left
+  // Field (/signup?offer=left-field), mostly with no account to sign in
+  // with. They see the same rate, and the server checks the email they
+  // type against the Substack list before charging it.
+  const [searchParams] = useSearchParams();
+  const leftFieldOffer = searchParams.get('offer') === 'left-field' && isExistingReaderWindow()
+    && !user?.email && !memberRate.existingReader;
+  const annual = leftFieldOffer ? leftFieldOfferPricing(isIndia) : memberRate;
   const [premium, setPremium] = useState([]);
   const [justPaidEmail, setJustPaidEmail] = useState(null);
 
@@ -145,12 +153,20 @@ export const SubscribeMockup = () => {
               // the 6 October rate rise applies here on its own, and
               // verify_payment sends the Standard welcome email.
               <RazorpayCheckoutButton
-                source="signup-page"
+                source={leftFieldOffer ? 'left-field-offer' : 'signup-page'}
                 plan="standard"
                 country={isIndia ? 'IN' : 'INTL'}
                 buttonLabel="Subscribe"
                 dataTestId="pricing-subscribe"
                 lockedEmail={user?.email}
+                {...(leftFieldOffer ? {
+                  extraOrderFields: { offer: 'left-field' },
+                  expectedRate: 'existing-reader',
+                  rateMismatch: {
+                    message: `That email isn’t on The Left Field’s list from before 6 October, so the ${isIndia ? '₹2,499' : '$120'} rate doesn’t apply. Try the email The Left Field comes to, or subscribe at ${isIndia ? '₹3,499 + GST (₹4,129)' : '$169'}.`,
+                    buttonLabel: `Subscribe at ${isIndia ? '₹4,129' : '$169'}`,
+                  },
+                } : {})}
                 onSuccess={(paidEmail) => {
                   setJustPaidEmail(paidEmail);
                   // Same as The Ten: a signed-in reader's session still

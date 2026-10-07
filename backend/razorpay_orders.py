@@ -49,7 +49,7 @@ from pydantic import BaseModel, EmailStr
 from tiers import PLAN_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email
-from session_auth import get_current_member, _free_welcome_email_html
+from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 from admin_auth import require_admin_key_or_session
@@ -218,6 +218,30 @@ class CreateOrderRequest(BaseModel):
     source: Optional[str] = ''
     ref: Optional[str] = ''
     landing: Optional[str] = ''
+    # Signed-out checkout from /signup?offer=left-field: the typed email,
+    # checked for the existing-reader rate (session_auth.early_rate_for_email).
+    email: Optional[str] = ''
+    offer: Optional[str] = ''
+
+
+# The typed-email rate check answers "is this email on the list", so it's
+# rate-limited per IP: burst 5, then one more every minute. Same
+# token-bucket shape as session_auth's register-free limit.
+_EARLY_RATE_BUCKET: dict = {}
+_EARLY_RATE_BURST = 5.0
+_EARLY_RATE_REFILL_PER_SEC = 1 / 60
+
+
+def _check_early_rate_limit(client_ip: str) -> bool:
+    import time as _t
+    now = _t.monotonic()
+    bucket = _EARLY_RATE_BUCKET.setdefault(client_ip, {'tokens': _EARLY_RATE_BURST, 'last': now})
+    bucket['tokens'] = min(_EARLY_RATE_BURST, bucket['tokens'] + (now - bucket['last']) * _EARLY_RATE_REFILL_PER_SEC)
+    bucket['last'] = now
+    if bucket['tokens'] >= 1.0:
+        bucket['tokens'] -= 1.0
+        return True
+    return False
 
 
 async def _approved_student_application(student_token: Optional[str]) -> Optional[dict]:
@@ -287,14 +311,29 @@ async def create_order(req: CreateOrderRequest, request: Request):
     # A signed-in free member who joined before 6 October keeps the old
     # annual price until 31 October (session_auth.existing_reader_rate_until).
     # The order is tied to their account, so the price can't be passed on.
+    # Someone not signed in who came through the Left Field offer link
+    # gets the same rate for the email they typed, and the order is then
+    # sold to that email only.
     if req.plan == 'standard':
         member = await get_current_member(request)
+        rate_email = None
         if member and member.get('early_rate_until'):
+            rate_email = member['email']
+        elif not member and req.offer == 'left-field' and req.email:
+            client_ip = (
+                request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+                or (request.client.host if request.client else '0.0.0.0')
+            )
+            if not _check_early_rate_limit(client_ip):
+                raise HTTPException(status_code=429, detail='Too many tries. Wait a minute and try again.')
+            if await early_rate_for_email(req.email):
+                rate_email = req.email
+        if rate_email:
             plans = PLAN_PRICING['standard']
             old = plans.get(req.country, plans['IN'])
             config = {**old, 'label': 'Annual Membership (existing reader rate)'}
             order_notes['rate'] = 'existing-reader'
-            order_notes['email'] = member['email'].lower().strip()
+            order_notes['email'] = rate_email.lower().strip()
 
     amount = config['amount']
     label = config['label']
@@ -318,6 +357,7 @@ async def create_order(req: CreateOrderRequest, request: Request):
         'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
         'plan': req.plan,
         'label': label,
+        'rate': notes.get('rate') or '',
     }
 
 

@@ -78,7 +78,7 @@ from fastapi import APIRouter, Request, Response, HTTPException
 from pydantic import BaseModel, EmailStr
 
 from tiers import find_ghost_member, create_ghost_member, is_genuinely_paid, resolve_tier, is_paid_from_labels
-from payments import has_paid_beyond_trial
+from payments import has_paid_beyond_trial, is_left_field_reader
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 
@@ -133,9 +133,33 @@ async def existing_reader_rate_until(member: dict, label_names: list, is_paid: b
     if is_paid or is_paid_from_labels(label_names) or resolve_tier(label_names, is_paid) != 'free':
         return None
     joined = _ghost_time(member.get('created_at'))
-    if not joined or joined >= EXISTING_READER_JOINED_BEFORE:
+    # A Ghost account opened after 6 October still qualifies if the email
+    # read The Left Field on Substack before then.
+    if (not joined or joined >= EXISTING_READER_JOINED_BEFORE) and not await is_left_field_reader(email):
         return None
     if await has_paid_beyond_trial(email):
+        return None
+    return EXISTING_READER_RATE_LAST_DAY
+
+
+async def early_rate_for_email(email: str) -> Optional[str]:
+    """existing_reader_rate_until for someone who isn't signed in, from
+    the email they typed at checkout: a free Ghost member by the same
+    rule, or, with no Ghost account, a Left Field reader on Substack from
+    before 6 October who has never paid. create_order then sells the
+    membership to that email only, so the rate can't be used for anyone
+    else."""
+    email = (email or '').lower().strip()
+    now = _now()
+    if not email or not (EXISTING_READER_JOINED_BEFORE <= now < EXISTING_READER_RATE_ENDS):
+        return None
+    admin_token = _create_ghost_admin_token()
+    member = await find_ghost_member(email, admin_token) if admin_token else None
+    if member:
+        label_names = [(lbl.get('name') or '').lower() for lbl in (member.get('labels') or [])]
+        is_paid = await is_genuinely_paid(label_names, member.get('status', 'free'), email)
+        return await existing_reader_rate_until(member, label_names, is_paid, email)
+    if not await is_left_field_reader(email) or await has_paid_beyond_trial(email):
         return None
     return EXISTING_READER_RATE_LAST_DAY
 

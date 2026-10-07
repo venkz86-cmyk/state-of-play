@@ -4,6 +4,7 @@ import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { BackfillPanel } from './BackfillPanel';
+import { LeftFieldReadersPanel } from './LeftFieldReadersPanel';
 
 // Phase 6, the checkpoint the whole build was aimed at: one page that
 // answers "who's subscribed, what did they pay, what's expiring, what
@@ -157,6 +158,7 @@ export const OverviewPanel = ({ onAuthError }) => {
       )}
 
       <BackfillPanel onAuthError={onAuthError} />
+      <LeftFieldReadersPanel onAuthError={onAuthError} />
     </div>
   );
 };
