@@ -678,6 +678,46 @@ async def backfill_payments(
     return result
 
 
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+class LinkEmailRequest(BaseModel):
+    paid_with: str   # the email on the Razorpay payment
+    account: str     # the member's account email on the site
+
+
+@router.post('/api/admin/payments/link-email')
+async def link_payment_email(
+    req: LinkEmailRequest,
+    _admin: None = Depends(require_admin_key_or_session),
+):
+    """Moves every payment recorded under the email someone paid with in
+    Razorpay onto their account email, for members who paid with a
+    different address (e.g. a work Gmail) than the one they sign in with.
+    Their end date, renewal emails and dashboard rows all read from the
+    account email afterwards. The original email is kept on each payment
+    as `paid_with_email`, so the move can be traced."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Not configured')
+    paid_with = (req.paid_with or '').lower().strip()
+    account = (req.account or '').lower().strip()
+    if not _EMAIL_RE.match(paid_with) or not _EMAIL_RE.match(account):
+        raise HTTPException(status_code=400, detail='Enter both email addresses.')
+    if paid_with == account:
+        raise HTTPException(status_code=400, detail='Those are the same email.')
+    moved = []
+    async for doc in _db.payments.find({'email': paid_with}):
+        await _db.payments.update_one(
+            {'payment_id': doc.get('payment_id')},
+            {'$set': {'email': account, 'paid_with_email': paid_with}},
+        )
+        moved.append({'payment_id': doc.get('payment_id'), 'amount': doc.get('amount'),
+                      'currency': doc.get('currency'), 'plan': doc.get('plan'),
+                      'razorpay_created_at': _iso(doc.get('razorpay_created_at'))})
+    logger.info(f'link-email: moved {len(moved)} payment(s) from {paid_with!r} to {account!r}')
+    return {'moved': len(moved), 'payments': moved}
+
+
 @router.get('/api/admin/payments/backfill/status')
 async def backfill_status(_admin: None = Depends(require_admin_key_or_session)):
     if _db is None:
