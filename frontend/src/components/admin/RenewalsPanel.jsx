@@ -3,6 +3,7 @@ import { DataTable } from './DataTable';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, daysUntil } from '../../lib/format';
 import { BulkEmailControls, RowSendButton, daysSince } from './BulkEmailControls';
+import { RenewalSweepPanel } from './RenewalSweepPanel';
 
 const LAPSED_ENDPOINT = '/api/admin/annual-renewal/send-lapsed';
 
@@ -11,6 +12,7 @@ const FILTERS = [
   { key: 'next30', label: 'Next 30 days' },
   { key: 'drift', label: 'Overdue, still labeled paid' },
   { key: 'lapsed', label: 'Lapsed, not renewed' },
+  { key: 'sweep', label: 'Renewal emails' },
 ];
 
 // Same subscriber data GET /api/admin/subscribers already returns --
@@ -117,6 +119,10 @@ export const RenewalsPanel = ({ onAuthError }) => {
         ))}
       </div>
   );
+
+  if (filter === 'sweep') {
+    return <div>{tabs}<RenewalSweepPanel onAuthError={onAuthError} /></div>;
+  }
 
   if (filter === 'lapsed') {
     if (!lapsed) {
