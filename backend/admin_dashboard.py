@@ -257,6 +257,12 @@ async def _build_subscriber_rows() -> list[dict]:
         first_payment = summary.get('first_payment') if summary else None
         converted_from_free = _is_free_to_paid_conversion(member.get('created_at'), first_payment)
         ghost_subscription_expires = _ghost_subscription_end(member.get('subscriptions'))
+        # A Razorpay member comped in Ghost by hand (to keep Ghost's lists
+        # right) has a $0 comp with its own date; their real year comes
+        # from the Razorpay payment, same as on their account page.
+        if (member.get('status') == 'comped' and last_payment
+                and not last_payment.get('subscription_id') and last_payment.get('plan') != 'trial'):
+            ghost_subscription_expires = None
         corp_account_id = _corp_account_id(label_names)
         company_name = corp_name_map.get(corp_account_id) if corp_account_id else None
 

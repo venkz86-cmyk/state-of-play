@@ -266,7 +266,7 @@ async def _lapsed_rows(token: str) -> dict:
         if not email:
             continue
         lower_labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
-        if is_paid_from_labels(lower_labels) or member.get('status') in ('paid', 'comped'):
+        if is_paid_from_labels(lower_labels) or member.get('status') == 'paid':
             continue
         if any(l in _EXCLUDED_LABELS for l in lower_labels):
             continue
@@ -289,6 +289,9 @@ async def _lapsed_rows(token: str) -> dict:
             'expiry': expiry_iso,
             'last_payment': last_payment,
             'last_emailed': None,
+            # Still comped in Ghost: they keep access (and Ghost's paid
+            # list) until Venkat removes the comp by hand.
+            'still_comped': member.get('status') == 'comped',
             'lapsed_sent': None,
         }
     if rows and _db is not None:
@@ -396,7 +399,7 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
     payment_summaries = await get_subscriber_payment_summaries()
     now = datetime.now(timezone.utc)
 
-    checked = reminded = grace_started = downgraded = 0
+    checked = reminded = grace_started = downgraded = still_comped = 0
 
     for member in members:
         email = (member.get('email') or '').lower().strip()
@@ -411,8 +414,11 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
             continue
         if any(l.startswith('corp-') for l in lower_labels):
             continue
-        if member.get('subscriptions'):
-            continue  # a real Ghost-native subscription/comp -- not this lifecycle
+        if member.get('status') == 'paid':
+            continue  # billed by Ghost/Stripe itself -- not this lifecycle
+        # A Ghost comp ('comped') doesn't exclude them: Venkat comps
+        # Razorpay members by hand so Ghost's free/paid lists stay right,
+        # and their year still comes from the Razorpay payment below.
 
         summary = payment_summaries.get(email)
         last_payment = summary.get('last_payment') if summary else None
@@ -436,6 +442,11 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
                 ok = await _downgrade_member(member['id'], label_names, token)
                 if ok:
                     downgraded += 1
+                    # Ghost's 'comped' status also grants access on the
+                    # site, so until Venkat removes the comp they keep
+                    # reading. Listed on the Renewals panel's Lapsed tab.
+                    if member.get('status') == 'comped':
+                        still_comped += 1
             continue
 
         notice = await _db.annual_renewal_notices.find_one({'email': email, 'expiry': expiry_iso})
@@ -468,4 +479,5 @@ async def annual_renewal_sweep(_admin: None = Depends(require_admin_key_or_sessi
             )
             reminded += 1
 
-    return {'checked': checked, 'reminded': reminded, 'grace_started': grace_started, 'downgraded': downgraded}
+    return {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
+            'downgraded': downgraded, 'downgraded_still_comped': still_comped}
