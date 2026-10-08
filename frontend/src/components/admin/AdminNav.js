@@ -42,6 +42,7 @@ export const NAV_GROUPS = [
   {
     key: 'tools', label: 'Tools',
     pages: [
+      { path: 'tools/invites', label: 'Invite links', title: 'Invite links', description: 'A first year at ₹2,499 + GST for people you invite: one person by email, or a room full of people with a QR code. Never shown on the site.' },
       { path: 'tools/complimentary', label: 'Complimentary', title: 'Give a complimentary membership', description: 'A month, three months, six months or a year, for someone you choose. They get a note from you now, and an offer when it ends.' },
       { path: 'tools/link-email', label: 'Link a payment email', title: 'Link a payment email', description: 'For someone who paid in Razorpay with a different email than the one they sign in with.' },
       { path: 'tools/left-field', label: 'Left Field readers', title: 'Left Field readers', description: 'The list for the ₹2,499 Left Field offer, open until October 31.' },
