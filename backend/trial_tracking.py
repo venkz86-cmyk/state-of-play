@@ -4,10 +4,9 @@ trial_tracking.py — the access side of Trial ("The Ten"), ₹590.
 Nothing in the codebase tracked WHEN a trial started or ended before this
 module — tiers.py's `tier-trial` label says someone is on Trial, but not
 since when, or which 10 stories they're allowed to read. This module is
-that missing piece: a Mongo record per trial signup, snapshotting
-Venkat's currently admin-curated Ten at that moment (a fixed set, not
-rolling -- see _get_curated_ten_slugs and the admin panel's "Edit The
-Ten" button) and computing the 30-day window around it.
+that missing piece: a Mongo record per trial signup, snapshotting the
+ten most recent paid stories at that moment (a fixed set, not rolling --
+see _get_ten_slugs) and computing the 30-day window around it.
 
 Two access rules (see is_trial_slug_accessible's own docstring for the
 full reasoning): the original 10-story snapshot is a PERMANENT keepsake,
@@ -135,22 +134,17 @@ async def _fetch_recent_premium_slugs(limit: int = SNAPSHOT_SIZE) -> list[str]:
 THE_TEN_CONFIG_ID = 'the_ten'  # singleton _id, same pattern as payments.py's payments_meta doc
 
 
-async def _get_curated_ten_slugs() -> list[str]:
-    """What a brand-new signup's permanent Ten actually is: Venkat's own
-    admin-curated list (trial_config's singleton doc), not an automatic
-    pick -- see the admin panel's "Edit The Ten" button. Falls back to
-    the old auto-pick (most recent premium stories) if the list hasn't
-    been set up yet, or has been emptied out, so start_trial() always
-    has something sensible to snapshot rather than an empty Ten."""
-    if _db is not None:
-        doc = await _db.trial_config.find_one({'_id': THE_TEN_CONFIG_ID})
-        if doc and doc.get('slugs'):
-            return doc['slugs']
+async def _get_ten_slugs() -> list[str]:
+    """What a brand-new signup's permanent Ten is: always the ten most
+    recent paid stories, newest first, so /trial's "the ten most recent"
+    is true without anyone keeping a list up to date (Venkat's call,
+    October 8, 2026). The old hand-picked list (trial_config's singleton
+    doc, edited through /api/admin/trials/the-ten*) is no longer read."""
     return await _fetch_recent_premium_slugs()
 
 
 async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN') -> Optional[dict]:
-    """Snapshot Venkat's currently curated Ten (see _get_curated_ten_slugs)
+    """Snapshot the ten most recent paid stories (see _get_ten_slugs)
     and open a 30-day window from right now. Idempotent on email — re-running (e.g. a
     retried webhook) updates rather than duplicating, but does NOT reset
     an already-running trial's clock; only inserts fresh state if none
@@ -178,7 +172,7 @@ async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN'
         'email': email,
         'ghost_member_id': ghost_member_id or '',
         'country': country if country in ('IN', 'INTL') else 'IN',
-        'snapshot_slugs': await _get_curated_ten_slugs(),
+        'snapshot_slugs': await _get_ten_slugs(),
         'opened_slugs': [],
         'started_at': now,
         'expires_at': now + timedelta(days=TRIAL_DAYS),
@@ -918,15 +912,15 @@ async def _fetch_covers(slugs: list[str]) -> list[dict]:
 
 @router.get('/api/trial/the-ten/covers')
 async def the_ten_covers():
-    """Public. The covers of the Ten a new signup gets today (Venkat's
-    curated list, see _get_curated_ten_slugs), for the stack on /trial.
+    """Public. The covers of the Ten a new signup gets today (the ten most
+    recent paid stories, see _get_ten_slugs), for the stack on /trial.
     Cached for ten minutes so page views don't each call Ghost; a failed
     fetch isn't cached."""
     now = datetime.now(timezone.utc)
     at = _covers_cache['at']
     if at and _covers_cache['covers'] is not None and (now - at).total_seconds() < _COVERS_CACHE_SECONDS:
         return {'covers': _covers_cache['covers']}
-    covers = await _fetch_covers(await _get_curated_ten_slugs())
+    covers = await _fetch_covers(await _get_ten_slugs())
     if covers:
         _covers_cache.update(at=now, covers=covers)
     return {'covers': covers}
@@ -1028,8 +1022,10 @@ async def remove_trial_slug(req: TrialSlugRequest, _admin: None = Depends(requir
 
 @router.get('/api/admin/trials/the-ten')
 async def the_ten_detail(_admin: None = Depends(require_admin_key_or_session)):
-    """The global admin-curated Ten every NEW signup's permanent
-    snapshot is copied from (see _get_curated_ten_slugs) -- same shape
+    """No longer used to pick The Ten (see _get_ten_slugs): the old
+    hand-picked list, kept readable for reference. Was: the global
+    admin-curated Ten every NEW signup's permanent
+    snapshot is copied from (see _get_ten_slugs) -- same shape
     as GET .../{email}/stories, just reading/resolving the trial_config
     singleton instead of one member's snapshot_slugs. Doesn't touch any
     existing member's already-locked-in Ten; this only sets what a

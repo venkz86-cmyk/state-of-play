@@ -1,6 +1,18 @@
 {
   "installCommand": "yarn install",
   "buildCommand": "yarn build",
+  "redirects": [
+    {
+      "source": "/the-ten",
+      "destination": "/trial",
+      "permanent": true
+    },
+    {
+      "source": "/ten",
+      "destination": "/trial",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/signup",

@@ -11,7 +11,6 @@ export const TrialsPanel = ({ onAuthError }) => {
   const [sweeping, setSweeping] = useState(false);
   const [sweepResult, setSweepResult] = useState(null);
   const [editingEmail, setEditingEmail] = useState(null);
-  const [editingGlobal, setEditingGlobal] = useState(false);
   const [drifted, setDrifted] = useState(null);
   const [checkingDrift, setCheckingDrift] = useState(false);
   const [auditResult, setAuditResult] = useState(null);
@@ -134,20 +133,12 @@ export const TrialsPanel = ({ onAuthError }) => {
         <KPITile label="Total ever" value={trials.length} bordered />
       </div>
 
-      <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
-        <div>
-          <p className="font-plex text-[13px] text-[var(--text-muted)]">
-            The ten stories a brand-new signup's permanent Ten is copied from. Add or remove
-            stories directly; nobody already signed up is affected, only what a future signup gets.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setEditingGlobal(true)}
-          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 shrink-0 ml-6"
-        >
-          Edit The Ten
-        </button>
+      {/* The Ten is no longer a hand-picked list (trial_tracking._get_ten_slugs). */}
+      <div className="mb-6 pb-6 border-b border-[var(--rule)]" data-testid="the-ten-automatic">
+        <p className="font-plex text-[13px] text-[var(--text-muted)]">
+          The Ten is always your ten most recent paid stories. Each reader keeps the ten that were
+          newest on the day they joined.
+        </p>
       </div>
 
       <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--rule)]">
@@ -248,10 +239,10 @@ export const TrialsPanel = ({ onAuthError }) => {
       />
 
       <TrialStoryEditorModal
-        key={editingGlobal ? 'global' : editingEmail || 'closed'}
-        email={editingGlobal ? null : editingEmail}
-        open={editingGlobal || !!editingEmail}
-        onOpenChange={(v) => { if (!v) { setEditingEmail(null); setEditingGlobal(false); } }}
+        key={editingEmail || 'closed'}
+        email={editingEmail}
+        open={!!editingEmail}
+        onOpenChange={(v) => { if (!v) setEditingEmail(null); }}
         onChanged={load}
       />
     </div>
