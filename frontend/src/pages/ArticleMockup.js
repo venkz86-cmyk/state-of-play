@@ -21,6 +21,8 @@ import { CustomComments } from '../components/CustomComments';
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 import { seasonLabel } from '../lib/season';
+import { useGeoPricing } from '../hooks/useGeoPricing';
+import { addDollarAmounts } from '../lib/currency';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -53,6 +55,8 @@ export const ArticleMockup = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { canAccessPremium, user, isLoggedIn } = useAuth();
+  const geo = useGeoPricing();
+  const abroad = !geo.loading && geo.country && geo.country !== 'IN';
 
   const previewMember = searchParams.get('preview') === 'member';
   // isMember drives comments/bookmark/gift/nominate -- real subscriber
@@ -237,9 +241,12 @@ export const ArticleMockup = () => {
   // ghostAPI.js's own preview_content (itself already falls back to
   // the excerpt) -> the subtitle -- so there's always something real
   // above the gate even if the preview fetch is still loading or fails.
-  const bodyHtml = isGated
+  const rupeeHtml = isGated
     ? (gatedPreviewHtml || previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
     : (article.content || article.preview_content || '');
+  // Readers outside India see a rounded dollar figure after rupee
+  // amounts (lib/currency.js).
+  const bodyHtml = abroad ? addDollarAmounts(rupeeHtml) : rupeeHtml;
   const beat = article.theme;
   const articleTags = article.tags?.length > 0
     ? article.tags
