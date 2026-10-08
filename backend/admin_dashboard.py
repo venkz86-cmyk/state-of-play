@@ -562,6 +562,12 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
             pending_students = await _db.student_applications.count_documents({'status': 'pending'})
         except Exception as e:
             logger.warning(f'overview pending_students count failed (non-fatal): {e!r}')
+    mixed_zone_unread = 0
+    if _db is not None:
+        try:
+            mixed_zone_unread = await _db.mixed_zone_replies.count_documents({'read': {'$ne': True}})
+        except Exception as e:
+            logger.warning(f'overview mixed_zone_unread count failed (non-fatal): {e!r}')
     comps_to_remove = _comps_to_remove(rows, now)
     unmatched = _unmatched_payments(rows, payment_summaries)
     email_failures = await _recent_email_failures(now)
@@ -604,6 +610,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
             ],
             'pending_comments': pending_comments,
             'pending_students': pending_students,
+            'mixed_zone_unread': mixed_zone_unread,
             'comps_to_remove': comps_to_remove[:50],
             'comps_to_remove_count': len(comps_to_remove),
             'unmatched_payments': unmatched[:50],

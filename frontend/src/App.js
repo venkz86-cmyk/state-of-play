@@ -23,6 +23,7 @@ import { StudentPayMockup as StudentPay } from "./pages/StudentPayMockup";
 import { GiftMockup as Gift } from "./pages/GiftMockup";
 import { GiftRedeemMockup as GiftRedeem } from "./pages/GiftRedeemMockup";
 import { RenewMockup as Renew } from "./pages/RenewMockup";
+import { MixedZoneMockup as MixedZone } from "./pages/MixedZoneMockup";
 import { TrialMockup as Trial } from "./pages/TrialMockup";
 import { SeasonMockup as Season } from "./pages/SeasonMockup";
 import { StartHereMockup as StartHere } from "./pages/StartHereMockup";
@@ -79,6 +80,7 @@ function Shell() {
           <Route path="/dashboard" element={<MemberDashboard />} />
           <Route path="/account" element={<MemberDashboard />} />
           <Route path="/renew" element={<Renew />} />
+          <Route path="/mixed-zone" element={<MixedZone />} />
           <Route path="/welcome" element={<MemberDashboard />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

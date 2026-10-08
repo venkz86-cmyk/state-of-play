@@ -29,6 +29,9 @@ export const AccountMockup = () => {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [justRenewed, setJustRenewed] = useState(false);
   const [giftModalOpen, setGiftModalOpen] = useState(false);
+  // The Mixed Zone (annual members only): whether to show its row, and
+  // how many notes are new since the last visit.
+  const [mixedZone, setMixedZone] = useState({ eligible: false, count: 0 });
 
   useEffect(() => {
     setRecent(getReadingHistory().slice(0, 5));
@@ -66,6 +69,16 @@ export const AccountMockup = () => {
         console.error('Member details failed:', e);
       }
     })();
+    return () => { active = false; };
+  }, [user?.email]);
+
+  useEffect(() => {
+    let active = true;
+    if (!user?.email || !API) return;
+    fetch(`${API}/api/mixed-zone/new-count`, { headers: authHeader() })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (active && data) setMixedZone(data); })
+      .catch(() => {});
     return () => { active = false; };
   }, [user?.email]);
 
@@ -386,13 +399,13 @@ export const AccountMockup = () => {
                 cta: 'Give a year',
                 href: '/gift?ref=account',
               },
-              {
-                title: 'Insider Drops · Soon',
-                desc: 'Subscriber-only feed of deal whispers and short notes.',
-                cta: 'Notify me',
-                href: 'mailto:venkat@stateofplay.club?subject=Insider%20Drops%3A%20notify%20me',
+              mixedZone.eligible && {
+                title: 'Mixed Zone',
+                desc: "Short notes on what I've heard, before they are stories. Replies reach only me.",
+                cta: mixedZone.count > 0 ? `Open · ${mixedZone.count} new` : 'Open',
+                href: '/mixed-zone',
               },
-            ].map(({ title, desc, cta, href, onClick }) => (
+            ].filter(Boolean).map(({ title, desc, cta, href, onClick }) => (
               <li key={title} className="grid grid-cols-12 gap-4 py-5 border-b border-[var(--rule)]">
                 <div className="col-span-12 md:col-span-4">
                   <h3 className="font-editorial font-medium text-lg">{title}</h3>
