@@ -7,6 +7,10 @@ import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+const deadline = (iso) =>
+  new Date(iso).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    .replace(' AM', ' am').replace(' PM', ' pm');
+
 const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors';
 
 const CLOSED_LINE = {
@@ -73,9 +77,14 @@ export const InviteMockup = () => {
           <span className="font-editorial font-semibold text-[2.75rem] leading-[0.9] text-[var(--text)]">{isIndia ? '₹2,499' : '$120'}</span>
           <span className="font-plex text-base text-[var(--text-muted)] pb-1">{isIndia ? '+ 18% GST' : 'for the year'}</span>
         </div>
-        <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
+        <p className={`font-plex text-[13px] text-[var(--text-label)] ${invite.personal && invite.expires_at ? 'mb-2' : 'mb-6'}`}>
           {isIndia ? '₹2,949 total. New readers pay ₹3,499 + GST.' : 'New readers pay $169.'}
         </p>
+        {invite.personal && invite.expires_at && (
+          <p data-testid="invite-deadline" className="font-plex text-[14px] text-[var(--text)] mb-6">
+            Your invitation is open until {deadline(invite.expires_at)}.
+          </p>
+        )}
         <RazorpayCheckoutButton
           plan="standard"
           source="invite"

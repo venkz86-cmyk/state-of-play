@@ -47,7 +47,11 @@ const InviteRow = ({ invite, onClose, onRefresh }) => {
         <p className="font-plex text-[13px] text-[var(--text-muted)] mt-1">
           <span style={{ color: STATE_TONE[invite.state] }}>{STATE_TEXT[invite.state] || invite.state}</span>
           {' · '}{cap}
-          {invite.expires_at ? ` · last day ${formatDate(new Date(new Date(invite.expires_at).getTime() - 1000).toISOString())}` : ''}
+          {invite.expires_at
+            ? (invite.kind === 'person'
+              ? ` · open until ${new Date(invite.expires_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+              : ` · last day ${formatDate(new Date(new Date(invite.expires_at).getTime() - 1000).toISOString())}`)
+            : ''}
           {invite.email ? ` · for ${invite.email}${invite.email_sent === false ? ' (email didn’t send; copy the link to them)' : ', emailed'}` : ''}
         </p>
         <p className="font-plex text-[13px] text-[var(--text-label)] mt-2 break-all">{invite.url}</p>
@@ -108,11 +112,12 @@ export const InviteLinksPanel = ({ onAuthError }) => {
     e.preventDefault();
     setBusy(true); setError(''); setMade(null);
     try {
-      const body = { name: name.trim(), last_day: lastDay || null };
+      const body = { name: name.trim(), kind };
       if (kind === 'person') {
-        if (email.trim()) { body.email = email.trim(); body.note = note.trim(); } else { body.max_uses = 1; }
-      } else if (maxUses) {
-        body.max_uses = Number(maxUses);
+        if (email.trim()) { body.email = email.trim(); body.note = note.trim(); }
+      } else {
+        body.last_day = lastDay || null;
+        if (maxUses) body.max_uses = Number(maxUses);
       }
       const data = await call('/api/admin/invites', { method: 'POST', body: JSON.stringify(body) });
       if (data) {
@@ -184,16 +189,18 @@ export const InviteLinksPanel = ({ onAuthError }) => {
               className={`${field} mt-1 normal-case tracking-normal`} data-testid="invite-max" />
           </label>
         )}
-        <label className={label}>
-          Last day (optional)
-          <input type="date" value={lastDay} onChange={(e) => setLastDay(e.target.value)}
-            className={`${field} mt-1 normal-case tracking-normal`} data-testid="invite-last-day" />
-        </label>
+        {kind === 'event' && (
+          <label className={label}>
+            Last day (optional)
+            <input type="date" value={lastDay} onChange={(e) => setLastDay(e.target.value)}
+              className={`${field} mt-1 normal-case tracking-normal`} data-testid="invite-last-day" />
+          </label>
+        )}
         <p className="font-plex text-[13px] text-[var(--text-muted)]">
           {kind === 'person'
             ? (email.trim()
-              ? 'The link works once, for this email only, and goes to them now with your line.'
-              : 'The link works once. Copy it and send it yourself.')
+              ? 'The link stays open for 72 hours from now. They can open it as often as they like and use it for one payment. It works for this email only, and goes to them now with your line.'
+              : 'The link stays open for 72 hours from now. They can open it as often as they like and use it for one payment. Copy it and send it yourself.')
             : 'Anyone with the link or the QR code can use it until it’s used up or past its last day.'}
           {' '}It’s a first year at ₹2,499 + GST, or $120 outside India.
         </p>
