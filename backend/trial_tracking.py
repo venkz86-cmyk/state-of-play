@@ -876,6 +876,62 @@ async def _fetch_titles(slugs: list[str]) -> dict[str, str]:
     return {}
 
 
+_COVERS_CACHE_SECONDS = 600
+_covers_cache: dict = {'at': None, 'covers': None}
+
+
+async def _fetch_covers(slugs: list[str]) -> list[dict]:
+    """Title, cover image and date for each slug, in the given order.
+    Never the story itself: the /trial page shows these as a stack of
+    covers, and they are the same fields the archive already shows to
+    anyone."""
+    if not GHOST_CONTENT_API_KEY or not slugs:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/content/posts/',
+                params={
+                    'key': GHOST_CONTENT_API_KEY,
+                    'limit': len(slugs),
+                    'filter': f"slug:[{','.join(slugs)}]",
+                    'fields': 'slug,title,feature_image,published_at',
+                },
+            )
+        if r.status_code != 200:
+            logger.warning(f'Ghost cover fetch HTTP {r.status_code}')
+            return []
+        by_slug = {p['slug']: p for p in r.json().get('posts', [])}
+    except Exception as e:
+        logger.warning(f'Ghost cover fetch failed: {e!r}')
+        return []
+    return [
+        {
+            'slug': s,
+            'title': by_slug[s].get('title') or s,
+            'feature_image': by_slug[s].get('feature_image') or '',
+            'published_at': by_slug[s].get('published_at') or '',
+        }
+        for s in slugs if s in by_slug
+    ]
+
+
+@router.get('/api/trial/the-ten/covers')
+async def the_ten_covers():
+    """Public. The covers of the Ten a new signup gets today (Venkat's
+    curated list, see _get_curated_ten_slugs), for the stack on /trial.
+    Cached for ten minutes so page views don't each call Ghost; a failed
+    fetch isn't cached."""
+    now = datetime.now(timezone.utc)
+    at = _covers_cache['at']
+    if at and _covers_cache['covers'] is not None and (now - at).total_seconds() < _COVERS_CACHE_SECONDS:
+        return {'covers': _covers_cache['covers']}
+    covers = await _fetch_covers(await _get_curated_ten_slugs())
+    if covers:
+        _covers_cache.update(at=now, covers=covers)
+    return {'covers': covers}
+
+
 @router.get('/api/admin/trials/{email}/stories')
 async def trial_stories_detail(email: str, _admin: None = Depends(require_admin_key_or_session)):
     """Backs the admin panel's per-member story editor: this member's

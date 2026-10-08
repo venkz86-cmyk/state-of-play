@@ -327,3 +327,54 @@ a:visited { color: inherit; }
 .tsop-usd {
   color: var(--text-muted);
 }
+
+/* The Ten's cover stack on /trial (components/TenCoverStack.jsx). Each
+   card sits a little up and to the right of the one in front, with its
+   own tilt; hovering the pile spreads it. The outer card holds the
+   position, the inner one the entry animation, so the two transforms
+   never fight. */
+.ten-stack-frame {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 440 / 430;
+  margin-left: auto;
+}
+.ten-stack { --spread: 1; }
+.ten-stack:hover { --spread: 1.8; }
+.ten-stack-card {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 86%;
+  transform-origin: 50% 100%;
+  transform:
+    translate(calc(var(--i) * 7px * var(--spread)), calc(var(--i) * -8px * var(--spread)))
+    rotate(calc(var(--tilt) * var(--spread) * 1deg));
+  transition: transform 420ms cubic-bezier(.2, .7, .2, 1);
+}
+.ten-stack-card:first-child { transform: none; }
+.ten-stack-inner {
+  animation: ten-stack-in 520ms cubic-bezier(.2, .7, .2, 1) both;
+  animation-delay: calc((9 - var(--i)) * 40ms);
+}
+@keyframes ten-stack-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.ten-stack-tab {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  transform: rotate(3deg);
+}
+.ten-row-card {
+  animation: ten-stack-in 420ms cubic-bezier(.2, .7, .2, 1) both;
+  animation-delay: calc(var(--i) * 30ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ten-stack:hover { --spread: 1; }
+  .ten-stack-card { transition: none; }
+  .ten-stack-inner, .ten-row-card { animation: none; }
+}

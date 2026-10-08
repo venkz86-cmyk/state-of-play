@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { TenCoverStack } from '../components/TenCoverStack';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
@@ -103,7 +104,8 @@ export const TrialMockup = () => {
       </div>
 
       {/* Hero */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-12">
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-12 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
+        <div className="lg:col-span-7">
         <Overline className="mb-4 block">The State of Play</Overline>
         <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
           Ten stories.<br />Thirty days.<br /><em className="italic font-normal">{isIndia ? '₹500.' : '$9.'}</em>
@@ -172,6 +174,11 @@ export const TrialMockup = () => {
             </a>
           </>
         )}
+        <div className="lg:hidden"><TenCoverStack variant="row" /></div>
+        </div>
+        <div className="hidden lg:block lg:col-span-5">
+          <TenCoverStack />
+        </div>
       </section>
 
       {/* How the month works */}
