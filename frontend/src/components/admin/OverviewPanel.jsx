@@ -57,6 +57,10 @@ export const OverviewPanel = ({ onAuthError }) => {
       key: 'ghost-downgraded', count: kpis.ghost_status_downgraded, path: 'subscribers',
       text: `paying ${kpis.ghost_status_downgraded === 1 ? 'member' : 'members'} Ghost shows as free`,
     },
+    attention.mixed_zone_unread > 0 && {
+      key: 'mixed-zone', count: attention.mixed_zone_unread, path: 'mixed-zone',
+      text: `Mixed Zone ${attention.mixed_zone_unread === 1 ? 'reply' : 'replies'} you haven’t read`,
+    },
     attention.pending_students > 0 && {
       key: 'students', count: attention.pending_students, path: 'students',
       text: `student ${attention.pending_students === 1 ? 'application' : 'applications'} waiting for you`,

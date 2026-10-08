@@ -36,6 +36,10 @@ export const NAV_GROUPS = [
     pages: [{ path: 'comments', label: 'Comments', title: 'Comments', description: 'Reader comments waiting for review.' }],
   },
   {
+    key: 'mixed-zone', label: 'Mixed Zone',
+    pages: [{ path: 'mixed-zone', label: 'Mixed Zone', title: 'Mixed Zone', description: 'Your notes for annual members, and their private replies. Nothing here sends an email.' }],
+  },
+  {
     key: 'tools', label: 'Tools',
     pages: [
       { path: 'tools/complimentary', label: 'Complimentary', title: 'Give a complimentary membership', description: 'A month, three months, six months or a year, for someone you choose. They get a note from you now, and an offer when it ends.' },

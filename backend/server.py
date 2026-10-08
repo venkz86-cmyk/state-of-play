@@ -2523,13 +2523,13 @@ try:
 except Exception as _e:
     logging.warning(f"comments module not mounted: {_e!r}")
 
-# Mount Insider Drops (annual members' feed, private replies)
+# Mount the Mixed Zone (annual members' notes feed, private replies)
 try:
-    from drops import router as drops_router, init as drops_init
-    drops_init(db)
-    app.include_router(drops_router)
+    from mixed_zone import router as mixed_zone_router, init as mixed_zone_init
+    mixed_zone_init(db)
+    app.include_router(mixed_zone_router)
 except Exception as _e:
-    logging.warning(f"drops module not mounted: {_e!r}")
+    logging.warning(f"mixed_zone module not mounted: {_e!r}")
 
 # Mount plan/tier infrastructure (September roadmap, P0)
 try:

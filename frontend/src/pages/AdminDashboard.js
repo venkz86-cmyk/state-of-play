@@ -17,6 +17,7 @@ import { LinkPaymentEmail } from '../components/admin/LinkPaymentEmail';
 import { LeftFieldReadersPanel } from '../components/admin/LeftFieldReadersPanel';
 import { BackfillPanel } from '../components/admin/BackfillPanel';
 import { ComplimentaryPanel } from '../components/admin/ComplimentaryPanel';
+import { MixedZonePanel } from '../components/admin/MixedZonePanel';
 
 const todayLine = () =>
   new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -69,6 +70,7 @@ export const AdminDashboard = () => {
             <Route path="subscribers" element={<SubscribersPanel onAuthError={onAuthError} />} />
             <Route path="renewals" element={<RenewalsPanel onAuthError={onAuthError} />} />
             <Route path="comments" element={<CommentsPanel onAuthError={onAuthError} />} />
+            <Route path="mixed-zone" element={<MixedZonePanel onAuthError={onAuthError} />} />
             <Route path="nominated" element={<NominatedReadersPanel onAuthError={onAuthError} />} />
             <Route path="corporate" element={<CorporateAccountsPanel onAuthError={onAuthError} />} />
             <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />
