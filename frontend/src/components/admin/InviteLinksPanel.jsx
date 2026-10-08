@@ -33,7 +33,7 @@ const QR = ({ invite }) => {
   );
 };
 
-const InviteRow = ({ invite, onClose }) => {
+const InviteRow = ({ invite, onClose, onRefresh }) => {
   const [copied, setCopied] = useState(false);
   const [showUses, setShowUses] = useState(false);
   const copy = async () => {
@@ -55,6 +55,9 @@ const InviteRow = ({ invite, onClose }) => {
           <button type="button" className={quiet} onClick={copy} data-testid="invite-copy">{copied ? 'Copied' : 'Copy link'}</button>
           {invite.used > 0 && (
             <button type="button" className={quiet} onClick={() => setShowUses(!showUses)}>{showUses ? 'Hide who joined' : 'Who joined'}</button>
+          )}
+          {invite.state === 'open' && !invite.email && (
+            <button type="button" className={quiet} onClick={() => onRefresh(invite)} data-testid="invite-refresh">New link and QR</button>
           )}
           {invite.state === 'open' && (
             <button type="button" className={quiet} onClick={() => onClose(invite)} data-testid="invite-close">Close link</button>
@@ -127,6 +130,11 @@ export const InviteLinksPanel = ({ onAuthError }) => {
   const close = async (invite) => {
     if (!window.confirm(`Close the link “${invite.name}”? Anyone who opens it after this sees the regular price.`)) return;
     try { await call(`/api/admin/invites/${invite.code}/close`, { method: 'POST' }); await load(); } catch (e) { setError(e.message); }
+  };
+
+  const refresh = async (invite) => {
+    if (!window.confirm(`Make a new link and QR for “${invite.name}”? The current link and QR stop working straight away.`)) return;
+    try { await call(`/api/admin/invites/${invite.code}/refresh`, { method: 'POST' }); await load(); } catch (e) { setError(e.message); }
   };
 
   const tab = (value, text) => (
@@ -208,7 +216,7 @@ export const InviteLinksPanel = ({ onAuthError }) => {
         <p className="font-plex text-[14px] text-[var(--text-muted)]">No links yet.</p>
       ) : (
         <ul className="border-t border-[var(--rule)]">
-          {invites.map((i) => <InviteRow key={i.code} invite={i} onClose={close} />)}
+          {invites.map((i) => <InviteRow key={i.code} invite={i} onClose={close} onRefresh={refresh} />)}
         </ul>
       )}
     </div>
