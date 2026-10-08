@@ -58,9 +58,11 @@ body {
   --surface: #F3F2EF;
   --rule: #E5E2DC;
   --text: #1A1A1A;
-  --text-muted: #555555;
+  /* Secondary text, darkened Oct 2026 (Venkat picked option B): the old
+     #555 read washed out on the cream background at small sizes. */
+  --text-muted: #333333;
   --text-secondary: #334155;
-  --text-label: #666666;
+  --text-label: #555555;
   --nav-bg: #FFFFFF;
   --footer-bg: #111111;
   --footer-cta-bg: #161616;
@@ -83,9 +85,9 @@ body {
   --surface: #1A1A1A;
   --rule: #2A2A2A;
   --text: #F0EDE8;
-  --text-muted: #888888;
+  --text-muted: #B8B3AB;
   --text-secondary: #CBD5E1;
-  --text-label: #666666;
+  --text-label: #8F8A82;
   --nav-bg: #0F0F0F;
   --footer-bg: #0A0A0A;
   --footer-cta-bg: #161616;
