@@ -2523,6 +2523,14 @@ try:
 except Exception as _e:
     logging.warning(f"comments module not mounted: {_e!r}")
 
+# Mount Insider Drops (annual members' feed, private replies)
+try:
+    from drops import router as drops_router, init as drops_init
+    drops_init(db)
+    app.include_router(drops_router)
+except Exception as _e:
+    logging.warning(f"drops module not mounted: {_e!r}")
+
 # Mount plan/tier infrastructure (September roadmap, P0)
 try:
     from tiers import router as tiers_router
