@@ -64,11 +64,33 @@ def _signoff_html(title: str = _DEFAULT_SIGNOFF_TITLE) -> str:
 # rather than universal, since only the higher-volume subscriber-facing
 # emails (sign-in codes, nominations, Trial) have carried it so far, not
 # the admin-only or one-off transactional ones.
-_COMPLIANCE_FOOTER_HTML = (
-    f'<p style="font-size: 12px; color: #999999; line-height: 1.7; margin-top: 24px;">'
-    'Left Field Ventures · Ground Floor, 36 Infantry Road, Bengaluru 560001'
-    '</p>'
+# The registered address, on every email Resend sends. resend_email.
+# send_email adds it (address_footer below), so no template can leave it
+# out; compliance_footer on email_shell is kept only so existing callers
+# don't break, and adds nothing.
+COMPANY_ADDRESS_LINES = (
+    'Left Field Ventures',
+    'Ground Floor, 36, Infantry Road, Tasker Town, Shivaji Nagar,',
+    'Bengaluru, Karnataka 560001',
 )
+COMPANY_ADDRESS_HTML = (
+    '<p data-company-address style="font-size: 12px; color: #999999; line-height: 1.7; margin-top: 32px;">'
+    + '<br>'.join(COMPANY_ADDRESS_LINES)
+    + '</p>'
+)
+COMPANY_ADDRESS_TEXT = '\n'.join(COMPANY_ADDRESS_LINES)
+
+
+def add_company_address(html: str) -> str:
+    """Puts the address at the bottom of an email: inside the house
+    layout's container when the email uses email_shell, at the end
+    otherwise. Never twice."""
+    if not html or 'data-company-address' in html:
+        return html
+    if html.rstrip().endswith('</div>') and 'max-width: 560px' in html:
+        body = html.rstrip()
+        return body[:-len('</div>')] + COMPANY_ADDRESS_HTML + '</div>'
+    return html + COMPANY_ADDRESS_HTML
 
 
 def email_cta_button(label: str, url: str) -> str:
@@ -103,6 +125,5 @@ def email_shell(
         f'<h1 style="font-family: {_FONT_HEADLINE}; font-weight: 400; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 24px;">{headline_html}</h1>'
         f'{body_html}'
         f'{_signoff_html(signoff_title) if signoff else ""}'
-        f'{_COMPLIANCE_FOOTER_HTML if compliance_footer else ""}'
         '</div>'
     )

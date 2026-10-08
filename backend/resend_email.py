@@ -76,14 +76,16 @@ async def send_email(
         logger.warning('RESEND_API_KEY not set, cannot send email')
         return False
 
+    from email_layout import add_company_address, COMPANY_ADDRESS_TEXT
     payload = {
         'from': from_address or DEFAULT_FROM_EMAIL,
         'to': [to],
         'subject': subject,
-        'html': html,
+        # The registered address goes on every email (email_layout).
+        'html': add_company_address(html),
     }
     if text:
-        payload['text'] = text
+        payload['text'] = text if COMPANY_ADDRESS_TEXT in text else f'{text}\n\n{COMPANY_ADDRESS_TEXT}'
     if reply_to:
         payload['reply_to'] = reply_to
 
