@@ -36,10 +36,10 @@ export const InvoicePreviewMockup = () => {
   // Sample invoice
   const invoice = {
     number: 'TSOP/2026-27/0001',
-    issued: '04 June 2026',
+    issued: 'June 4, 2026',
     placeOfSupply: 'Maharashtra (27)',
     description: 'The State of Play — Annual Subscription',
-    period: '04 June 2026 to 03 June 2027',
+    period: 'June 4, 2026 to June 3, 2027',
     sacCode: '998431',
     razorpayRef: 'pay_QqXyZAbc1234',
   };

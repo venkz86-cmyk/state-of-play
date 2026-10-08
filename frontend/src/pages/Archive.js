@@ -25,10 +25,10 @@ const BEAT_TAGS = [
 ];
 
 const monthLabel = (iso) =>
-  new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
 const dayLabel = (iso) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
 const ArchiveEntry = ({ post }) => (
   <li className="border-b border-[var(--rule)]">

@@ -6,7 +6,7 @@ import { isBeforeOctoberCutover } from '../lib/octoberPricing';
 
 // "Separate subscriptions" compares GST-inclusive totals on both sides:
 // what Razorpay charges one new annual member (₹2,949 until the
-// 6 October cutover, ₹4,129 from then; lib/octoberPricing.js) times the
+// October 6 cutover, ₹4,129 from then; lib/octoberPricing.js) times the
 // seats, against the team plan's own total.
 const teamPlans = () => {
   const perSeatTotal = isBeforeOctoberCutover() ? 2949 : 4129;
@@ -29,7 +29,7 @@ export const TeamsMockup = () => {
   const [companyName, setCompanyName] = useState('');
 
   return (
-    <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
+    <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', image: 'https://www.stateofplay.club/og/teams.png', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>

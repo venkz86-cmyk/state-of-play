@@ -9,7 +9,7 @@ import { annualPricingFor, isExistingReaderWindow, leftFieldOfferPricing } from 
 import { TESTIMONIALS } from '../data/testimonials';
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 // A short, specific pull-quote for the hero rail -- real and attributable,
 // unlike a logo-strip of outlet names TSOP hasn't actually been covered
@@ -38,7 +38,7 @@ export const SubscribeMockup = () => {
   const { user } = useAuth();
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
-  // A signed-in free reader who joined before 6 October sees the
+  // A signed-in free reader who joined before October 6 sees the
   // existing-reader rate. It is offered by email only (to free members,
   // linking to /login?next=/signup), never advertised to signed-out visitors.
   const memberRate = annualPricingFor(isIndia, user);
@@ -63,7 +63,7 @@ export const SubscribeMockup = () => {
   }, []);
 
   return (
-    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', description: 'Subscribe to The State of Play, India’s sports business publication: one reported story a week and the full archive.' }}>
+    <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', image: 'https://www.stateofplay.club/og/signup.png', description: 'Subscribe to The State of Play, India’s sports business publication: one reported story a week and the full archive.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
@@ -150,7 +150,7 @@ export const SubscribeMockup = () => {
               </div>
             ) : (
               // The dynamic Orders checkout, so the backend prices it:
-              // the 6 October rate rise applies here on its own, and
+              // the October 6 rate rise applies here on its own, and
               // verify_payment sends the Standard welcome email.
               <RazorpayCheckoutButton
                 source={leftFieldOffer ? 'left-field-offer' : 'signup-page'}
@@ -163,7 +163,7 @@ export const SubscribeMockup = () => {
                   extraOrderFields: { offer: 'left-field' },
                   expectedRate: 'existing-reader',
                   rateMismatch: {
-                    message: `That email isn’t on The Left Field’s list from before 6 October, so the ${isIndia ? '₹2,499' : '$120'} rate doesn’t apply. Try the email The Left Field comes to, or subscribe at ${isIndia ? '₹3,499 + GST (₹4,129)' : '$169'}.`,
+                    message: `That email isn’t on The Left Field’s list from before October 6, so the ${isIndia ? '₹2,499' : '$120'} rate doesn’t apply. Try the email The Left Field comes to, or subscribe at ${isIndia ? '₹3,499 + GST (₹4,129)' : '$169'}.`,
                     buttonLabel: `Subscribe at ${isIndia ? '₹4,129' : '$169'}`,
                   },
                 } : {})}

@@ -37,7 +37,7 @@ export function useNominate({
   // Abuse-prevention state
   const [quota, setQuota] = useState(null);           // { used, quota, remaining, resets_on } | null
   const [blocked, setBlocked] = useState('');         // '' | 'quota' | 'duplicate'
-  const [resetsOn, setResetsOn] = useState('');       // eg '1 August'
+  const [resetsOn, setResetsOn] = useState('');       // eg 'August 1'
 
   // Fetch remaining quota on mount (and whenever subscriber changes).
   useEffect(() => {

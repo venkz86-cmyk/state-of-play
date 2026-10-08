@@ -13,7 +13,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
    text end mid-thought. Below that: a solid, high-contrast block with a
    lock icon, unmissable heading, and a primary CTA (Razorpay). Pricing
    is geo-IP-aware and comes from lib/octoberPricing.js, so it switches
-   at the 6 October cutover with the backend.
+   at the October 6 cutover with the backend.
 
    Readers whose complimentary Sandbox-event access has lapsed (Ghost's
    sandbox-event-comp label, now downgraded to free) get a heading and
@@ -40,7 +40,7 @@ export const Paywall = () => {
     return () => { active = false; };
   }, []);
 
-  // A qualifying reader's price (₹2,499 until 31 October) without saying
+  // A qualifying reader's price (₹2,499 until October 31) without saying
   // why: the offer is email-only, explained on /signup where it lands.
   const annual = annualPricingFor(isIndia, user);
   const priceLine = isIndia

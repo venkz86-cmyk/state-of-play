@@ -6,7 +6,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 import { STORIES_PER_SEASON, isSeasonStory } from '../lib/season';
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 const pad = (n) => String(n).padStart(2, '0');
 

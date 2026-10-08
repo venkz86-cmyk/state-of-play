@@ -10,7 +10,7 @@ import { renewalOffer } from '../lib/renewal';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 const P = ({ children }) => (
   <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">{children}</p>
@@ -172,7 +172,7 @@ export const RenewMockup = () => {
           </P>
           <P>If you decide it's worth another year, that will mean more to me than the renewal itself.</P>
           <P>
-            Renewing costs ₹2,999 + GST for the year. That is ₹500 more than the introductory price you paid, and ₹500 less than what new readers pay from 6 October. I wanted the readers who backed this early to be recognised for it.
+            Renewing costs ₹2,999 + GST for the year. That is ₹500 more than the introductory price you paid, and ₹500 less than what new readers now pay. I wanted the readers who backed this early to be recognised for it.
           </P>
           <P>
             You get the same things as before: the reported story every Friday, The Left Field on Mondays and Wednesdays, the full archive, and a direct line to me. Write back any time. I read everything.

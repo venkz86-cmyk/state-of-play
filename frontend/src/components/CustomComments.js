@@ -10,7 +10,7 @@ const TITLE_STORAGE_KEY = 'tsop_comment_author_title';
 const relativeDate = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;

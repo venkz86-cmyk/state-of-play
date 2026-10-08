@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 // Venkat picks the stories in Ghost by adding the hidden tag "#start-here"
 // (slug "hash-start-here") to a post, so the selection changes without a

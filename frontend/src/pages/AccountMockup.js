@@ -17,7 +17,7 @@ import { renewalOffer } from '../lib/renewal';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 export const AccountMockup = () => {
   const navigate = useNavigate();
@@ -379,6 +379,12 @@ export const AccountMockup = () => {
                 cta: 'Need GST invoice? Download',
                 onClick: canAccessPremium ? () => setInvoiceOpen(true) : null,
                 href: canAccessPremium ? null : '#',
+              },
+              {
+                title: 'Give a year',
+                desc: 'Buy someone a year of The State of Play. It costs the same as your own.',
+                cta: 'Give a year',
+                href: '/gift?ref=account',
               },
               {
                 title: 'Insider Drops · Soon',

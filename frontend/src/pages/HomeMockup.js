@@ -16,16 +16,16 @@ import { annualPricingFor } from '../lib/octoberPricing';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const datelineDate = (d = new Date()) =>
-  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 const shortDate = (iso) => {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 };
 
 const longDate = (iso) => {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 // Section label — Schibsted Grotesk uppercase 11px, tracked

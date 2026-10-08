@@ -12,7 +12,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const TALLY_FORM_URL = 'https://tally.so/r/RGNvOd';
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 const HOW_IT_WORKS = [
   ['Apply', 'Submit the form with your name, college and a photo of your current student ID.'],
@@ -50,7 +50,7 @@ export const StudentsMockup = () => {
   }, [user?.email, isStudent]);
 
   return (
-    <MockupLayout testId="mockup-students" seo={{ title: 'Student Plan', path: '/students', description: 'The State of Play for currently enrolled students: the same weekly reporting and full archive as the annual plan, at a student price.' }}>
+    <MockupLayout testId="mockup-students" seo={{ title: 'Student Plan', path: '/students', image: 'https://www.stateofplay.club/og/students.png', description: 'The State of Play for currently enrolled students: the same weekly reporting and full archive as the annual plan, at a student price.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Students</Overline>

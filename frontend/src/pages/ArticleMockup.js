@@ -28,10 +28,10 @@ const VENKAT_LINKEDIN_URL = 'https://www.linkedin.com/in/venkat-ananth/';
 const VENKAT_X_URL = 'https://x.com/venkatananth';
 
 const longDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
 const datelineDate = (d = new Date()) =>
-  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 const SectionLabel = ({ children, className = '' }) => (
   <p className={`section-label ${className}`}>{children}</p>
