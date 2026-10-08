@@ -5,37 +5,29 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
-import { trialUpgradePricing, newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPricing';
-import { STORIES_PER_SEASON } from '../lib/season';
+import { trialUpgradePricing } from '../lib/octoberPricing';
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-// The fourteen-stories outcome described below is illustrative (ten
-// plus roughly a month of weekly publishing), not a per-visitor live
-// count -- but the season size it's measured against is the same real
-// STORIES_PER_SEASON constant HomeMockup.js's "Season One" dateline
-// uses, so this stays honest if that constant ever changes.
-const TYPICAL_MONTH_STORY_COUNT = 14;
-const SEASON_SHARE_PCT = Math.round((TYPICAL_MONTH_STORY_COUNT / STORIES_PER_SEASON) * 100);
+// The day a month bought today ends: trial_tracking.TRIAL_DAYS (30) on.
+const TRIAL_DAYS = 30;
+const monthEndsOn = (d = new Date()) =>
+  new Date(d.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
+// Three beats, Venkat's copy (proofread).
 const TRACK = [
-  ['Day 1', 'You pay, you read', 'The ten most recent premium stories the moment you sign up. In full. Permanently yours.'],
-  ['Week 2', 'A new story every week', 'I publish one long-form story every week. Anything that comes out while you are in, you can read too.'],
-  ['Weeks 3–4', 'Same again', `By the end of the month, most readers of The Ten have read fourteen stories, not ten. That's about ${SEASON_SHARE_PCT}% of the State of Play's annual season. Nothing lost, only added.`],
-  ['Day 30', 'The extras close', 'Anything published after you joined closes with the month. Your original ten never do.'],
+  ['Day 1', 'You start reading', 'The ten most recent paid stories open the moment you pay.'],
+  ['During the month', 'One story a week', 'One comes out most Fridays, so that’s four new stories in most months.'],
+  ['Day 30', 'The ten stay', 'Stories published during your month close. The original ten don’t.'],
 ];
 
 
-// Built per render so the upgrade answer follows the October 6 cutover
-// and the reader's country, like trialUpgradePricing does.
-const buildFaqs = (isIndia) => [
-  ['What happens to my ten stories after 30 days?', 'They stay yours, permanently. That never changes, whether you subscribe or not. If you don’t subscribe, your account becomes a free membership, same as anyone who signs up for the Left Field briefing, with the original ten still there whenever you want them. What closes is everything published after you joined. Subscribing picks that back up, plus the rest of the archive.'],
-  ['Can I upgrade before the 30 days are up?', isBeforeOctoberCutover()
-    ? 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before October 6 and it’s ₹2,499 + GST, today’s rate. From October 6 it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'
-    : `Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve, at ${isIndia ? '₹2,999 + GST' : '$160'}. That is the renewal rate, lower than the ${isIndia ? '₹3,499 + GST' : '$169'} a new subscriber pays.`],
-  ['Does it auto-renew into a subscription?', 'No. It is a one-time payment for thirty days. Nothing renews, nothing charges you again. If you want more after that, you choose it yourself.'],
-  ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
+// Two questions; the renewal and comparison answers live under the
+// button and in "If it's for you" (Venkat's copy, proofread).
+const FAQS = [
+  ['What happens to my ten stories after 30 days?', 'They stay in your account for good, even if you never subscribe. Subscribe and the stories published since you joined open again, along with the rest of the archive.'],
+  ['Can I upgrade before the 30 days are up?', 'Yes, any time before your month ends. Sign in with the account you joined with and the upgrade is on this page.'],
 ];
 
 // Some live payment methods (UPI/netbanking redirect flows on mobile, in
@@ -99,7 +91,7 @@ export const TrialMockup = () => {
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru · {datelineDate()}</Overline>
-          <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">The Trial · The Ten</span>
+          <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">The Ten</span>
         </div>
       </div>
 
@@ -111,7 +103,7 @@ export const TrialMockup = () => {
           Ten stories.<br />Thirty days.<br /><em className="italic font-normal">{isIndia ? '₹500.' : '$9.'}</em>
         </h1>
         <p className="font-plex text-lg text-[var(--text-muted)] leading-relaxed max-w-[54ch] mb-8">
-          Read the ten most recent State of Play stories on the business of Indian sport: franchise valuations, broadcast rights, ownership fights, the deals nobody else is reporting properly. They are yours to keep. And while your month runs, everything new I publish is yours to read too.
+          Read the ten most recent State of Play stories on the business of Indian sport, from franchise valuations to ownership fights. While your month runs, every new story is yours too.
         </p>
 
         {justPaidEmail ? (
@@ -154,7 +146,7 @@ export const TrialMockup = () => {
               dataTestId="trial-checkout"
               className="max-w-[520px] mb-4"
               lockedEmail={user?.email}
-              disclosureText="One-time payment for a 30-day trial. Not a recurring subscription."
+              disclosureText={`One payment. Nothing renews. Pay today and your month runs to ${monthEndsOn()}.`}
               onSuccess={(paidEmail) => {
                 setJustPaidEmail(paidEmail);
                 persistJustPaidEmail(paidEmail);
@@ -169,9 +161,14 @@ export const TrialMockup = () => {
                 }
               }}
             />
-            <a href="#compare" className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors">
-              Compare with the annual membership
-            </a>
+            <p className="font-plex text-sm text-[var(--text-muted)] flex flex-wrap gap-x-5 gap-y-2">
+              <a href="mailto:venkat@stateofplay.club?subject=The%20Ten" data-testid="trial-write" className="underline underline-offset-4 hover:text-[var(--text)] transition-colors">
+                Questions? Write to me.
+              </a>
+              <a href="#compare" className="underline underline-offset-4 hover:text-[var(--text)] transition-colors">
+                Compare with the annual membership
+              </a>
+            </p>
           </div>
         )}
         <div className="lg:hidden"><TenCoverStack variant="row" /></div>
@@ -184,16 +181,13 @@ export const TrialMockup = () => {
       {/* How the month works */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12">
         <div className="border-t border-[var(--text)] pt-8">
-          <p className="font-editorial italic text-lg mb-3">How the month works</p>
-          <p className="font-plex text-base text-[var(--text-muted)] max-w-[60ch] mb-10">
-            The ten stories are yours to keep, whatever you decide later. What you read beyond the ten is yours for the month.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
+          <p className="font-editorial italic text-lg mb-8">How the month works</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8" data-testid="trial-track">
             {TRACK.map(([day, title, desc], i) => (
               <div key={day} className="border-l-2 pl-4" style={{ borderColor: i === 0 ? 'var(--accent-burgundy)' : 'var(--rule)' }}>
                 <p className="font-plex text-xs tracking-[0.1em] uppercase text-[var(--text-label)] tabular-nums mb-2">{day}</p>
-                <h3 className="font-editorial font-medium text-lg leading-snug mb-1.5">{title}</h3>
-                <p className="font-plex text-[13.5px] leading-relaxed text-[var(--text-muted)]">{desc}</p>
+                <h3 className="font-editorial font-medium text-xl leading-snug mb-1.5">{title}</h3>
+                <p className="font-plex text-[15px] leading-relaxed text-[var(--text-muted)]">{desc}</p>
               </div>
             ))}
           </div>
@@ -203,35 +197,16 @@ export const TrialMockup = () => {
       {/* If it's for you */}
       <section id="compare" className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12 scroll-mt-24">
         <div className="border-t border-[var(--text)] pt-8">
-          <p className="font-editorial italic text-lg mb-8">If it's for you</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10">
-            <div>
-              <p className="font-editorial font-medium text-lg mb-1">The Ten</p>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-editorial font-semibold text-[2.25rem] leading-[0.9]">{isIndia ? '₹590' : '$9'}</span>
-              </div>
-              <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">once · yours to keep · no renewal</p>
-              <ul className="space-y-2.5">
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Ten stories on day one, growing through the month</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">The original ten, permanently, even if you never subscribe</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['−'] before:absolute before:left-0 before:text-[var(--text-label)]">The extras close with the month</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['−'] before:absolute before:left-0 before:text-[var(--text-label)]">No comments, no nominating other readers</li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-editorial font-medium text-lg mb-1">Annual membership</p>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-editorial font-semibold text-[2.25rem] leading-[0.9]">{newSignupAnnualPricing(isIndia).amount}</span>
-                {isIndia && <span className="font-plex text-sm text-[var(--text-muted)]">+ GST</span>}
-              </div>
-              <p className="font-plex text-[13px] text-[var(--text-label)] mb-4">{newSignupAnnualPricing(isIndia).note}</p>
-              <ul className="space-y-2.5">
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Every story, all year</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Full archive, searchable</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Comments and nominating other readers</li>
-                <li className="font-plex text-sm text-[var(--text-muted)] pl-5 relative before:content-['+'] before:absolute before:left-0 before:text-[var(--accent-burgundy)]">Direct line to the desk</li>
-              </ul>
-            </div>
+          <p className="font-editorial italic text-lg mb-6">If it's for you</p>
+          <div className="max-w-[62ch] space-y-3" data-testid="trial-compare">
+            <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text)]">
+              {isIndia
+                ? 'If you’d rather have the whole year, it’s ₹3,499 + GST. Upgrade before your thirty days end and it’s ₹2,999 + GST for thirteen months.'
+                : 'If you’d rather have the whole year, it’s $169. Upgrade before your thirty days end and it’s $160 for thirteen months.'}
+            </p>
+            <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
+              The Ten has no comments or nominating other readers; the annual membership does.
+            </p>
           </div>
           <p className="font-plex text-sm text-[var(--text-muted)] mt-8">
             The Left Field briefing is free whether you subscribe or not.
@@ -283,7 +258,7 @@ export const TrialMockup = () => {
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-8">Before you start</p>
           <ul>
-            {buildFaqs(isIndia).map(([q, a]) => (
+            {FAQS.map(([q, a]) => (
               <li key={q} className="py-6 border-b border-[var(--rule)]">
                 <p className="font-editorial font-medium text-lg leading-snug mb-2">{q}</p>
                 <p className="font-plex text-base text-[var(--text-muted)] leading-relaxed max-w-[65ch]">{a}</p>
@@ -298,7 +273,7 @@ export const TrialMockup = () => {
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-xl mb-4">Ten stories. Thirty days. See if it is for you.</p>
           <p className="font-plex text-base text-[var(--text-muted)] max-w-[55ch] mb-6">
-            And if it is not for you, no hard feelings. You keep the ten, and The Left Field keeps coming, free, every Monday and Wednesday.
+            And if it is not for you, no hard feelings. The Left Field keeps coming, free, every Monday and Wednesday.
           </p>
           <p className="font-editorial italic text-lg">Venkat</p>
         </div>
