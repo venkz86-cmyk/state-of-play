@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const shortDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+const shortDate = (iso) => {
+  const d = iso ? new Date(iso) : null;
+  return d && !Number.isNaN(d.getTime())
+    ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : '';
+};
 
 // Ghost serves resized copies of its own images under /size/wN/.
 const sized = (url, width) =>
@@ -89,19 +93,18 @@ export const TenCoverStack = ({ variant = 'stack' }) => {
             <div className="aspect-[3/2] overflow-hidden">
               <Cover cover={c} width={750} />
             </div>
-            <div className="px-4 py-3 border-t border-[var(--rule)]">
-              <p className="font-editorial text-[17px] leading-snug text-[var(--text)] line-clamp-2">{c.title}</p>
-              <p className="font-plex text-[12px] text-[var(--text-label)] mt-1">{shortDate(c.published_at)}</p>
+            <div className="px-5 pt-4 pb-5 border-t border-[var(--rule)]">
+              <p className="font-editorial text-[21px] leading-[1.2] text-[var(--text)] line-clamp-2">{c.title}</p>
+              {shortDate(c.published_at) && (
+                <p className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-2">{shortDate(c.published_at)}</p>
+              )}
             </div>
           </div>
         </div>
       ))}
-      <span
-        className="ten-stack-tab font-editorial text-white bg-[var(--accent-burgundy)] text-[20px] leading-none px-3 py-2"
-        aria-hidden="true"
-        title={top ? LABEL : undefined}
-      >
-        {covers.length}
+      <span className="ten-stack-seal" aria-hidden="true" title={top ? LABEL : undefined}>
+        <span className="font-editorial text-[30px] leading-none">{covers.length}</span>
+        <span className="font-plex text-[9px] uppercase tracking-[0.14em] mt-1">stories</span>
       </span>
     </figure>
   );

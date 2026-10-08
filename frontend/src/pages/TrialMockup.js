@@ -104,8 +104,8 @@ export const TrialMockup = () => {
       </div>
 
       {/* Hero */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-12 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
-        <div className="lg:col-span-7">
+      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-16 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
+        <div className="lg:col-span-6">
         <Overline className="mb-4 block">The State of Play</Overline>
         <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
           Ten stories.<br />Thirty days.<br /><em className="italic font-normal">{isIndia ? '₹500.' : '$9.'}</em>
@@ -138,7 +138,7 @@ export const TrialMockup = () => {
             </div>
           </div>
         ) : (
-          <>
+          <div className="border-t border-[var(--rule)] pt-8 max-w-[520px]">
             <div className={`flex items-end gap-3 ${isIndia ? 'mb-2' : 'mb-6'}`}>
               <span className="font-editorial font-semibold text-[2.75rem] leading-[0.9] text-[var(--text)]">{isIndia ? '₹500' : '$9'}</span>
               <span className="font-plex text-base text-[var(--text-muted)] pb-1">{isIndia ? '+ 18% GST' : 'one-time'}</span>
@@ -172,11 +172,11 @@ export const TrialMockup = () => {
             <a href="#compare" className="font-plex text-sm text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] transition-colors">
               Compare with the annual membership
             </a>
-          </>
+          </div>
         )}
         <div className="lg:hidden"><TenCoverStack variant="row" /></div>
         </div>
-        <div className="hidden lg:block lg:col-span-5">
+        <div className="hidden lg:block lg:col-span-6 lg:pt-10">
           <TenCoverStack />
         </div>
       </section>
