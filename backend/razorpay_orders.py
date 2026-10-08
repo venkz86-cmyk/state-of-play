@@ -50,6 +50,7 @@ from tiers import PLAN_LABELS, PAID_LABELS, ensure_member_labeled, remove_member
 from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
+from invite_links import invite_usable, record_invite_use
 from resend_email import send_email
 from email_layout import email_shell, email_cta_button
 from admin_auth import require_admin_key_or_session
@@ -222,6 +223,8 @@ class CreateOrderRequest(BaseModel):
     # checked for the existing-reader rate (session_auth.early_rate_for_email).
     email: Optional[str] = ''
     offer: Optional[str] = ''
+    # The code from a private /invite/<code> link (invite_links.py).
+    invite: Optional[str] = ''
 
 
 # The typed-email rate check answers "is this email on the list", so it's
@@ -343,6 +346,25 @@ async def create_order(req: CreateOrderRequest, request: Request):
             config = {**old, 'label': 'Annual Membership (existing reader rate)'}
             order_notes['rate'] = 'existing-reader'
             order_notes['email'] = rate_email.lower().strip()
+        elif req.invite:
+            # A private invite link: the old annual price for a first
+            # year, for whoever has the link, while it's open. Someone
+            # already a member renews at the renewal rate instead.
+            invite = await invite_usable(req.invite)
+            if not invite:
+                raise HTTPException(status_code=410, detail='This invite link has closed. The regular price is on the membership page.')
+            if member and member.get('is_paid'):
+                raise HTTPException(status_code=409, detail="You're already a member, so you don't need this invite.")
+            plans = PLAN_PRICING['standard']
+            old = plans.get(req.country, plans['IN'])
+            config = {**old, 'label': 'Annual Membership (invite)'}
+            order_notes['rate'] = 'invite'
+            order_notes['invite'] = invite['code']
+            order_notes['source'] = 'invite'
+            order_notes['ref'] = invite['code']
+            # A one-person link is sold to that person only.
+            if invite.get('email'):
+                order_notes['email'] = invite['email']
 
     amount = config['amount']
     label = config['label']
@@ -620,6 +642,8 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
             currency=(payment_record or {}).get('currency') or '', payment_id=req.razorpay_payment_id,
             landing=order_notes.get('landing', ''),
         )
+        if order_notes.get('invite'):
+            await record_invite_use(order_notes['invite'], email, req.razorpay_payment_id)
 
     if is_new_standard_signup:
         expiry_dt = compute_synthetic_expiry(payment_record)

@@ -2483,6 +2483,8 @@ async def robots_txt():
         "Disallow: /teams/manage\n"
         "Disallow: /teams/login\n"
         "Disallow: /s/\n"
+        "Disallow: /invite/\n"
+        "Disallow: /mixed-zone\n"
         "Allow: /\n"
         "\n"
         "Sitemap: https://www.stateofplay.club/sitemap.xml\n"
@@ -2522,6 +2524,14 @@ try:
     app.include_router(comments_router)
 except Exception as _e:
     logging.warning(f"comments module not mounted: {_e!r}")
+
+# Mount private invite links (first year at the old price)
+try:
+    from invite_links import router as invite_links_router, init as invite_links_init
+    invite_links_init(db)
+    app.include_router(invite_links_router)
+except Exception as _e:
+    logging.warning(f"invite_links module not mounted: {_e!r}")
 
 # Mount the Mixed Zone (annual members' notes feed, private replies)
 try:
