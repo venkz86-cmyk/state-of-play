@@ -15,12 +15,15 @@ const UNITS = {
   thousand: 1e3,
 };
 
-// ₹ / Rs / Rs. / INR, a number (Indian or Western grouping, decimals),
-// then an optional unit. Ranges ("₹1,500-2,000 crore") and figures the
+// Rs / Rs. / ₹ / INR (stories use Rs), a number (Indian or Western
+// grouping, decimals), then an optional unit, spaced or hyphenated
+// ("Rs 1,500 crore", "a Rs 1,500-crore deal", "Rs 500cr"). Ranges ("₹1,500-2,000 crore") and figures the
 // writer already gave in dollars ("₹1,500 crore ($180 million)") are
 // left alone.
-const AMOUNT = /(₹|\bRs\.?|\bINR)\s?(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:\s?(lakh[ -]crore|crores?|cr|lakhs?|lac|billion|bn|million|mn|thousand)\b)?/gi;
-const RANGE_OR_DOLLARS_NEXT = /^(?:\s?[-–]\s?\d|\s*\(\s*(?:US)?\$|\d)/;
+const AMOUNT = /(₹|\bRs\.?|\bINR)\s?(\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:[\s-]?(lakh[ -]crore|crores?|cr|lakhs?|lac|billion|bn|million|mn|thousand)\b)?/gi;
+// "Rs 1,500-2,000 crore", "Rs 1,500 to 2,000 crore", or a dollar figure
+// the writer already gave: the amount is left as written.
+const RANGE_OR_DOLLARS_NEXT = /^(?:\s?[-–]\s?(?:Rs\.?\s?)?\d|\s+to\s+(?:Rs\.?\s?)?\d|\s*\(\s*(?:US)?\$|\d)/i;
 
 const twoSignificant = (n) => {
   if (n === 0) return 0;
@@ -33,7 +36,7 @@ const trim = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0
 export const formatDollars = (usd) => {
   if (usd >= 1e9) {
     const b = usd / 1e9;
-    return `$${trim(b >= 10 ? Math.round(b) : Math.round(b * 10) / 10)} billion`;
+    return `$${trim(b >= 10 ? twoSignificant(b) : Math.round(b * 10) / 10)} billion`;
   }
   if (usd >= 1e6) {
     const m = usd / 1e6;
@@ -43,7 +46,7 @@ export const formatDollars = (usd) => {
 };
 
 export const rupeesToDollarText = (amount, unit) => {
-  const multiplier = unit ? UNITS[unit.toLowerCase().replace(/\s+/, ' ')] || 1 : 1;
+  const multiplier = unit ? UNITS[unit.toLowerCase().replace(/[\s-]+/, ' ')] || 1 : 1;
   const rupees = parseFloat(amount.replace(/,/g, '')) * multiplier;
   if (!Number.isFinite(rupees) || rupees <= 0) return null;
   return formatDollars(rupees / RUPEES_PER_DOLLAR);
