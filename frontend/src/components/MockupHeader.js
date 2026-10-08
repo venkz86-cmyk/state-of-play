@@ -19,6 +19,7 @@ const NAV = [
   { path: '/state-of-play', label: 'Stories' },
   { path: '/left-field', label: 'The Left Field' },
   { path: '/outfield', label: 'The Outfield' },
+  { path: '/trial', label: 'The Ten' },
   { path: '/teams', label: 'For Teams' },
 ];
 
@@ -65,13 +66,13 @@ export const MockupHeader = () => {
           </Link>
 
           {/* Desktop nav — Schibsted Grotesk 15px */}
-          <nav className="hidden lg:flex items-center gap-8 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-8 flex-1 justify-center">
             {NAV.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 data-testid={`mockup-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`font-plex text-[15px] transition-colors duration-200 ${
+                className={`font-plex text-[15px] whitespace-nowrap transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'text-[var(--accent-burgundy)]'
                     : 'text-[var(--text)] hover:text-[var(--accent-burgundy)]'
