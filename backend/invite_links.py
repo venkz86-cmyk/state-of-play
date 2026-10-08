@@ -21,6 +21,8 @@ Provides:
   * GET  /api/admin/invites                 — admin: every link, with uses
   * POST /api/admin/invites                 — admin: make a link
   * POST /api/admin/invites/{code}/close    — admin: stop a link working
+  * POST /api/admin/invites/{code}/refresh  — admin: new code and QR; the
+                                              old ones stop working
 
 Used by razorpay_orders.create_order (invite_usable) and verify_payment
 (record_invite_use).
@@ -75,6 +77,10 @@ def _iso(value) -> Optional[str]:
     return value.isoformat() if value else None
 
 
+def _new_code() -> str:
+    return ''.join(secrets.choice(_ALPHABET) for _ in range(10))
+
+
 def _clean_code(code: str) -> str:
     code = (code or '').strip().lower()
     return code if code and len(code) <= 32 and all(c in _ALPHABET for c in code) else ''
@@ -112,8 +118,13 @@ async def record_invite_use(code: str, email: str, payment_id: str) -> None:
     if _db is None or not code:
         return
     try:
+        # An order started on a code that has since been refreshed still
+        # counts against the same link.
+        doc = await _db.invite_links.find_one({'code': code}) or await _db.invite_links.find_one({'old_codes': code})
+        if not doc:
+            return
         await _db.invite_links.update_one(
-            {'code': code, 'uses.payment_id': {'$ne': payment_id}},
+            {'code': doc['code'], 'uses.payment_id': {'$ne': payment_id}},
             {'$push': {'uses': {'email': (email or '').lower().strip(), 'payment_id': payment_id, 'at': _now()}}},
         )
     except Exception as e:
@@ -249,7 +260,7 @@ async def create_invite(req: InviteCreate, _admin: None = Depends(require_admin_
         logger.warning(f'invite index ensure failed (non-fatal): {e!r}')
     email = (str(req.email) if req.email else '').lower().strip()
     doc = {
-        'code': ''.join(secrets.choice(_ALPHABET) for _ in range(10)),
+        'code': _new_code(),
         'name': ' '.join(req.name.split()),
         # A one-person link works once.
         'max_uses': 1 if email else req.max_uses,
@@ -278,3 +289,24 @@ async def close_invite(code: str, _admin: None = Depends(require_admin_key_or_se
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail='Link not found')
     return {'success': True}
+
+
+@router.post('/api/admin/invites/{code}/refresh')
+async def refresh_invite(code: str, _admin: None = Depends(require_admin_key_or_session)):
+    """For a link or QR that has travelled further than intended: the
+    link gets a new code (and so a new QR), and the old one stops working
+    at once. Name, cap, last day and who joined carry over."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Invites unavailable')
+    code = _clean_code(code)
+    doc = await _db.invite_links.find_one({'code': code}) if code else None
+    if not doc:
+        raise HTTPException(status_code=404, detail='Link not found')
+    if doc.get('email'):
+        raise HTTPException(status_code=400, detail='A one-person link works only for its own address. Close it and make a new one instead.')
+    new = _new_code()
+    await _db.invite_links.update_one(
+        {'code': code},
+        {'$set': {'code': new, 'refreshed_at': _now()}, '$push': {'old_codes': code}},
+    )
+    return _serialize(await _db.invite_links.find_one({'code': new}))
