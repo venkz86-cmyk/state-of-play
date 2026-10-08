@@ -23,6 +23,7 @@ import { NotFoundMockup } from './NotFoundMockup';
 import { seasonLabel } from '../lib/season';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { addDollarAmounts } from '../lib/currency';
+import { DollarToggle, useShowDollars } from '../components/DollarToggle';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -57,6 +58,7 @@ export const ArticleMockup = () => {
   const { canAccessPremium, user, isLoggedIn } = useAuth();
   const geo = useGeoPricing();
   const abroad = !geo.loading && geo.country && geo.country !== 'IN';
+  const [showDollars, setShowDollars] = useShowDollars();
 
   const previewMember = searchParams.get('preview') === 'member';
   // isMember drives comments/bookmark/gift/nominate -- real subscriber
@@ -244,9 +246,13 @@ export const ArticleMockup = () => {
   const rupeeHtml = isGated
     ? (gatedPreviewHtml || previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
     : (article.content || article.preview_content || '');
-  // Readers outside India see a rounded dollar figure after rupee
-  // amounts (lib/currency.js).
-  const bodyHtml = abroad ? addDollarAmounts(rupeeHtml) : rupeeHtml;
+  // Readers outside India can switch on a rounded dollar figure after
+  // rupee amounts (lib/currency.js); the switch only appears when the
+  // story has an amount to convert, and the story is unchanged until
+  // they use it.
+  const dollarHtml = abroad ? addDollarAmounts(rupeeHtml) : rupeeHtml;
+  const hasAmounts = dollarHtml !== rupeeHtml;
+  const bodyHtml = hasAmounts && showDollars ? dollarHtml : rupeeHtml;
   const beat = article.theme;
   const articleTags = article.tags?.length > 0
     ? article.tags
@@ -347,7 +353,10 @@ export const ArticleMockup = () => {
           {/* Utility strip: Text-size toggle (leftmost, prioritised for
               discoverability per audit) + Save + Share row */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
-            <MockupFontSizeToggle value={size} onChange={setSize} />
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+              <MockupFontSizeToggle value={size} onChange={setSize} />
+              {hasAmounts && <DollarToggle on={showDollars} onChange={setShowDollars} />}
+            </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               {isMember && <BookmarkButton article={article} />}
               <ShareRow
