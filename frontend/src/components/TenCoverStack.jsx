@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -42,6 +42,14 @@ const Cover = ({ cover, width }) =>
    don't load, so the page falls back to how it looked before. */
 export const TenCoverStack = ({ variant = 'stack' }) => {
   const [covers, setCovers] = useState(null);
+  // Desktop: which cover is on top, and whether it's sliding off.
+  const [start, setStart] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const [turned, setTurned] = useState(false);
+  const timer = useRef(null);
+  // Phone: the thumbnail whose title is showing.
+  const [picked, setPicked] = useState(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   useEffect(() => {
     let active = true;
@@ -56,22 +64,44 @@ export const TenCoverStack = ({ variant = 'stack' }) => {
 
   if (variant === 'row') {
     if (!usable) return null;
+    const shown = picked === null ? null : covers[picked];
     return (
       <figure data-testid="ten-cover-row" aria-label={LABEL} className="mt-8">
-        <div className="flex items-end pt-2 px-1">
+        <div className="flex items-end pt-3 px-1">
           {covers.map((c, i) => (
-            <div
+            <button
+              type="button"
               key={c.slug}
-              className="relative w-[18%] aspect-[3/4]"
-              style={{ marginLeft: i === 0 ? 0 : '-9.1%', zIndex: covers.length - i, '--i': i, transform: `rotate(${(TILT[i] || 0) * 0.8}deg)` }}
+              onClick={() => setPicked(picked === i ? null : i)}
+              aria-label={c.title}
+              aria-pressed={picked === i}
+              data-testid="ten-row-thumb"
+              className="ten-row-thumb relative w-[18%] aspect-[3/4] p-0 border-0 bg-transparent"
+              style={{
+                marginLeft: i === 0 ? 0 : '-9.1%',
+                zIndex: picked === i ? 30 : covers.length - i,
+                '--i': i,
+                transform: `rotate(${(TILT[i] || 0) * 0.8}deg) translateY(${picked === i ? -10 : 0}px)`,
+              }}
             >
-              <div className="ten-row-card w-full h-full border border-[var(--rule)] bg-[var(--bg)] overflow-hidden shadow-[0_6px_14px_-8px_rgba(0,0,0,0.45)]">
+              <div className={`ten-row-card w-full h-full border bg-[var(--bg)] overflow-hidden shadow-[0_6px_14px_-8px_rgba(0,0,0,0.45)] ${picked === i ? 'border-[var(--accent-burgundy)]' : 'border-[var(--rule)]'}`}>
                 <Cover cover={c} width={300} />
               </div>
-            </div>
+            </button>
           ))}
         </div>
-        <figcaption className="font-plex text-[13px] text-[var(--text-label)] mt-3">{LABEL}</figcaption>
+        <figcaption className="mt-3 min-h-[40px]" aria-live="polite" data-testid="ten-row-caption">
+          {shown ? (
+            <>
+              <span className="block font-editorial text-[16px] leading-snug text-[var(--text)]">{shown.title}</span>
+              {shortDate(shown.published_at) && (
+                <span className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-1">{shortDate(shown.published_at)}</span>
+              )}
+            </>
+          ) : (
+            <span className="font-plex text-[13px] text-[var(--text-label)]">{LABEL}. Tap a cover for its title.</span>
+          )}
+        </figcaption>
       </figure>
     );
   }
@@ -79,33 +109,61 @@ export const TenCoverStack = ({ variant = 'stack' }) => {
   // Desktop pile. A fixed frame while loading keeps the hero from jumping.
   if (covers === null) return <div className="ten-stack-frame" aria-hidden="true" />;
   if (!usable) return null;
-  const top = covers[0];
+  const n = covers.length;
+  const ordered = covers.map((_, k) => covers[(start + k) % n]);
+  const next = () => {
+    if (leaving) return;
+    setTurned(true);
+    setLeaving(true);
+    timer.current = setTimeout(() => {
+      setStart((v) => (v + 1) % n);
+      setLeaving(false);
+    }, 260);
+  };
+  const prev = () => { if (!leaving) { setTurned(true); setStart((v) => (v - 1 + n) % n); } };
+  const onKey = (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+  };
   return (
-    <figure data-testid="ten-cover-stack" aria-label={LABEL} className="ten-stack-frame ten-stack group">
-      {covers.map((c, i) => (
-        <div
-          key={c.slug}
-          className="ten-stack-card"
-          style={{ '--i': i, '--tilt': TILT[i] || 0, zIndex: covers.length - i }}
-          aria-hidden={i === 0 ? undefined : 'true'}
-        >
-          <div className="ten-stack-inner border border-[var(--rule)] bg-[var(--bg)] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
-            <div className="aspect-[3/2] overflow-hidden">
-              <Cover cover={c} width={750} />
-            </div>
-            <div className="px-5 pt-4 pb-5 border-t border-[var(--rule)]">
-              <p className="font-editorial text-[21px] leading-[1.2] text-[var(--text)] line-clamp-2">{c.title}</p>
-              {shortDate(c.published_at) && (
-                <p className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-2">{shortDate(c.published_at)}</p>
-              )}
+    <figure data-testid="ten-cover-stack" className="ten-stack-figure">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={next}
+        onKeyDown={onKey}
+        aria-label={`${LABEL}. Showing ${start + 1} of ${n}: ${ordered[0].title}. Press for the next one.`}
+        className="ten-stack-frame ten-stack group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-burgundy)] focus-visible:ring-offset-4"
+      >
+        {ordered.map((c, i) => (
+          <div
+            key={c.slug}
+            className={`ten-stack-card ${i === 0 && leaving ? 'ten-stack-leaving' : ''}`}
+            style={{ '--i': i, '--tilt': TILT[i] || 0, zIndex: n - i }}
+            aria-hidden="true"
+          >
+            <div className="ten-stack-inner border border-[var(--rule)] bg-[var(--bg)] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)]">
+              <div className="aspect-[3/2] overflow-hidden">
+                <Cover cover={c} width={750} />
+              </div>
+              <div className="px-5 pt-4 pb-5 border-t border-[var(--rule)]">
+                <p className="font-editorial text-[21px] leading-[1.2] text-[var(--text)] line-clamp-2">{c.title}</p>
+                {shortDate(c.published_at) && (
+                  <p className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-2">{shortDate(c.published_at)}</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-      <span className="ten-stack-seal" aria-hidden="true" title={top ? LABEL : undefined}>
-        <span className="font-editorial text-[30px] leading-none">{covers.length}</span>
-        <span className="font-plex text-[9px] uppercase tracking-[0.14em] mt-1">stories</span>
-      </span>
+        ))}
+        <span className="ten-stack-seal" aria-hidden="true">
+          <span className="font-editorial text-[30px] leading-none">{n}</span>
+          <span className="font-plex text-[9px] uppercase tracking-[0.14em] mt-1">stories</span>
+        </span>
+      </div>
+      <figcaption className="flex items-baseline justify-between gap-4 mt-6 max-w-[520px] ml-auto font-plex text-[13px] text-[var(--text-label)]">
+        <span data-testid="ten-stack-count" className="tabular-nums">{start + 1} of {n}</span>
+        <span>{turned ? 'Click for the next one' : 'Click the pile to flip through'}</span>
+      </figcaption>
     </figure>
   );
 };
