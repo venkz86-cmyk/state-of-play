@@ -321,3 +321,9 @@ a:visited { color: inherit; }
   margin-right: 0.7rem;
 }
 
+
+/* Dollar figures added after rupee amounts for readers outside India
+   (lib/currency.js): same size, one step quieter than the story text. */
+.tsop-usd {
+  color: var(--text-muted);
+}
