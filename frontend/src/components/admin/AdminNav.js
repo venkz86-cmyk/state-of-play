@@ -40,7 +40,7 @@ export const NAV_GROUPS = [
     pages: [
       { path: 'tools/complimentary', label: 'Complimentary', title: 'Give a complimentary membership', description: 'A month, three months, six months or a year, for someone you choose. They get a note from you now, and an offer when it ends.' },
       { path: 'tools/link-email', label: 'Link a payment email', title: 'Link a payment email', description: 'For someone who paid in Razorpay with a different email than the one they sign in with.' },
-      { path: 'tools/left-field', label: 'Left Field readers', title: 'Left Field readers', description: 'The list for the ₹2,499 Left Field offer, open until 31 October.' },
+      { path: 'tools/left-field', label: 'Left Field readers', title: 'Left Field readers', description: 'The list for the ₹2,499 Left Field offer, open until October 31.' },
       { path: 'tools/import', label: 'Import past payments', title: 'Import past payments', description: 'Pulls payments from Razorpay into the dashboard. Safe to run again.' },
       { path: 'links', label: 'Links', title: 'Links', description: 'Cold and gift access links you have sent.' },
     ],

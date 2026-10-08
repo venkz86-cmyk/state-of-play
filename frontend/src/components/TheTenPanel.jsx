@@ -8,7 +8,7 @@ import { trialUpgradePricing } from '../lib/octoberPricing';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const shortDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
 // Byline/meta line shared by every card size below. A read story doesn't
 // carry a badge -- the title itself dims, and "Read" quietly joins the

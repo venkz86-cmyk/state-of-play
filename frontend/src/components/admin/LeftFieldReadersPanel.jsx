@@ -4,7 +4,7 @@ import { formatDateTime } from '../../lib/format';
 
 // The Left Field's Substack readers, for the ₹2,499 offer: upload
 // Substack's subscriber export and everyone who signed up before
-// 6 October can pay that rate at /signup?offer=left-field
+// October 6 can pay that rate at /signup?offer=left-field
 // (payments.import_left_field_readers, session_auth.early_rate_for_email).
 const n = (x) => (x ?? 0).toLocaleString('en-IN');
 
@@ -70,8 +70,8 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
   return (
     <div className="max-w-[640px]" data-testid="left-field-readers">
       <p className="font-plex text-[14px] text-[var(--text-muted)] mb-5">
-        Upload the subscriber export from Substack (Settings → Exports). Readers who signed up before 6 October can
-        then subscribe at ₹2,499 + GST until 31 October through stateofplay.club/signup?offer=left-field. Uploading a
+        Upload the subscriber export from Substack (Settings → Exports). Readers who signed up before October 6 can
+        then subscribe at ₹2,499 + GST until October 31 through stateofplay.club/signup?offer=left-field. Uploading a
         newer export only adds the new emails.
       </p>
       {status?.total ? (
@@ -84,7 +84,7 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
       {result && (
         <p className="font-plex text-[13px] text-[var(--text)] mb-4" data-testid="left-field-result">
           Added {n(result.added)}. {n(result.already_listed)} were already on the list.
-          {result.too_recent ? ` ${n(result.too_recent)} signed up on or after 6 October and were left out.` : ''}
+          {result.too_recent ? ` ${n(result.too_recent)} signed up on or after October 6 and were left out.` : ''}
           {' '}{n(result.total)} readers on the list now.
           {result.date_column
             ? ` Signup dates came from the “${result.date_column}” column.`
@@ -99,7 +99,7 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
           Checked against TSOP subscribers: removed {n(audit.removed_subscribers)} current or past
           subscriber{audit.removed_subscribers === 1 ? '' : 's'}. {n(audit.total)} readers on the list now:{' '}
           {n(audit.substack_only)} on Substack only, {n(audit.ghost_free_before_cutover)} free Ghost readers from before
-          6 October{audit.ghost_free_after_cutover ? ` and ${n(audit.ghost_free_after_cutover)} who joined Ghost after` : ''}.
+          October 6{audit.ghost_free_after_cutover ? ` and ${n(audit.ghost_free_after_cutover)} who joined Ghost after` : ''}.
         </p>
       )}
       {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-3">{error}</p>}

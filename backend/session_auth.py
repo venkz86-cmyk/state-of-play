@@ -97,10 +97,10 @@ router = APIRouter()
 
 _db = None
 
-# The existing-reader rate. From 6 October a new annual membership costs
+# The existing-reader rate. From October 6 a new annual membership costs
 # ₹3,499 + GST ($169). Free members who joined before then, and have
 # never paid for a membership, can still buy one at the old ₹2,499 + GST
-# ($120) until 31 October, once signed in. EXISTING_READER_JOINED_BEFORE
+# ($120) until October 31, once signed in. EXISTING_READER_JOINED_BEFORE
 # is the same instant as razorpay_orders.OCT_1_CUTOFF (that module
 # imports this one, so it can't be imported from there).
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -133,7 +133,7 @@ async def existing_reader_rate_until(member: dict, label_names: list, is_paid: b
     if is_paid or is_paid_from_labels(label_names) or resolve_tier(label_names, is_paid) != 'free':
         return None
     joined = _ghost_time(member.get('created_at'))
-    # A Ghost account opened after 6 October still qualifies if the email
+    # A Ghost account opened after October 6 still qualifies if the email
     # read The Left Field on Substack before then.
     if (not joined or joined >= EXISTING_READER_JOINED_BEFORE) and not await is_left_field_reader(email):
         return None
@@ -146,7 +146,7 @@ async def early_rate_for_email(email: str) -> Optional[str]:
     """existing_reader_rate_until for someone who isn't signed in, from
     the email they typed at checkout: a free Ghost member by the same
     rule, or, with no Ghost account, a Left Field reader on Substack from
-    before 6 October who has never paid. create_order then sells the
+    before October 6 who has never paid. create_order then sells the
     membership to that email only, so the rate can't be used for anyone
     else."""
     email = (email or '').lower().strip()

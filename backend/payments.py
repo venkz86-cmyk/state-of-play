@@ -759,8 +759,8 @@ async def link_payment_email(
 
 
 # The Left Field's readers on Substack, uploaded from Substack's subscriber
-# export. Readers who signed up before 6 October get the existing-reader
-# rate until 31 October like Ghost's own free readers do
+# export. Readers who signed up before October 6 get the existing-reader
+# rate until October 31 like Ghost's own free readers do
 # (session_auth.existing_reader_rate_until), most of them without a Ghost
 # account to sign in with.
 LEFT_FIELD_JOINED_BEFORE = datetime(2026, 10, 6, tzinfo=timezone(timedelta(hours=5, minutes=30)))
@@ -792,7 +792,7 @@ def parse_left_field_export(text: str) -> dict:
     'date_column': name or None} from a Substack subscriber CSV. The
     email column is whichever header contains 'email'; the signup date
     is the first header that looks like one ('created', 'subscri…',
-    'date'), if any. Rows dated on or after 6 October are left out, and
+    'date'), if any. Rows dated on or after October 6 are left out, and
     so are rows whose source column says 'import': readers brought into
     Substack from Ghost, who are TSOP's own readers ('imported')."""
     rows = list(csv.reader(io.StringIO(text or '')))

@@ -58,8 +58,8 @@ class TestQuotaEndpoint:
         assert d['quota'] == 5
         assert d['remaining'] == 5
         assert isinstance(d['resets_on'], str) and d['resets_on']
-        # e.g. "1 August" — day + month
-        assert re.match(r"^\d{1,2}\s+[A-Za-z]+$", d['resets_on']), f"resets_on shape unexpected: {d['resets_on']}"
+        # e.g. "August 1" — day + month
+        assert re.match(r"^[A-Za-z]+\s+\d{1,2}$", d["resets_on"]), f"resets_on shape unexpected: {d['resets_on']}"
 
     def test_missing_param(self):
         r = requests.get(f"{BASE_URL}/api/nominations/quota", timeout=15)

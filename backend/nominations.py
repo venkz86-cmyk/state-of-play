@@ -347,9 +347,9 @@ async def _count_pair_nominations(subscriber_email: str, nominee_email: str) -> 
 
 
 def _month_reset_label() -> str:
-    """Human-readable reset date, e.g. '1 August'."""
+    """Human-readable reset date, e.g. 'August 1'."""
     _, nxt = _current_month_bounds()
-    return nxt.strftime('%-d %B') if hasattr(nxt, 'strftime') else '1st of next month'
+    return nxt.strftime('%B %-d') if hasattr(nxt, 'strftime') else '1st of next month'
 
 
 async def _count_gift_links_30d(subscriber_email: str) -> int:
@@ -1160,7 +1160,7 @@ async def nudge_nominees(body: NudgeBody, _admin: None = Depends(require_admin_k
     if body.test_to:
         ok = await _send_email(
             to=body.test_to, subject='[Test] A year of The State of Play',
-            html=_nomination_nudge_email_html('A State of Play reader', _utcnow().strftime('%d %B %Y')),
+            html=_nomination_nudge_email_html('A State of Play reader', _utcnow().strftime('%B %-d, %Y')),
         )
         return {'sent': 1 if ok else 0, 'skipped': [], 'test': True}
     if _db is None:
@@ -1178,7 +1178,7 @@ async def nudge_nominees(body: NudgeBody, _admin: None = Depends(require_admin_k
             skipped.append({'email': email, 'reason': f'Nudged {(now - last).days} days ago'})
             continue
         started = row['started_at'] and datetime.fromisoformat(row['started_at'])
-        nominated_on = started.strftime('%d %B %Y') if started else 'a recent day'
+        nominated_on = started.strftime('%B %-d, %Y') if started else 'a recent day'
         ok = await _send_email(
             to=email, subject='A year of The State of Play',
             html=_nomination_nudge_email_html(row['nominator_name'] or 'a State of Play reader', nominated_on),
@@ -1318,7 +1318,7 @@ def _attribution_block(token_doc: dict) -> str:
         if isinstance(expires_at, datetime):
             if expires_at.tzinfo is None:
                 expires_at = expires_at.replace(tzinfo=timezone.utc)
-            expiry_str = expires_at.astimezone(IST).strftime('%d %B, %I:%M %p IST')
+            expiry_str = expires_at.astimezone(IST).strftime('%B %-d, %-I:%M %p IST')
         else:
             expiry_str = 'soon'
         tlf_cta = f'{PUBLIC_BASE_URL}/left-field?ref=shared-story'
@@ -1383,7 +1383,7 @@ def _shared_story_page(token_doc: dict, post: dict, related: list, token_id: str
     published = post.get('published_at') or ''
     try:
         if published:
-            published = datetime.fromisoformat(published.replace('Z', '+00:00')).strftime('%d %B %Y')
+            published = datetime.fromisoformat(published.replace('Z', '+00:00')).strftime('%B %-d, %Y')
     except Exception:
         pass
     related_html = ''.join(_related_card(p) for p in (related or []))

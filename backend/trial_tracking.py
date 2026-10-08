@@ -445,7 +445,7 @@ def _trial_upgrade_price_text(country: str) -> str:
     """The live trial-upgrade price for this reader's geo, resolved
     through razorpay_orders.py's own pricing config rather than a
     number hardcoded here -- that config has its own before/after split
-    (the 6 October cutoff), so reading it from the shared config means
+    (the October 6 cutoff), so reading it from the shared config means
     this line can't go stale the way a fixed figure already had.
     Imported locally rather than at module level: razorpay_orders.py
     imports start_trial from this module, so a module-level import back

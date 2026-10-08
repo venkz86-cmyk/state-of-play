@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout } from '../components/MockupLayout';
 
 const datelineDate = (d = new Date()) =>
-  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 export const LoginMockup = () => {
   const navigate = useNavigate();

@@ -19,7 +19,7 @@ import { BackfillPanel } from '../components/admin/BackfillPanel';
 import { ComplimentaryPanel } from '../components/admin/ComplimentaryPanel';
 
 const todayLine = () =>
-  new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // Every page opens with its title and one line on what it's for, from
 // AdminNav's NAV_GROUPS, so the panels themselves carry no headings.

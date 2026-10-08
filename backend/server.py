@@ -1753,7 +1753,7 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
         if override < payment_day:
             raise HTTPException(
                 status_code=400,
-                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%d %b %Y')})",
+                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%b %-d, %Y')})",
             )
         if override > today:
             raise HTTPException(status_code=400, detail="Issue date cannot be in the future")
@@ -1811,8 +1811,8 @@ async def generate_gst_invoice(req: InvoiceGenerateRequest):
             "state_code": req.state_code or "—",
             "is_international": req.is_international,
         },
-        "period_start": sub_start.strftime("%d %b %Y"),
-        "period_end": sub_end.strftime("%d %b %Y"),
+        "period_start": sub_start.strftime("%b %-d, %Y"),
+        "period_end": sub_end.strftime("%b %-d, %Y"),
         "razorpay_ref": rzp_ref,
         "taxable_value": taxable_value,
         "tax": tax,
@@ -1984,7 +1984,7 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
         if override < payment_day:
             raise HTTPException(
                 status_code=400,
-                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%d %b %Y')})",
+                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%b %-d, %Y')})",
             )
         if override > today:
             raise HTTPException(status_code=400, detail="Issue date cannot be in the future")
@@ -2016,8 +2016,8 @@ async def generate_team_gst_invoice(req: TeamInvoiceGenerateRequest):
             "state_code": req.state_code or "—",
             "is_international": req.is_international,
         },
-        "period_start": sub_start.strftime("%d %b %Y"),
-        "period_end": sub_end.strftime("%d %b %Y"),
+        "period_start": sub_start.strftime("%b %-d, %Y"),
+        "period_end": sub_end.strftime("%b %-d, %Y"),
         "razorpay_ref": rzp_ref,
         "taxable_value": taxable_value,
         "tax": tax,
@@ -2143,7 +2143,7 @@ async def get_story_ssr(slug: str, request: Request):
     if published:
         try:
             dt = datetime.fromisoformat(published.replace('Z', '+00:00'))
-            display_date = dt.strftime('%-d %B %Y')
+            display_date = dt.strftime('%B %-d, %Y')
         except Exception:
             display_date = published[:10]
 

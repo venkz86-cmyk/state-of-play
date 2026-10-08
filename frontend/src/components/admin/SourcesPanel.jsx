@@ -30,7 +30,7 @@ const PLAN_LABEL = {
 const WEEK_OPTIONS = [4, 8, 26];
 
 const weekLabel = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
 // Turns {name: count} into sorted table rows.
 const toRows = (counts, labels) =>
@@ -47,7 +47,7 @@ const Section = ({ title, children }) => (
 
 // Where new free members, payments and gifts came from: which button on
 // the site, and which ?ref= tag the visitor first arrived with. Counted
-// from the day tracking went live (5 October 2026).
+// from the day tracking went live (October 5, 2026).
 export const SourcesPanel = ({ onAuthError }) => {
   const [weeks, setWeeks] = useState(8);
   const [data, setData] = useState(null);
@@ -143,7 +143,7 @@ export const SourcesPanel = ({ onAuthError }) => {
       </Section>
 
       <p className="font-plex text-[13px] text-[var(--text-muted)] max-w-[60ch]">
-        Counted from 5 October 2026. Add ?ref= to links you share so they show up here:
+        Counted from October 5, 2026. Add ?ref= to links you share so they show up here:
         ?ref=linkedin, ?ref=x, ?ref=whatsapp, ?ref=leftfield, ?ref=email.
       </p>
     </div>

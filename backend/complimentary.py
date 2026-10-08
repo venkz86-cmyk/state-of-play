@@ -104,7 +104,7 @@ def first_name(name: str) -> str:
 
 
 def long_date(dt: datetime) -> str:
-    return f'{dt.day} {dt.strftime("%B %Y")}'
+    return f'{dt.strftime("%B")} {dt.day}, {dt.year}'
 
 
 # ─── Emails (Venkat's copy, proofread) ──────────────────────────────────────

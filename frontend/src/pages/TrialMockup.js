@@ -8,7 +8,7 @@ import { trialUpgradePricing, newSignupAnnualPricing, isBeforeOctoberCutover } f
 import { STORIES_PER_SEASON } from '../lib/season';
 
 const datelineDate = (d = new Date()) =>
-  d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 // The fourteen-stories outcome described below is illustrative (ten
 // plus roughly a month of weekly publishing), not a per-visitor live
@@ -26,12 +26,12 @@ const TRACK = [
 ];
 
 
-// Built per render so the upgrade answer follows the 6 October cutover
+// Built per render so the upgrade answer follows the October 6 cutover
 // and the reader's country, like trialUpgradePricing does.
 const buildFaqs = (isIndia) => [
   ['What happens to my ten stories after 30 days?', 'They stay yours, permanently. That never changes, whether you subscribe or not. If you don’t subscribe, your account becomes a free membership, same as anyone who signs up for the Left Field briefing, with the original ten still there whenever you want them. What closes is everything published after you joined. Subscribing picks that back up, plus the rest of the archive.'],
   ['Can I upgrade before the 30 days are up?', isBeforeOctoberCutover()
-    ? 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before 6 October and it’s ₹2,499 + GST, today’s rate. From 6 October it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'
+    ? 'Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve. Upgrade before October 6 and it’s ₹2,499 + GST, today’s rate. From October 6 it’s ₹2,999 + GST, the same as a normal renewal, not the new-signup rate.'
     : `Yes, any time. Take the annual membership before your month ends and you get thirteen months for the price of twelve, at ${isIndia ? '₹2,999 + GST' : '$160'}. That is the renewal rate, lower than the ${isIndia ? '₹3,499 + GST' : '$169'} a new subscriber pays.`],
   ['Does it auto-renew into a subscription?', 'No. It is a one-time payment for thirty days. Nothing renews, nothing charges you again. If you want more after that, you choose it yourself.'],
   ['What am I not getting, compared to a subscription?', 'The full archive, comments, nominating other readers, and anything published after your thirty days. The original ten stories are the same either way.'],
@@ -94,7 +94,7 @@ export const TrialMockup = () => {
   }, []);
 
   return (
-    <MockupLayout testId="mockup-trial" seo={{ title: 'The Ten', path: '/trial', description: 'Ten of The State of Play’s most recent stories on the business of Indian sport, for ₹590. Stay the month and everything new is yours too.' }}>
+    <MockupLayout testId="mockup-trial" seo={{ title: 'The Ten', path: '/trial', image: 'https://www.stateofplay.club/og/trial.png', description: 'Ten of The State of Play’s most recent stories on the business of Indian sport, for ₹590. Stay the month and everything new is yours too.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru · {datelineDate()}</Overline>

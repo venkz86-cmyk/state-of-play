@@ -3,6 +3,61 @@
   "buildCommand": "yarn build",
   "rewrites": [
     {
+      "source": "/signup",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/signup.html"
+    },
+    {
+      "source": "/trial",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/trial.html"
+    },
+    {
+      "source": "/students",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/students.html"
+    },
+    {
+      "source": "/teams",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/teams.html"
+    },
+    {
+      "source": "/gift",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/gift.html"
+    },
+    {
       "source": "/content/:path*",
       "destination": "https://the-state-of-play.ghost.io/content/:path*"
     },

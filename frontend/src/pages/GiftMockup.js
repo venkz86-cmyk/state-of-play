@@ -26,14 +26,14 @@ export const GiftMockup = () => {
   const [result, setResult] = useState(null);
 
   // Same rate a new signup pays for themselves (razorpay_orders.py's
-  // PLAN_PRICING['standard'], date-gated at the same 5 October cutoff)
+  // PLAN_PRICING['standard'], date-gated at the same October 5 cutoff)
   // -- a gift is basically a new subscription, so it follows the new-
   // signup price on both sides of that date, not a separate gift price.
   const pricingInfo = newSignupAnnualPricing(isIndia);
   const gstTotal = isBeforeOctoberCutover() ? '₹2,949' : '₹4,129';
 
   return (
-    <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', description: 'Give someone a year of The State of Play: reported stories on the business of Indian sport, delivered weekly.' }}>
+    <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', image: 'https://www.stateofplay.club/og/gift.png', description: 'Give someone a year of The State of Play: reported stories on the business of Indian sport, delivered weekly.' }}>
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Give a subscription</Overline>

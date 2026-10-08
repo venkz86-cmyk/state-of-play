@@ -88,8 +88,8 @@ const AdminEmail = () => (
 
       <p>
         Your <strong className="font-semibold">Team-5 subscription</strong> to The State of Play
-        is set up. Thank you. The plan runs from <strong className="font-semibold">14 April 2026
-        to 14 April 2027</strong>.
+        is set up. Thank you. The plan runs from <strong className="font-semibold">April 14, 2026
+        to April 14, 2027</strong>.
       </p>
 
       <p>

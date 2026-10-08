@@ -118,7 +118,7 @@ def _create_ghost_admin_token() -> Optional[str]:
 # rate. No promise about a future price is ever made at signup time --
 # next year's rate is next year's decision. 'trial-upgrade' is a
 # DELIBERATELY separate plan from razorpay_subscriptions.py's renewal
-# rate, even though the amount lands on the same number from 6 October
+# rate, even though the amount lands on the same number from October 6
 # on: an upgrade from The Ten carries the thirteen-months-for-twelve
 # bonus (see admin_dashboard.py's _compute_expiry), which only applies
 # to this plan, not to a normal renewal at the same price. The amount
@@ -126,8 +126,8 @@ def _create_ghost_admin_token() -> Optional[str]:
 # TRIAL_UPGRADE_LAUNCH_PRICING below for the cheaper pre-cutoff price.
 PLAN_PRICING = {
     'standard': {
-        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, through 5 October
-        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, through 5 October
+        'IN': {'amount': 294900, 'currency': 'INR', 'label': 'Annual Membership'},   # ₹2,499 + 18% GST = ₹2,949, through October 5
+        'INTL': {'amount': 12000, 'currency': 'USD', 'label': 'Annual Membership'},  # $120, through October 5
     },
     'trial': {
         'IN': {'amount': 59000, 'currency': 'INR', 'label': '30-Day Trial (one-time payment, not a subscription)'},  # ₹500 + 18% GST = ₹590
@@ -166,15 +166,15 @@ PLAN_PRICING = {
     },
 }
 
-# Everything below pivots on the same instant: 6 October 00:00 IST, when
+# Everything below pivots on the same instant: October 6 00:00 IST, when
 # the new-signup rate rises from ₹2,499/$120 to ₹3,499/$169, and the
-# trial-upgrade launch discount (below) ends. 5 October runs the full
-# day at the current rate (moved from 1 October -- Venkat's call, to
-# keep pushing The Ten right through 5 October).
+# trial-upgrade launch discount (below) ends. October 5 runs the full
+# day at the current rate (moved from October 1 -- Venkat's call, to
+# keep pushing The Ten right through October 5).
 IST = timezone(timedelta(hours=5, minutes=30))
 OCT_1_CUTOFF = datetime(2026, 10, 6, tzinfo=IST)
 
-# The new-signup rate itself, from 6 October on -- this is the one
+# The new-signup rate itself, from October 6 on -- this is the one
 # place that number is actually charged (a new signup never touches a
 # Subscription object at all, see the PLAN_PRICING comment above).
 NEW_SIGNUP_RATE_RISE_PRICING = {
@@ -182,9 +182,9 @@ NEW_SIGNUP_RATE_RISE_PRICING = {
     'INTL': {'amount': 16900, 'currency': 'USD', 'label': 'Annual Membership'},  # $169
 }
 
-# Launch-window price on the trial-upgrade: through 5 October, upgrading
+# Launch-window price on the trial-upgrade: through October 5, upgrading
 # costs exactly today's direct-signup rate -- no discount for the trial
-# fee already paid, Venkat's explicit call. From 6 October, PLAN_PRICING
+# fee already paid, Venkat's explicit call. From October 6, PLAN_PRICING
 # ['trial-upgrade'] above takes over instead: the new, higher direct
 # rate minus the ₹590/$9 trial fee, so the trial fee is effectively
 # refunded for anyone who upgrades after the price rise.
@@ -317,8 +317,8 @@ async def create_order(req: CreateOrderRequest, request: Request):
             detail=f"No pricing configured for plan='{req.plan}' country='{req.country}'",
         )
 
-    # A signed-in free member who joined before 6 October keeps the old
-    # annual price until 31 October (session_auth.existing_reader_rate_until).
+    # A signed-in free member who joined before October 6 keeps the old
+    # annual price until October 31 (session_auth.existing_reader_rate_until).
     # The order is tied to their account, so the price can't be passed on.
     # Someone not signed in who came through the Left Field offer link
     # gets the same rate for the email they typed, and the order is then
@@ -624,7 +624,7 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     if is_new_standard_signup:
         expiry_dt = compute_synthetic_expiry(payment_record)
         expiry_date_str = (
-            datetime.fromisoformat(expiry_dt).strftime('%d %B %Y') if expiry_dt else 'a year from today'
+            datetime.fromisoformat(expiry_dt).strftime('%B %-d, %Y') if expiry_dt else 'a year from today'
         )
         sent = await send_email(
             to=email, subject="You’re in. Welcome to The State of Play",
@@ -751,7 +751,7 @@ async def test_welcome_email(
         html = _free_welcome_email_html()
         subject = 'Welcome to The State of Play'
     elif req.template == 'standard':
-        sample_expiry = (datetime.now(timezone.utc) + timedelta(days=365)).strftime('%d %B %Y')
+        sample_expiry = (datetime.now(timezone.utc) + timedelta(days=365)).strftime('%B %-d, %Y')
         html = _standard_welcome_email_html(sample_expiry)
         subject = "You’re in. Welcome to The State of Play"
     else:

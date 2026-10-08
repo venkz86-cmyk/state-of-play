@@ -168,7 +168,7 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
     _draw_label(c, inv_x - 35 * mm, H - MARGIN, "Invoice no.")
     _draw_right(c, inv_x, H - MARGIN - 12, invoice_data["invoice_number"], "Helvetica-Bold", 11)
     _draw_label(c, inv_x - 35 * mm, H - MARGIN - 28, "Date of issue")
-    _draw_right(c, inv_x, H - MARGIN - 40, invoice_data["issued_at"].strftime("%d %B %Y"))
+    _draw_right(c, inv_x, H - MARGIN - 40, invoice_data["issued_at"].strftime("%B %-d, %Y"))
 
     # Divider must sit BELOW both the masthead (left) and the date block (right).
     cursor_y = H - MARGIN - 52

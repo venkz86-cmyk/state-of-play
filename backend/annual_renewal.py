@@ -333,7 +333,7 @@ async def send_lapsed_emails(body: SendBody, _admin: None = Depends(require_admi
     the last LAPSED_EMAIL_GAP_DAYS. test_to sends one sample and records
     nothing."""
     if body.test_to:
-        sample_end = (datetime.now(timezone.utc) - timedelta(days=5)).strftime('%d %B %Y')
+        sample_end = (datetime.now(timezone.utc) - timedelta(days=5)).strftime('%B %-d, %Y')
         ok = await send_email(
             to=body.test_to, subject='[Test] Your first year of The State of Play',
             html=_lapsed_email_html(sample_end, RENEW_PAGE),
@@ -360,7 +360,7 @@ async def send_lapsed_emails(body: SendBody, _admin: None = Depends(require_admi
             continue
         renewal_token = mint_renewal_link_token(raw, row['ghost_member_id'])
         renew_url = f'{RENEW_PAGE}?t={renewal_token}&ref=lapsed-email' if renewal_token else f'{RENEW_PAGE}?ref=lapsed-email'
-        end_str = _as_utc(row['expiry']).strftime('%d %B %Y')
+        end_str = _as_utc(row['expiry']).strftime('%B %-d, %Y')
         ok = await send_email(
             to=raw, subject='Your first year of The State of Play',
             html=_lapsed_email_html(end_str, renew_url),
@@ -418,7 +418,7 @@ async def annual_renewal_sweep(
         renew_url = f'https://www.stateofplay.club/renew?t={renewal_token}'
         await send_email(
             to=email, subject='A second year of The State of Play',
-            html=_reminder_email_html(expiry_dt.strftime('%d %B %Y'), renew_url),
+            html=_reminder_email_html(expiry_dt.strftime('%B %-d, %Y'), renew_url),
         )
         await _db.annual_renewal_notices.update_one(
             {'email': email, 'expiry': expiry_iso}, {'$set': fields}, upsert=True,
