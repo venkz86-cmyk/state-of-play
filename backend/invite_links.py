@@ -8,9 +8,10 @@ at the pre-October 6 price (razorpay_orders.PLAN_PRICING['standard']:
 ₹2,499 + GST, or $120). A year later they renew at the normal renewal
 rate like any member; nothing here touches renewals.
 
-A link can also be made for one email address: it then works once, for
-that address only, and the person is emailed the link with a note from
-Venkat. Event links have no email and come with a QR code in the
+A link for one person stays open for 72 hours from when it's made (it
+can be opened any number of times, and pays for one membership). With
+an email address it works for that address only, and the person is
+emailed the link with a note from Venkat. Event links have no email and come with a QR code in the
 dashboard.
 
 Links are never listed anywhere public. The page at /invite/<code> only
@@ -54,6 +55,7 @@ _db = None
 
 IST = timezone(timedelta(hours=5, minutes=30))
 _ALPHABET = string.ascii_lowercase + string.digits
+PERSON_LINK_HOURS = 72
 SITE_URL = 'https://www.stateofplay.club'
 
 
@@ -162,16 +164,20 @@ async def check_invite(code: str, request: Request):
         # A one-person link is checked out under its own address; only
         # the person holding the link sees it.
         'email': (doc.get('email') or '') if doc and state == 'open' else '',
+        'personal': bool(doc and doc.get('kind') == 'person'),
     }
 
 
 class InviteCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
+    # 'person': one payment, open for 72 hours from now. 'event': cap and
+    # last day as set. An email makes it a person link either way.
+    kind: str = 'event'
     # Empty for no cap; 1 for a one-person link.
     max_uses: Optional[int] = Field(None, ge=1, le=10000)
     # Last day the link works, 'YYYY-MM-DD' (India time, to the end of that day).
     last_day: Optional[str] = None
-    # For one person: the link works once, for this address only, and is
+    # For one person: the link works for this address only, and is
     # emailed to them with an optional line from Venkat.
     email: Optional[EmailStr] = None
     note: str = Field('', max_length=400)
@@ -192,13 +198,9 @@ def long_date(dt: datetime) -> str:
 INVITE_SUBJECT = 'An invitation to The State of Play'
 
 
-def invite_email_html(name: str, code: str, note: str = '', expires_at: Optional[datetime] = None) -> str:
+def invite_email_html(name: str, code: str, note: str = '') -> str:
     """Venkat's copy, proofread."""
     personal = f'<p>{escape(note.strip())}</p>' if note and note.strip() else ''
-    last_day = ''
-    if expires_at:
-        last = _aware(expires_at).astimezone(IST) - timedelta(seconds=1)
-        last_day = f' It’s open until {long_date(last)}.'
     return email_shell(
         'An invitation to <em style="font-style: italic;">The State of Play.</em>',
         (
@@ -207,7 +209,7 @@ def invite_email_html(name: str, code: str, note: str = '', expires_at: Optional
             + '<p>I’d like you to read The State of Play. This invitation gives you your first year at the price our '
             'first readers paid: ₹2,499 + GST (₹2,949 in all), or $120 outside India. New readers now pay '
             '₹3,499 + GST, or $169.</p>'
-            f'<p>The link is yours alone and works once.{last_day}</p>'
+            f'<p>The link is yours alone and stays open for {PERSON_LINK_HOURS} hours.</p>'
             + email_cta_button('Accept the invitation', invite_url(code))
             + '<p>Every week there’s one reported story on the business of Indian sport, usually on a Friday, and '
             'the full archive is yours from the first day. It’s one payment for the year, and nothing renews on '
@@ -229,6 +231,7 @@ def _serialize(doc: dict) -> dict:
         'state': _state(doc),
         'email': doc.get('email') or '',
         'email_sent': doc.get('email_sent'),
+        'kind': doc.get('kind') or ('person' if doc.get('email') else 'event'),
         'url': invite_url(doc['code']),
     }
 
@@ -245,8 +248,12 @@ async def list_invites(_admin: None = Depends(require_admin_key_or_session)):
 async def create_invite(req: InviteCreate, _admin: None = Depends(require_admin_key_or_session)):
     if _db is None:
         raise HTTPException(status_code=503, detail='Invites unavailable')
+    email = (str(req.email) if req.email else '').lower().strip()
+    person = bool(email) or req.kind == 'person'
     expires_at = None
-    if req.last_day:
+    if person:
+        expires_at = _now() + timedelta(hours=PERSON_LINK_HOURS)
+    elif req.last_day:
         try:
             day = datetime.strptime(req.last_day, '%Y-%m-%d').replace(tzinfo=IST)
         except ValueError:
@@ -258,12 +265,12 @@ async def create_invite(req: InviteCreate, _admin: None = Depends(require_admin_
         await _db.invite_links.create_index('code', unique=True)
     except Exception as e:
         logger.warning(f'invite index ensure failed (non-fatal): {e!r}')
-    email = (str(req.email) if req.email else '').lower().strip()
     doc = {
         'code': _new_code(),
         'name': ' '.join(req.name.split()),
-        # A one-person link works once.
-        'max_uses': 1 if email else req.max_uses,
+        # A one-person link pays for one membership.
+        'max_uses': 1 if person else req.max_uses,
+        'kind': 'person' if person else 'event',
         'expires_at': expires_at,
         'created_at': _now(),
         'uses': [],
@@ -274,7 +281,7 @@ async def create_invite(req: InviteCreate, _admin: None = Depends(require_admin_
     if email:
         sent = await send_email(
             to=email, subject=INVITE_SUBJECT,
-            html=invite_email_html(doc['name'], doc['code'], req.note, expires_at),
+            html=invite_email_html(doc['name'], doc['code'], req.note),
         )
         doc['email_sent'] = bool(sent)
         await _db.invite_links.update_one({'code': doc['code']}, {'$set': {'email_sent': bool(sent)}})
