@@ -2,7 +2,7 @@
 invite_links.py — private invite links for a first year at the old price.
 
 Venkat makes a link in the dashboard for one person ("Rohan") or for an
-event ("Mumbai Speakeasy, November 12"), with an optional cap on how many
+event (named by Venkat), with an optional cap on how many
 people can use it and an optional last day. Whoever opens it gets a year
 at the pre-October 6 price (razorpay_orders.PLAN_PRICING['standard']:
 ₹2,499 + GST, or $120). A year later they renew at the normal renewal

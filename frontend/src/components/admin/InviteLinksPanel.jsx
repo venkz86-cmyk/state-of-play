@@ -150,7 +150,7 @@ export const InviteLinksPanel = ({ onAuthError }) => {
         <label className={label}>
           {kind === 'person' ? 'Their name' : 'Event'}
           <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120}
-            placeholder={kind === 'person' ? 'Priya Nair' : 'Mumbai Speakeasy, November 12'}
+            placeholder={kind === 'person' ? 'Their full name' : 'Name of the event'}
             className={`${field} mt-1 normal-case tracking-normal`} data-testid="invite-name" />
         </label>
         {kind === 'person' ? (
