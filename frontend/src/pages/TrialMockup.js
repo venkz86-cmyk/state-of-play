@@ -77,6 +77,9 @@ export const TrialMockup = () => {
   }[searchParams.get('via')] || 'trial-page';
   const pricing = useGeoPricing();
   const isIndia = pricing.country === 'IN';
+  // Prices stay hidden until the reader's country is known, so ₹ never
+  // flashes before $ on a first visit (useGeoPricing remembers it after).
+  const priceHidden = pricing.loading ? 'invisible' : '';
   const checkoutCountry = isIndia ? 'IN' : 'INTL';
   const [justPaidEmail, setJustPaidEmail] = useState(null);
   const [justUpgraded, setJustUpgraded] = useState(false);
@@ -100,10 +103,10 @@ export const TrialMockup = () => {
         <div className="lg:col-span-6">
         <Overline className="mb-4 block">The State of Play</Overline>
         <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
-          Ten stories.<br />Thirty days.<br /><em className="italic font-normal">{isIndia ? '₹500.' : '$9.'}</em>
+          Ten stories.<br />Thirty days.<br /><em className={`italic font-normal ${priceHidden}`}>{isIndia ? '₹500.' : '$9.'}</em>
         </h1>
         <p className="font-plex text-lg text-[var(--text-muted)] leading-relaxed max-w-[54ch] mb-8">
-          Read the ten most recent State of Play stories on the business of Indian sport, from franchise valuations to ownership fights. While your month runs, every new story is yours too.
+          Read The State of Play's ten most recent paid stories on the business of Indian sport, from franchise valuations to ownership fights. While your month runs, every new story is yours too.
         </p>
 
         {justPaidEmail ? (
@@ -131,12 +134,12 @@ export const TrialMockup = () => {
           </div>
         ) : (
           <div className="border-t border-[var(--rule)] pt-8 max-w-[520px]">
-            <div className={`flex items-end gap-3 ${isIndia ? 'mb-2' : 'mb-6'}`}>
+            <div className={`flex items-end gap-3 ${isIndia ? 'mb-2' : 'mb-6'} ${priceHidden}`}>
               <span className="font-editorial font-semibold text-[2.75rem] leading-[0.9] text-[var(--text)]">{isIndia ? '₹500' : '$9'}</span>
               <span className="font-plex text-base text-[var(--text-muted)] pb-1">{isIndia ? '+ 18% GST' : 'one-time'}</span>
             </div>
             {isIndia && (
-              <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">₹590 total</p>
+              <p className={`font-plex text-[13px] text-[var(--text-label)] mb-6 ${priceHidden}`}>₹590 total</p>
             )}
             <RazorpayCheckoutButton
               source={trialSource}
@@ -198,7 +201,7 @@ export const TrialMockup = () => {
       <section id="compare" className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-12 scroll-mt-24">
         <div className="border-t border-[var(--text)] pt-8">
           <p className="font-editorial italic text-lg mb-6">If it's for you</p>
-          <div className="max-w-[62ch] space-y-3" data-testid="trial-compare">
+          <div className={`max-w-[62ch] space-y-3 ${priceHidden}`} data-testid="trial-compare">
             <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text)]">
               {isIndia
                 ? 'If you’d rather have the whole year, it’s ₹3,499 + GST. Upgrade before your thirty days end and it’s ₹2,999 + GST for thirteen months.'

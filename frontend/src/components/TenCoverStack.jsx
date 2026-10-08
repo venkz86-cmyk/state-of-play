@@ -47,8 +47,6 @@ export const TenCoverStack = ({ variant = 'stack' }) => {
   const [leaving, setLeaving] = useState(false);
   const [turned, setTurned] = useState(false);
   const timer = useRef(null);
-  // Phone: the thumbnail whose title is showing.
-  const [picked, setPicked] = useState(null);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   useEffect(() => {
@@ -64,44 +62,31 @@ export const TenCoverStack = ({ variant = 'stack' }) => {
 
   if (variant === 'row') {
     if (!usable) return null;
-    const shown = picked === null ? null : covers[picked];
+    // Phones: a row that scrolls sideways, each cover with its title and
+    // date showing, rather than ten slivers you have to tap open.
     return (
-      <figure data-testid="ten-cover-row" aria-label={LABEL} className="mt-8">
-        <div className="flex items-end pt-3 px-1">
+      <figure data-testid="ten-cover-row" aria-label={LABEL} className="mt-8 -mx-6">
+        <div className="ten-row-scroll flex gap-3 overflow-x-auto snap-x snap-mandatory px-6 pb-3" tabIndex={0}>
           {covers.map((c, i) => (
-            <button
-              type="button"
+            <div
               key={c.slug}
-              onClick={() => setPicked(picked === i ? null : i)}
-              aria-label={c.title}
-              aria-pressed={picked === i}
-              data-testid="ten-row-thumb"
-              className="ten-row-thumb relative w-[18%] aspect-[3/4] p-0 border-0 bg-transparent"
-              style={{
-                marginLeft: i === 0 ? 0 : '-9.1%',
-                zIndex: picked === i ? 30 : covers.length - i,
-                '--i': i,
-                transform: `rotate(${(TILT[i] || 0) * 0.8}deg) translateY(${picked === i ? -10 : 0}px)`,
-              }}
+              data-testid="ten-row-card"
+              className="ten-row-card shrink-0 w-[46%] max-w-[200px] snap-start border border-[var(--rule)] bg-[var(--bg)] overflow-hidden"
+              style={{ '--i': i }}
             >
-              <div className={`ten-row-card w-full h-full border bg-[var(--bg)] overflow-hidden shadow-[0_6px_14px_-8px_rgba(0,0,0,0.45)] ${picked === i ? 'border-[var(--accent-burgundy)]' : 'border-[var(--rule)]'}`}>
-                <Cover cover={c} width={300} />
+              <div className="aspect-[3/2] overflow-hidden">
+                <Cover cover={c} width={400} />
               </div>
-            </button>
+              <div className="px-3 pt-2 pb-3">
+                <p className="font-editorial text-[15px] leading-snug text-[var(--text)] line-clamp-3">{c.title}</p>
+                {shortDate(c.published_at) && (
+                  <p className="font-plex text-[10px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-1">{shortDate(c.published_at)}</p>
+                )}
+              </div>
+            </div>
           ))}
         </div>
-        <figcaption className="mt-3 min-h-[40px]" aria-live="polite" data-testid="ten-row-caption">
-          {shown ? (
-            <>
-              <span className="block font-editorial text-[16px] leading-snug text-[var(--text)]">{shown.title}</span>
-              {shortDate(shown.published_at) && (
-                <span className="block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mt-1">{shortDate(shown.published_at)}</span>
-              )}
-            </>
-          ) : (
-            <span className="font-plex text-[13px] text-[var(--text-label)]">{LABEL}. Tap a cover for its title.</span>
-          )}
-        </figcaption>
+        <figcaption className="font-plex text-[13px] text-[var(--text-label)] mt-2 px-6">{LABEL}. Swipe for more.</figcaption>
       </figure>
     );
   }
