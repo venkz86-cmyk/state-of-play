@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 DEFAULT_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'The State of Play <hello@stateofplay.club>')
+DEFAULT_REPLY_TO = os.environ.get('RESEND_REPLY_TO', 'Venkat Ananth <venkat@stateofplay.club>')
 ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 RESEND_API_URL = 'https://api.resend.com/emails'
@@ -86,8 +87,9 @@ async def send_email(
     }
     if text:
         payload['text'] = text if COMPANY_ADDRESS_TEXT in text else f'{text}\n\n{COMPANY_ADDRESS_TEXT}'
-    if reply_to:
-        payload['reply_to'] = reply_to
+    # Replies reach Venkat directly (emails sign off from him and invite
+    # a reply), unless a caller sets another address.
+    payload['reply_to'] = reply_to or DEFAULT_REPLY_TO
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:

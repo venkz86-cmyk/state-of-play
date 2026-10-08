@@ -398,7 +398,7 @@ export const AccountMockup = () => {
                   <h3 className="font-editorial font-medium text-lg">{title}</h3>
                 </div>
                 <div className="col-span-12 md:col-span-6">
-                  <p className="font-plex text-sm text-[var(--text-muted)]">{desc}</p>
+                  <p className="font-plex text-[16px] leading-snug text-[var(--text-muted)]">{desc}</p>
                 </div>
                 <div className="col-span-12 md:col-span-2 md:text-right">
                   {onClick ? (
