@@ -28,6 +28,8 @@ from typing import Optional
 import httpx
 from fastapi import APIRouter, HTTPException, Depends
 
+from pydantic import BaseModel, EmailStr
+
 from admin_auth import require_admin_key_or_session
 
 logger = logging.getLogger(__name__)
@@ -96,3 +98,29 @@ def init():
 async def list_corporate_accounts(refresh: bool = False, _admin: None = Depends(require_admin_key_or_session)):
     accounts = await fetch_accounts(force=refresh)
     return {'accounts': accounts, 'count': len(accounts)}
+
+
+class FinishSetupBody(BaseModel):
+    email: EmailStr
+    company_name: str
+    plan: str = 'team-5'
+    payment_id: str = ''
+
+
+@router.post('/api/admin/corporate/finish-setup')
+async def finish_team_setup(req: FinishSetupBody, _admin: None = Depends(require_admin_key_or_session)):
+    """For a Team-5/10 payment whose team setup didn't finish at checkout.
+    Creates the team only if the Sheet has no account for this admin yet
+    (a checkout whose reply was lost may still have created it), then
+    emails the admin their team management link. Safe to run twice."""
+    from razorpay_orders import setup_team_account
+    company = ' '.join(req.company_name.split())
+    if not company:
+        raise HTTPException(status_code=400, detail='Company name is required.')
+    if req.plan not in ('team-5', 'team-10'):
+        raise HTTPException(status_code=400, detail="Plan must be 'team-5' or 'team-10'.")
+    result = await setup_team_account(str(req.email), company, req.plan, req.payment_id.strip(), skip_if_exists=True)
+    _cache['accounts'] = None  # the panel should show the new row straight away
+    if result.get('error'):
+        raise HTTPException(status_code=502, detail=f"Team setup didn't finish: {result['error']}")
+    return result
