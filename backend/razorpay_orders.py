@@ -51,7 +51,7 @@ from trial_tracking import start_trial
 from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
 from invite_links import invite_usable, record_invite_use
-from resend_email import send_email
+from resend_email import send_email, _record_failure as record_email_failure
 from email_layout import email_shell, email_cta_button
 from admin_auth import require_admin_key_or_session
 
@@ -704,54 +704,98 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     return {'verified': True, 'email': email, 'plan': req.plan}
 
 
-async def _create_team_account(req: VerifyPaymentRequest, email: str) -> None:
-    """Fires the same Apps Script action ('create_account') a Zapier zap
-    used to call after a payment on the old static Team-5/10 Payment
-    Links, then 'send_dashboard_link' to actually email the buyer their
-    team management link -- replicating the real, working self-serve
-    flow Venkat already has, not inventing a new one. Non-fatal: the
-    payment is already real and already recorded by the time this runs,
-    so a failure here logs loudly but doesn't fail the request -- the
-    alternative (raising) would tell a customer their real payment
-    failed when it didn't."""
-    if not req.company_name:
-        logger.error(
-            f'Team account creation skipped: no company_name on a {req.plan} '
-            f'payment (payment_id={req.razorpay_payment_id}, email={email}) -- '
-            f'needs manual follow-up in the Corporate Subscriptions Sheet.'
-        )
-        return
+async def setup_team_account(
+    email: str, company_name: str, plan: str, payment_id: str, *, skip_if_exists: bool = False,
+) -> dict:
+    """Creates the team in the Corporate Subscriptions Sheet (Apps Script
+    'create_account', the action a Zapier zap used to call for the old
+    static Team-5/10 Payment Links) and emails the admin their team
+    management link ('send_dashboard_link'). Shared by checkout
+    (_create_team_account) and the dashboard's "Finish a team's setup"
+    (corporate.finish_team_setup), which passes skip_if_exists so a team
+    the Sheet already has isn't created twice.
 
-    config = PLAN_PRICING[req.plan]['IN']
-    amount_rupees = config['amount'] // 100
+    Apps Script answers every POST with a 302 to the result, so redirects
+    must be followed. Without that, every Team-5/10 checkout read as a
+    failure and no admin got their link (JioStar Sports, October 9, 2026).
+
+    Never raises. A failure is logged and listed on the dashboard's Today
+    page (email_failures), since the payment itself is already real."""
+    result = {'created': False, 'existed': False, 'link_sent': False, 'error': '', 'company_name': company_name}
+    email = (email or '').lower().strip()
+
+    async def fail(reason: str) -> dict:
+        result['error'] = reason
+        logger.error(
+            f'Team setup failed for {plan} payment {payment_id} ({email}, {company_name!r}): '
+            f'{reason} -- finish it from the dashboard (Corporate, Finish a team\'s setup).'
+        )
+        await record_email_failure(email, f'Team setup: {company_name or "no company name"} ({plan})', reason)
+        return result
+
+    if not company_name:
+        return await fail('no company name on the payment')
+    if plan not in TEAM_SEATS:
+        return await fail(f'not a team plan: {plan}')
 
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            create_res = await client.post(APPS_SCRIPT_URL, json={
-                'action': 'create_account',
-                'company_name': req.company_name,
-                'admin_email': email,
-                'plan_name': TEAM_PLAN_NAME[req.plan],
-                'seats': TEAM_SEATS[req.plan],
-                'amount_paid': amount_rupees,
-                'currency': 'INR',
-                'razorpay_payment_id': req.razorpay_payment_id,
-            })
-            body = create_res.json() if create_res.status_code == 200 else {}
-            if not body.get('success'):
-                logger.error(
-                    f'Team account creation failed for {req.plan} payment '
-                    f'{req.razorpay_payment_id} ({email}): {body.get("error") or create_res.text[:300]!r} '
-                    f'-- needs manual follow-up in the Corporate Subscriptions Sheet.'
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+            if skip_if_exists:
+                from corporate import fetch_accounts
+                accounts = await fetch_accounts(force=True)
+                match = next((a for a in accounts if (a.get('admin_email') or '').lower().strip() == email), None)
+                result['existed'] = bool(match)
+                if match:
+                    result['company_name'] = match.get('company_name') or ''
+                    result['seats'] = match.get('seats')
+                    result['status'] = match.get('status') or ''
+            if not result['existed']:
+                create_res = await client.post(APPS_SCRIPT_URL, json={
+                    'action': 'create_account',
+                    'company_name': company_name,
+                    'admin_email': email,
+                    'plan_name': TEAM_PLAN_NAME[plan],
+                    'seats': TEAM_SEATS[plan],
+                    'amount_paid': PLAN_PRICING[plan]['IN']['amount'] // 100,
+                    'currency': 'INR',
+                    'razorpay_payment_id': payment_id,
+                })
+                try:
+                    body = create_res.json()
+                except ValueError:
+                    body = {}
+                if not body.get('success'):
+                    return await fail(
+                        f'create_account: HTTP {create_res.status_code} '
+                        f'{body.get("error") or create_res.text[:200]!r}'
+                    )
+                result['created'] = True
+            link_res = await client.post(APPS_SCRIPT_URL, json={'action': 'send_dashboard_link', 'email': email})
+            try:
+                link_body = link_res.json()
+            except ValueError:
+                link_body = {}
+            if not link_body.get('success'):
+                return await fail(
+                    f'send_dashboard_link: HTTP {link_res.status_code} '
+                    f'{link_body.get("error") or link_res.text[:200]!r}'
                 )
-                return
-            await client.post(APPS_SCRIPT_URL, json={'action': 'send_dashboard_link', 'email': email})
+            result['link_sent'] = True
     except Exception as e:
-        logger.error(
-            f'Team account creation request failed for {req.plan} payment '
-            f'{req.razorpay_payment_id} ({email}): {e!r} -- needs manual '
-            f'follow-up in the Corporate Subscriptions Sheet.'
-        )
+        return await fail(f'request failed: {e!r}')
+
+    logger.info(
+        f'Team setup done for {plan} payment {payment_id} ({email}, {company_name!r}): '
+        f'{"created" if result["created"] else "already there"}, link sent'
+    )
+    return result
+
+
+async def _create_team_account(req: VerifyPaymentRequest, email: str) -> None:
+    """After a Team-5/10 checkout. Non-fatal: the payment is already real
+    and recorded by the time this runs, so telling the customer it failed
+    would be wrong; setup_team_account logs and flags any failure."""
+    await setup_team_account(email, req.company_name or '', req.plan, req.razorpay_payment_id)
 
 
 class TestWelcomeEmailRequest(BaseModel):
