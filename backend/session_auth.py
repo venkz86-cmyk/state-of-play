@@ -255,7 +255,8 @@ def _mint_session(email: str, ghost_member_id: str) -> Optional[str]:
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
 
-RENEWAL_LINK_TTL_DAYS = 30
+# Long enough to cover the 30 days' grace after a year ends, with room.
+RENEWAL_LINK_TTL_DAYS = 60
 
 
 def mint_renewal_link_token(email: str, ghost_member_id: str) -> Optional[str]:

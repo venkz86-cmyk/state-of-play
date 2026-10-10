@@ -73,15 +73,15 @@ export const RenewalSweepPanel = ({ onAuthError }) => {
     <>
       <Group
         testId="sweep-letter" title="Renewal letter" rows={result.letter || []}
-        note="Your letter, “A second year of The State of Play”, with their personal renewal link. Goes to anyone whose year ends in the next 14 days, and to anyone in their grace week who never got it."
+        note="Your letter, “A second year of The State of Play”, with their personal renewal link. Goes to anyone whose year ends in the next 14 days, and to anyone in their 30 days’ grace who never got it."
       />
       <Group
         testId="sweep-lapsed" title="Short lapsed note" rows={result.lapsed_note || []}
-        note="“Your membership has lapsed”, for anyone whose year has ended who already had the letter. Seven days to renew."
+        note="“Your membership has lapsed”, for anyone whose year has ended who already had the letter. They have 30 days to renew."
       />
       <Group
         testId="sweep-downgrade" title="Paid labels removed" rows={result.downgrade || []}
-        note="More than seven days past the end of their year. Anyone still comped in Ghost keeps reading until you remove the comp."
+        note="More than 30 days past the end of their year. Anyone still comped in Ghost keeps reading until you remove the comp."
       />
     </>
   );
@@ -115,7 +115,8 @@ export const RenewalSweepPanel = ({ onAuthError }) => {
           {result.dry_run ? 'Preview, nothing sent: ' : 'Done: '}
           {result.reminded} renewal letter{result.reminded === 1 ? '' : 's'}, {result.grace_started} lapsed
           note{result.grace_started === 1 ? '' : 's'}, {result.downgraded} label removal{result.downgraded === 1 ? '' : 's'}
-          {result.downgraded_still_comped ? ` (${result.downgraded_still_comped} still comped)` : ''}.
+          {result.downgraded_still_comped ? ` (${result.downgraded_still_comped} still comped)` : ''}
+          {result.restored ? `, ${result.restored} given back their access (inside the 30 days)` : ''}.
           {' '}{result.checked} annual member{result.checked === 1 ? '' : 's'} checked.
         </p>
       )}

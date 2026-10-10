@@ -85,7 +85,15 @@ GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
 REMINDER_DAYS_BEFORE = 14
-GRACE_PERIOD_DAYS = 7
+# Days a member keeps reading after their year ends, before the sweep
+# removes paid access. Was 7; 30 since October 10, 2026 (Venkat: give
+# them time to renew). Complimentary memberships keep their own week
+# (COMP_GRACE_DAYS).
+GRACE_PERIOD_DAYS = 30
+COMP_GRACE_DAYS = 7
+# Plans a one-time annual year comes from (what the sweep reminds,
+# downgrades, and gives back).
+_ANNUAL_PLANS = ('standard', 'renewal', 'trial-upgrade', '')
 # Same pair subscription_grace.py reverses -- a one-time Standard/
 # trial-upgrade/community payment only ever confers exactly these two.
 _DOWNGRADE_LABELS = ('paid-via-razorpay', 'premium-subscriber')
@@ -195,6 +203,28 @@ def _grace_email_html(renew_url: str) -> str:
     )
 
 
+async def _restore_member(member_id: str, existing_labels: list[str], token: str) -> bool:
+    """Puts back the two labels _downgrade_member removes. For members the
+    sweep cut off after 7 days, before the grace period became 30."""
+    lower = [l.lower() for l in existing_labels]
+    new_labels = existing_labels + [l for l in _DOWNGRADE_LABELS if l not in lower]
+    if new_labels == existing_labels:
+        return True
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.put(
+                f'{GHOST_URL}/ghost/api/admin/members/{member_id}/',
+                json={'members': [{'labels': new_labels}]},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+        if r.status_code == 200:
+            return True
+        logger.error(f'annual_renewal: restore failed for {member_id}: HTTP {r.status_code} {r.text[:200]}')
+    except Exception as e:
+        logger.error(f'annual_renewal: restore failed for {member_id}: {e!r}')
+    return False
+
+
 async def _downgrade_member(member_id: str, existing_labels: list[str], token: str) -> bool:
     """Reverses exactly what a one-time Standard-equivalent payment
     granted. Removing only one of the two labels would leave the other
@@ -217,7 +247,7 @@ async def _downgrade_member(member_id: str, existing_labels: list[str], token: s
 
 
 # ─── Lapsed members, emailed by hand from the admin dashboard ────────────────
-# Members whose year has ended (and grace week passed) and who haven't
+# Members whose year has ended (and grace period passed) and who haven't
 # renewed. The sweep above never writes to them again; this lets Venkat
 # send a renewal note from the Renewals panel, at most once every
 # LAPSED_EMAIL_GAP_DAYS per person.
@@ -274,7 +304,7 @@ async def _lapsed_rows(token: str) -> dict:
         if any(l.startswith(('corp-', 'team-')) for l in lower_labels):
             continue
         summary = payment_summaries.get(email)
-        last_payment = summary.get('last_payment') if summary else None
+        last_payment = (summary.get('last_membership_payment') or summary.get('last_payment')) if summary else None
         if not last_payment or last_payment.get('subscription_id'):
             continue
         if last_payment.get('plan') in ('trial', 'student'):
@@ -378,6 +408,105 @@ async def send_lapsed_emails(body: SendBody, _admin: None = Depends(require_admi
     return {'sent': sent, 'skipped': skipped}
 
 
+# ─── Renewal links sent by hand from the dashboard ──────────────────────────
+# For anyone who can renew (razorpay_orders.renewal_eligibility, the rule
+# checkout uses): Venkat sends their personal renewal email, or copies the
+# link to send himself. Whose year hasn't ended gets the letter ("A second
+# year of The State of Play"); whose has gets the ended note.
+LINK_EARLIEST_DAYS = 60  # further out than this, there's nothing to renew yet
+
+
+async def _renewal_target(email: str, token: str) -> tuple[Optional[dict], str]:
+    """(target, '') for someone who can renew now, else (None, reason)."""
+    from razorpay_orders import renewal_eligibility
+    from tiers import find_ghost_member, resolve_tier, is_genuinely_paid
+    from payments import get_last_membership_payment_for_email, complimentary_grant_for
+    member = await find_ghost_member(email, token)
+    if not member:
+        return None, 'No account with this email'
+    labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
+    is_paid = await is_genuinely_paid(labels, member.get('status', 'free'), email)
+    ok, reason = await renewal_eligibility({'email': email, 'tier': resolve_tier(labels, is_paid), 'label_names': labels})
+    if not ok:
+        return None, {'auto': 'Renews automatically', 'not_annual': 'Not an annual member (student, The Ten, or no membership payment)'}.get(reason, 'Cannot renew')
+    end_iso = compute_synthetic_expiry(await get_last_membership_payment_for_email(email))
+    if not end_iso:
+        grant = await complimentary_grant_for(email)
+        ends = (grant or {}).get('ends_at')
+        end_iso = _as_utc(ends).isoformat() if ends else None
+    end_dt = _as_utc(datetime.fromisoformat(end_iso)) if end_iso else None
+    now = datetime.now(timezone.utc)
+    if end_dt and end_dt - now > timedelta(days=LINK_EARLIEST_DAYS):
+        return None, f'Their year runs to {end_dt.strftime("%B %-d, %Y")}, so there is nothing to renew yet'
+    return {'email': email, 'member_id': member.get('id', ''), 'end': end_dt, 'end_iso': end_iso}, ''
+
+
+def _renew_url(email: str, member_id: str, ref: str) -> str:
+    renewal_token = mint_renewal_link_token(email, member_id)
+    return f'{RENEW_PAGE}?t={renewal_token}&ref={ref}' if renewal_token else f'{RENEW_PAGE}?ref={ref}'
+
+
+class LinkBody(BaseModel):
+    emails: list[EmailStr] = []
+    test_to: Optional[EmailStr] = None
+
+
+@router.post('/api/admin/annual-renewal/send-link')
+async def send_renewal_links(body: LinkBody, _admin: None = Depends(require_admin_key_or_session)):
+    """Sends each address its personal renewal email, if they can renew
+    (re-checked here). Skips, with a reason, anyone who can't. test_to
+    sends one sample letter and records nothing."""
+    if body.test_to:
+        sample_end = (datetime.now(timezone.utc) + timedelta(days=10)).strftime('%B %-d, %Y')
+        ok = await send_email(
+            to=str(body.test_to), subject='[Test] A second year of The State of Play',
+            html=_reminder_email_html(sample_end, RENEW_PAGE),
+        )
+        return {'sent': 1 if ok else 0, 'skipped': [], 'test': True}
+    token = _create_ghost_admin_token()
+    if not token:
+        return {'sent': 0, 'skipped': [], 'error': 'Ghost Admin API not configured'}
+    if _db is not None:
+        await _ensure_indexes()
+    now = datetime.now(timezone.utc)
+    sent, skipped = 0, []
+    for raw in list(dict.fromkeys(str(e).lower().strip() for e in body.emails))[:SEND_CAP]:
+        target, reason = await _renewal_target(raw, token)
+        if not target:
+            skipped.append({'email': raw, 'reason': reason})
+            continue
+        url = _renew_url(raw, target['member_id'], 'admin-link')
+        end = target['end']
+        if end and end > now:
+            subject, html = 'A second year of The State of Play', _reminder_email_html(end.strftime('%B %-d, %Y'), url)
+        else:
+            end_str = end.strftime('%B %-d, %Y') if end else 'recently'
+            subject, html = 'Your first year of The State of Play', _lapsed_email_html(end_str, url)
+        if not await send_email(to=raw, subject=subject, html=html):
+            skipped.append({'email': raw, 'reason': 'Email failed to send'})
+            continue
+        if _db is not None and target['end_iso']:
+            await _db.annual_renewal_notices.update_one(
+                {'email': raw, 'expiry': target['end_iso']}, {'$set': {'link_sent': now}}, upsert=True,
+            )
+        sent += 1
+        await asyncio.sleep(SEND_PAUSE_SECONDS)
+    return {'sent': sent, 'skipped': skipped}
+
+
+@router.get('/api/admin/annual-renewal/link')
+async def renewal_link_for(email: EmailStr, _admin: None = Depends(require_admin_key_or_session)):
+    """The member's personal renewal link, for Venkat to send himself."""
+    token = _create_ghost_admin_token()
+    if not token:
+        return {'url': '', 'error': 'Ghost Admin API not configured'}
+    raw = str(email).lower().strip()
+    target, reason = await _renewal_target(raw, token)
+    if not target:
+        return {'url': '', 'error': reason}
+    return {'url': _renew_url(raw, target['member_id'], 'admin-link')}
+
+
 @router.post('/api/admin/annual-renewal/sweep')
 async def annual_renewal_sweep(
     dry_run: bool = False, details: bool = False,
@@ -388,7 +517,7 @@ async def annual_renewal_sweep(
     subscription_id, not Trial/Student/corp, not billed by Ghost itself):
     sends the renewal letter once from 14 days before their year ends,
     the short lapsed note once from day 0 (or the letter, if they never
-    had it), and strips paid labels once past the grace week. Safe to
+    had it), and strips paid labels once past the grace period. Safe to
     re-run as often as the cron schedule likes.
 
     dry_run=true (the dashboard's Preview) sends nothing and changes
@@ -396,7 +525,7 @@ async def annual_renewal_sweep(
     sending. The people behind each count are listed only for a preview
     or with details=true (the dashboard): the nightly cron prints this
     response into Render's logs, which shouldn't hold member emails."""
-    empty = {'checked': 0, 'reminded': 0, 'grace_started': 0, 'downgraded': 0,
+    empty = {'checked': 0, 'reminded': 0, 'grace_started': 0, 'downgraded': 0, 'restored': 0,
              'downgraded_still_comped': 0, 'dry_run': dry_run,
              'letter': [], 'lapsed_note': [], 'downgrade': []}
     if _db is None:
@@ -410,7 +539,7 @@ async def annual_renewal_sweep(
     payment_summaries = await get_subscriber_payment_summaries()
     now = datetime.now(timezone.utc)
 
-    checked = reminded = grace_started = downgraded = still_comped = 0
+    checked = reminded = grace_started = downgraded = still_comped = restored = 0
     letter, lapsed_note, downgrade = [], [], []
 
     async def send_letter(email, member, expiry_dt, expiry_iso, fields):
@@ -432,6 +561,24 @@ async def annual_renewal_sweep(
         lower_labels = [l.lower() for l in label_names]
 
         if 'premium-subscriber' not in lower_labels:
+            # Cut off at 7 days, before the grace period became 30: if
+            # their year ended less than GRACE_PERIOD_DAYS ago, give their
+            # access back. Harmless once nobody is in that position.
+            if not any(l in _EXCLUDED_LABELS for l in lower_labels) and not any(l.startswith('corp-') for l in lower_labels):
+                summary = payment_summaries.get(email) or {}
+                annual = summary.get('last_membership_payment')
+                if annual and not annual.get('subscription_id') and (annual.get('plan') or '') in _ANNUAL_PLANS:
+                    end_iso = compute_synthetic_expiry(annual)
+                    if end_iso:
+                        end_dt = datetime.fromisoformat(end_iso)
+                        if end_dt.tzinfo is None:
+                            end_dt = end_dt.replace(tzinfo=timezone.utc)
+                        days_past = (now - end_dt).total_seconds() / 86400
+                        if 0 < days_past < GRACE_PERIOD_DAYS:
+                            ok = True if dry_run else await _restore_member(member['id'], label_names, token)
+                            if ok:
+                                restored += 1
+                                logger.info(f'annual_renewal: access given back to {email} (year ended {end_iso[:10]}, inside the {GRACE_PERIOD_DAYS}-day grace)')
             continue
         if any(l in _EXCLUDED_LABELS for l in lower_labels):
             continue
@@ -480,7 +627,7 @@ async def annual_renewal_sweep(
         notice = await _db.annual_renewal_notices.find_one({'email': email, 'expiry': expiry_iso})
 
         if days_to_expiry <= 0:
-            # Someone in their grace week who never got the renewal letter
+            # Someone in their grace period who never got the renewal letter
             # (the first renewals, before this sweep ran, or a payment made
             # less than 14 days before its year ended) gets the letter in
             # place of the short lapsed note: one email, not two.
@@ -514,7 +661,7 @@ async def annual_renewal_sweep(
     # own letter in place of the paying members' one.
     try:
         comp = await complimentary_sweep(
-            now, dry_run, token, reminder_days=REMINDER_DAYS_BEFORE, grace_days=GRACE_PERIOD_DAYS,
+            now, dry_run, token, reminder_days=REMINDER_DAYS_BEFORE, grace_days=COMP_GRACE_DAYS,
             mint_link=mint_renewal_link_token, notices=_db.annual_renewal_notices,
         )
         letter += comp['letter']; lapsed_note += comp['lapsed_note']; downgrade += comp['downgrade']
@@ -524,7 +671,8 @@ async def annual_renewal_sweep(
         logger.warning(f'complimentary sweep failed: {e!r}')
 
     result = {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
-              'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'dry_run': dry_run}
+              'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'restored': restored,
+              'dry_run': dry_run}
     if not dry_run:
         # The dashboard's Today page shows the last run, and flags it when
         # the nightly one hasn't happened (the cron has failed silently
@@ -532,7 +680,7 @@ async def annual_renewal_sweep(
         try:
             await _db.renewal_runs.insert_one({
                 'ran_at': now, 'checked': checked, 'reminded': reminded,
-                'grace_started': grace_started, 'downgraded': downgraded,
+                'grace_started': grace_started, 'downgraded': downgraded, 'restored': restored,
                 'downgraded_still_comped': still_comped,
             })
         except Exception as e:

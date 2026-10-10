@@ -48,7 +48,7 @@ from pydantic import BaseModel, EmailStr
 
 from tiers import PLAN_LABELS, PAID_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, complimentary_grant_for
+from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, get_last_membership_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
 from invite_links import invite_usable, record_invite_use
 from resend_email import send_email, _record_failure as record_email_failure
@@ -209,6 +209,50 @@ def _resolve_plan_config(plan: str, country: str) -> Optional[dict]:
     return config
 
 
+RENEWAL_REFUSAL = {
+    'signed_out': 'Sign in with the account your membership is on to renew.',
+    'not_annual': 'Sign in with the account your membership is on to renew.',
+    'auto': 'Your membership already renews automatically.',
+}
+
+
+async def renewal_eligibility(member: Optional[dict]) -> tuple[bool, str]:
+    """Can this signed-in member (session_auth.get_current_member's shape:
+    email, tier, label_names) renew at the renewal rate? The one rule for
+    both checkout (create_order, plan 'renewal') and the account and
+    /renew pages (member-details' can_renew), so a page never hides the
+    button from someone checkout would take, or shows it to someone it
+    would refuse.
+
+    Yes for someone with a membership payment on file, a current annual
+    member (covers payments from the old Razorpay links, before the
+    ledger), or a complimentary year, whether their year ends soon, has
+    ended, or is months away (renewing early costs nothing: the new year
+    starts when the current one ends). No for students (their own ID
+    check), The Ten (its own upgrade), a 14-day nomination, a shorter
+    complimentary membership (new-reader price), or a member on a
+    Subscription that renews by itself. Returns (ok, reason)."""
+    if not member:
+        return False, 'signed_out'
+    if member.get('tier') in ('student', 'trial', 'nomination'):
+        return False, 'not_annual'
+    email = member['email']
+    grant = await complimentary_grant_for(email)
+    year_grant = bool(grant) and (grant.get('months') or 12) == 12
+    labels = member.get('label_names') or []
+    complimentary_only = 'complimentary' in labels and not any(
+        l in PAID_LABELS for l in labels if l != 'complimentary')
+    if not (
+        (member.get('tier') == 'standard' and not complimentary_only)
+        or await has_paid_beyond_trial(email) or year_grant
+    ):
+        return False, 'not_annual'
+    last_payment = await get_last_membership_payment_for_email(email)
+    if last_payment and last_payment.get('subscription_id'):
+        return False, 'auto'
+    return True, ''
+
+
 class CreateOrderRequest(BaseModel):
     plan: str
     country: str = 'IN'
@@ -288,29 +332,10 @@ async def create_order(req: CreateOrderRequest, request: Request):
             raise HTTPException(status_code=403, detail='Sign in with the account you joined The Ten with to upgrade.')
         order_notes['email'] = member['email'].lower().strip()
     elif req.plan == 'renewal':
-        # For an annual member near (or past) the end of their year: someone
-        # with a membership payment on file, or a current annual member.
-        # The second covers members who paid through the old Razorpay
-        # payment links before the payments ledger existed, so have no
-        # payment on file but do carry the paid labels. Students renew
-        # through their own ID check, and The Ten has its own upgrade.
         member = await get_current_member(request)
-        # A complimentary year renews at this rate; a shorter
-        # complimentary membership (complimentary.py) doesn't, so someone
-        # whose only access is one is sent to the new-reader price.
-        grant = await complimentary_grant_for(member['email']) if member else None
-        year_grant = bool(grant) and (grant.get('months') or 12) == 12
-        labels = (member.get('label_names') or []) if member else []
-        complimentary_only = 'complimentary' in labels and not any(
-            l in PAID_LABELS for l in labels if l != 'complimentary')
-        if not member or member.get('tier') in ('student', 'trial', 'nomination') or not (
-            (member.get('tier') == 'standard' and not complimentary_only)
-            or await has_paid_beyond_trial(member['email']) or year_grant
-        ):
-            raise HTTPException(status_code=403, detail='Sign in with the account your membership is on to renew.')
-        last_payment = await get_last_payment_for_email(member['email'])
-        if last_payment and last_payment.get('subscription_id'):
-            raise HTTPException(status_code=409, detail='Your membership already renews automatically.')
+        ok, reason = await renewal_eligibility(member)
+        if not ok:
+            raise HTTPException(status_code=409 if reason == 'auto' else 403, detail=RENEWAL_REFUSAL[reason])
         order_notes['email'] = member['email'].lower().strip()
 
     config = _resolve_plan_config(req.plan, req.country)

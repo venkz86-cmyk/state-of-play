@@ -164,7 +164,7 @@ export const OverviewPanel = ({ onAuthError }) => {
             <ul className="flex flex-wrap gap-x-6 gap-y-1 font-plex text-[13px] text-[var(--text-muted)]">
               <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--accent-blue)]" />{month.renewed} renewed</li>
               <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--rule)]" />{month.upcoming} still to come</li>
-              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--accent-burgundy)]" />{month.in_grace} in their grace week</li>
+              <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--accent-burgundy)]" />{month.in_grace} in their 30 days’ grace</li>
               <li><span className="inline-block w-2 h-2 mr-1.5 bg-[var(--text-muted)]" />{month.lapsed} lapsed</li>
             </ul>
           </div>
@@ -219,9 +219,9 @@ export const OverviewPanel = ({ onAuthError }) => {
 
       {(attention.comps_to_remove || []).length > 0 && (
         <section className="mb-10" data-testid="today-comps">
-          <p className={label}>Still comped in Ghost, grace week over</p>
+          <p className={label}>Still comped in Ghost, grace period over</p>
           <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
-            Their year ended more than seven days ago and they haven’t renewed. Remove the comp in Ghost when you’re ready.
+            Their year ended more than 30 days ago and they haven’t renewed. Remove the comp in Ghost when you’re ready.
           </p>
           <ul>
             {attention.comps_to_remove.map((r) => (
