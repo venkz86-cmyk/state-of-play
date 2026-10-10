@@ -46,6 +46,7 @@ const CopyLinkButton = ({ email, onAuthError, setResult }) => {
 const AnyEmailLink = ({ onAuthError, setResult }) => {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
+  const [apology, setApology] = useState(false);
   const valid = /.+@.+\..+/.test(email.trim());
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6" data-testid="any-email-link">
@@ -58,10 +59,11 @@ const AnyEmailLink = ({ onAuthError, setResult }) => {
       <button
         type="button" disabled={!valid || busy} className={quietLink} data-testid="any-email-send"
         onClick={async () => {
-          if (!window.confirm(`Send a renewal link to ${email.trim()}?`)) return;
+          const what = apology ? 'the apology note with a renewal link' : 'a renewal link';
+          if (!window.confirm(`Send ${what} to ${email.trim()}?`)) return;
           setBusy(true);
           try {
-            setResult(await adminFetch(LINK_ENDPOINT, { method: 'POST', body: JSON.stringify({ emails: [email.trim()] }) }));
+            setResult(await adminFetch(LINK_ENDPOINT, { method: 'POST', body: JSON.stringify({ emails: [email.trim()], apology }) }));
           } catch (e) {
             if (e instanceof AdminAuthError) { onAuthError?.(); return; }
             setResult({ error: e.message || 'Could not send.' });
@@ -73,6 +75,10 @@ const AnyEmailLink = ({ onAuthError, setResult }) => {
         {busy ? 'Sending…' : 'Send'}
       </button>
       {valid && <CopyLinkButton email={email.trim()} onAuthError={onAuthError} setResult={setResult} />}
+      <label className="flex items-center gap-2 font-plex text-[13px] text-[var(--text-muted)]" title="For readers whose link showed no renew button before October 10: “Your renewal link works now”, a short sorry with their link.">
+        <input type="checkbox" checked={apology} onChange={(e) => setApology(e.target.checked)} data-testid="any-email-apology" />
+        Send the apology note instead
+      </label>
     </div>
   );
 };

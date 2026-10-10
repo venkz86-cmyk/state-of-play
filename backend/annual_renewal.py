@@ -277,6 +277,29 @@ def _lapsed_email_html(end_date_str: str, renew_url: str) -> str:
     )
 
 
+def _apology_email_html(year_ended: bool, renew_url: str) -> str:
+    """For members whose renewal link (before October 10, 2026) showed a
+    page with no way to pay."""
+    timing = ('Your new year starts the day you renew.' if year_ended else
+              'Your new year starts when the current one ends, so renewing early costs you nothing.')
+    return email_shell(
+        'Your renewal link <em style="font-style: italic;">works now.</em>',
+        (
+            '<p>Dear reader,</p>'
+            '<p>You clicked your renewal link this week and the page gave you no way to pay. That was a glitch '
+            'on our side, and I’m sorry it cost you the time.</p>'
+            '<p>It’s fixed. The button below signs you in and takes you straight to the payment step. It works '
+            'as many times as you need for the next 60 days.</p>'
+            + email_cta_button('Renew for another year &rarr;', renew_url)
+            + f'<p>Renewal is ₹2,999 + GST (₹3,539 in all), or $149 outside India. {timing}</p>'
+        ),
+        compliance_footer=True,
+    )
+
+
+APOLOGY_SUBJECT = 'Your renewal link works now'
+
+
 def _as_utc(value) -> Optional[datetime]:
     if not value:
         return None
@@ -449,6 +472,7 @@ def _renew_url(email: str, member_id: str, ref: str) -> str:
 class LinkBody(BaseModel):
     emails: list[EmailStr] = []
     test_to: Optional[EmailStr] = None
+    apology: bool = False  # the "link works now" note instead of the letter
 
 
 @router.post('/api/admin/annual-renewal/send-link')
@@ -458,10 +482,9 @@ async def send_renewal_links(body: LinkBody, _admin: None = Depends(require_admi
     sends one sample letter and records nothing."""
     if body.test_to:
         sample_end = (datetime.now(timezone.utc) + timedelta(days=10)).strftime('%B %-d, %Y')
-        ok = await send_email(
-            to=str(body.test_to), subject='[Test] A second year of The State of Play',
-            html=_reminder_email_html(sample_end, RENEW_PAGE),
-        )
+        subject, html = ((APOLOGY_SUBJECT, _apology_email_html(False, RENEW_PAGE)) if body.apology
+                         else ('A second year of The State of Play', _reminder_email_html(sample_end, RENEW_PAGE)))
+        ok = await send_email(to=str(body.test_to), subject=f'[Test] {subject}', html=html)
         return {'sent': 1 if ok else 0, 'skipped': [], 'test': True}
     token = _create_ghost_admin_token()
     if not token:
@@ -477,7 +500,9 @@ async def send_renewal_links(body: LinkBody, _admin: None = Depends(require_admi
             continue
         url = _renew_url(raw, target['member_id'], 'admin-link')
         end = target['end']
-        if end and end > now:
+        if body.apology:
+            subject, html = APOLOGY_SUBJECT, _apology_email_html(not (end and end > now), url)
+        elif end and end > now:
             subject, html = 'A second year of The State of Play', _reminder_email_html(end.strftime('%B %-d, %Y'), url)
         else:
             end_str = end.strftime('%B %-d, %Y') if end else 'recently'
