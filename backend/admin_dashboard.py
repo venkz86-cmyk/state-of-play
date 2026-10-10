@@ -365,7 +365,8 @@ def _within_days(computed_expiry: Optional[str], days: int, now: datetime) -> bo
 # ─── Today: what the overview adds for the Today page ───────────────────────
 IST = timezone(timedelta(hours=5, minutes=30))
 ANNUAL_PLANS = ('standard', 'renewal', 'trial-upgrade', 'unknown')
-GRACE_DAYS = 7
+# Matches the renewal sweep (annual_renewal.GRACE_PERIOD_DAYS).
+GRACE_DAYS = 30
 # The nightly renewal run is at 4:10am IST; more than this since the last
 # one means it didn't happen.
 RENEWAL_RUN_OVERDUE_HOURS = 26
@@ -385,7 +386,7 @@ async def _renewals_this_month(now: datetime) -> dict:
     """This calendar month (IST) from the payments ledger: every annual
     year that ends this month, and what happened to it. A later payment by
     the same email counts as renewed; otherwise it's still to come, in its
-    grace week, or lapsed. Collected is this month's renewal payments."""
+    grace period, or lapsed. Collected is this month's renewal payments."""
     local = now.astimezone(IST)
     start = local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     end = (start + timedelta(days=32)).replace(day=1)
@@ -446,7 +447,7 @@ async def _last_renewal_run(now: datetime) -> dict:
 
 
 def _comps_to_remove(rows: list, now: datetime) -> list:
-    """Former annual members past their grace week who are still comped in
+    """Former annual members past their grace period who are still comped in
     Ghost, so they keep reading until the comp comes off by hand."""
     out = []
     for r in rows:

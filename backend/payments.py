@@ -352,6 +352,10 @@ async def get_subscriber_payment_summaries() -> dict:
             }
         summary = summaries[email]
         summary['first_payment'] = payment_snapshot
+        # The newest payment that isn't a The Ten: a member's year counts
+        # from this one (see get_last_membership_payment_for_email).
+        if 'last_membership_payment' not in summary and doc.get('plan') != 'trial':
+            summary['last_membership_payment'] = payment_snapshot
         summary['payment_count'] += 1
         currency = doc.get('currency')
         if currency in summary['total_paid']:
@@ -420,6 +424,30 @@ async def get_last_payment_for_email(email: str) -> Optional[dict]:
         return None
     doc = await _db.payments.find_one(
         {'email': email.lower().strip()}, sort=[('razorpay_created_at', -1)],
+    )
+    if not doc:
+        return None
+    return {
+        'payment_id': doc.get('payment_id'),
+        'amount': doc.get('amount'),
+        'currency': doc.get('currency'),
+        'plan': doc.get('plan'),
+        'subscription_id': doc.get('subscription_id') or '',
+        'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+        'access_from': _iso(doc.get('access_from')),
+    }
+
+
+async def get_last_membership_payment_for_email(email: str) -> Optional[dict]:
+    """The member's latest payment for a membership (anything but a The
+    Ten payment), in get_last_payment_for_email's shape. Their year is
+    counted from this one: a The Ten bought on the side after an annual
+    payment used to become "the last payment" and move the end date the
+    account and /renew pages worked from."""
+    if _db is None:
+        return None
+    doc = await _db.payments.find_one(
+        {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}}, sort=[('razorpay_created_at', -1)],
     )
     if not doc:
         return None

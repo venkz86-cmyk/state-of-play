@@ -77,7 +77,7 @@ export const RenewMockup = () => {
     return () => { active = false; };
   }, [user?.email]);
 
-  const offer = renewalOffer(details);
+  const offer = renewalOffer(details, { anyTime: true });
   const waiting = loading || linkStatus === 'loading' || (user && !details);
 
   const renewBlock = () => {
@@ -128,7 +128,8 @@ export const RenewMockup = () => {
     if (details?.subscription_end) {
       return (
         <p data-testid="renew-not-yet" className="font-plex text-sm text-[var(--text-muted)]">
-          Your membership runs until {longDate(details.subscription_end)}. You can renew here from 30 days before then.
+          Your membership runs until {longDate(details.subscription_end)}.{' '}
+          <Link to="/account" className={linkClass}>Go to your account</Link>
         </p>
       );
     }

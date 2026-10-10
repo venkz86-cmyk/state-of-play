@@ -7,6 +7,75 @@ import { BulkEmailControls, RowSendButton, daysSince } from './BulkEmailControls
 import { RenewalSweepPanel } from './RenewalSweepPanel';
 
 const LAPSED_ENDPOINT = '/api/admin/annual-renewal/send-lapsed';
+// Anyone who can renew, at any point: early, in their 30 days' grace, or
+// lapsed (backend annual_renewal.send_renewal_links).
+const LINK_ENDPOINT = '/api/admin/annual-renewal/send-link';
+const quietLink = 'font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60';
+
+// Copies a member's personal renewal link, to send yourself (WhatsApp,
+// a personal email). Says why if they can't renew.
+const CopyLinkButton = ({ email, onAuthError, setResult }) => {
+  const [state, setState] = useState('idle');
+  return (
+    <button
+      type="button"
+      disabled={state === 'busy'}
+      data-testid={`copy-link-${email}`}
+      className={quietLink}
+      onClick={async () => {
+        setState('busy');
+        try {
+          const data = await adminFetch(`/api/admin/annual-renewal/link?email=${encodeURIComponent(email)}`);
+          if (!data.url) { setResult({ sent: 0, skipped: [{ email, reason: data.error || 'Cannot renew' }] }); setState('idle'); return; }
+          await navigator.clipboard.writeText(data.url);
+          setState('copied');
+          setTimeout(() => setState('idle'), 1500);
+        } catch (e) {
+          if (e instanceof AdminAuthError) { onAuthError?.(); return; }
+          setResult({ error: e.message || 'Could not get the link.' });
+          setState('idle');
+        }
+      }}
+    >
+      {state === 'copied' ? 'Copied' : state === 'busy' ? '…' : 'Copy link'}
+    </button>
+  );
+};
+
+// A renewal link for any member, typed in: send it, or copy it.
+const AnyEmailLink = ({ onAuthError, setResult }) => {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const valid = /.+@.+\..+/.test(email.trim());
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6" data-testid="any-email-link">
+      <span className="font-plex text-[13px] text-[var(--text-muted)]">Renewal link for</span>
+      <input
+        type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@domain.com"
+        data-testid="any-email-input"
+        className="bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[14px] py-1 w-[240px] focus:outline-none focus:border-[var(--accent-burgundy)]"
+      />
+      <button
+        type="button" disabled={!valid || busy} className={quietLink} data-testid="any-email-send"
+        onClick={async () => {
+          if (!window.confirm(`Send a renewal link to ${email.trim()}?`)) return;
+          setBusy(true);
+          try {
+            setResult(await adminFetch(LINK_ENDPOINT, { method: 'POST', body: JSON.stringify({ emails: [email.trim()] }) }));
+          } catch (e) {
+            if (e instanceof AdminAuthError) { onAuthError?.(); return; }
+            setResult({ error: e.message || 'Could not send.' });
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? 'Sending…' : 'Send'}
+      </button>
+      {valid && <CopyLinkButton email={email.trim()} onAuthError={onAuthError} setResult={setResult} />}
+    </div>
+  );
+};
 
 const FILTERS = [
   { key: 'all', label: 'All with an expiry' },
@@ -104,6 +173,16 @@ export const RenewalsPanel = ({ onAuthError }) => {
         );
       },
     },
+    {
+      key: 'actions', label: '', align: 'right',
+      render: (r) => (
+        <span className="inline-flex gap-4 justify-end">
+          <RowSendButton endpoint={LINK_ENDPOINT} email={r.email} label="Send link"
+            onSent={() => {}} onAuthError={onAuthError} setResult={setSendResult} />
+          <CopyLinkButton email={r.email} onAuthError={onAuthError} setResult={setSendResult} />
+        </span>
+      ),
+    },
   ];
 
   const tabs = (
@@ -160,10 +239,14 @@ export const RenewalsPanel = ({ onAuthError }) => {
         key: 'actions', label: '', align: 'right',
         render: (r) => {
           const d = daysSince(r.lapsed_sent);
-          if (d != null && d < gapDays) return <span className="font-plex text-[12px] text-[var(--text-muted)]">Sent</span>;
           return (
-            <RowSendButton endpoint={LAPSED_ENDPOINT} email={r.email} label="Send"
-              onSent={loadLapsed} onAuthError={onAuthError} setResult={setSendResult} />
+            <span className="inline-flex gap-4 justify-end">
+              {d != null && d < gapDays
+                ? <span className="font-plex text-[12px] text-[var(--text-muted)]">Sent</span>
+                : <RowSendButton endpoint={LAPSED_ENDPOINT} email={r.email} label="Send"
+                    onSent={loadLapsed} onAuthError={onAuthError} setResult={setSendResult} />}
+              <CopyLinkButton email={r.email} onAuthError={onAuthError} setResult={setSendResult} />
+            </span>
           );
         },
       },
@@ -171,6 +254,7 @@ export const RenewalsPanel = ({ onAuthError }) => {
     return (
       <div>
         {tabs}
+        <AnyEmailLink onAuthError={onAuthError} setResult={setSendResult} />
         <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4 max-w-[70ch]">
           Former annual members whose year has ended and who haven't renewed. The note offers ₹2,999 + GST ($149)
           and links to their own /renew page. Nobody gets it twice within {gapDays} days.
@@ -206,6 +290,21 @@ export const RenewalsPanel = ({ onAuthError }) => {
   return (
     <div>
       {tabs}
+      <AnyEmailLink onAuthError={onAuthError} setResult={setSendResult} />
+      <p className="font-plex text-[13px] text-[var(--text-muted)] mb-4 max-w-[70ch]">
+        A renewal link signs the member straight in to their /renew page, at ₹2,999 + GST ($149). It works for 60
+        days and as many times as they need. Anyone who can't renew (a student, The Ten, a year that ends more than 60
+        days out) is skipped with the reason.
+      </p>
+      <BulkEmailControls
+        endpoint={LINK_ENDPOINT}
+        emails={rows.map((r) => r.email)}
+        allLabel={(n) => `Send renewal links to all ${n}`}
+        confirmText={(n) => `Send a renewal link to ${n} ${n === 1 ? 'person' : 'people'} on this tab?`}
+        onAuthError={onAuthError}
+        result={sendResult}
+        setResult={setSendResult}
+      />
 
       <DataTable
         columns={columns}

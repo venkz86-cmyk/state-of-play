@@ -89,7 +89,7 @@ PAID_LABELS = [
     'paid-via-razorpay', 'paid-via-invoice', 'premium-subscriber',
     'paid', 'premium', 'corporate-member', 'tier-student', 'nomination-access',
     # A complimentary year (complimentary.py), removed by the renewal sweep
-    # a week after the year ends.
+    # a week after the year ends (complimentary keeps a week's grace).
     'complimentary',
 ]
 

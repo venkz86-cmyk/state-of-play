@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 
 from tiers import resolve_tier, is_genuinely_paid, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
-from payments import get_last_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial, complimentary_grant_for
+from payments import get_last_payment_for_email, get_last_membership_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial, complimentary_grant_for
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -325,6 +325,9 @@ class MemberDetailsResponse(BaseModel):
     last_payment_amount: Optional[int] = None
     last_payment_currency: Optional[str] = None
     last_payment_date: Optional[str] = None
+    # Whether this member can renew at the renewal rate right now, by the
+    # same rule checkout uses (razorpay_orders.renewal_eligibility).
+    can_renew: bool = False
 
 @api_router.post("/ghost/member-details", response_model=MemberDetailsResponse)
 async def get_member_details(request: MemberVerifyRequest, http_request: Request):
@@ -454,7 +457,7 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         # on a member's renewal date -- including the thirteen-
                         # months-for-twelve trial-upgrade bonus, which a plain
                         # created_at + 365 days had no way to know about.
-                        last_payment = await get_last_payment_for_email(member.get('email') or request.email)
+                        last_payment = await get_last_membership_payment_for_email(member.get('email') or request.email)
                         # A real recurring Subscription payment (razorpay_
                         # subscriptions.py's verify_subscription) carries a
                         # subscription_id Razorpay itself attaches -- a plain
@@ -515,7 +518,7 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         # 'lapsed' lets the account page offer the renewal
                         # rate (razorpay_orders' 'renewal' plan) instead
                         # of sending them to the new-signup price.
-                        last_payment = await get_last_payment_for_email(member.get('email') or request.email)
+                        last_payment = await get_last_membership_payment_for_email(member.get('email') or request.email)
                         if last_payment and not last_payment.get('subscription_id'):
                             subscription_status = 'lapsed'
                             subscription_end = compute_synthetic_expiry(last_payment)
@@ -530,6 +533,16 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     # Surface the canonical paid status to the client
                     canonical_status = 'paid' if has_razorpay_label else status
 
+                    tier = resolve_tier(label_names, is_paid)
+                    try:
+                        from razorpay_orders import renewal_eligibility
+                        can_renew, _ = await renewal_eligibility(
+                            {'email': member_email, 'tier': tier, 'label_names': label_names}
+                        )
+                    except Exception as e:
+                        logger.warning(f'member-details: renewal check failed for {member_email}: {e!r}')
+                        can_renew = False
+
                     return MemberDetailsResponse(
                         is_member=True,
                         is_paid=is_paid,
@@ -541,7 +554,8 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                         subscription_end=subscription_end,
                         subscription_status=subscription_status,
                         avatar_image=member.get('avatar_image'),
-                        tier=resolve_tier(label_names, is_paid),
+                        tier=tier,
+                        can_renew=can_renew,
                         last_payment_amount=(last_payment or {}).get('amount'),
                         last_payment_currency=(last_payment or {}).get('currency'),
                         last_payment_date=(last_payment or {}).get('razorpay_created_at'),
