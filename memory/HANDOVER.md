@@ -334,11 +334,10 @@ Archive shows no reading time if Ghost leaves it out (confirm on the live site);
 `lib/ghostImage.js` gives lead images a srcset; story extras and rarely visited
 pages load on demand; Literata and Schibsted Grotesk are self-hosted in
 `public/fonts` (variable woff2, latin + latin-ext). Left:
-- Story labels (kickers): three options mocked October 11 (StoryLabel.jsx,
-  uncommitted on staging, chosen by localStorage tsop_label_variant a/b/c
-  for the mockups only). Waiting on Venkat's pick, then: hardcode it, apply
-  to Feed, Archive, search and related stories, proofread the label copy.
-  Format comes from an internal Ghost tag (#format-analysis etc.).
+- Story labels: done October 11 (option A, format + free mark, no topic).
+  To set a story's format in Ghost, add an internal tag: #format-analysis,
+  #format-interview, #format-explainer, #format-profile, #format-opinion
+  (names in services/ghostAPI.js FORMATS). No tag means Reportage.
 - Team renewals (done October 11, backend live): a second Team-5/10 payment
   from an admin whose team is over 30 days old calls the Apps Script's
   `renew_account` (v7), which extends the same row a year from its
@@ -351,31 +350,8 @@ pages load on demand; Literata and Schibsted Grotesk are self-hosted in
 - Razorpay webhook events refund.created/processed/failed are ticked
   (done October 11).
 
-## Next session: rethink the story labels ("kickers")
-Venkat (October 11): the grey uppercase "TOPIC · FREE" / "REPORTAGE · FOR
-SUBSCRIBERS" / "THE LEFT FIELD · FREE" labels read generic and templated.
-Wants better visibility. Starting proposal, to mock up before building:
-- Split what the label is doing. Topic (a real beat: Franchises, Media
-  rights) and access (paid or free) are two different facts crammed into
-  one grey line. Give each its own treatment.
-- KEEP the format label, but make it deliberate. Venkat: "Reportage is
-  important" because it tells the reader what kind of piece it is
-  (Reportage, Analysis, Interview, and so on). Today it only appears as
-  the fallback when a story has no topic tag. Make format its own field,
-  set per story in Ghost (an internal tag such as #format-analysis, or a
-  small fixed list), shown on every story, separate from the topic.
-  Default to Reportage when none is set.
-- Mark the exception, not the rule. Most stories are for members, so
-  don't label them; give the free ones a small, visible "Free to read"
-  mark. "For subscribers" on nearly every card is noise.
-- The Left Field is a publication, not a status: give it its own small
-  identity (its name in a distinct style or colour), not the same grey
-  kicker as a topic.
-- Typography: try sentence case at a readable size instead of
-  letterspaced 11px caps, and keep colour for the one thing that matters
-  (free), and let the format label carry the piece's type.
-- Mock 2 or 3 options on the home page and a story header, light and
-  dark, phone and desktop, then pick.
-Code: labels are built in HomeMockup.js, FeedMockup.js, ArticleMockup.js,
-Archive.js and the related-stories block; "Reportage" fallback is in
-services/ghostAPI.js (transformPost, `theme`).
+## Story labels (shipped October 11)
+The line above a headline is components/StoryLabel.jsx: the story's format
+in small red capitals and, on free stories only, a round "Free to read" or
+"Free with sign-up" mark. Topics are not shown there; they stay as tags in
+the archive and "Filed under". The Left Field gets LeftFieldMark.
