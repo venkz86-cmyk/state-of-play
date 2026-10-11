@@ -7,6 +7,7 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupHeader } from '../components/MockupHeader';
 import { SurveyBanner } from '../components/SurveyBanner';
 import { MockupFooter } from '../components/MockupFooter';
+import { StoriesUnavailable, StoriesSkeleton } from '../components/StoriesUnavailable';
 import { PartnersBlock } from '../components/PartnersBlock';
 import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
@@ -122,8 +123,10 @@ export const HomeMockup = () => {
   const previewMember = searchParams.get('preview') === 'member';
   const isMember = canAccessPremium || previewMember;
 
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
+    setLoading(true);
     (async () => {
       try {
         const [posts, count] = await Promise.all([
@@ -149,12 +152,14 @@ export const HomeMockup = () => {
     })();
 
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
 
-  if (loading) {
+  if (loading || articles.length === 0) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <span className="font-plex text-sm text-[var(--text-muted)]">Loading…</span>
+      <div className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]" data-testid="mockup-home">
+        <MockupHeader />
+        {loading ? <StoriesSkeleton /> : <StoriesUnavailable onRetry={() => setAttempt((n) => n + 1)} />}
+        <MockupFooter />
       </div>
     );
   }
