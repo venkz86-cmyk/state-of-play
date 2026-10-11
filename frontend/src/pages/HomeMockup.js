@@ -115,6 +115,9 @@ const TestimonialBlock = () => {
 export const HomeMockup = () => {
   const [articles, setArticles] = useState([]);
   const [briefs, setBriefs] = useState([]);
+  // The feed is someone else's server: if it fails, is slow or comes back
+  // empty, the corner points to Substack instead of loading forever.
+  const [briefsFailed, setBriefsFailed] = useState(false);
   const [editionNo, setEditionNo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
@@ -147,10 +150,13 @@ export const HomeMockup = () => {
 
     (async () => {
       try {
-        if (!API) return;
+        if (!API) { if (active) setBriefsFailed(true); return; }
         const r = await axios.get(`${API}/api/substack/feed`, { timeout: 5000 });
-        if (active && Array.isArray(r.data)) setBriefs(r.data.slice(0, 4));
-      } catch (e) { /* sidebar is non-blocking */ }
+        const list = Array.isArray(r.data) ? r.data.slice(0, 4) : [];
+        if (active) { setBriefs(list); setBriefsFailed(list.length === 0); }
+      } catch (e) {
+        if (active) setBriefsFailed(true); // sidebar is non-blocking
+      }
     })();
 
     return () => { active = false; };
@@ -279,8 +285,13 @@ export const HomeMockup = () => {
                   </li>
                 ))}
                 {briefs.length === 0 && (
-                  <li className="font-plex text-sm text-[var(--text-muted)]">
-                    Loading briefs…
+                  <li className="font-plex text-sm text-[var(--text-muted)]" data-testid="home-briefs-empty">
+                    {briefsFailed ? (
+                      <>
+                        The latest briefs are on{' '}
+                        <a href="https://theleftfield.substack.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-[var(--rule)] hover:decoration-[var(--text)]">Substack</a>.
+                      </>
+                    ) : 'Loading briefs…'}
                   </li>
                 )}
               </ul>
@@ -333,7 +344,7 @@ export const HomeMockup = () => {
           <div className="border-t border-[var(--rule)] pt-8">
             <div className="flex items-baseline justify-between mb-8">
               <SectionLabel>The Desk</SectionLabel>
-              <SectionLabel>This issue · {desk.length.toString().padStart(2, '0')} stories</SectionLabel>
+              <SectionLabel>This issue · {desk.length} {desk.length === 1 ? 'story' : 'stories'}</SectionLabel>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 lg:gap-x-12 gap-y-8">
               {desk.map((a) => (
