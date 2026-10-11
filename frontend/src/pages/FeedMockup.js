@@ -83,9 +83,9 @@ export const FeedMockup = () => {
                 <div className="aspect-[16/10] overflow-hidden bg-[var(--surface)] mb-6">
                   <img
                     src={lead.image_url}
-                    alt={lead.title}
+                    alt={lead.image_alt || ''}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover saturate-[0.85] group-hover:saturate-100 group-hover:scale-[1.02] transition-all duration-700 ease-out"
+                    className="w-full h-full object-cover md:saturate-[0.85] md:group-hover:saturate-100 group-hover:scale-[1.02] transition-all duration-700 ease-out"
                   />
                 </div>
               )}

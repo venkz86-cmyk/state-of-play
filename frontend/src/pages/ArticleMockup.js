@@ -373,9 +373,9 @@ export const ArticleMockup = () => {
           <figure className="mb-10 lg:mb-12 -mx-6 lg:mx-0 overflow-hidden">
             <img
               src={article.image_url}
-              alt={article.title}
+              alt={article.image_alt || ''}
               referrerPolicy="no-referrer"
-              className="w-full aspect-[16/9] object-cover saturate-0 hover:saturate-100 transition-all duration-700 ease-out"
+              className="w-full aspect-[16/9] object-cover md:saturate-0 md:hover:saturate-100 transition-all duration-700 ease-out"
             />
             {article.image_caption && (
               // Rendered as trusted rich text, not plain-text-stripped --

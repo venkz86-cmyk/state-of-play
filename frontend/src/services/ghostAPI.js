@@ -224,6 +224,9 @@ class GhostAPI {
         .map(t => ({ name: t.name, slug: t.slug })),
       image_url: fixImageUrl(post.feature_image),
       image_caption: post.feature_image_caption,
+      // Ghost's own description of the photo. Empty when none is set: the
+      // headline sits right beside the image, so repeating it isn't useful.
+      image_alt: post.feature_image_alt || '',
       read_time: post.reading_time || 5,
       created_at: post.published_at,
       updated_at: post.updated_at,
