@@ -1464,6 +1464,11 @@ async def razorpay_webhook(request: Request):
             else:
                 logger.warning("No email found in webhook payload")
                 logger.debug(f"Payment entity: {payment_entity}")
+        elif event in ('refund.created', 'refund.processed', 'refund.failed') and sync_refunds:
+            # Only the payment ID is taken from the webhook; what was
+            # refunded is read from Razorpay itself (refunds.py).
+            refund_entity = payload.get('payload', {}).get('refund', {}).get('entity', {})
+            await sync_refunds(refund_entity.get('payment_id') or '')
         elif event.startswith('subscription.') and handle_subscription_webhook_event:
             # subscription.activated and subscription.charged are already
             # covered above (Ghost labeling + Slack, same as payment.captured);
@@ -2602,6 +2607,17 @@ try:
 except Exception as _e:
     logging.warning(f"payments module not mounted: {_e!r}")
     record_payment = None
+
+# Mount refunds (October 2026): dashboard refunds, automatic paid-twice
+# and overpaid refunds (hooked into payments.record_payment), and the
+# webhook's refund.* events.
+try:
+    from refunds import router as refunds_router, init as refunds_init, sync_from_razorpay as sync_refunds
+    refunds_init(db, razorpay_client)
+    app.include_router(refunds_router)
+except Exception as _e:
+    logging.warning(f"refunds module not mounted: {_e!r}")
+    sync_refunds = None
 
 # Mount dynamic Razorpay Orders checkout (replaces static Payment Buttons
 # for plan/add-on combinations ahead of the Oct 6 launch)

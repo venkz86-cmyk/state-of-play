@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { DataTable } from './DataTable';
 import { KPITile } from './KPITile';
@@ -212,7 +213,17 @@ export const SubscribersPanel = ({ onAuthError }) => {
               {history[expanded].map((p) => (
                 <li key={p.payment_id} className="font-plex text-[13px] flex justify-between border-b border-[var(--rule)]/50 py-2">
                   <span>{formatDate(p.razorpay_created_at)} · {p.plan} · {p.source}</span>
-                  <span className="tabular-nums">{formatCurrency(p.amount, p.currency)}</span>
+                  <span className="flex items-center gap-4">
+                    <span className="tabular-nums">
+                      {formatCurrency(p.amount, p.currency)}
+                      {p.amount_refunded > 0 && (
+                        <span className="text-[var(--accent-burgundy)]"> · {p.amount_refunded >= p.amount ? 'refunded' : `${formatCurrency(p.amount_refunded, p.currency)} refunded`}</span>
+                      )}
+                    </span>
+                    {(p.payment_id || '').startsWith('pay_') && (
+                      <Link to={`/admin/dashboard/refunds?q=${encodeURIComponent(expanded)}`} className="text-[var(--accent-burgundy)] underline underline-offset-4">Refund…</Link>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

@@ -255,6 +255,34 @@ async def renewal_eligibility(member: Optional[dict]) -> tuple[bool, str]:
     return True, ''
 
 
+async def _returning_member_email(member: Optional[dict], typed_email: str, client_ip: str) -> str:
+    """The email a new-reader (standard) checkout should be sold to at the
+    renewal rate instead, or ''. Someone who has been an annual member
+    renews; they never pay the new-reader price (a past member paid
+    ₹590 too much that way on October 9, 2026). Signed in: their own
+    account. Signed out: the email they typed, checked the same way, and
+    the order is then sold to that email only, so the lower price can't
+    be passed to anyone else. The typed check is rate-limited like the
+    existing-reader one; over the limit it just isn't made."""
+    if member:
+        ok, _ = await renewal_eligibility(member)
+        return member['email'].lower().strip() if ok else ''
+    email = (typed_email or '').lower().strip()
+    if not email or not await has_paid_beyond_trial(email) or not _check_early_rate_limit(client_ip):
+        return ''
+    token = _create_ghost_admin_token()
+    if not token:
+        return ''
+    from tiers import find_ghost_member, resolve_tier, is_genuinely_paid
+    ghost = await find_ghost_member(email, token)
+    if not ghost:
+        return ''
+    labels = [(l.get('name') or '').lower() for l in (ghost.get('labels') or [])]
+    is_paid = await is_genuinely_paid(labels, ghost.get('status', 'free'), email)
+    ok, _ = await renewal_eligibility({'email': email, 'tier': resolve_tier(labels, is_paid), 'label_names': labels})
+    return email if ok else ''
+
+
 class CreateOrderRequest(BaseModel):
     plan: str
     country: str = 'IN'
@@ -361,7 +389,7 @@ async def create_order(req: CreateOrderRequest, request: Request):
         elif not member and req.offer == 'left-field' and req.email:
             client_ip = (
                 request.headers.get('x-forwarded-for', '').split(',')[0].strip()
-                or (request.client.host if request.client else '0.0.0.0')
+                or (getattr(getattr(request, 'client', None), 'host', None) or '0.0.0.0')
             )
             if not _check_early_rate_limit(client_ip):
                 raise HTTPException(status_code=429, detail='Too many tries. Wait a minute and try again.')
@@ -392,6 +420,19 @@ async def create_order(req: CreateOrderRequest, request: Request):
             # A one-person link is sold to that person only.
             if invite.get('email'):
                 order_notes['email'] = invite['email']
+        else:
+            client_ip = (
+                request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+                or (getattr(getattr(request, 'client', None), 'host', None) or '0.0.0.0')
+            )
+            returning = await _returning_member_email(member, req.email, client_ip)
+            if returning:
+                renewal_config = _resolve_plan_config('renewal', req.country)
+                if renewal_config:
+                    config = {**renewal_config, 'label': 'Annual Membership (renewal rate for returning members)'}
+                    order_notes['plan'] = 'renewal'
+                    order_notes['rate'] = 'renewal'
+                    order_notes['email'] = returning
 
     amount = config['amount']
     label = config['label']
@@ -413,7 +454,7 @@ async def create_order(req: CreateOrderRequest, request: Request):
         'amount': amount,
         'currency': config['currency'],
         'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
-        'plan': req.plan,
+        'plan': notes.get('plan') or req.plan,
         'label': label,
         'rate': notes.get('rate') or '',
     }
@@ -591,6 +632,10 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     order_plan = order_notes.get('plan') or ''
     if order_notes.get('gift') == 'true' or order_plan not in PLAN_LABELS:
         raise HTTPException(status_code=400, detail='This order is not for a membership')
+    # create_order sells a returning member's new-reader checkout as a
+    # renewal (_returning_member_email); the page still says 'standard'.
+    if req.plan == 'standard' and order_plan == 'renewal' and order_notes.get('rate') == 'renewal':
+        req.plan = 'renewal'
     if req.plan != order_plan:
         logger.warning(
             f'verify-payment: plan mismatch for order={req.razorpay_order_id}: '

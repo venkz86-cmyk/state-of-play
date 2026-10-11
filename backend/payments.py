@@ -151,6 +151,22 @@ def _serialize(doc: dict) -> dict:
     return out
 
 
+# A refunded payment stops counting toward anyone's year, unless Venkat
+# refunded it from the dashboard and chose to let them keep access
+# (refunds.py). Every lookup that decides access goes through this.
+COUNTS_FOR_ACCESS = {'$or': [{'status': {'$ne': 'refunded'}}, {'keeps_access': True}]}
+
+
+def counts_for_access(doc: dict) -> bool:
+    return doc.get('status') != 'refunded' or bool(doc.get('keeps_access'))
+
+
+# Called with each genuinely new payment's document (refunds.py's
+# paid-twice and overpaid checks). Run in the background, so a slow
+# Razorpay call never holds up a checkout.
+ON_NEW_PAYMENT: list = []
+
+
 async def record_payment(
     payment_id: str,
     email: str,
@@ -218,7 +234,14 @@ async def record_payment(
             {'$setOnInsert': {**doc, 'created_at': datetime.now(timezone.utc)}},
             upsert=True,
         )
-        return getattr(result, 'upserted_id', None) is not None
+        is_new = getattr(result, 'upserted_id', None) is not None
+        if is_new:
+            for hook in ON_NEW_PAYMENT:
+                try:
+                    asyncio.get_running_loop().create_task(hook(dict(doc)))
+                except Exception as e:
+                    logger.warning(f'record_payment: new-payment hook failed to start for {payment_id!r}: {e!r}')
+        return is_new
     except Exception as e:
         logger.warning(f'record_payment failed (non-fatal) for {payment_id!r}: {e!r}')
         return False
@@ -299,12 +322,12 @@ def _grant_end_during(grant: Optional[dict], paid_at: datetime) -> Optional[date
     return None
 
 
-async def renewal_access_from(email: str, paid_at: datetime) -> datetime:
+async def renewal_access_from(email: str, paid_at: datetime, exclude_payment_id: str = '') -> datetime:
     """When a renewal paid at paid_at starts: the end of the member's
     current year if that's still ahead, otherwise the payment date. The
     current year is their last payment's, or a complimentary year's when
     that ends later."""
-    ends = [_aware(compute_synthetic_expiry(await get_last_payment_for_email(email))),
+    ends = [_aware(compute_synthetic_expiry(await get_last_payment_for_email(email, exclude_payment_id))),
             _grant_end_during(await complimentary_grant_for(email), paid_at)]
     later = [end for end in ends if end and end > paid_at]
     return max(later) if later else paid_at
@@ -331,7 +354,7 @@ async def get_subscriber_payment_summaries() -> dict:
     cursor = _db.payments.find({}).sort('razorpay_created_at', -1)
     async for doc in cursor:
         email = doc.get('email')
-        if not email:
+        if not email or not counts_for_access(doc):
             continue
         payment_snapshot = {
             'payment_id': doc.get('payment_id'),
@@ -359,7 +382,7 @@ async def get_subscriber_payment_summaries() -> dict:
         summary['payment_count'] += 1
         currency = doc.get('currency')
         if currency in summary['total_paid']:
-            summary['total_paid'][currency] += doc.get('amount') or 0
+            summary['total_paid'][currency] += (doc.get('amount') or 0) - (doc.get('amount_refunded') or 0)
     return summaries
 
 
@@ -416,15 +439,16 @@ async def get_last_payment_by_subscription_id(subscription_id: str) -> Optional[
     }
 
 
-async def get_last_payment_for_email(email: str) -> Optional[dict]:
+async def get_last_payment_for_email(email: str, exclude_payment_id: str = '') -> Optional[dict]:
     """Single-email version of get_subscriber_payment_summaries()'s
     last_payment -- for a caller (server.py's /ghost/member-details) that
     only needs one member's record, not every subscriber's."""
     if _db is None:
         return None
-    doc = await _db.payments.find_one(
-        {'email': email.lower().strip()}, sort=[('razorpay_created_at', -1)],
-    )
+    query = {'email': email.lower().strip(), **COUNTS_FOR_ACCESS}
+    if exclude_payment_id:
+        query['payment_id'] = {'$ne': exclude_payment_id}
+    doc = await _db.payments.find_one(query, sort=[('razorpay_created_at', -1)])
     if not doc:
         return None
     return {
@@ -447,7 +471,7 @@ async def get_last_membership_payment_for_email(email: str) -> Optional[dict]:
     if _db is None:
         return None
     doc = await _db.payments.find_one(
-        {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}}, sort=[('razorpay_created_at', -1)],
+        {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}, **COUNTS_FOR_ACCESS}, sort=[('razorpay_created_at', -1)],
     )
     if not doc:
         return None
@@ -470,7 +494,7 @@ async def has_paid_before(email: str, exclude_payment_id: str = '') -> bool:
     few seconds before verify runs, so that payment has to be left out."""
     if _db is None:
         return False
-    query = {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}}
+    query = {'email': email.lower().strip(), 'plan': {'$ne': 'trial'}, **COUNTS_FOR_ACCESS}
     if exclude_payment_id:
         query['payment_id'] = {'$ne': exclude_payment_id}
     return await _db.payments.find_one(query) is not None
@@ -490,7 +514,7 @@ async def has_paid_beyond_trial(email: str) -> bool:
     Trial purchase never counts itself as prior history."""
     if _db is None:
         return False
-    doc = await _db.payments.find_one({'email': email.lower().strip(), 'plan': {'$ne': 'trial'}})
+    doc = await _db.payments.find_one({'email': email.lower().strip(), 'plan': {'$ne': 'trial'}, **COUNTS_FOR_ACCESS})
     return doc is not None
 
 
