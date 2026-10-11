@@ -185,7 +185,7 @@ story_tokens {
 
 ## 9. Design system (shipped, current)
 
-- **Fonts:** Fraunces (display), Newsreader (reading serif), DM Sans (UI). Only 3 loaded via Google Fonts in `public/index.html`. Everything else is CSS fallback strings.
+- **Fonts:** Literata (reading serif), Schibsted Grotesk (UI) and Gloock (display), all self-hosted in `public/fonts` with `@font-face` rules in `public/index.html`. No Google Fonts.
 - **Colours:** CSS role tokens `--bg / --rule / --text / --text-muted / --text-label`. **Sole accent = burgundy `#A0291C`.** No blue, no orange (those only survive in the logo asset).
 - **Grid:** 12-col asymmetric (8+4 lead/rail), hairline rules, no shadows, no rounded corners.
 - **Article typography:** 19 px / 1.6 desktop · 18 px / 1.65 mobile · S/M/L toggle to 17/18-19/22 px.
@@ -328,19 +328,14 @@ _Anything unclear or out of date — update this file in the same commit as the 
 
 ## Still to do (as of October 11, 2026)
 
-Site polish, releases 1 to 4 (first part) are live. Left from the plan:
-- Speed, rest: archive and search ask Ghost for list fields only
-  (`fields=` in `ghostAPI.getAllPosts`, one shared cached promise for
-  Archive.js, SiteSearch.js, StartHere, Season). Check on the live site
-  that reading times still show; if Ghost drops `reading_time` with
-  `fields`, show nothing rather than "5m".
-- Image `srcset` from Ghost's `/size/wN/` (helper `sized()` in
-  TenCoverStack.jsx) on home, feed and story lead images; `fetchpriority`
-  on the story's lead image.
-- Lazy-load story-page extras (comments, gift modal, print block with
-  qrcode.react) and other rarely used pages.
-- Fonts: self-host Literata and Schibsted Grotesk like Gloock, trimmed
-  to the weights used.
+Site polish, releases 1 to 4 (both parts) are live. Speed part 2 (October 11):
+archive and search use `fields=` with one 5-minute cache in `ghostAPI.getAllPosts`;
+Archive shows no reading time if Ghost leaves it out (confirm on the live site);
+`lib/ghostImage.js` gives lead images a srcset; story extras and rarely visited
+pages load on demand; Literata and Schibsted Grotesk are self-hosted in
+`public/fonts` (variable woff2, latin + latin-ext). Left:
+- Story labels (kickers): rethink the slugs, keep a per-story format label
+  (Reportage by default; analysis, interview and the like).
 - Teams off the Apps Script (parked while teams are active); before the
   first team renewals (around April 2027) make checkout extend an
   existing team instead of adding a second Sheet row.
