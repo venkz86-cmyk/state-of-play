@@ -1292,21 +1292,28 @@ async def razorpay_webhook(request: Request):
         
         logger.info(f"Webhook body length: {len(body_str)} bytes")
         
-        # Verify signature if webhook secret is configured
-        if webhook_secret and webhook_signature:
-            expected_signature = hmac.new(
-                webhook_secret.encode('utf-8'),
-                body_str.encode('utf-8'),
-                hashlib.sha256
-            ).hexdigest()
-            
-            if not hmac.compare_digest(expected_signature, webhook_signature):
-                logger.warning("Razorpay webhook signature verification FAILED")
-                # Return 200 anyway - don't block legitimate webhooks if secret is misconfigured
-            else:
-                logger.info("Razorpay webhook signature verified successfully")
-        else:
-            logger.warning("Webhook signature verification skipped - secret not configured")
+        # Only Razorpay can grant access through here. The URL is public, and
+        # until October 2026 a request with a missing or wrong signature was
+        # still processed, so a forged payment.captured could hand anyone a
+        # paid membership. Every real webhook since October 1 had passed
+        # this check before it was enforced.
+        if not webhook_secret:
+            # A config problem, not a forgery: 503 makes Razorpay retry for
+            # 24 hours, so real payments arrive once the secret is back.
+            logger.error("Razorpay webhook refused: RAZORPAY_WEBHOOK_SECRET is not set")
+            return Response(status_code=503, content='Webhook secret not configured')
+        expected_signature = hmac.new(
+            webhook_secret.encode('utf-8'),
+            body_str.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        if not webhook_signature or not hmac.compare_digest(expected_signature, webhook_signature):
+            logger.warning(
+                "Razorpay webhook refused: signature %s",
+                'missing' if not webhook_signature else 'does not match',
+            )
+            return Response(status_code=401, content='Invalid signature')
+        logger.info("Razorpay webhook signature verified successfully")
         
         # Parse the payload
         payload = json.loads(body_str)
