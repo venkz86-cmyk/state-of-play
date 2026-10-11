@@ -9,7 +9,7 @@ import { formatDateTime } from '../../lib/format';
 const label = 'font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]';
 const field = 'bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[14px] py-1 focus:outline-none focus:border-[var(--accent-burgundy)]';
 const primary = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-10 px-5 disabled:opacity-50';
-const quiet = 'font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-4 hover:text-[var(--text)] disabled:opacity-50';
+const quiet = 'font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-4 hover:text-[var(--text)] disabled:opacity-50';
 const STATE = { open: 'Open', expired: 'Ended', closed: 'Closed' };
 
 const CopyButton = ({ text, children, testId }) => {
@@ -37,7 +37,7 @@ const Readers = ({ code, onAuthError }) => {
     <ul className="py-2" data-testid={`group-readers-${code}`}>
       {rows.map((r) => (
         <li key={r.email} className="font-plex text-[13px] flex justify-between gap-4 py-1">
-          <span>{r.email}{r.new_member && <span className="text-[var(--text-muted)]"> · new</span>}{r.joined && <span className="text-[var(--accent-burgundy)]"> · joined</span>}</span>
+          <span>{r.email}{r.new_member && <span className="text-[var(--text-muted)]"> · new</span>}{r.joined && <span className="text-[var(--accent-ink)]"> · joined</span>}</span>
           <span className="text-[var(--text-muted)]">{formatDateTime(r.first_read_at)}</span>
         </li>
       ))}
@@ -84,6 +84,16 @@ export const GroupLinksPanel = ({ onAuthError }) => {
     catch (e) { if (e instanceof AdminAuthError) onAuthError?.(); }
   };
 
+  const remove = async (l) => {
+    const read = l.readers ? ` ${l.readers} ${l.readers === 1 ? 'person has' : 'people have'} read it, and that record goes too.` : '';
+    if (!window.confirm(`Delete this link?${read} The link stops working for anyone who has it. You can make a new one any time.`)) return;
+    try {
+      await adminFetch(`/api/admin/group-links/${l.code}`, { method: 'DELETE' });
+      if (made?.code === l.code) setMade(null);
+      load();
+    } catch (e) { if (e instanceof AdminAuthError) onAuthError?.(); else setError(e.message || 'Could not delete the link.'); }
+  };
+
   return (
     <div className="max-w-[900px]">
       <form onSubmit={create} className="mb-4" data-testid="group-create">
@@ -111,7 +121,7 @@ export const GroupLinksPanel = ({ onAuthError }) => {
         Readers enter their email and a 6-digit code to read the story in full, so a forwarded link still tells you who read
         it. The end of the story offers the first year at ₹2,949 ($120 outside India) until the last day.
       </p>
-      {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-6">{error}</p>}
+      {error && <p className="font-plex text-[13px] text-[var(--accent-ink)] mb-6">{error}</p>}
       {made && (
         <div className="border border-[var(--text)] p-5 mb-10" data-testid="group-made">
           <p className="font-plex text-[14px] mb-1">Ready for {made.group_name}, open until {made.last_day}:</p>
@@ -144,6 +154,7 @@ export const GroupLinksPanel = ({ onAuthError }) => {
                   <button type="button" className={quiet} onClick={() => setOpen(open === l.code ? null : l.code)}>{open === l.code ? 'Hide readers' : 'Readers'}</button>
                   {l.state === 'open' && <CopyButton text={l.url}>Copy link</CopyButton>}
                   {l.state === 'open' && <button type="button" className={quiet} onClick={() => close(l.code)}>Close</button>}
+                  <button type="button" className={quiet} onClick={() => remove(l)} data-testid={`group-delete-${l.code}`}>Delete</button>
                 </div>
               </div>
               {open === l.code && <Readers code={l.code} onAuthError={onAuthError} />}
