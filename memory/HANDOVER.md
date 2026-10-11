@@ -356,8 +356,13 @@ Wants better visibility. Starting proposal, to mock up before building:
 - Split what the label is doing. Topic (a real beat: Franchises, Media
   rights) and access (paid or free) are two different facts crammed into
   one grey line. Give each its own treatment.
-- Drop "Reportage". It's only the fallback when a story has no topic tag,
-  and it says nothing. Show no topic rather than a filler word.
+- KEEP the format label, but make it deliberate. Venkat: "Reportage is
+  important" because it tells the reader what kind of piece it is
+  (Reportage, Analysis, Interview, and so on). Today it only appears as
+  the fallback when a story has no topic tag. Make format its own field,
+  set per story in Ghost (an internal tag such as #format-analysis, or a
+  small fixed list), shown on every story, separate from the topic.
+  Default to Reportage when none is set.
 - Mark the exception, not the rule. Most stories are for members, so
   don't label them; give the free ones a small, visible "Free to read"
   mark. "For subscribers" on nearly every card is noise.
@@ -366,8 +371,7 @@ Wants better visibility. Starting proposal, to mock up before building:
   kicker as a topic.
 - Typography: try sentence case at a readable size instead of
   letterspaced 11px caps, and keep colour for the one thing that matters
-  (free, or a format like Exclusive / Interview / Part 2 of 3 if Ghost
-  tags carry it).
+  (free), and let the format label carry the piece's type.
 - Mock 2 or 3 options on the home page and a story header, light and
   dark, phone and desktop, then pick.
 Code: labels are built in HomeMockup.js, FeedMockup.js, ArticleMockup.js,
