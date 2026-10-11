@@ -334,11 +334,18 @@ Archive shows no reading time if Ghost leaves it out (confirm on the live site);
 `lib/ghostImage.js` gives lead images a srcset; story extras and rarely visited
 pages load on demand; Literata and Schibsted Grotesk are self-hosted in
 `public/fonts` (variable woff2, latin + latin-ext). Left:
-- Story labels (kickers): rethink the slugs, keep a per-story format label
-  (Reportage by default; analysis, interview and the like).
-- Teams off the Apps Script (parked while teams are active); before the
-  first team renewals (around April 2027) make checkout extend an
-  existing team instead of adding a second Sheet row.
+- Story labels (kickers): three options mocked October 11 (StoryLabel.jsx,
+  uncommitted on staging, chosen by localStorage tsop_label_variant a/b/c
+  for the mockups only). Waiting on Venkat's pick, then: hardcode it, apply
+  to Feed, Archive, search and related stories, proofread the label copy.
+  Format comes from an internal Ghost tag (#format-analysis etc.).
+- Team renewals (done October 11, backend live): a second Team-5/10 payment
+  from an admin whose team is over 30 days old calls the Apps Script's
+  `renew_account` (v7), which extends the same row a year from its
+  renewal date. NEEDS Venkat to paste v7's handleRenewAccount, formatDay_
+  and the `case 'renew_account'` line into the live script and redeploy;
+  until then a renewal fails cleanly and shows on Today. Teams still live
+  on the Apps Script (moving them to Mongo is parked while teams are active).
 - DMARC record for stateofplay.club: check it exists (not visible from
   Resend); suggested `v=DMARC1; p=none; rua=mailto:venkat@stateofplay.club`.
 - Razorpay webhook events refund.created/processed/failed are ticked
