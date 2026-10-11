@@ -455,40 +455,43 @@ export const ArticleMockup = () => {
       {/* Comments — real Ghost member threads for subscribers; a subscribe
           nudge for everyone else. Gated the same as the rest of the page:
           members only, matching Ghost's own comments setting. Sits right
-          after the article since it's a direct continuation of it. */}
-      <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
-        <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
-          <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
-            On the Record
-          </h2>
-          {isMember && (
-            <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
-              Every post is reviewed before it's public.
-            </p>
-          )}
-          {isMember ? (
-            <Suspense fallback={null}>
-              <CustomComments
-                postSlug={article.id}
-                user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
-              />
-            </Suspense>
-          ) : (
-            <>
-              <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
-                Comments are for members. Subscribe to join the conversation.
+          after the article since it's a direct continuation of it. Hidden
+          under the paywall, which already makes the subscribe ask. */}
+      {!isPaywalled && (
+        <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
+          <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
+            <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
+              On the Record
+            </h2>
+            {isMember && (
+              <p className="font-plex text-[13px] text-[var(--text-label)] mb-6">
+                Every post is reviewed before it's public.
               </p>
-              <Link
-                to="/signup"
-                data-testid="comments-subscribe"
-                className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
-              >
-                Subscribe
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+            )}
+            {isMember ? (
+              <Suspense fallback={null}>
+                <CustomComments
+                  postSlug={article.id}
+                  user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
+                />
+              </Suspense>
+            ) : (
+              <>
+                <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
+                  Comments are for members. Subscribe to join the conversation.
+                </p>
+                <Link
+                  to="/signup"
+                  data-testid="comments-subscribe"
+                  className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                >
+                  Subscribe
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
 
       {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks. Sits after
