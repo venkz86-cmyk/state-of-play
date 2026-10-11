@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Lock } from 'lucide-react';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
 import { annualPricingFor } from '../lib/octoberPricing';
 import { useAuth } from '../contexts/AuthContext';
@@ -70,20 +69,6 @@ export const Paywall = () => {
         className="border-t-2 border-[var(--text)] pt-10 pb-12 max-w-[680px] relative"
         style={{ borderRadius: 0 }}
       >
-        {/* Lock icon — solid burgundy circle so it reads as an interruption,
-            not decoration. */}
-        <div className="mb-6 flex items-center gap-3">
-          <span
-            className="inline-flex items-center justify-center w-11 h-11 bg-[var(--accent-burgundy)] text-white"
-            style={{ borderRadius: 0 }}
-            aria-hidden="true"
-            data-testid="paywall-lock"
-          >
-            <Lock className="w-5 h-5" strokeWidth={2} />
-          </span>
-          <span className="section-label">For subscribers</span>
-        </div>
-
         <h2
           className="font-editorial font-semibold text-[30px] md:text-[34px] leading-[1.1] tracking-tight text-[var(--text)] mb-3 max-w-[22ch]"
           data-testid="paywall-heading"
