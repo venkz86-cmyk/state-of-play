@@ -2510,6 +2510,7 @@ async def robots_txt():
         "Disallow: /teams/login\n"
         "Disallow: /s/\n"
         "Disallow: /invite/\n"
+        "Disallow: /g/\n"
         "Disallow: /mixed-zone\n"
         "Allow: /\n"
         "\n"
@@ -2558,6 +2559,15 @@ try:
     app.include_router(invite_links_router)
 except Exception as _e:
     logging.warning(f"invite_links module not mounted: {_e!r}")
+
+# Mount group story links (one story shared with a WhatsApp group, with a
+# first-year offer; group_links.py)
+try:
+    from group_links import router as group_links_router, init as group_links_init
+    group_links_init(db)
+    app.include_router(group_links_router)
+except Exception as _e:
+    logging.warning(f"group_links module not mounted: {_e!r}")
 
 # Mount the Mixed Zone (annual members' notes feed, private replies)
 try:
