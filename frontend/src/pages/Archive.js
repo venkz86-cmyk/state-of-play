@@ -50,7 +50,7 @@ const ArchiveEntry = ({ post }) => (
         {post.theme}
       </span>
       <span className="hidden md:block md:col-span-1 font-plex text-[12px] text-[var(--text-muted)] tabular-nums text-right">
-        {post.read_time || 5}m
+        {post.read_time ? `${post.read_time}m` : ''}
       </span>
     </Link>
   </li>

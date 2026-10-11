@@ -38,6 +38,8 @@ const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'publ
 // are editorial plumbing, e.g. #start-here, and never shown to readers.
 const isHiddenTag = (slug) => !slug || INTERNAL_TAGS.has(slug) || slug.startsWith('hash-');
 
+const LIST_FIELDS = 'id,slug,title,custom_excerpt,excerpt,published_at,updated_at,reading_time,visibility,feature_image,feature_image_alt,feature_image_caption';
+
 class GhostAPI {
   constructor() {
     this.contentURL = `${GHOST_URL}/ghost/api/content`;
@@ -68,6 +70,19 @@ class GhostAPI {
    * Returns the merged list in published-desc order.
    */
   async getAllPosts() {
+    // One copy for the archive, search, Start here and Season One, kept
+    // for five minutes, so moving between them doesn't fetch it again.
+    const now = Date.now();
+    if (this._allPosts && now - this._allPostsAt < 5 * 60 * 1000) return this._allPosts;
+    this._allPostsAt = now;
+    this._allPosts = this._fetchAllPosts().then((list) => {
+      if (!list.length) this._allPosts = null; // a failed fetch isn't cached
+      return list;
+    });
+    return this._allPosts;
+  }
+
+  async _fetchAllPosts() {
     const PER_PAGE = 50;
     const all = [];
     let page = 1;
@@ -75,14 +90,21 @@ class GhostAPI {
       // Loop until Ghost reports no more pages.
       // Safety cap of 20 pages (=1000 posts) is plenty headroom.
       for (let i = 0; i < 20; i += 1) {
+        // List fields only: never the story bodies, which made this the
+        // heaviest request on the site.
         const params = new URLSearchParams({
           key: GHOST_CONTENT_KEY,
           limit: PER_PAGE,
           include: 'tags,authors',
+          fields: LIST_FIELDS,
           page: String(page),
         });
         const resp = await axios.get(`${this.contentURL}/posts/?${params}`);
-        const batch = this.transformPosts(resp.data.posts || []);
+        const batch = (resp.data.posts || []).map((p) => ({
+          ...this.transformPost(p),
+          // No made-up "5 min" when Ghost leaves reading time out of a list.
+          read_time: p.reading_time || null,
+        }));
         all.push(...batch);
         const meta = resp.data?.meta?.pagination;
         if (!meta || page >= (meta.pages || 1)) break;

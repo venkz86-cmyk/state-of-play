@@ -13,6 +13,7 @@ import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
 import { seasonLabel } from '../lib/season';
 import { annualPricingFor } from '../lib/octoberPricing';
+import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -221,6 +222,9 @@ export const HomeMockup = () => {
                   <img
                     src={lead.image_url}
                     alt={lead.image_alt || ''}
+                    srcSet={ghostSrcSet(lead.image_url)}
+                    sizes="(min-width: 1024px) 66vw, 100vw"
+                    fetchPriority="high"
                     referrerPolicy="no-referrer"
                     className="w-full aspect-[16/10] object-cover md:saturate-0 md:group-hover:saturate-100 transition-all duration-700 ease-out"
                   />

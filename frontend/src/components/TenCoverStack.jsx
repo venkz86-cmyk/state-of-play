@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { sized } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -8,12 +9,6 @@ const shortDate = (iso) => {
     ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : '';
 };
-
-// Ghost serves resized copies of its own images under /size/wN/.
-const sized = (url, width) =>
-  url && url.includes('/content/images/') && !url.includes('/content/images/size/')
-    ? url.replace('/content/images/', `/content/images/size/w${width}/`)
-    : url;
 
 // A small, fixed tilt per layer so the pile looks hand-stacked rather
 // than generated. Index 0 is the top card.

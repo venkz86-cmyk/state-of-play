@@ -4,6 +4,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { StoriesUnavailable } from '../components/StoriesUnavailable';
+import { ghostSrcSet } from '../lib/ghostImage';
 
 const fmtDate = (iso) => {
   if (!iso) return '';
@@ -84,6 +85,9 @@ export const FeedMockup = () => {
                   <img
                     src={lead.image_url}
                     alt={lead.image_alt || ''}
+                    srcSet={ghostSrcSet(lead.image_url)}
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    fetchPriority="high"
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover md:saturate-[0.85] md:group-hover:saturate-100 group-hover:scale-[1.02] transition-all duration-700 ease-out"
                   />

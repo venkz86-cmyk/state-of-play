@@ -19,22 +19,22 @@ import { AboutMockup as About } from "./pages/AboutMockup";
 import { ContactMockup as Contact } from "./pages/ContactMockup";
 import { TeamsMockup as Teams } from "./pages/TeamsMockup";
 import { StudentsMockup as Students } from "./pages/StudentsMockup";
-import { StudentPayMockup as StudentPay } from "./pages/StudentPayMockup";
+const StudentPay = lazy(() => import("./pages/StudentPayMockup").then((m) => ({ default: m.StudentPayMockup })));
 import { GiftMockup as Gift } from "./pages/GiftMockup";
-import { GiftRedeemMockup as GiftRedeem } from "./pages/GiftRedeemMockup";
-import { RenewMockup as Renew } from "./pages/RenewMockup";
-import { MixedZoneMockup as MixedZone } from "./pages/MixedZoneMockup";
-import { InviteMockup as Invite } from "./pages/InviteMockup";
+const GiftRedeem = lazy(() => import("./pages/GiftRedeemMockup").then((m) => ({ default: m.GiftRedeemMockup })));
+const Renew = lazy(() => import("./pages/RenewMockup").then((m) => ({ default: m.RenewMockup })));
+const MixedZone = lazy(() => import("./pages/MixedZoneMockup").then((m) => ({ default: m.MixedZoneMockup })));
+const Invite = lazy(() => import("./pages/InviteMockup").then((m) => ({ default: m.InviteMockup })));
 import { TrialMockup as Trial } from "./pages/TrialMockup";
-import { GroupStoryPage } from "./pages/GroupStoryPage";
+const GroupStoryPage = lazy(() => import("./pages/GroupStoryPage").then((m) => ({ default: m.GroupStoryPage })));
 import { SeasonMockup as Season } from "./pages/SeasonMockup";
 import { StartHereMockup as StartHere } from "./pages/StartHereMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
 import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
 import { NotFoundMockup as NotFound } from "./pages/NotFoundMockup";
-import { TeamsManage } from "./pages/TeamsManage";
-import { TeamsLogin } from "./pages/TeamsLogin";
+const TeamsManage = lazy(() => import("./pages/TeamsManage").then((m) => ({ default: m.TeamsManage })));
+const TeamsLogin = lazy(() => import("./pages/TeamsLogin").then((m) => ({ default: m.TeamsLogin })));
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AdminLogin } from "./pages/AdminLogin";
 // The dashboard only loads for admins, not in every reader's download.
@@ -72,6 +72,8 @@ function Shell() {
     <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
       {/* Each page draws its own <main> (after its header), so this is a plain wrapper. */}
       <div className="flex-grow">
+        {/* Rarely visited pages load on demand; each shows its own loading state. */}
+        <Suspense fallback={null}>
         <Routes>
           {/* Production URLs — preserved exactly */}
           <Route path="/" element={<Home />} />
@@ -116,6 +118,7 @@ function Shell() {
           {/* Custom 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </div>
       <MockupBackToTop />
       <Toaster position="top-right" />
