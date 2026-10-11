@@ -216,7 +216,7 @@ export const LoginMockup = () => {
           <p className="font-plex text-sm text-[var(--text-muted)]">
             Trouble signing in?{' '}
             <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors">
-              Email the desk
+              Email Venkat
             </a>.
           </p>
         </div>
