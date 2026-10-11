@@ -23,6 +23,7 @@ Endpoints:
   POST /api/admin/group-links                admin: create
   GET  /api/admin/group-links/{code}/readers admin: who read it
   POST /api/admin/group-links/{code}/close   admin: close early
+  DELETE /api/admin/group-links/{code}       admin: delete (e.g. to send later)
 """
 from __future__ import annotations
 
@@ -366,4 +367,23 @@ async def close(code: str, _admin: None = Depends(require_admin_key_or_session))
     await _db.group_links.update_one({'code': doc['code']}, {'$set': {'closed': True}})
     if doc.get('invite_code'):
         await _db.invite_links.update_one({'code': doc['invite_code']}, {'$set': {'closed': True}})
+    return {'success': True}
+
+
+@router.delete('/api/admin/group-links/{code}')
+async def delete(code: str, _admin: None = Depends(require_admin_key_or_session)):
+    """Removes the link, its reader log and its offer, so it can be made
+    again later in the week with a fresh window. An offer someone already
+    paid through is kept (closed), so the payment's record stays whole."""
+    doc = await _link(code)
+    if not doc:
+        raise HTTPException(status_code=404, detail='Link not found')
+    await _db.group_links.delete_one({'code': doc['code']})
+    await _db.group_link_readers.delete_many({'code': doc['code']})
+    if doc.get('invite_code'):
+        invite = await _db.invite_links.find_one({'code': doc['invite_code']}) or {}
+        if invite.get('uses'):
+            await _db.invite_links.update_one({'code': doc['invite_code']}, {'$set': {'closed': True}})
+        else:
+            await _db.invite_links.delete_one({'code': doc['invite_code']})
     return {'success': True}
