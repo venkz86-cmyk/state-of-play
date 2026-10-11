@@ -99,15 +99,19 @@ export const EmailGate = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Name (optional)"
+            aria-label="Your name (optional)"
+            autoComplete="name"
             disabled={status === 'loading'}
             data-testid="email-gate-name"
-            className="w-full bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[15px] py-2.5 mb-4 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
+            className="w-full bg-transparent border-0 border-b border-[var(--text-label)] font-plex text-[15px] py-2.5 mb-4 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
           />
           <input
             type="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); if (error) { setError(''); setExists(false); } }}
             placeholder="you@yourdomain.com"
+            aria-label="Your email"
+            autoComplete="email"
             disabled={status === 'loading'}
             data-testid="email-gate-email"
             className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-[15px] py-2.5 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] disabled:opacity-60"
@@ -122,7 +126,7 @@ export const EmailGate = () => {
             {status === 'loading' ? 'Please wait…' : 'Continue reading'}
           </button>
           {error && (
-            <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid="email-gate-error">
+            <p className="font-plex text-sm text-[var(--accent-ink)] mt-3 max-w-[50ch]" data-testid="email-gate-error">
               {error}
               {exists && (
                 <>

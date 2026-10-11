@@ -69,7 +69,8 @@ function Shell() {
   }, [location.pathname, location.hash, navType]);
   return (
     <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
-      <main className="flex-grow">
+      {/* Each page draws its own <main> (after its header), so this is a plain wrapper. */}
+      <div className="flex-grow">
         <Routes>
           {/* Production URLs — preserved exactly */}
           <Route path="/" element={<Home />} />
@@ -114,7 +115,7 @@ function Shell() {
           {/* Custom 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
+      </div>
       <MockupBackToTop />
       <Toaster position="top-right" />
     </div>

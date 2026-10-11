@@ -266,7 +266,7 @@ export const TeamInvoiceRequestModal = ({ open, onClose, token, companyName, pla
           </div>
 
           {error && (
-            <p className="font-plex text-[14px] text-[var(--accent-burgundy)]" data-testid="team-invoice-error">
+            <p className="font-plex text-[14px] text-[var(--accent-ink)]" data-testid="team-invoice-error">
               {error}
             </p>
           )}

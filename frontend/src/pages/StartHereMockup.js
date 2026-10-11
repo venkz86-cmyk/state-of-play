@@ -76,7 +76,7 @@ export const StartHereMockup = () => {
                   <p className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-2">
                     {s.theme}{s.is_premium ? '' : ' · Free'}
                   </p>
-                  <h2 className="font-editorial font-semibold text-2xl lg:text-[2rem] leading-[1.15] tracking-tight text-[var(--text)] group-hover:text-[var(--accent-burgundy)] transition-colors duration-200 mb-3">
+                  <h2 className="font-editorial font-semibold text-2xl lg:text-[2rem] leading-[1.15] tracking-tight text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200 mb-3">
                     {s.title}
                   </h2>
                   {s.subtitle && (
@@ -94,7 +94,7 @@ export const StartHereMockup = () => {
           <Link
             to="/season-one"
             data-testid="start-here-season"
-            className="inline-block mt-8 font-plex text-sm text-[var(--accent-burgundy)] underline underline-offset-4"
+            className="inline-block mt-8 font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4"
           >
             See all of Season One
           </Link>

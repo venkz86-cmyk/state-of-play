@@ -123,11 +123,11 @@ export const TrialMockup = () => {
             )}
             <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
               {!user?.email && (
-                <a href="/login" className="font-plex text-sm text-[var(--accent-burgundy)] underline underline-offset-4">
+                <a href="/login" className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4">
                   Sign in
                 </a>
               )}
-              <a href="/" className="font-plex text-sm text-[var(--accent-burgundy)] underline underline-offset-4">
+              <a href="/" className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4">
                 Start reading
               </a>
             </div>
@@ -224,7 +224,7 @@ export const TrialMockup = () => {
             {!user ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]" data-testid="trial-upgrade-signin">
                 <span className="font-editorial font-medium text-lg text-[var(--text)]">Already in The Ten?</span>{' '}
-                <a href="/login" className="text-[var(--accent-burgundy)] underline underline-offset-4">Sign in to upgrade.</a>
+                <a href="/login" className="text-[var(--accent-ink)] underline underline-offset-4">Sign in to upgrade.</a>
               </p>
             ) : justUpgraded ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]">

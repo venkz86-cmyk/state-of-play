@@ -114,7 +114,7 @@ export const Paywall = () => {
         </p>
 
         <p
-          className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)] mb-3"
+          className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-ink)] mb-3"
           data-testid="paywall-cta-prompt"
         >
           Subscribe to continue reading
@@ -151,7 +151,7 @@ export const Paywall = () => {
         {!justPaidEmail && !hasExpiredTrial && user?.tier !== 'trial' && (
           <p className="font-plex text-[14px] text-[var(--text-muted)] mt-5" data-testid="paywall-the-ten">
             Not ready for a year?{' '}
-            <Link to="/trial?via=paywall" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+            <Link to="/trial?via=paywall" className="text-[var(--accent-ink)] underline underline-offset-4">
               Start with The Ten
             </Link>
             , ten stories for {isIndia ? '₹590' : '$9'}.

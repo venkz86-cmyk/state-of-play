@@ -89,7 +89,7 @@ export const ColdLinkAdminButton = ({ user, postSlug, isPremium }) => {
         onClick={handleClick}
         disabled={status === 'copying'}
         data-testid="cold-link-admin-button"
-        className="font-plex text-[12px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)] hover:underline underline-offset-[5px] decoration-1 disabled:opacity-60"
+        className="font-plex text-[12px] uppercase tracking-[0.06em] text-[var(--accent-ink)] hover:underline underline-offset-[5px] decoration-1 disabled:opacity-60"
       >
         {status === 'copying' ? 'Generating…' : 'Generate cold link'}
       </button>

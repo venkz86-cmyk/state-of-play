@@ -264,7 +264,7 @@ export const InvoiceRequestModal = ({ open, onClose, memberEmail }) => {
           </div>
 
           {error && (
-            <p className="font-plex text-[14px] text-[var(--accent-burgundy)]" data-testid="invoice-error">
+            <p className="font-plex text-[14px] text-[var(--accent-ink)]" data-testid="invoice-error">
               {error}
             </p>
           )}

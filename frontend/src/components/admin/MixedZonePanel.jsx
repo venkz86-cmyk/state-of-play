@@ -11,7 +11,7 @@ const STATUSES = ['heard', 'checking', 'confirmed', 'didnt_hold'];
 const field = 'w-full bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[15px] py-2 focus:outline-none focus:border-[var(--accent-burgundy)]';
 const label = 'block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]';
 const primary = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-10 px-5 disabled:opacity-50';
-const quiet = 'font-plex text-[13px] text-[var(--accent)] underline underline-offset-[5px] decoration-1 hover:decoration-2 disabled:opacity-50';
+const quiet = 'font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2 disabled:opacity-50';
 
 const parseTags = (text) => text.split(',').map((t) => t.trim()).filter(Boolean);
 
@@ -23,7 +23,7 @@ const StatusPicker = ({ value, onChange, testId }) => (
         data-testid={`${testId}-${s}`}
         className={`font-plex text-[13px] px-3 h-8 border transition-colors ${
           value === s
-            ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]'
+            ? 'border-[var(--accent-burgundy)] text-[var(--accent-ink)]'
             : 'border-[var(--rule)] text-[var(--text-muted)] hover:text-[var(--text)]'
         }`}
       >
@@ -76,7 +76,7 @@ const NoteCard = ({ drop, call, reload }) => {
         <span className="font-plex text-[13px] text-[var(--text-label)]">{formatDate(drop.created_at)}</span>
         {drop.tags.map((t) => <span key={t} className="font-plex text-[13px] text-[var(--text-muted)]">#{t}</span>)}
         {drop.unread > 0 && (
-          <span data-testid="mz-admin-unread" className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--accent-burgundy)]">
+          <span data-testid="mz-admin-unread" className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--accent-ink)]">
             {drop.unread} new {drop.unread === 1 ? 'reply' : 'replies'}
           </span>
         )}
@@ -248,7 +248,7 @@ export const MixedZonePanel = ({ onAuthError }) => {
         <button type="submit" disabled={busy || !body.trim()} className={primary} data-testid="mz-admin-post">
           {busy ? 'Posting…' : 'Post note'}
         </button>
-        {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>}
+        {error && <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>}
       </form>
 
       <p className="section-label text-[var(--text-label)] block mb-1">Notes</p>

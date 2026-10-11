@@ -42,7 +42,7 @@ const ArchiveEntry = ({ post }) => (
         {dayLabel(post.created_at)}
       </span>
       <span className="col-span-9 md:col-span-7">
-        <p className="font-editorial text-[18px] md:text-[20px] leading-snug text-[var(--text)] group-hover:text-[var(--accent-burgundy)] transition-colors">
+        <p className="font-editorial text-[18px] md:text-[20px] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors">
           {post.title}
         </p>
       </span>
@@ -156,7 +156,7 @@ export const Archive = () => {
               </h1>
               <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
                 {!loading && `${filtered.length} ${filtered.length === 1 ? 'story' : 'stories'}, newest first. `}
-                <Link to="/archive" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="topic-all-stories">
+                <Link to="/archive" className="text-[var(--accent-ink)] underline underline-offset-4" data-testid="topic-all-stories">
                   All stories
                 </Link>
               </p>
@@ -164,7 +164,7 @@ export const Archive = () => {
           ) : (
             <>
               <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[4rem] leading-[1.05] max-w-4xl">
-                Everything we’ve <em className="italic font-normal text-[var(--accent-burgundy)]">put on the record.</em>
+                Everything we’ve <em className="italic font-normal text-[var(--accent-ink)]">put on the record.</em>
               </h1>
               <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] mt-6 max-w-2xl leading-relaxed">
                 Indexed by date. The full back catalogue of long-reads and the weekly briefing.

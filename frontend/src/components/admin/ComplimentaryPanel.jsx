@@ -102,7 +102,7 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
                 aria-pressed={months === l.months} data-testid={`comp-length-${l.months}`}
                 className={`font-plex text-[13px] px-4 h-9 border transition-colors ${
                   months === l.months
-                    ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]'
+                    ? 'border-[var(--accent-burgundy)] text-[var(--accent-ink)]'
                     : 'border-[var(--rule)] text-[var(--text-muted)] hover:text-[var(--text)]'
                 }`}
               >
@@ -127,7 +127,7 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-11 px-6 disabled:opacity-50">
           {busy ? 'Giving…' : `Give ${length.phrase}`}
         </button>
-        {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)] mt-4">{error}</p>}
+        {error && <p className="font-plex text-[14px] text-[var(--accent-ink)] mt-4">{error}</p>}
         {result && (
           <div data-testid="comp-result" className="font-plex text-[14px] mt-4 space-y-1">
             <p>
@@ -136,7 +136,7 @@ export const ComplimentaryPanel = ({ onAuthError }) => {
               {' '}{result.email_sent ? 'Your note is on its way.' : 'The note didn’t send; it’s listed on Today.'}
             </p>
             {!result.ghost_comp && (
-              <p className="text-[var(--accent-burgundy)]">
+              <p className="text-[var(--accent-ink)]">
                 Ghost’s own comp couldn’t be set. They can read everything on the site already; comp them in Ghost
                 by hand until {formatDate(result.ends_at)} so Ghost’s paid list is right.
               </p>

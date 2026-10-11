@@ -50,7 +50,7 @@ export const GiftMockup = () => {
         </p>
         <p className="font-plex text-sm text-[var(--text-muted)]">
           Already have a gift code?{' '}
-          <Link to="/gift/redeem" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="gift-redeem-link">
+          <Link to="/gift/redeem" className="text-[var(--accent-ink)] underline underline-offset-4" data-testid="gift-redeem-link">
             Redeem it
           </Link>.
         </p>
@@ -95,32 +95,35 @@ export const GiftMockup = () => {
               )}
               {!isIndia && <div className="mb-8" />}
 
-              <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your name</p>
+              <label htmlFor="gift-buyer-name" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your name</label>
               <input
                 type="text"
                 value={buyerName}
                 onChange={(e) => setBuyerName(e.target.value)}
                 placeholder="So they know who this is from"
+                id="gift-buyer-name"
                 data-testid="gift-buyer-name"
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
               />
 
-              <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your email</p>
+              <label htmlFor="gift-buyer-email" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Your email</label>
               <input
                 type="email"
                 value={buyerEmail}
                 onChange={(e) => setBuyerEmail(e.target.value)}
                 placeholder="you@yourdomain.com"
+                id="gift-buyer-email"
                 data-testid="gift-buyer-email"
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-5 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
               />
 
-              <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Recipient's email (optional)</p>
+              <label htmlFor="gift-recipient-email" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">Recipient's email (optional)</label>
               <input
                 type="email"
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
                 placeholder="Know their email? We'll set them up right away."
+                id="gift-recipient-email"
                 data-testid="gift-recipient-email"
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 mb-2 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
               />
@@ -128,12 +131,13 @@ export const GiftMockup = () => {
                 Leave it blank and you'll get a link to send them yourself instead.
               </p>
 
-              <p className="font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">A note (optional)</p>
+              <label htmlFor="gift-personal-note" className="block font-plex text-[11px] tracking-[0.08em] uppercase text-[var(--text-label)] mb-2">A note (optional)</label>
               <textarea
                 value={personalNote}
                 onChange={(e) => setPersonalNote(e.target.value)}
                 placeholder="Optional message"
                 rows={2}
+                id="gift-personal-note"
                 data-testid="gift-personal-note"
                 className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-base py-3 mb-2 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)] resize-none"
               />

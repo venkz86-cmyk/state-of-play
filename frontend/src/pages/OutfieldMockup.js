@@ -40,7 +40,7 @@ const Sched = ({ rows }) => (
         </div>
         <div className="col-span-2 flex justify-end">
           {r.registerUrl ? (
-            <a href={r.registerUrl} target="_blank" rel="noopener noreferrer" className="font-plex text-sm text-[var(--accent)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
+            <a href={r.registerUrl} target="_blank" rel="noopener noreferrer" className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all">
               Register
             </a>
           ) : (

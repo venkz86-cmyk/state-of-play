@@ -57,12 +57,12 @@ export const LinkPaymentEmail = ({ onAuthError, onLinked }) => {
           {busy ? 'Linking…' : 'Link'}
         </button>
       </div>
-      {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3">{error}</p>}
+      {error && <p className="font-plex text-[13px] text-[var(--accent-ink)] mt-3">{error}</p>}
       {result && (
         <div data-testid="link-result" className="font-plex text-[13px] mt-3">
           {result.moved
             ? <p>Moved {result.moved} payment{result.moved === 1 ? '' : 's'} onto {account.trim().toLowerCase()}:</p>
-            : <p className="text-[var(--accent-burgundy)]">No payments found under {paidWith.trim().toLowerCase()}. Run Import past payments (under Tools), then try again.</p>}
+            : <p className="text-[var(--accent-ink)]">No payments found under {paidWith.trim().toLowerCase()}. Run Import past payments (under Tools), then try again.</p>}
           {(result.payments || []).map((p) => (
             <p key={p.payment_id} className="text-[var(--text-muted)]">
               {formatDate(p.razorpay_created_at)} · {formatCurrency(p.amount, p.currency)} · {PLAN_LABEL[p.plan] || p.plan || 'Unknown plan'}

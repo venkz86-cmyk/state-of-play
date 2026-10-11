@@ -26,7 +26,7 @@ export const BookmarkButton = ({ article }) => {
       aria-label={saved ? 'Remove from saved' : 'Save for later'}
       aria-pressed={saved}
       className={`inline-flex items-center gap-1.5 font-plex text-[12px] uppercase tracking-[0.08em] transition-colors duration-200 ${
-        saved ? 'text-[var(--accent-burgundy)]' : 'text-[var(--text-label)] hover:text-[var(--text)]'
+        saved ? 'text-[var(--accent-ink)]' : 'text-[var(--text-label)] hover:text-[var(--text)]'
       }`}
     >
       <Bookmark

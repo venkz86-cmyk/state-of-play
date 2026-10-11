@@ -22,7 +22,7 @@ const Meta = ({ post, read, className = '' }) => (
 );
 
 const titleClass = (read) =>
-  `transition-colors duration-300 ${read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-burgundy)]'}`;
+  `transition-colors duration-300 ${read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-ink)]'}`;
 
 // Lead card -- the single most recent story, same treatment as the
 // homepage's own hero: image (when the post has one), theme label, big
@@ -125,7 +125,7 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
   }, [email]);
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!status) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading your ten…</p>;

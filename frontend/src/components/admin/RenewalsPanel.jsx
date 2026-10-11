@@ -10,7 +10,7 @@ const LAPSED_ENDPOINT = '/api/admin/annual-renewal/send-lapsed';
 // Anyone who can renew, at any point: early, in their 30 days' grace, or
 // lapsed (backend annual_renewal.send_renewal_links).
 const LINK_ENDPOINT = '/api/admin/annual-renewal/send-link';
-const quietLink = 'font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60';
+const quietLink = 'font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60';
 
 // Copies a member's personal renewal link, to send yourself (WhatsApp,
 // a personal email). Says why if they can't renew.
@@ -152,7 +152,7 @@ export const RenewalsPanel = ({ onAuthError }) => {
   }, [subscribers, filter]);
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!subscribers) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -234,7 +234,7 @@ export const RenewalsPanel = ({ onAuthError }) => {
       {
         key: 'still_comped', label: 'Ghost', sortable: true,
         render: (r) => (r.still_comped
-          ? <span className="font-plex text-[12px] text-[var(--accent-burgundy)]">Still comped</span>
+          ? <span className="font-plex text-[12px] text-[var(--accent-ink)]">Still comped</span>
           : <span className="font-plex text-[12px] text-[var(--text-muted)]">Free</span>),
       },
       {
@@ -266,7 +266,7 @@ export const RenewalsPanel = ({ onAuthError }) => {
           and links to their own /renew page. Nobody gets it twice within {gapDays} days.
         </p>
         {lapsed.some((m) => m.still_comped) && (
-          <p data-testid="lapsed-still-comped" className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-4 max-w-[70ch]">
+          <p data-testid="lapsed-still-comped" className="font-plex text-[13px] text-[var(--accent-ink)] mb-4 max-w-[70ch]">
             {lapsed.filter((m) => m.still_comped).length} of them are still comped in Ghost, so they can still read
             every story and stay on Ghost's paid list. Remove the comp in Ghost to end their access.
           </p>

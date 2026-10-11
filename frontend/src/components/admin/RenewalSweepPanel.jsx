@@ -108,7 +108,7 @@ export const RenewalSweepPanel = ({ onAuthError }) => {
           </button>
         )}
         {busy && <span className="font-plex text-[13px] text-[var(--text-muted)]">Working…</span>}
-        {error && <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">{error}</span>}
+        {error && <span className="font-plex text-[13px] text-[var(--accent-ink)]">{error}</span>}
       </div>
       {result && (
         <p data-testid="sweep-summary" className="font-plex text-[14px] text-[var(--text)] mb-6">

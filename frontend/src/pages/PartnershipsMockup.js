@@ -77,7 +77,7 @@ export const PartnershipsMockup = () => (
             <div key={t.name} data-testid={`partner-tier-${i}`}>
               <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-2">{String(i + 1).padStart(2, '0')}</p>
               <h3 className="font-editorial font-semibold text-[22px] leading-snug mb-2">{t.name}</h3>
-              <p className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-burgundy)] mb-4">{t.fee}</p>
+              <p className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-ink)] mb-4">{t.fee}</p>
               <p className="font-plex text-[14px] leading-[1.65] text-[var(--text-muted)] max-w-[40ch]">{t.detail}</p>
             </div>
           ))}

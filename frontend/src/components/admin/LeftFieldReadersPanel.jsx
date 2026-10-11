@@ -102,9 +102,9 @@ export const LeftFieldReadersPanel = ({ onAuthError }) => {
           October 6{audit.ghost_free_after_cutover ? ` and ${n(audit.ghost_free_after_cutover)} who joined Ghost after` : ''}.
         </p>
       )}
-      {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-3">{error}</p>}
+      {error && <p className="font-plex text-[13px] text-[var(--accent-ink)] mb-3">{error}</p>}
       <div className="flex flex-wrap gap-x-6 gap-y-3 pt-2">
-        <label className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 cursor-pointer">
+        <label className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2 cursor-pointer">
         {busy ? 'Working…' : 'Upload Substack export →'}
         <input type="file" accept=".csv,text/csv,text/plain" onChange={upload} disabled={busy} className="sr-only" data-testid="left-field-file" />
       </label>

@@ -66,7 +66,7 @@ export const CommentsPanel = ({ onAuthError }) => {
   const pendingDelta = useCountDelta('tsop_admin_comments_pending_count', pending?.length ?? null);
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!pending || !approved) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -87,7 +87,7 @@ export const CommentsPanel = ({ onAuthError }) => {
             type="button"
             onClick={() => moderate(c.id, 'approve')}
             disabled={busyId === c.id}
-            className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60"
+            className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60"
           >
             Approve
           </button>
@@ -116,7 +116,7 @@ export const CommentsPanel = ({ onAuthError }) => {
           type="button"
           onClick={() => deleteComment(c.id)}
           disabled={busyId === c.id}
-          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60"
+          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60"
         >
           Delete
         </button>

@@ -140,7 +140,7 @@ export const DataTable = ({
               type="button"
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={clampedPage === 0}
-              className="underline underline-offset-4 hover:text-[var(--accent-burgundy)] disabled:opacity-40 disabled:no-underline"
+              className="underline underline-offset-4 hover:text-[var(--accent-ink)] disabled:opacity-40 disabled:no-underline"
             >
               ← Prev
             </button>
@@ -148,7 +148,7 @@ export const DataTable = ({
               type="button"
               onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
               disabled={clampedPage >= pageCount - 1}
-              className="underline underline-offset-4 hover:text-[var(--accent-burgundy)] disabled:opacity-40 disabled:no-underline"
+              className="underline underline-offset-4 hover:text-[var(--accent-ink)] disabled:opacity-40 disabled:no-underline"
             >
               Next →
             </button>

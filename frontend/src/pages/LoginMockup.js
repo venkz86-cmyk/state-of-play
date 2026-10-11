@@ -116,7 +116,7 @@ export const LoginMockup = () => {
               </div>
 
               {error && (
-                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="login-error">
+                <p className="font-plex text-sm text-[var(--accent-ink)] max-w-[55ch]" data-testid="login-error">
                   {error}
                 </p>
               )}
@@ -131,7 +131,7 @@ export const LoginMockup = () => {
               </button>
               <p className="font-plex text-sm text-[var(--text-muted)]">
                 Not a member yet?{' '}
-                <Link to="/signup" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
+                <Link to="/signup" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors">
                   Subscribe
                 </Link>.
               </p>
@@ -166,7 +166,7 @@ export const LoginMockup = () => {
               </div>
 
               {error && (
-                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="login-error">
+                <p className="font-plex text-sm text-[var(--accent-ink)] max-w-[55ch]" data-testid="login-error">
                   {error}
                 </p>
               )}
@@ -191,7 +191,7 @@ export const LoginMockup = () => {
                     onClick={onResendCode}
                     disabled={submitting}
                     data-testid="login-resend"
-                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors disabled:opacity-60"
+                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors disabled:opacity-60"
                   >
                     Send a new code
                   </button>.
@@ -202,7 +202,7 @@ export const LoginMockup = () => {
                     type="button"
                     onClick={() => { setCodeSent(false); setCode(''); setError(null); }}
                     data-testid="login-different-email"
-                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+                    className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors"
                   >
                     Use a different email
                   </button>.
@@ -215,7 +215,7 @@ export const LoginMockup = () => {
         <div className="mt-16 pt-6 border-t border-[var(--rule)]">
           <p className="font-plex text-sm text-[var(--text-muted)]">
             Trouble signing in?{' '}
-            <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
+            <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors">
               Email the desk
             </a>.
           </p>
