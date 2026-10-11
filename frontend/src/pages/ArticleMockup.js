@@ -425,8 +425,16 @@ export const ArticleMockup = () => {
         {isPaywalled && <Paywall />}
         {needsRegistration && <EmailGate />}
 
+        {/* A second, small Share line at the end of a story the reader
+            could open, for whoever finishes it. The full row stays at the top. */}
         {!isGated && (
-          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <div className="mt-12" data-testid="story-end-share">
+            <ShareRow title={article.title} />
+          </div>
+        )}
+
+        {!isGated && (
+          <div className="mt-6 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <p className="font-plex text-[13px] text-[var(--text-label)] flex flex-wrap items-baseline gap-x-2">
               <span>Filed under</span>
               {articleTags.map((t, i) => (
