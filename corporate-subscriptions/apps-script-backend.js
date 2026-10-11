@@ -6,7 +6,16 @@
  * Google Apps Script backend for managing corporate team subscriptions.
  * Handles account creation, member management, and Ghost CMS integration.
  *
- * CHANGES IN THIS VERSION (v6, October 2026):
+ * CHANGES IN THIS VERSION (v7, October 2026):
+ * - Added the `renew_account` action (admin_key required) for a team that
+ *   pays again. It extends the company's existing row by a year from its
+ *   current renewal_date (or from today if that date has passed), records
+ *   the new payment and plan, and sets status back to active. Before this,
+ *   a second Team-5/10 checkout added a second row for the same company.
+ *   Running it twice for the same payment changes nothing.
+ * - All other logic unchanged from v6.
+ *
+ * CHANGES IN v6 (October 2026):
  * - SECURITY: create_account now requires admin_key, checked against
  *   RENDER_ADMIN_KEY exactly as list_accounts does. This script's URL is
  *   public (the /teams pages call it), and without the check anyone could
@@ -182,6 +191,7 @@ function doPost(e) {
 
     switch (action) {
       case 'create_account':  return handleCreateAccount(payload);
+      case 'renew_account':   return handleRenewAccount(payload);
       case 'add_member':      return handleAddMember(payload);
       case 'remove_member':   return handleRemoveMember(payload);
       case 'get_account':     return handleGetAccount(payload);
@@ -266,6 +276,80 @@ function handleCreateAccount(payload) {
     Logger.log('handleCreateAccount error: ' + error.toString());
     return jsonResponse({ success: false, error: 'Failed to create account. Please try again.' });
   }
+}
+
+/**
+ * Renew an existing corporate account for another year (called by the
+ * backend's Team-5/10 checkout when the admin already has a team; needs
+ * admin_key). The year runs on from the current renewal_date, so paying
+ * early loses nothing; a lapsed team starts a fresh year from today.
+ * Members stay as they are. The same razorpay_payment_id twice is a no-op.
+ */
+function handleRenewAccount(payload) {
+  if (!RENDER_ADMIN_KEY || payload.admin_key !== RENDER_ADMIN_KEY) {
+    return jsonResponse({ success: false, error: 'Unauthorized' });
+  }
+  const requiredFields = ['account_id', 'plan_name', 'seats', 'amount_paid', 'currency', 'razorpay_payment_id'];
+  for (const field of requiredFields) {
+    if (!payload[field]) {
+      return jsonResponse({ success: false, error: 'Missing required field: ' + field });
+    }
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet   = getAccountsSheet();
+    const data    = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const col     = function (name) { return headers.indexOf(name); };
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][col('account_id')] !== payload.account_id) continue;
+      const row = i + 1;
+
+      if (data[i][col('razorpay_payment_id')] === payload.razorpay_payment_id) {
+        return jsonResponse({ success: true, data: { renewal_date: formatDay_(data[i][col('renewal_date')]), already: true } });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const current = data[i][col('renewal_date')] ? new Date(data[i][col('renewal_date')]) : null;
+      const from = current && !isNaN(current) && current > today ? current : today;
+      const next = new Date(from);
+      next.setFullYear(next.getFullYear() + 1);
+      const nextStr = formatDay_(next);
+
+      sheet.getRange(row, col('plan_name') + 1).setValue(payload.plan_name);
+      sheet.getRange(row, col('seats') + 1).setValue(parseInt(payload.seats));
+      sheet.getRange(row, col('amount_paid') + 1).setValue(parseInt(payload.amount_paid));
+      sheet.getRange(row, col('currency') + 1).setValue(payload.currency);
+      sheet.getRange(row, col('razorpay_payment_id') + 1).setValue(payload.razorpay_payment_id);
+      sheet.getRange(row, col('renewal_date') + 1).setValue(nextStr);
+      sheet.getRange(row, col('status') + 1).setValue('active');
+      Logger.log('Renewed account: ' + payload.account_id + ' to ' + nextStr);
+
+      return jsonResponse({
+        success: true,
+        data: { renewal_date: nextStr, member_count: getMembers(payload.account_id).length }
+      });
+    }
+    return jsonResponse({ success: false, error: 'No account with that account_id' });
+
+  } catch (error) {
+    Logger.log('handleRenewAccount error: ' + error.toString());
+    return jsonResponse({ success: false, error: 'Failed to renew account. Please try again.' });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// A Sheet cell can hold a Date or a "YYYY-MM-DD" string; always answer
+// with the string, in the script's own time zone.
+function formatDay_(value) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d)) return String(value || '');
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 
 /**

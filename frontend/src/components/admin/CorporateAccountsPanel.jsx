@@ -85,15 +85,20 @@ const FinishSetup = ({ onDone, onAuthError }) => {
       {error && <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>}
       {result && (
         <p data-testid="finish-setup-result" className="font-plex text-[14px]">
-          {result.existed
-            ? `The Sheet already had this team${result.company_name ? ` (as “${result.company_name}”)` : ''}, so nothing new was created.`
-            : `Team created as “${result.company_name}”.`}
+          {result.renewed
+            ? `Renewed “${result.company_name}” for another year${result.renewal_date ? `, to ${formatDate(result.renewal_date)}` : ''}.`
+            : result.existed
+              ? `The Sheet already had this team${result.company_name ? ` (as “${result.company_name}”)` : ''}, so nothing new was created.`
+              : `Team created as “${result.company_name}”.`}
           {' '}The team link is on its way to {email.trim()}.
-          {result.existed && result.company_name && result.company_name !== company.trim()
+          {(result.existed || result.renewed) && result.company_name && result.company_name !== company.trim()
             ? ' To change the team’s name, edit company_name for this row in the Corporate Subscriptions Sheet.'
             : ''}
         </p>
       )}
+      {result?.notes?.map((n) => (
+        <p key={n} className="font-plex text-[14px] text-[var(--accent-ink)]">Worth a look: {n}.</p>
+      ))}
     </form>
   );
 };

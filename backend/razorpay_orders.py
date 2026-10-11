@@ -776,16 +776,37 @@ async def verify_payment(req: VerifyPaymentRequest, request: Request):
     return {'verified': True, 'email': email, 'plan': req.plan}
 
 
-async def setup_team_account(
-    email: str, company_name: str, plan: str, payment_id: str, *, skip_if_exists: bool = False,
-) -> dict:
-    """Creates the team in the Corporate Subscriptions Sheet (Apps Script
-    'create_account', the action a Zapier zap used to call for the old
-    static Team-5/10 Payment Links) and emails the admin their team
-    management link ('send_dashboard_link'). Shared by checkout
-    (_create_team_account) and the dashboard's "Finish a team's setup"
-    (corporate.finish_team_setup), which passes skip_if_exists so a team
-    the Sheet already has isn't created twice.
+# A second payment this soon after a team was set up is the same purchase
+# seen twice (a retried checkout, or the dashboard finishing a setup whose
+# reply was lost), never a renewal: no extra year for it.
+TEAM_RENEWAL_MIN_AGE = timedelta(days=30)
+
+
+def _parse_sheet_time(value) -> Optional[datetime]:
+    try:
+        dt = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except (TypeError, ValueError):
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def _company_key(name: str) -> str:
+    return ' '.join((name or '').split()).casefold()
+
+
+async def setup_team_account(email: str, company_name: str, plan: str, payment_id: str) -> dict:
+    """Sets up a Team-5/10 payment in the Corporate Subscriptions Sheet and
+    emails the admin their team management link ('send_dashboard_link').
+    Shared by checkout (_create_team_account) and the dashboard's "Finish a
+    team's setup" (corporate.finish_team_setup). What it does depends on
+    the Sheet:
+      - no team for this admin email: 'create_account' adds one;
+      - a team set up with this payment, or within TEAM_RENEWAL_MIN_AGE:
+        nothing to change (safe to run twice);
+      - an older team: 'renew_account' extends it by a year from its
+        renewal date and records the new payment and plan, instead of
+        adding a second row for the same company (before October 2026 a
+        renewal would have done that).
 
     Apps Script answers every POST with a 302 to the result, so redirects
     must be followed. Without that, every Team-5/10 checkout read as a
@@ -793,8 +814,9 @@ async def setup_team_account(
 
     Never raises. A failure is logged and listed on the dashboard's Today
     page (email_failures), since the payment itself is already real."""
-    result = {'created': False, 'existed': False, 'link_sent': False, 'error': '', 'company_name': company_name}
+    result = {'created': False, 'existed': False, 'renewed': False, 'link_sent': False, 'error': '', 'company_name': company_name}
     email = (email or '').lower().strip()
+    label = f'Team setup: {company_name or "no company name"} ({plan})'
 
     async def fail(reason: str) -> dict:
         result['error'] = reason
@@ -802,7 +824,7 @@ async def setup_team_account(
             f'Team setup failed for {plan} payment {payment_id} ({email}, {company_name!r}): '
             f'{reason} -- finish it from the dashboard (Corporate, Finish a team\'s setup).'
         )
-        await record_email_failure(email, f'Team setup: {company_name or "no company name"} ({plan})', reason)
+        await record_email_failure(email, label, reason)
         return result
 
     if not company_name:
@@ -812,18 +834,70 @@ async def setup_team_account(
     if not ADMIN_KEY:
         return await fail('ADMIN_KEY is not set on the server, so the Sheet would refuse the new team')
 
+    notes = []
     try:
+        from corporate import fetch_accounts
+        accounts = await fetch_accounts(force=True)
+        mine = [a for a in accounts if (a.get('admin_email') or '').lower().strip() == email]
+        # An admin with more than one row (from before renewals extended
+        # the existing one): use the active row that runs latest.
+        mine.sort(key=lambda a: ((a.get('status') == 'active'), str(a.get('renewal_date') or '')), reverse=True)
+        match = mine[0] if mine else None
+
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
-            if skip_if_exists:
-                from corporate import fetch_accounts
-                accounts = await fetch_accounts(force=True)
-                match = next((a for a in accounts if (a.get('admin_email') or '').lower().strip() == email), None)
-                result['existed'] = bool(match)
-                if match:
-                    result['company_name'] = match.get('company_name') or ''
-                    result['seats'] = match.get('seats')
-                    result['status'] = match.get('status') or ''
-            if not result['existed']:
+            if match:
+                result['company_name'] = match.get('company_name') or ''
+                result['seats'] = match.get('seats')
+                result['status'] = match.get('status') or ''
+                created = _parse_sheet_time(match.get('created_at'))
+                same_purchase = (
+                    not payment_id
+                    or (match.get('razorpay_payment_id') or '') == payment_id
+                    or created is None
+                    or datetime.now(timezone.utc) - created < TEAM_RENEWAL_MIN_AGE
+                )
+                if same_purchase:
+                    result['existed'] = True
+                else:
+                    renew_res = await client.post(APPS_SCRIPT_URL, json={
+                        'action': 'renew_account',
+                        'admin_key': ADMIN_KEY,
+                        'account_id': match.get('account_id'),
+                        'plan_name': TEAM_PLAN_NAME[plan],
+                        'seats': TEAM_SEATS[plan],
+                        'amount_paid': PLAN_PRICING[plan]['IN']['amount'] // 100,
+                        'currency': 'INR',
+                        'razorpay_payment_id': payment_id,
+                    })
+                    try:
+                        body = renew_res.json()
+                    except ValueError:
+                        body = {}
+                    if not body.get('success'):
+                        err = body.get('error') or renew_res.text[:200]
+                        if 'Unknown action' in str(err):
+                            err = f'{err} (paste Apps Script v7 from corporate-subscriptions/ into the live script)'
+                        return await fail(f'renew_account: HTTP {renew_res.status_code} {err!r}')
+                    result['renewed'] = True
+                    result['renewal_date'] = (body.get('data') or {}).get('renewal_date') or ''
+                    result['seats'] = TEAM_SEATS[plan]
+                    members = (body.get('data') or {}).get('member_count')
+                    if isinstance(members, int) and members > TEAM_SEATS[plan]:
+                        notes.append(
+                            f'renewed on {TEAM_PLAN_NAME[plan]} ({TEAM_SEATS[plan]} seats) but {members} '
+                            'colleagues still have access; ask the admin to remove some on their team page'
+                        )
+            else:
+                same_company = next(
+                    (a for a in accounts if _company_key(a.get('company_name')) == _company_key(company_name)),
+                    None,
+                )
+                if same_company:
+                    notes.append(
+                        f'{same_company.get("company_name")} already has a team under '
+                        f'{same_company.get("admin_email")}; this payment from a different email made a '
+                        'second team. If it was a renewal, merge them in the Sheet'
+                    )
                 create_res = await client.post(APPS_SCRIPT_URL, json={
                     'action': 'create_account',
                     'admin_key': ADMIN_KEY,
@@ -859,10 +933,14 @@ async def setup_team_account(
     except Exception as e:
         return await fail(f'request failed: {e!r}')
 
-    logger.info(
-        f'Team setup done for {plan} payment {payment_id} ({email}, {company_name!r}): '
-        f'{"created" if result["created"] else "already there"}, link sent'
-    )
+    # Done, but worth a look: listed on Today alongside real failures.
+    for note in notes:
+        logger.warning(f'Team setup for {plan} payment {payment_id} ({email}): {note}')
+        await record_email_failure(email, label, note)
+    result['notes'] = notes
+
+    outcome = 'created' if result['created'] else f'renewed to {result.get("renewal_date")}' if result['renewed'] else 'already there'
+    logger.info(f'Team setup done for {plan} payment {payment_id} ({email}, {company_name!r}): {outcome}, link sent')
     return result
 
 
