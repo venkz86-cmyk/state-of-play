@@ -4,6 +4,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { Overline } from './MockupLayout';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
 import { trialUpgradePricing } from '../lib/octoberPricing';
+import { StoryLabel } from './StoryLabel';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -39,7 +40,7 @@ const LeadCard = ({ post, read }) => (
         />
       </div>
     )}
-    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <StoryLabel post={post} small className="mb-2" />
     <h2 className={`font-editorial font-semibold tracking-tight text-[1.6rem] lg:text-[2rem] leading-[1.1] mb-3 max-w-[26ch] ${titleClass(read)}`}>
       {post.title}
     </h2>
@@ -56,7 +57,7 @@ const LeadCard = ({ post, read }) => (
 // homepage's secondary row.
 const SecondaryCard = ({ post, read }) => (
   <a href={`/${post.slug}`} className="group block">
-    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <StoryLabel post={post} small className="mb-2" />
     <h3 className={`font-editorial font-medium tracking-tight text-[1.15rem] leading-[1.25] mb-2 ${titleClass(read)}`}>
       {post.title}
     </h3>
@@ -73,7 +74,7 @@ const SecondaryCard = ({ post, read }) => (
 // homepage's "The Desk".
 const DeskCard = ({ post, read }) => (
   <a href={`/${post.slug}`} className="group block py-5 border-b border-[var(--rule)]">
-    <Overline className="!normal-case !tracking-normal !text-xs block mb-2">{post.theme}</Overline>
+    <StoryLabel post={post} small className="mb-2" />
     <h3 className={`font-editorial font-medium text-[17px] leading-snug mb-2 ${titleClass(read)}`}>
       {post.title}
     </h3>

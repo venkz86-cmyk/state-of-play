@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { StoryLabel } from '../components/StoryLabel';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -73,9 +74,7 @@ export const StartHereMockup = () => {
             {stories.map((s) => (
               <li key={s.id} className="border-b border-[var(--rule)]">
                 <Link to={`/${s.id}`} data-testid="start-here-story" className="group block py-7 lg:py-8 max-w-[800px]">
-                  <p className="font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-2">
-                    {s.theme}{s.is_premium ? '' : ' · Free'}
-                  </p>
+                  <StoryLabel post={s} className="mb-2" />
                   <h2 className="font-editorial font-semibold text-2xl lg:text-[2rem] leading-[1.15] tracking-tight text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200 mb-3">
                     {s.title}
                   </h2>

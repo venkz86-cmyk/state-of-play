@@ -16,6 +16,7 @@ export const addToReadingHistory = (article) => {
       id: article.id,
       title: article.title,
       theme: article.theme,
+      format: article.format,
       read_time: article.read_time,
       image_url: article.image_url,
       is_premium: article.is_premium,

@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { StoriesUnavailable } from '../components/StoriesUnavailable';
 import { ghostSrcSet } from '../lib/ghostImage';
+import { StoryLabel } from '../components/StoryLabel';
 
 const fmtDate = (iso) => {
   if (!iso) return '';
@@ -94,7 +95,7 @@ export const FeedMockup = () => {
                 </div>
               )}
               <div className="flex items-center gap-3 mb-4">
-                {lead.theme && <Overline className="text-[var(--accent-ink)]">{lead.theme}</Overline>}
+                <StoryLabel post={lead} />
                 <span className="h-px w-6 bg-[var(--accent)]/40" />
                 <Overline>Lead Story</Overline>
               </div>
@@ -121,7 +122,7 @@ export const FeedMockup = () => {
                       className="group block"
                       data-testid={`feed-side-${p.id}`}
                     >
-                      <Overline className="text-[var(--accent-ink)] mb-2 block">{p.theme}</Overline>
+                      <StoryLabel post={p} small className="mb-2" />
                       <h3 className="font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] mb-2 group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                         {p.title}
                       </h3>
@@ -158,7 +159,7 @@ export const FeedMockup = () => {
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="col-span-12 md:col-span-2">
-                      <Overline className="text-[var(--accent-ink)]">{p.theme}</Overline>
+                      <StoryLabel post={p} small />
                     </div>
                     <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                       {p.title}

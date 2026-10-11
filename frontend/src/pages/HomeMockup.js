@@ -343,7 +343,7 @@ export const HomeMockup = () => {
                   data-testid={`desk-${a.id}`}
                   className="group block py-5 border-b border-[var(--rule)]"
                 >
-                  <SectionLabel className="mb-2 block">{a.theme}</SectionLabel>
+                  <StoryLabel post={a} small className="mb-2" />
                   <h3 className="headline-lock font-editorial font-medium text-[20px] leading-snug mb-2">
                     {a.title}
                   </h3>
