@@ -425,7 +425,7 @@ export const HomeMockup = () => {
                 </span>
               </div>
               <p className="font-plex text-base leading-relaxed text-[var(--text-muted)]">
-                One deeply reported story a week on the business of Indian sport, plus the full archive.
+                One reported story a week on the business of Indian sport, plus the full archive.
               </p>
               {/* The Ten as a smaller first step, same line as the paywall's.
                   Not for anyone already in it or whose trial has ended. */}

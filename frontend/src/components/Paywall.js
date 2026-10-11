@@ -86,7 +86,7 @@ export const Paywall = () => {
         <p className="font-plex text-[15px] leading-[1.65] text-[var(--text-muted)] mb-2 max-w-[58ch]">
           {hasExpiredTrial
             ? 'You had a preview of what we cover each week: franchise valuations, broadcast rights, ownership deals, and the people driving them. A subscription gets you the rest.'
-            : 'The State of Play publishes one deeply reported edition each week on the business of Indian sport. Franchise valuations, broadcast rights, ownership deals, and the people driving them.'}
+            : 'The State of Play reports one story a week on the business of Indian sport, from franchise valuations to broadcast rights.'}
         </p>
 
         <p className="font-plex text-[15px] leading-[1.65] text-[var(--text)] font-medium mb-1">
@@ -95,7 +95,7 @@ export const Paywall = () => {
         <p
           className="font-plex text-[13px] text-[var(--text-muted)] mb-8"
         >
-          Weekly deep-dives · Full archive
+          Includes the full archive
         </p>
 
         <p
@@ -151,7 +151,7 @@ export const Paywall = () => {
               data-testid="paywall-login"
               className="font-plex text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] hover:underline underline-offset-[5px] decoration-1 transition-all"
             >
-              Already a member? Sign in
+              Already a subscriber? Sign in
             </Link>
           </div>
         )}
