@@ -6,7 +6,17 @@
  * Google Apps Script backend for managing corporate team subscriptions.
  * Handles account creation, member management, and Ghost CMS integration.
  *
- * CHANGES IN THIS VERSION (v5):
+ * CHANGES IN THIS VERSION (v6, October 2026):
+ * - SECURITY: create_account now requires admin_key, checked against
+ *   RENDER_ADMIN_KEY exactly as list_accounts does. This script's URL is
+ *   public (the /teams pages call it), and without the check anyone could
+ *   create a team account and add members with paid access (a
+ *   TEST_COMPANY row appeared on October 9, 2026). The backend's team
+ *   checkout sends the key. Any old Zapier zap calling create_account
+ *   will now get "Unauthorized"; it should already be switched off.
+ * - All other logic unchanged from v5.
+ *
+ * CHANGES IN v5:
  * - Added the `list_accounts` action (+ handleListAccounts) for the
  *   internal TSOP admin dashboard's read-only Corporate accounts tab.
  *   Auth reuses the existing RENDER_ADMIN_KEY constant below -- no new
@@ -198,9 +208,13 @@ function doPost(e) {
  */
 
 /**
- * Create a new corporate account (called by Zapier after payment)
+ * Create a new corporate account (called by the backend's Team-5/10
+ * checkout and the dashboard's "Finish a team's setup"; needs admin_key)
  */
 function handleCreateAccount(payload) {
+  if (!RENDER_ADMIN_KEY || payload.admin_key !== RENDER_ADMIN_KEY) {
+    return jsonResponse({ success: false, error: 'Unauthorized' });
+  }
   const requiredFields = ['company_name', 'admin_email', 'plan_name', 'seats', 'amount_paid', 'currency'];
   for (const field of requiredFields) {
     if (!payload[field]) {
