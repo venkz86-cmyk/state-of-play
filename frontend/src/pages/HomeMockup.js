@@ -431,7 +431,7 @@ export const HomeMockup = () => {
             <Link
               to="/signup"
               data-testid="subscribe-link"
-              className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-8 transition-colors duration-200 shrink-0"
+              className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 shrink-0"
               style={{ borderRadius: 'var(--control-radius)' }}
             >
               Subscribe

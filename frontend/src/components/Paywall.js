@@ -114,7 +114,7 @@ export const Paywall = () => {
         </p>
 
         <p
-          className="font-plex text-[13px] uppercase tracking-[0.08em] text-[var(--accent-ink)] mb-3"
+          className="font-plex btn-type text-[var(--text)] mb-3"
           data-testid="paywall-cta-prompt"
         >
           Subscribe to continue reading
