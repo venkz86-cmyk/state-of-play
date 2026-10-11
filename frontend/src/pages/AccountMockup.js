@@ -12,6 +12,7 @@ import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Book
 import { TheTenPanel } from '../components/TheTenPanel';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { renewalOffer } from '../lib/renewal';
+import { StoryLabel } from '../components/StoryLabel';
 
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -309,7 +310,7 @@ export const AccountMockup = () => {
                   className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
                 >
                   <Link to={`/${p.id}`} className="flex-1 min-w-0">
-                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Reportage'}</Overline>
+                    <StoryLabel post={p} small showFree={false} className="mb-1" />
                     <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                       {p.title}
                     </h3>
@@ -359,7 +360,7 @@ export const AccountMockup = () => {
                 >
                   <div className="flex-1 min-w-0">
                     {/* Fallback only for history recorded before theme was added to addToReadingHistory */}
-                    <Overline className="!normal-case !tracking-normal !text-xs block mb-1">{p.theme || 'Reportage'}</Overline>
+                    <StoryLabel post={p} small showFree={false} className="mb-1" />
                     <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                       {p.title}
                     </h3>

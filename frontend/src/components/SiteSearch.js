@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { ghostAPI } from '../services/ghostAPI';
+import { StoryLabel } from './StoryLabel';
 
 /* Lightweight client-side search — titles, tags and authors, over posts
    already fetched for the Archive page. No third-party widget: Ghost's
@@ -166,11 +167,7 @@ export const SiteSearchTrigger = ({ className = '' }) => {
                   data-testid={`site-search-result-${post.id}`}
                   className="w-full text-left px-5 py-3 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--surface)] transition-colors"
                 >
-                  <p className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] mb-1">
-                    {post.theme}{post.is_premium
-                      ? (post.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
-                      : ' · Free'}
-                  </p>
+                  <StoryLabel post={post} small className="mb-1" />
                   <p className="font-editorial text-[16px] leading-snug text-[var(--text)]">
                     {post.title}
                   </p>

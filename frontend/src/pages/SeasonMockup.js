@@ -4,6 +4,7 @@ import { ghostAPI } from '../services/ghostAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { STORIES_PER_SEASON, isSeasonStory } from '../lib/season';
+import { StoryLabel } from '../components/StoryLabel';
 
 const longDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -111,9 +112,7 @@ export const SeasonMockup = () => {
                   <h2 className="col-span-10 lg:col-span-7 font-editorial font-medium text-lg lg:text-xl leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                     {s.title}
                   </h2>
-                  <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto font-plex text-[12px] uppercase tracking-[0.08em] text-[var(--text-label)]">
-                    {s.theme}{s.is_premium ? '' : ' · Free'}
-                  </span>
+                  <StoryLabel post={s} small as="span" className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto" />
                   <span className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto lg:text-right font-plex text-[12px] text-[var(--text-label)]">
                     {longDate(s.created_at)}
                   </span>
