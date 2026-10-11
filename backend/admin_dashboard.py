@@ -42,7 +42,7 @@ from pydantic import BaseModel
 
 from admin_auth import require_admin_key_or_session
 from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels, delete_ghost_member
-from payments import get_subscriber_payment_summaries, compute_synthetic_expiry
+from payments import get_subscriber_payment_summaries, compute_synthetic_expiry, COUNTS_FOR_ACCESS
 from corporate import fetch_accounts as fetch_corporate_accounts
 
 logger = logging.getLogger(__name__)
@@ -395,7 +395,7 @@ async def _renewals_this_month(now: datetime) -> dict:
     if _db is None:
         return out
     by_email: dict = {}
-    async for doc in _db.payments.find({'plan': {'$in': list(ANNUAL_PLANS)}}):
+    async for doc in _db.payments.find({'plan': {'$in': list(ANNUAL_PLANS)}, **COUNTS_FOR_ACCESS}):
         email = (doc.get('email') or '').lower().strip()
         if email:
             by_email.setdefault(email, []).append(doc)
@@ -406,7 +406,7 @@ async def _renewals_this_month(now: datetime) -> dict:
             if doc.get('plan') == 'renewal' and paid_at and start <= paid_at < end:
                 currency = doc.get('currency')
                 if currency in out['collected']:
-                    out['collected'][currency] += doc.get('amount') or 0
+                    out['collected'][currency] += (doc.get('amount') or 0) - (doc.get('amount_refunded') or 0)
             if doc.get('subscription_id'):
                 continue
             year_ends = _utc(compute_synthetic_expiry({
@@ -425,6 +425,16 @@ async def _renewals_this_month(now: datetime) -> dict:
             else:
                 out['lapsed'] += 1
     return out
+
+
+async def _auto_refunds() -> list:
+    """Paid-twice and overpaid refunds the site made by itself this week."""
+    try:
+        from refunds import automatic_this_week
+        return await automatic_this_week()
+    except Exception as e:
+        logger.warning(f'overview auto-refunds read failed (non-fatal): {e!r}')
+        return []
 
 
 async def _last_renewal_run(now: datetime) -> dict:
@@ -531,7 +541,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
                 if paid_at and paid_at.tzinfo is None:
                     paid_at = paid_at.replace(tzinfo=timezone.utc)
                 currency = doc.get('currency')
-                amount = doc.get('amount') or 0
+                amount = (doc.get('amount') or 0) - (doc.get('amount_refunded') or 0)
                 if currency not in revenue_365d:
                     continue
                 revenue_365d[currency] += amount
@@ -617,6 +627,7 @@ async def admin_overview(_admin: None = Depends(require_admin_key_or_session)):
             'unmatched_payments': unmatched[:50],
             'unmatched_payments_count': len(unmatched),
             'email_failures': email_failures,
+            'auto_refunds': await _auto_refunds(),
         },
         'renewal_run': await _last_renewal_run(now),
         'renewals_month': await _renewals_this_month(now),

@@ -29,6 +29,7 @@ export const NAV_GROUPS = [
     pages: [
       { path: 'renewals', label: 'Renewals', title: 'Renewals', description: 'Whose year ends when, and the renewal emails.' },
       { path: 'sources', label: 'Sources', title: 'Sources', description: 'Where sign-ups and payments came from.' },
+      { path: 'refunds', label: 'Refunds', title: 'Refunds', description: 'Give a reader their money back, in full or in part, without opening Razorpay.' },
     ],
   },
   {

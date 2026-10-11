@@ -14,6 +14,7 @@ import { SourcesPanel } from '../components/admin/SourcesPanel';
 import { OverviewPanel } from '../components/admin/OverviewPanel';
 import { FreeRegistrationsPanel } from '../components/admin/FreeRegistrationsPanel';
 import { LinkPaymentEmail } from '../components/admin/LinkPaymentEmail';
+import { RefundsPanel } from '../components/admin/RefundsPanel';
 import { LeftFieldReadersPanel } from '../components/admin/LeftFieldReadersPanel';
 import { BackfillPanel } from '../components/admin/BackfillPanel';
 import { ComplimentaryPanel } from '../components/admin/ComplimentaryPanel';
@@ -78,6 +79,7 @@ export const AdminDashboard = () => {
             <Route path="students" element={<StudentApplicationsPanel onAuthError={onAuthError} />} />
             <Route path="links" element={<LinksPanel onAuthError={onAuthError} />} />
             <Route path="sources" element={<SourcesPanel onAuthError={onAuthError} />} />
+            <Route path="refunds" element={<RefundsPanel onAuthError={onAuthError} />} />
             <Route path="free-signups" element={<FreeRegistrationsPanel onAuthError={onAuthError} />} />
             <Route path="tools" element={<Navigate to="complimentary" replace />} />
             <Route path="tools/invites" element={<InviteLinksPanel onAuthError={onAuthError} />} />

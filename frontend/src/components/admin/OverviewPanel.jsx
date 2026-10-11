@@ -254,6 +254,26 @@ export const OverviewPanel = ({ onAuthError }) => {
         </section>
       )}
 
+      {(attention.auto_refunds || []).length > 0 && (
+        <section className="mb-10" data-testid="today-auto-refunds">
+          <div className="flex items-baseline justify-between gap-4">
+            <p className={label}>Refunded automatically, last 7 days</p>
+            <button type="button" onClick={() => goTo('refunds')}
+              className="font-plex text-[13px] text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] shrink-0">
+              Refunds
+            </button>
+          </div>
+          <ul>
+            {attention.auto_refunds.map((r) => (
+              <li key={`${r.email}-${r.at}`} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className="font-plex text-[14px]">{r.email} <span className="text-[var(--text-muted)]">· {r.reason}</span></span>
+                <span className="font-plex text-[13px] tabular-nums">{r.display} <span className="text-[var(--text-muted)]">· {r.at ? formatDateTime(r.at) : ''}</span></span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {(attention.email_failures || []).length > 0 && (
         <section className="mb-10" id="today-email-failures" data-testid="today-email-failures">
           <div className="flex items-baseline justify-between gap-4">
