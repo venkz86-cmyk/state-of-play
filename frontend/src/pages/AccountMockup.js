@@ -310,7 +310,7 @@ export const AccountMockup = () => {
                   className="group flex items-baseline justify-between gap-6 py-5 border-b border-[var(--rule)]"
                 >
                   <Link to={`/${p.id}`} className="flex-1 min-w-0">
-                    <StoryLabel post={p} small showFree={false} className="mb-1" />
+                    <StoryLabel post={p} small showAccess={false} className="mb-1" />
                     <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                       {p.title}
                     </h3>
@@ -360,7 +360,7 @@ export const AccountMockup = () => {
                 >
                   <div className="flex-1 min-w-0">
                     {/* Fallback only for history recorded before theme was added to addToReadingHistory */}
-                    <StoryLabel post={p} small showFree={false} className="mb-1" />
+                    <StoryLabel post={p} small showAccess={false} className="mb-1" />
                     <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
                       {p.title}
                     </h3>
