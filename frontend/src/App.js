@@ -26,6 +26,7 @@ import { RenewMockup as Renew } from "./pages/RenewMockup";
 import { MixedZoneMockup as MixedZone } from "./pages/MixedZoneMockup";
 import { InviteMockup as Invite } from "./pages/InviteMockup";
 import { TrialMockup as Trial } from "./pages/TrialMockup";
+import { GroupStoryPage } from "./pages/GroupStoryPage";
 import { SeasonMockup as Season } from "./pages/SeasonMockup";
 import { StartHereMockup as StartHere } from "./pages/StartHereMockup";
 import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
@@ -78,6 +79,7 @@ function Shell() {
           <Route path="/renew" element={<Renew />} />
           <Route path="/mixed-zone" element={<MixedZone />} />
           <Route path="/invite/:code" element={<Invite />} />
+          <Route path="/g/:code" element={<GroupStoryPage />} />
           <Route path="/welcome" element={<MemberDashboard />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
