@@ -1,6 +1,6 @@
 import "@/index.css";
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { captureRef } from "./lib/attribution";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -61,6 +61,13 @@ function AdminArea() {
 function Shell() {
   const location = useLocation();
   useEffect(() => { captureRef(location.search, location.pathname); }, [location.search, location.pathname]);
+  // A new page opens at the top. Back and forward (POP) are left alone, so
+  // the browser returns the reader to where they were; a link to a section
+  // (#anchor) scrolls there instead.
+  const navType = useNavigationType();
+  useEffect(() => {
+    if (navType !== 'POP' && !location.hash) window.scrollTo(0, 0);
+  }, [location.pathname, location.hash, navType]);
   return (
     <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
       <main className="flex-grow">

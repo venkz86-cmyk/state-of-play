@@ -217,9 +217,9 @@ export const HomeMockup = () => {
                 <div className="mb-6 lg:mb-7 overflow-hidden">
                   <img
                     src={lead.image_url}
-                    alt={lead.title}
+                    alt={lead.image_alt || ''}
                     referrerPolicy="no-referrer"
-                    className="w-full aspect-[16/10] object-cover saturate-0 group-hover:saturate-100 transition-all duration-700 ease-out"
+                    className="w-full aspect-[16/10] object-cover md:saturate-0 md:group-hover:saturate-100 transition-all duration-700 ease-out"
                   />
                 </div>
               )}

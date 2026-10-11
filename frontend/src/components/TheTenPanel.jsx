@@ -33,9 +33,9 @@ const LeadCard = ({ post, read }) => (
       <div className="mb-5 lg:mb-6 overflow-hidden">
         <img
           src={post.image_url}
-          alt={post.title}
+          alt={post.image_alt || ''}
           referrerPolicy="no-referrer"
-          className="w-full aspect-[16/10] object-cover saturate-0 group-hover:saturate-100 transition-all duration-700 ease-out"
+          className="w-full aspect-[16/10] object-cover md:saturate-0 md:group-hover:saturate-100 transition-all duration-700 ease-out"
         />
       </div>
     )}
