@@ -47,7 +47,7 @@ export const FeedMockup = () => {
     return (
       <MockupLayout testId="mockup-feed" seo={{ title: 'Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play, India\'s sports business desk.' }}>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <Overline>Loading desk…</Overline>
+          <Overline>Loading stories…</Overline>
         </div>
       </MockupLayout>
     );

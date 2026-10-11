@@ -21,11 +21,11 @@ const BENEFITS = [
   ['The weekly story', 'A reported long read on the business of Indian sport, most Fridays.'],
   ['The Left Field briefing', 'News briefs covering Indian and global sports business, twice a week.'],
   ['The full archive', 'Every premium story since launch, searchable and always available.'],
-  ['First on the big deals', 'The desk reports major transactions and announcements, often before anyone else.'],
+  ['First on the big deals', 'The State of Play reports major transactions and announcements, often before anyone else.'],
   ['The TSOP Transcript', 'Q&As with the people actually running the business of Indian sport.'],
   ['The numbers behind the story', 'IRR models and valuation breakdowns.'],
   ['No ads in the stories', 'Every story reads without ads or sponsored content.'],
-  ['A direct line to the desk', 'Reply to any email from The State of Play and Venkat answers.'],
+  ['A direct line to Venkat', 'Reply to any email from The State of Play and you get an answer.'],
 ];
 
 const FAQS = [
