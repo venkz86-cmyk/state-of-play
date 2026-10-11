@@ -65,10 +65,12 @@ PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 # (corporate.py, server.py's /invoice/generate-team) -- Team-5/10's
 # checkout calls its 'create_account' action directly, taking over the
 # job a Zapier automation used to do by watching the old static Payment
-# Links. create_account itself takes no admin_key (it was designed for
-# an external, unauthenticated caller); by the time this module reaches
-# it, the Razorpay signature is already verified, so this is at least as
-# trustworthy a caller as Zapier ever was.
+# Links. create_account checks admin_key (the backend's ADMIN_KEY, the
+# same value as the script's RENDER_ADMIN_KEY), as list_accounts does.
+# The script's URL is public (the /teams pages use it), and before
+# October 2026 anyone could create a team account with it (TEST_COMPANY,
+# October 9, 2026).
+ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 APPS_SCRIPT_URL = os.environ.get(
     "APPS_SCRIPT_URL",
     "https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec",
@@ -762,6 +764,8 @@ async def setup_team_account(
         return await fail('no company name on the payment')
     if plan not in TEAM_SEATS:
         return await fail(f'not a team plan: {plan}')
+    if not ADMIN_KEY:
+        return await fail('ADMIN_KEY is not set on the server, so the Sheet would refuse the new team')
 
     try:
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
@@ -777,6 +781,7 @@ async def setup_team_account(
             if not result['existed']:
                 create_res = await client.post(APPS_SCRIPT_URL, json={
                     'action': 'create_account',
+                    'admin_key': ADMIN_KEY,
                     'company_name': company_name,
                     'admin_email': email,
                     'plan_name': TEAM_PLAN_NAME[plan],
