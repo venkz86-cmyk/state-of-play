@@ -25,6 +25,7 @@ import { useGeoPricing } from '../hooks/useGeoPricing';
 import { addDollarAmounts } from '../lib/currency';
 import { DollarToggle, useShowDollars } from '../components/DollarToggle';
 import { StoryLabel } from '../components/StoryLabel';
+import { StoryEndOffer } from '../components/StoryEndOffer';
 import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -307,7 +308,7 @@ export const ArticleMockup = () => {
       <article className="max-w-[680px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
         <header className="mb-8 lg:mb-10">
           <StoryLabel post={article} className="mb-5" />
-          <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[40px] leading-[1.08] text-[var(--text)] mb-5 max-w-[24ch]">
+          <h1 className="font-editorial font-semibold tracking-tight text-[30px] md:text-[44px] lg:text-[50px] leading-[1.05] text-[var(--text)] mb-5 max-w-[22ch]">
             {article.title}
           </h1>
           {article.subtitle && (
@@ -350,20 +351,20 @@ export const ArticleMockup = () => {
             isPremium={!!article.is_premium}
           />
 
-          {/* Utility strip: Text-size toggle (leftmost, prioritised for
-              discoverability per audit) + Save + Share row */}
+          {/* Utility strip: text size (leftmost, prioritised for
+              discoverability per audit). Save and Share sit at the end of a
+              story the reader can open, where people share; on a locked
+              story the end is behind the paywall, so they stay here. */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               <MockupFontSizeToggle value={size} onChange={setSize} />
               {hasAmounts && <DollarToggle on={showDollars} onChange={setShowDollars} />}
             </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              {isMember && <BookmarkButton article={article} />}
-              <ShareRow
-                title={article.title}
-                onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
-              />
-            </div>
+            {isGated && (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <ShareRow title={article.title} />
+              </div>
+            )}
           </div>
         </header>
 
@@ -425,7 +426,17 @@ export const ArticleMockup = () => {
         {needsRegistration && <EmailGate />}
 
         {!isGated && (
-          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3" data-testid="story-end-share">
+            {isMember && <BookmarkButton article={article} />}
+            <ShareRow
+              title={article.title}
+              onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
+            />
+          </div>
+        )}
+
+        {!isGated && (
+          <div className="mt-6 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <p className="font-plex text-[13px] text-[var(--text-label)] flex flex-wrap items-baseline gap-x-2">
               <span>Filed under</span>
               {articleTags.map((t, i) => (
@@ -450,14 +461,17 @@ export const ArticleMockup = () => {
             </p>
           </div>
         )}
+
+        {!isGated && !bodyStillLoading && <StoryEndOffer />}
       </article>
 
       {/* Comments — real Ghost member threads for subscribers; a subscribe
           nudge for everyone else. Gated the same as the rest of the page:
           members only, matching Ghost's own comments setting. Sits right
-          after the article since it's a direct continuation of it. Hidden
-          under the paywall, which already makes the subscribe ask. */}
-      {!isPaywalled && (
+          after the article since it's a direct continuation of it. Shown
+          to subscribers only: everyone else gets the paywall or the
+          end-of-story offer, which already make the subscribe ask. */}
+      {isMember && (
         <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pb-20">
           <div className="border-t border-[var(--rule)] pt-8 max-w-[680px] mx-auto">
             <h2 className="font-editorial font-semibold text-[1.75rem] md:text-[2rem] leading-[1.15] mb-2">
