@@ -394,7 +394,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                   type="submit"
                   disabled={submitting}
                   data-testid="teams-add-submit"
-                  className="h-12 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
+                  className="h-12 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-70"
                   style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   {submitting ? 'Adding…' : 'Add'}

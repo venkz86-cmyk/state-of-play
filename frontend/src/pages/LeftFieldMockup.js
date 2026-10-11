@@ -182,7 +182,7 @@ export const LeftFieldMockup = () => {
               href="https://theleftfield.substack.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-plex text-[11px] tracking-[0.22em] uppercase text-[var(--text)] border-b border-[var(--text)] pb-1 hover:text-[var(--accent-ink)] hover:border-[var(--accent)] transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 hover:text-[var(--accent-ink)] hover:border-[var(--accent)] transition-colors duration-200"
             >
               Read The Left Field <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             </a>
@@ -214,7 +214,7 @@ export const LeftFieldMockup = () => {
                       {lead.subtitle}
                     </p>
                   )}
-                  <span className="inline-flex items-center gap-2 font-plex tabular-nums text-[11px] tracking-[0.22em] uppercase text-[var(--text)] border-b border-[var(--text)] pb-1 group-hover:text-[var(--accent-ink)] group-hover:border-[var(--accent)] transition-colors duration-200">
+                  <span className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 group-hover:text-[var(--accent-ink)] group-hover:border-[var(--accent)] transition-colors duration-200">
                     Read on Substack
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                   </span>

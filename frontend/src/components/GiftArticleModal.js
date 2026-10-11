@@ -190,7 +190,7 @@ export const GiftArticleModal = ({
               </p>
               <a
                 href="/signup"
-                className="inline-block h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] leading-[44px] transition-colors"
+                className="inline-block h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type leading-[44px] transition-colors"
                 style={{ borderRadius: 'var(--control-radius)' }}
                 data-testid="gift-modal-subscribe-cta"
               >
@@ -222,7 +222,7 @@ export const GiftArticleModal = ({
                       type="button"
                       onClick={onCopyLink}
                       data-testid="gift-link-copy"
-                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors"
+                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
                       {linkCopied ? 'Copied' : 'Copy link'}
@@ -232,7 +232,7 @@ export const GiftArticleModal = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid="gift-link-whatsapp"
-                      className="h-11 px-6 border border-[var(--rule)] text-[var(--text)] font-plex font-medium text-[13px] uppercase tracking-[0.05em] inline-flex items-center hover:border-[var(--text)] transition-colors"
+                      className="h-11 px-6 border border-[var(--rule)] text-[var(--text)] font-plex btn-type inline-flex items-center hover:border-[var(--text)] transition-colors"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
                       Share on WhatsApp
@@ -286,7 +286,7 @@ export const GiftArticleModal = ({
                     type="button"
                     onClick={clearBlock}
                     data-testid="gift-modal-blocked-duplicate-try-another"
-                    className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                    className="font-plex text-[15px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
                     Nominate someone else
                   </button>
@@ -364,7 +364,7 @@ export const GiftArticleModal = ({
                       type="submit"
                       disabled={submitting}
                       data-testid="gift-modal-submit"
-                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] transition-colors disabled:opacity-70"
+                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-70"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
                       {submitting ? 'Sending…' : 'Nominate'}
@@ -400,7 +400,7 @@ export const GiftArticleModal = ({
                     type="button"
                     onClick={reset}
                     data-testid="gift-modal-again"
-                    className="font-plex text-[13px] uppercase tracking-[0.06em] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                    className="font-plex text-[15px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
                     Nominate someone else
                   </button>

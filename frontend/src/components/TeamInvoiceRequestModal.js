@@ -276,7 +276,7 @@ export const TeamInvoiceRequestModal = ({ open, onClose, token, companyName, pla
               type="submit"
               disabled={submitting}
               data-testid="team-invoice-submit"
-              className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] h-12 px-8 transition-colors disabled:opacity-60"
+              className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60"
               style={{ borderRadius: 'var(--control-radius)' }}
             >
               {submitting ? 'Generating…' : 'Download invoice'}

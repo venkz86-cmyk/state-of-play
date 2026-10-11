@@ -244,7 +244,7 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
             type="submit"
             disabled={submitting || !body.trim() || unchanged}
             data-testid={`edit-submit-${comment.id}`}
-            className="h-9 px-4 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] transition-colors disabled:opacity-60"
+            className="h-9 px-4 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-60"
             style={{ borderRadius: 'var(--control-radius)' }}
           >
             {submitting ? 'Saving…' : 'Save edit'}
@@ -392,7 +392,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
           type="submit"
           disabled={submitting || !body.trim()}
           data-testid={parentId ? `reply-submit-${parentId}` : 'comment-submit'}
-          className="h-10 px-5 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] transition-colors disabled:opacity-60"
+          className="h-10 px-5 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-60"
           style={{ borderRadius: 'var(--control-radius)' }}
         >
           {submitting ? 'Posting…' : parentId ? 'Post reply' : 'Post comment'}

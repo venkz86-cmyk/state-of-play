@@ -454,7 +454,7 @@ export const AccountMockup = () => {
               type="button"
               onClick={() => setGiftModalOpen(true)}
               data-testid="account-gift-cta"
-              className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[14px] uppercase tracking-[0.05em] transition-colors"
+              className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors"
               style={{ borderRadius: 'var(--control-radius)' }}
             >
               Gift a story

@@ -63,7 +63,7 @@ const P = ({ children }) => (
 );
 
 const buttonClass =
-  'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-11 px-6 transition-colors duration-200 disabled:opacity-60';
+  'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-11 px-6 transition-colors duration-200 disabled:opacity-60';
 const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors';
 
 const ReplyBox = ({ dropId }) => {
