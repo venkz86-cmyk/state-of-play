@@ -113,7 +113,7 @@ export const SubscribeMockup = () => {
               <p className="font-plex text-[14px] text-[var(--text-label)] mb-3">{annual.total} / year total</p>
             )}
             {annual.existingReader && (
-              <p data-testid="signup-existing-reader-rate" className="font-plex text-[14px] font-medium text-[var(--accent-burgundy)] mb-3">
+              <p data-testid="signup-existing-reader-rate" className="font-plex text-[14px] font-medium text-[var(--accent-ink)] mb-3">
                 {annual.note}
               </p>
             )}
@@ -122,7 +122,7 @@ export const SubscribeMockup = () => {
             </p>
             <p className="font-plex text-sm text-[var(--text-muted)] mt-3">
               Student?{' '}
-              <Link to="/students" className="text-[var(--accent-burgundy)] underline underline-offset-4" data-testid="signup-student-link">
+              <Link to="/students" className="text-[var(--accent-ink)] underline underline-offset-4" data-testid="signup-student-link">
                 Get the same access for {isIndia ? '₹1,770' : '$29'} a year.
               </Link>
             </p>
@@ -131,7 +131,7 @@ export const SubscribeMockup = () => {
             {user?.tier !== 'trial' && !user?.trial_expired && (
               <p className="font-plex text-sm text-[var(--text-muted)] mt-3" data-testid="signup-the-ten">
                 Not ready for a year?{' '}
-                <Link to="/trial?via=signup" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+                <Link to="/trial?via=signup" className="text-[var(--accent-ink)] underline underline-offset-4">
                   Start with The Ten
                 </Link>
                 , ten stories for {isIndia ? '₹590' : '$9'}.
@@ -218,7 +218,7 @@ export const SubscribeMockup = () => {
                   className="group block py-5 border-b border-[var(--rule)]"
                 >
                   <p className="font-plex text-xs tracking-[0.18em] uppercase text-[var(--text-muted)] mb-2">{p.theme}</p>
-                  <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200">{p.title}</h3>
+                  <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">{p.title}</h3>
                   <p className="font-plex text-xs text-[var(--text-muted)] mt-2 tabular-nums">{longDate(p.created_at)}</p>
                 </Link>
               ))}

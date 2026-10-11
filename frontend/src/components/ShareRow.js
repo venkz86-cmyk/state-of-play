@@ -102,7 +102,7 @@ export const ShareRow = ({ title = '', url, onGiftClick }) => {
           title="Gift this article."
           aria-label="Gift this article"
           data-testid="share-gift"
-          className="inline-flex items-center p-2 -m-2 text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+          className="inline-flex items-center p-2 -m-2 text-[var(--text-label)] hover:text-[var(--accent-ink)] transition-colors duration-200"
         >
           <Gift className="w-[15px] h-[15px]" strokeWidth={1.5} aria-hidden="true" />
         </button>

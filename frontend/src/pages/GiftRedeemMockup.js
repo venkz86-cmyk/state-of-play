@@ -139,7 +139,7 @@ export const GiftRedeemMockup = () => {
             Claim your <em className="italic font-normal">gift.</em>
           </h1>
           {fatal && (
-            <p className="font-plex text-[14px] text-[var(--accent-burgundy)] leading-relaxed mb-6" data-testid="gift-redeem-fatal">
+            <p className="font-plex text-[14px] text-[var(--accent-ink)] leading-relaxed mb-6" data-testid="gift-redeem-fatal">
               {fatalMessages[fatal]}
             </p>
           )}
@@ -156,7 +156,7 @@ export const GiftRedeemMockup = () => {
             className="w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg tracking-[0.05em] py-3 mb-2 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-muted)]"
           />
           {manualError && (
-            <p className="font-plex text-sm text-[var(--accent-burgundy)] mb-4" data-testid="gift-redeem-code-error">{manualError}</p>
+            <p className="font-plex text-sm text-[var(--accent-ink)] mb-4" data-testid="gift-redeem-code-error">{manualError}</p>
           )}
           <button
             type="button"
@@ -232,7 +232,7 @@ export const GiftRedeemMockup = () => {
               {status === 'loading' ? 'Claiming…' : 'Claim your year'}
             </button>
             {error && (
-              <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3" data-testid="gift-redeem-error">{error}</p>
+              <p className="font-plex text-sm text-[var(--accent-ink)] mt-3" data-testid="gift-redeem-error">{error}</p>
             )}
           </>
         )}

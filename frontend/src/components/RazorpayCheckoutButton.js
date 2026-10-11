@@ -236,7 +236,7 @@ export const RazorpayCheckoutButton = ({
       )}
       {mismatch && rateMismatch && (
         <div className="mt-4 max-w-[50ch]" data-testid={`${dataTestId}-rate-mismatch`}>
-          <p className="font-plex text-sm text-[var(--accent-burgundy)] mb-3">{rateMismatch.message}</p>
+          <p className="font-plex text-sm text-[var(--accent-ink)] mb-3">{rateMismatch.message}</p>
           <button
             type="button"
             onClick={() => startCheckout(true)}
@@ -249,7 +249,7 @@ export const RazorpayCheckoutButton = ({
         </div>
       )}
       {error && (
-        <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>
+        <p className="font-plex text-sm text-[var(--accent-ink)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>
           {error}
         </p>
       )}

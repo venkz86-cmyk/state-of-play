@@ -103,7 +103,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
         </DialogDescription>
 
         {error && (
-          <p className="font-plex text-[13px] text-[var(--accent-burgundy)]">{error}</p>
+          <p className="font-plex text-[13px] text-[var(--accent-ink)]">{error}</p>
         )}
 
         {loading ? (
@@ -125,7 +125,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
                     <div className="min-w-0">
                       <p className="font-plex text-[14px] truncate">{story.title}</p>
                       {story.visibility !== 'paid' && story.visibility !== 'members' && (
-                        <p className="font-plex text-[12px] text-[var(--accent-burgundy)]">
+                        <p className="font-plex text-[12px] text-[var(--accent-ink)]">
                           Now {story.visibility === 'unknown' ? 'unresolved' : story.visibility}, no longer paywalled.
                         </p>
                       )}
@@ -134,7 +134,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
                       type="button"
                       onClick={() => removeSlug(story.slug)}
                       disabled={busySlug === story.slug}
-                      className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 shrink-0 disabled:opacity-60"
+                      className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 shrink-0 disabled:opacity-60"
                     >
                       {busySlug === story.slug ? '...' : 'Remove'}
                     </button>
@@ -165,7 +165,7 @@ export const TrialStoryEditorModal = ({ email, open, onOpenChange, onChanged }) 
                       type="button"
                       onClick={() => addSlug(story.slug)}
                       disabled={busySlug === story.slug}
-                      className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 shrink-0 disabled:opacity-60"
+                      className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 shrink-0 disabled:opacity-60"
                     >
                       {busySlug === story.slug ? '...' : 'Add'}
                     </button>

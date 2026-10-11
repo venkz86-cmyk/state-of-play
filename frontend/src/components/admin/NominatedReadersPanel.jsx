@@ -52,7 +52,7 @@ export const NominatedReadersPanel = ({ onAuthError }) => {
   };
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!grants) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -109,7 +109,7 @@ export const NominatedReadersPanel = ({ onAuthError }) => {
           type="button"
           onClick={() => revoke(g.nominee_email)}
           disabled={busyEmail === g.nominee_email}
-          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60"
+          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60"
         >
           Revoke
         </button>

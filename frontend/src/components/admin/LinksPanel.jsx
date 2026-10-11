@@ -41,7 +41,7 @@ export const LinksPanel = ({ onAuthError }) => {
   };
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!links) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -71,7 +71,7 @@ export const LinksPanel = ({ onAuthError }) => {
         <button
           type="button"
           onClick={() => copy(l)}
-          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4"
+          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4"
         >
           {copiedId === l.token_id ? 'Copied' : 'Copy link'}
         </button>

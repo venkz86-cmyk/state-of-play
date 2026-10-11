@@ -64,7 +64,7 @@ export const StudentApplicationsPanel = ({ onAuthError }) => {
   };
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!applications) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -90,7 +90,7 @@ export const StudentApplicationsPanel = ({ onAuthError }) => {
           href={a.id_photo_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--accent-burgundy)] underline underline-offset-4"
+          className="text-[var(--accent-ink)] underline underline-offset-4"
         >
           View →
         </a>
@@ -115,7 +115,7 @@ export const StudentApplicationsPanel = ({ onAuthError }) => {
               type="button"
               onClick={() => approve(a, 'IN')}
               disabled={busyId === a.application_id}
-              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--text)] hover:text-[var(--accent-burgundy)] underline underline-offset-4 disabled:opacity-60"
+              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--text)] hover:text-[var(--accent-ink)] underline underline-offset-4 disabled:opacity-60"
             >
               Approve · IN
             </button>
@@ -123,7 +123,7 @@ export const StudentApplicationsPanel = ({ onAuthError }) => {
               type="button"
               onClick={() => approve(a, 'INTL')}
               disabled={busyId === a.application_id}
-              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--text)] hover:text-[var(--accent-burgundy)] underline underline-offset-4 disabled:opacity-60"
+              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--text)] hover:text-[var(--accent-ink)] underline underline-offset-4 disabled:opacity-60"
             >
               Approve · Intl
             </button>
@@ -131,7 +131,7 @@ export const StudentApplicationsPanel = ({ onAuthError }) => {
               type="button"
               onClick={() => reject(a)}
               disabled={busyId === a.application_id}
-              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60"
+              className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60"
             >
               Reject
             </button>

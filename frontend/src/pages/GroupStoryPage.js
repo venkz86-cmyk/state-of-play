@@ -17,7 +17,7 @@ const API = process.env.REACT_APP_BACKEND_URL || '';
 const label = 'font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]';
 const field = 'w-full bg-transparent border-0 border-b border-[var(--text)] font-plex text-lg py-3 focus:outline-none focus:border-[var(--accent-burgundy)] placeholder:text-[var(--text-label)]';
 const primary = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[13px] uppercase tracking-[0.05em] h-12 px-7 transition-colors disabled:opacity-60';
-const quiet = 'font-plex text-[14px] underline underline-offset-4 decoration-[var(--rule)] hover:decoration-[var(--accent-burgundy)]';
+const quiet = 'font-plex text-[14px] underline underline-offset-4 decoration-[var(--rule)] hover:decoration-[var(--accent-ink)]';
 
 // Once the code is accepted the reader is signed in, and the page loads
 // the full story by itself (it watches the signed-in user).
@@ -83,7 +83,7 @@ const EmailGate = ({ code }) => {
           </div>
         </form>
       )}
-      {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)] mt-4" role="alert">{error}</p>}
+      {error && <p className="font-plex text-[14px] text-[var(--accent-ink)] mt-4" role="alert">{error}</p>}
     </div>
   );
 };
@@ -198,7 +198,7 @@ export const GroupStoryPage = () => {
             {user && !storyError ? (
               <p className="font-plex text-[14px] text-[var(--text-muted)] mt-8">Opening the full story…</p>
             ) : storyError ? (
-              <p className="font-plex text-[14px] text-[var(--accent-burgundy)] mt-8" role="alert">
+              <p className="font-plex text-[14px] text-[var(--accent-ink)] mt-8" role="alert">
                 {storyError} <button type="button" className={quiet} onClick={loadStory}>Try again</button>
               </p>
             ) : (

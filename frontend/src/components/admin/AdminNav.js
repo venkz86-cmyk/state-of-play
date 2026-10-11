@@ -109,8 +109,8 @@ export const AdminSidebar = ({ adminEmail, onSignOut }) => {
                       data-testid={`admin-nav-${p.path.replace('/', '-') || 'today'}`}
                       className={`block font-plex text-[14px] leading-snug px-3 py-1.5 border-l-2 transition-colors ${
                         active
-                          ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)] font-medium'
-                          : 'border-transparent text-[var(--text)] hover:text-[var(--accent-burgundy)]'
+                          ? 'border-[var(--accent-burgundy)] text-[var(--accent-ink)] font-medium'
+                          : 'border-transparent text-[var(--text)] hover:text-[var(--accent-ink)]'
                       }`}
                     >
                       {p.label}
@@ -127,7 +127,7 @@ export const AdminSidebar = ({ adminEmail, onSignOut }) => {
         <div className="flex items-center justify-between">
           <button
             type="button" onClick={onSignOut} data-testid="admin-sign-out"
-            className="font-plex text-[13px] text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)]"
+            className="font-plex text-[13px] text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)]"
           >
             Sign out
           </button>
@@ -184,7 +184,7 @@ export const AdminMobileNav = ({ onSignOut }) => {
               key={p.path}
               to={href(p.path)}
               end
-              className={`font-plex text-[13px] ${p === current ? 'text-[var(--accent-burgundy)] font-medium' : 'text-[var(--text-muted)]'}`}
+              className={`font-plex text-[13px] ${p === current ? 'text-[var(--accent-ink)] font-medium' : 'text-[var(--text-muted)]'}`}
             >
               {p.label}
             </NavLink>

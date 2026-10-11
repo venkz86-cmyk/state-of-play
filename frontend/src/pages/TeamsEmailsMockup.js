@@ -59,7 +59,7 @@ const EmailFrame = ({ children, meta }) => (
       <p className="mt-2">
         You’re receiving this because your organisation subscribed to The State of Play. For
         anything you need on this account, write to{' '}
-        <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
+        <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1">
           prerna@stateofplay.club
         </a>.
       </p>
@@ -110,7 +110,7 @@ const AdminEmail = () => (
 
       <p className="font-plex text-[13px] text-[var(--text-muted)] !mt-3">
         Or paste this into your browser:<br />
-        <span className="text-[var(--accent-burgundy)] break-all">
+        <span className="text-[var(--accent-ink)] break-all">
           https://www.stateofplay.club/teams/manage?token=ACC129-d4e6f8a9-b2c1-mock
         </span>
       </p>
@@ -121,7 +121,7 @@ const AdminEmail = () => (
         <li>You have <strong className="font-semibold">5 seats</strong>. Add colleagues from your account. They’ll get a one-time sign-in link by email, no password required.</li>
         <li>Only <strong className="font-semibold">@acmesports.in</strong> email addresses can be added. If you need a different domain, write to Prerna.</li>
         <li>The link in this email is unique to your account. Don’t forward it. Share access by adding colleagues to the seats instead.</li>
-        <li>For a GST tax invoice, write to <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">prerna@stateofplay.club</a>.</li>
+        <li>For a GST tax invoice, write to <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1">prerna@stateofplay.club</a>.</li>
       </ul>
 
       <p className="pt-3">
@@ -175,20 +175,20 @@ const MemberEmail = () => (
 
       <p className="font-plex text-[13px] text-[var(--text-muted)] !mt-3">
         Or paste this into your browser:<br />
-        <span className="text-[var(--accent-burgundy)] break-all">
+        <span className="text-[var(--accent-ink)] break-all">
           https://www.stateofplay.club/members/auth?token=eyJhbGc…
         </span>
       </p>
 
       <p className="pt-2">
         Once you’re in, you’ll have full access to everything we publish: the long-reads, the
-        weekly <a href="https://www.stateofplay.club/left-field" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">Left Field</a> briefing,
+        weekly <a href="https://www.stateofplay.club/left-field" className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1">Left Field</a> briefing,
         and the subscriber-only notes from the desk.
       </p>
 
       <p className="text-[var(--text-muted)]">
         If you weren’t expecting this, or you’re not the right person at Acme Sports, write to{' '}
-        <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1">
+        <a href="mailto:prerna@stateofplay.club" className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1">
           prerna@stateofplay.club
         </a>{' '}
         and we’ll sort it out.

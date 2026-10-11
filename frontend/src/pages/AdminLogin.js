@@ -107,7 +107,7 @@ export const AdminLogin = () => {
               </div>
 
               {error && (
-                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="admin-login-error">
+                <p className="font-plex text-sm text-[var(--accent-ink)] max-w-[55ch]" data-testid="admin-login-error">
                   {error}
                 </p>
               )}
@@ -116,7 +116,7 @@ export const AdminLogin = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="admin-login-submit"
-                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+                className="font-plex text-base text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
               >
                 {submitting ? 'Sending…' : 'Send code →'}
               </button>
@@ -151,7 +151,7 @@ export const AdminLogin = () => {
               </div>
 
               {error && (
-                <p className="font-plex text-sm text-[var(--accent-burgundy)] max-w-[55ch]" data-testid="admin-login-error">
+                <p className="font-plex text-sm text-[var(--accent-ink)] max-w-[55ch]" data-testid="admin-login-error">
                   {error}
                 </p>
               )}
@@ -160,7 +160,7 @@ export const AdminLogin = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="admin-login-submit"
-                className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
+                className="font-plex text-base text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all disabled:opacity-60"
               >
                 {submitting ? 'Verifying…' : 'Sign in →'}
               </button>
@@ -172,7 +172,7 @@ export const AdminLogin = () => {
                   onClick={onResendCode}
                   disabled={submitting}
                   data-testid="admin-login-resend"
-                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors disabled:opacity-60"
+                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors disabled:opacity-60"
                 >
                   Send a new code
                 </button>.

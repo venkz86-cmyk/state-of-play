@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -45,11 +45,31 @@ export const MockupHeader = () => {
 
   const isActive = (p) => location.pathname === p;
 
+  // The phone menu closes on a new page and on Escape.
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
+  // Skip link: jumps past the header to the page's main area.
+  const skipToContent = (e) => {
+    const target = document.getElementById('main-content');
+    if (!target) return;
+    e.preventDefault();
+    target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+    target.scrollIntoView();
+  };
+
   return (
     <header
       data-testid="mockup-header"
       className="theme-transition sticky top-0 z-50 bg-[var(--nav-bg)] border-b border-[var(--rule)]"
     >
+      <a href="#main-content" className="skip-link font-plex text-[14px]" onClick={skipToContent}>Skip to content</a>
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-6">
           {/* Logo */}
@@ -74,8 +94,8 @@ export const MockupHeader = () => {
                 data-testid={`mockup-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                 className={`font-plex text-[15px] whitespace-nowrap transition-colors duration-200 ${
                   isActive(item.path)
-                    ? 'text-[var(--accent-burgundy)]'
-                    : 'text-[var(--text)] hover:text-[var(--accent-burgundy)]'
+                    ? 'text-[var(--accent-ink)]'
+                    : 'text-[var(--text)] hover:text-[var(--accent-ink)]'
                 }`}
               >
                 {item.label}
@@ -93,7 +113,7 @@ export const MockupHeader = () => {
               onClick={toggleTheme}
               data-testid="mockup-header-theme-toggle"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="h-9 w-9 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
+              className="h-11 w-11 -mx-1 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
             >
               {isDark
                 ? <Sun className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -105,7 +125,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/account"
                   data-testid="mockup-header-account"
-                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-ink)] transition-colors duration-200"
                 >
                   {memberName ? memberName.split(' ')[0] : 'My Account'}
                 </Link>
@@ -113,7 +133,7 @@ export const MockupHeader = () => {
                   type="button"
                   onClick={logout}
                   data-testid="mockup-header-logout"
-                  className="font-plex text-[15px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text-muted)] hover:text-[var(--accent-ink)] transition-colors duration-200"
                 >
                   Sign out
                 </button>
@@ -123,7 +143,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/login"
                   data-testid="mockup-header-login"
-                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-ink)] transition-colors duration-200"
                 >
                   Sign in
                 </Link>
@@ -140,9 +160,11 @@ export const MockupHeader = () => {
 
             <button
               type="button"
-              className="lg:hidden h-9 w-9 inline-flex items-center justify-center text-[var(--text)]"
+              className="lg:hidden h-11 w-11 -mr-2.5 inline-flex items-center justify-center text-[var(--text)]"
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Menu"
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
               data-testid="mockup-header-menu"
             >
               {mobileOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
@@ -152,7 +174,7 @@ export const MockupHeader = () => {
 
         {/* Mobile drawer */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-[var(--rule)] py-6">
+          <div id="mobile-nav" className="lg:hidden border-t border-[var(--rule)] py-6">
             <nav className="flex flex-col gap-5">
               {NAV.map((item) => (
                 <Link
@@ -161,7 +183,7 @@ export const MockupHeader = () => {
                   onClick={() => setMobileOpen(false)}
                   className={`font-plex text-base ${
                     isActive(item.path)
-                      ? 'text-[var(--accent-burgundy)]'
+                      ? 'text-[var(--accent-ink)]'
                       : 'text-[var(--text)]'
                   }`}
                 >

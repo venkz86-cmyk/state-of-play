@@ -73,7 +73,7 @@ export const InvoicePreviewMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 pb-6">
         <p className="font-plex text-[14px] text-[var(--text-muted)] max-w-[60ch]">
           This is a visual mock. The buyer block (name / GSTIN / address) will be
-          filled by the customer when they request the invoice from <code className="text-[var(--accent-burgundy)]">/account</code>.
+          filled by the customer when they request the invoice from <code className="text-[var(--accent-ink)]">/account</code>.
           Sample buyer below is in <strong>Maharashtra</strong> to demonstrate the
           inter-state (18% IGST) case.
         </p>

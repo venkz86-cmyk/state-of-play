@@ -53,13 +53,13 @@ export const BackfillPanel = ({ onAuthError }) => {
         </p>
       )}
       {error && (
-        <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-3">{error}</p>
+        <p className="font-plex text-[13px] text-[var(--accent-ink)] mb-3">{error}</p>
       )}
       <button
         type="button"
         onClick={runBackfill}
         disabled={running}
-        className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60"
+        className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60"
       >
         {running ? 'Importing…' : 'Import past payments →'}
       </button>

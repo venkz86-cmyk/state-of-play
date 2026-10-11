@@ -68,7 +68,7 @@ export const SourcesPanel = ({ onAuthError }) => {
     return () => { active = false; };
   }, [weeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (error) return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+  if (error) return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   if (!data) return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
 
   const t = data.totals;

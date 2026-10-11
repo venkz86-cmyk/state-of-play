@@ -41,7 +41,7 @@ export const SurveyBanner = () => {
             href={SURVEY_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2"
+            className="text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2"
           >
             take the survey
           </a>

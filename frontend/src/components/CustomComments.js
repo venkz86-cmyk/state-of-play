@@ -20,7 +20,7 @@ const BARE_URL_RE = /(https?:\/\/[^\s<]+)/g;
 // swallow the period.
 const TRAILING_PUNCT_RE = /[),.!?;:'"]+$/;
 
-const linkClass = 'text-[var(--accent-burgundy)] underline underline-offset-[3px] decoration-1 hover:decoration-2 break-all';
+const linkClass = 'text-[var(--accent-ink)] underline underline-offset-[3px] decoration-1 hover:decoration-2 break-all';
 
 /* Turns a comment body into text + <a> nodes — markdown [text](url) links
    first, then any bare http(s) URL left in the remaining plain-text
@@ -168,7 +168,7 @@ const LinkButton = ({ onClick, testId }) => (
     data-testid={testId}
     title="Add link (Ctrl+K)"
     aria-label="Add link"
-    className="py-1.5 pr-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+    className="py-1.5 pr-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-ink)] transition-colors"
   >
     Link
   </button>
@@ -252,7 +252,7 @@ const EditCommentForm = ({ comment, user, onSaved, onCancel }) => {
         </div>
       </div>
       {error && (
-        <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3" data-testid={`edit-error-${comment.id}`}>
+        <p className="font-plex text-[13px] text-[var(--accent-ink)] mt-3" data-testid={`edit-error-${comment.id}`}>
           {error}
         </p>
       )}
@@ -344,7 +344,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         <button
           type="button"
           onClick={() => setSubmitted(false)}
-          className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+          className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
         >
           {parentId ? 'Add another reply' : 'Add another'}
         </button>
@@ -399,7 +399,7 @@ const CommentForm = ({ postSlug, parentId, user, compact, onSubmitted }) => {
         </button>
       </div>
       {error && (
-        <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3" data-testid="comment-error">
+        <p className="font-plex text-[13px] text-[var(--accent-ink)] mt-3" data-testid="comment-error">
           {error}
         </p>
       )}
@@ -524,7 +524,7 @@ export const CustomComments = ({ postSlug, user }) => {
                                 type="button"
                                 onClick={() => setEditingId(r.id)}
                                 data-testid={`edit-toggle-${r.id}`}
-                                className="mt-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                                className="mt-2 font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-ink)] transition-colors"
                               >
                                 Edit
                               </button>
@@ -541,7 +541,7 @@ export const CustomComments = ({ postSlug, user }) => {
                     type="button"
                     onClick={() => setExpandedThreads((prev) => ({ ...prev, [c.id]: true }))}
                     data-testid={`expand-replies-${c.id}`}
-                    className="mt-3 ml-5 font-plex text-[12px] text-[var(--accent-burgundy)] underline underline-offset-[4px] decoration-1 hover:decoration-2"
+                    className="mt-3 ml-5 font-plex text-[12px] text-[var(--accent-ink)] underline underline-offset-[4px] decoration-1 hover:decoration-2"
                   >
                     Show {hiddenCount} more {hiddenCount === 1 ? 'reply' : 'replies'}
                   </button>
@@ -574,7 +574,7 @@ export const CustomComments = ({ postSlug, user }) => {
                         type="button"
                         onClick={() => setReplyingTo(c.id)}
                         data-testid={`reply-toggle-${c.id}`}
-                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                        className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-ink)] transition-colors"
                       >
                         Reply
                       </button>
@@ -583,7 +583,7 @@ export const CustomComments = ({ postSlug, user }) => {
                           type="button"
                           onClick={() => setEditingId(c.id)}
                           data-testid={`edit-toggle-${c.id}`}
-                          className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-burgundy)] transition-colors"
+                          className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text-label)] hover:text-[var(--accent-ink)] transition-colors"
                         >
                           Edit
                         </button>

@@ -67,7 +67,7 @@ const Notice = ({ title, body }) => (
     </p>
     <a
       href="https://www.stateofplay.club"
-      className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+      className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
     >
       ← Back to The State of Play
     </a>
@@ -404,7 +404,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 Once added, your colleague can sign in at stateofplay.club using their work email.
               </p>
               {emailError && (
-                <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mt-3" data-testid="teams-add-error">
+                <p className="font-plex text-[13px] text-[var(--accent-ink)] mt-3" data-testid="teams-add-error">
                   {emailError}
                 </p>
               )}
@@ -421,7 +421,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 All {seatsTotal} seats are in use. Remove a member to add someone new, or write to{' '}
                 <a
                   href="mailto:prerna@stateofplay.club?subject=Upgrade%20team%20plan"
-                  className="text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1"
+                  className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1"
                 >
                   prerna@stateofplay.club
                 </a>{' '}
@@ -472,7 +472,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                             type="button"
                             onClick={() => { setRemoveError(''); setPendingRemove(m.member_id); }}
                             data-testid={`teams-remove-${m.member_id}`}
-                            className="font-plex text-[12px] text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
+                            className="font-plex text-[12px] text-[var(--text-muted)] hover:text-[var(--accent-ink)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
                           >
                             Remove
                           </button>
@@ -504,7 +504,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                             Cancel
                           </button>
                           {removeError && (
-                            <span className="font-plex text-[13px] text-[var(--accent-burgundy)] sm:ml-3" data-testid="teams-remove-error">
+                            <span className="font-plex text-[13px] text-[var(--accent-ink)] sm:ml-3" data-testid="teams-remove-error">
                               {removeError}
                             </span>
                           )}
@@ -539,7 +539,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
               <button
                 type="button"
                 onClick={() => setInvoiceOpen(true)}
-                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                 data-testid="teams-invoice-link"
               >
                 Download invoice
@@ -557,7 +557,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
             Questions about your subscription? Write to{' '}
             <a
               href="mailto:prerna@stateofplay.club"
-              className="text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+              className="text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
             >
               prerna@stateofplay.club
             </a>

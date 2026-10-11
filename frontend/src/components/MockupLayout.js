@@ -24,7 +24,7 @@ export const MockupLayout = ({
   >
     {seo && <SEO {...seo} />}
     <MockupHeader />
-    <main>{children}</main>
+    <main id="main-content">{children}</main>
     <MockupFooter hideHeroCta={hideFooterHeroCta} />
   </div>
 );

@@ -82,7 +82,7 @@ export const TrialsPanel = ({ onAuthError }) => {
   };
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!trials) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -98,7 +98,7 @@ export const TrialsPanel = ({ onAuthError }) => {
         <button
           type="button"
           onClick={() => setEditingEmail(t.email)}
-          className="font-plex text-[13px] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors"
+          className="font-plex text-[13px] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors"
         >
           {(t.snapshot_slugs || []).length} snapshotted
           {drifted?.some((d) => d.email === t.email) ? ' · needs a swap' : ''}
@@ -161,7 +161,7 @@ export const TrialsPanel = ({ onAuthError }) => {
           type="button"
           onClick={runSweep}
           disabled={sweeping}
-          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
         >
           {sweeping ? 'Running…' : 'Run reminder sweep'}
         </button>
@@ -186,7 +186,7 @@ export const TrialsPanel = ({ onAuthError }) => {
           type="button"
           onClick={checkDrift}
           disabled={checkingDrift}
-          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
         >
           {checkingDrift ? 'Checking…' : 'Check for drifted stories'}
         </button>
@@ -211,7 +211,7 @@ export const TrialsPanel = ({ onAuthError }) => {
                 <ul className="mt-2 space-y-1">
                   {auditResult.flagged.map((f) => (
                     <li key={f.email} className="font-plex text-[12.5px] text-[var(--text-muted)]">
-                      <span className="text-[var(--accent-burgundy)]">{f.email}</span> — {f.reason}
+                      <span className="text-[var(--accent-ink)]">{f.email}</span> — {f.reason}
                     </li>
                   ))}
                 </ul>
@@ -223,7 +223,7 @@ export const TrialsPanel = ({ onAuthError }) => {
           type="button"
           onClick={runAudit}
           disabled={auditing}
-          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
+          className="font-plex text-[13px] uppercase tracking-[0.05em] text-[var(--accent-ink)] underline underline-offset-4 hover:decoration-2 disabled:opacity-60 shrink-0 ml-6"
         >
           {auditing ? 'Checking…' : 'Check for stray paid state'}
         </button>

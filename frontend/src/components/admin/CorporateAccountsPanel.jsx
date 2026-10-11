@@ -41,7 +41,7 @@ const FinishSetup = ({ onDone, onAuthError }) => {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} data-testid="finish-setup-open"
-        className="mt-8 font-plex text-[13px] text-[var(--accent)] underline underline-offset-[5px] decoration-1 hover:decoration-2">
+        className="mt-8 font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2">
         Finish a team's setup
       </button>
     );
@@ -82,7 +82,7 @@ const FinishSetup = ({ onDone, onAuthError }) => {
         className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-11 px-6 disabled:opacity-50">
         {busy ? 'Working…' : 'Finish setup and send the link'}
       </button>
-      {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>}
+      {error && <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>}
       {result && (
         <p data-testid="finish-setup-result" className="font-plex text-[14px]">
           {result.existed
@@ -124,7 +124,7 @@ export const CorporateAccountsPanel = ({ onAuthError }) => {
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error && !accounts) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!accounts) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -170,13 +170,13 @@ export const CorporateAccountsPanel = ({ onAuthError }) => {
           type="button"
           onClick={() => load(true)}
           disabled={refreshing}
-          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60"
+          className="font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60"
         >
           {refreshing ? 'Refreshing…' : 'Refresh →'}
         </button>
       </div>
       {error && (
-        <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-3">{error}</p>
+        <p className="font-plex text-[13px] text-[var(--accent-ink)] mb-3">{error}</p>
       )}
 
       <DataTable

@@ -33,7 +33,7 @@ export const SubscriptionCheckoutTest = () => {
               key={c}
               type="button"
               onClick={() => { setCountry(c); setResult(''); }}
-              className={`font-plex text-[13px] px-4 py-2 border ${country === c ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]' : 'border-[var(--rule)] text-[var(--text-muted)]'}`}
+              className={`font-plex text-[13px] px-4 py-2 border ${country === c ? 'border-[var(--accent-burgundy)] text-[var(--accent-ink)]' : 'border-[var(--rule)] text-[var(--text-muted)]'}`}
             >
               {c === 'IN' ? 'IN — real Plan created' : 'INTL — expect a 503'}
             </button>

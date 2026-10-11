@@ -97,7 +97,7 @@ export const TeamsMockup = () => {
                     type="button"
                     onClick={() => { setOpenPlan(p.id); setCompanyName(''); }}
                     data-testid={`teams-cta-${p.id}`}
-                    className="font-plex text-base text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                    className="font-plex text-base text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                   >
                     Buy {p.name}
                   </button>
@@ -107,10 +107,10 @@ export const TeamsMockup = () => {
           </div>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">
             More than ten seats, or want to talk it through first? Write to me:{' '}
-            <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors">
+            <a href="mailto:venkat@stateofplay.club" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors">
               venkat@stateofplay.club
             </a>. Already subscribed?{' '}
-            <Link to="/teams/login" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-burgundy)] transition-colors" data-testid="teams-existing-customer-link">
+            <Link to="/teams/login" className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors" data-testid="teams-existing-customer-link">
               Go to your team account
             </Link>.
           </p>

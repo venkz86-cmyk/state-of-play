@@ -37,7 +37,7 @@ export const MockupIndex = () => (
         The new aesthetic, <em className="italic font-normal">page by page.</em>
       </h1>
       <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] max-w-[60ch]">
-        Each surface sandboxed under <code className="font-plex text-sm text-[var(--accent-burgundy)]">/mockup</code>. The live site is untouched. Append <code className="font-plex text-sm text-[var(--accent-burgundy)]">?preview=member</code> to most pages to see the logged-in state.
+        Each surface sandboxed under <code className="font-plex text-sm text-[var(--accent-ink)]">/mockup</code>. The live site is untouched. Append <code className="font-plex text-sm text-[var(--accent-ink)]">?preview=member</code> to most pages to see the logged-in state.
       </p>
     </section>
 

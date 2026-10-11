@@ -84,7 +84,7 @@ export const SubscribersPanel = ({ onAuthError }) => {
   const subscriberDelta = useCountDelta('tsop_admin_subscribers_count', subscribers?.length ?? null);
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!subscribers) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -217,11 +217,11 @@ export const SubscribersPanel = ({ onAuthError }) => {
                     <span className="tabular-nums">
                       {formatCurrency(p.amount, p.currency)}
                       {p.amount_refunded > 0 && (
-                        <span className="text-[var(--accent-burgundy)]"> · {p.amount_refunded >= p.amount ? 'refunded' : `${formatCurrency(p.amount_refunded, p.currency)} refunded`}</span>
+                        <span className="text-[var(--accent-ink)]"> · {p.amount_refunded >= p.amount ? 'refunded' : `${formatCurrency(p.amount_refunded, p.currency)} refunded`}</span>
                       )}
                     </span>
                     {(p.payment_id || '').startsWith('pay_') && (
-                      <Link to={`/admin/dashboard/refunds?q=${encodeURIComponent(expanded)}`} className="text-[var(--accent-burgundy)] underline underline-offset-4">Refund…</Link>
+                      <Link to={`/admin/dashboard/refunds?q=${encodeURIComponent(expanded)}`} className="text-[var(--accent-ink)] underline underline-offset-4">Refund…</Link>
                     )}
                   </span>
                 </li>

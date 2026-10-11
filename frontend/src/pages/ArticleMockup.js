@@ -274,6 +274,7 @@ export const ArticleMockup = () => {
       />
       <ReadingProgress />
       <MockupHeader />
+      <main id="main-content">
 
       {/* DATELINE STRIP */}
       <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
@@ -281,7 +282,7 @@ export const ArticleMockup = () => {
             neither half wraps into a cramped column of its own. */}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[var(--text-muted)]">
-            <Link to="/" className="hover:text-[var(--accent-burgundy)] transition-colors duration-200">
+            <Link to="/" className="hover:text-[var(--accent-ink)] transition-colors duration-200">
               ← The State of Play
             </Link>
             <span className="hidden sm:inline">
@@ -431,7 +432,7 @@ export const ArticleMockup = () => {
                     <Link
                       to={`/topic/${t.slug}`}
                       data-testid={`article-tag-${t.slug}`}
-                      className="text-[var(--text-label)] underline underline-offset-[4px] decoration-1 hover:text-[var(--accent-burgundy)] transition-colors"
+                      className="text-[var(--text-label)] underline underline-offset-[4px] decoration-1 hover:text-[var(--accent-ink)] transition-colors"
                     >
                       {t.name}
                     </Link>
@@ -476,7 +477,7 @@ export const ArticleMockup = () => {
               <Link
                 to="/signup"
                 data-testid="comments-subscribe"
-                className="font-plex text-[14px] text-[var(--accent-burgundy)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
               >
                 Subscribe
               </Link>
@@ -517,6 +518,7 @@ export const ArticleMockup = () => {
         </section>
       )}
 
+      </main>
       <MockupFooter />
 
       {/* Print / Save-as-PDF intercept. Hidden on screen; activates on @media print */}

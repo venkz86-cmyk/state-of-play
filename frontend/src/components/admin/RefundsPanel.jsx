@@ -23,7 +23,7 @@ const STATUS_LABEL = { processed: 'Done', pending: 'On its way', failed: 'Failed
 const label = 'font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]';
 const field = 'bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[14px] py-1 focus:outline-none focus:border-[var(--accent-burgundy)]';
 const primary = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-10 px-5 disabled:opacity-50';
-const quiet = 'font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-4 hover:text-[var(--text)] disabled:opacity-50';
+const quiet = 'font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-4 hover:text-[var(--text)] disabled:opacity-50';
 
 const toMinor = (major) => Math.round(parseFloat(String(major).replace(/[^0-9.]/g, '')) * 100);
 
@@ -92,7 +92,7 @@ const RefundForm = ({ payment, onDone, onAuthError }) => {
           />
         </div>
         {choice === 'custom' && custom && !valid && (
-          <p className="font-plex text-[12px] text-[var(--accent-burgundy)]">Up to {money(full)}.</p>
+          <p className="font-plex text-[12px] text-[var(--accent-ink)]">Up to {money(full)}.</p>
         )}
       </div>
 
@@ -128,7 +128,7 @@ const RefundForm = ({ payment, onDone, onAuthError }) => {
         </button>
         <button type="button" className={quiet} onClick={() => onDone(null)}>Cancel</button>
       </div>
-      {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)]">{error}</p>}
+      {error && <p className="font-plex text-[13px] text-[var(--accent-ink)]">{error}</p>}
     </div>
   );
 };
@@ -146,7 +146,7 @@ const PaymentRow = ({ p, open, onOpen, onDone, onAuthError }) => {
           <span className="font-plex text-[14px] tabular-nums">
             {formatCurrency(p.amount, p.currency)}
             {refunded && (
-              <span className="text-[var(--accent-burgundy)]">
+              <span className="text-[var(--accent-ink)]">
                 {' '}· {p.refundable === 0 ? 'refunded in full' : `${formatCurrency(p.amount_refunded, p.currency)} refunded`}
               </span>
             )}
@@ -219,7 +219,7 @@ export const RefundsPanel = ({ onAuthError }) => {
         and paying the new-reader price as a returning member are refunded automatically.
       </p>
 
-      {error && <p className="font-plex text-[13px] text-[var(--accent-burgundy)] mb-4">{error}</p>}
+      {error && <p className="font-plex text-[13px] text-[var(--accent-ink)] mb-4">{error}</p>}
       {done && (
         <p className="font-plex text-[14px] mb-6" data-testid="refund-done">
           Refunded {done.display}.{done.access ? ` ${done.access}` : ''}{done.emailed ? ' We emailed them.' : ''}
@@ -257,7 +257,7 @@ export const RefundsPanel = ({ onAuthError }) => {
                 </span>
                 <span className="font-plex text-[13px] tabular-nums">
                   {formatCurrency(r.amount, r.currency)}
-                  <span className={r.status === 'failed' ? 'text-[var(--accent-burgundy)]' : 'text-[var(--text-muted)]'}> · {STATUS_LABEL[r.status] || r.status}</span>
+                  <span className={r.status === 'failed' ? 'text-[var(--accent-ink)]' : 'text-[var(--text-muted)]'}> · {STATUS_LABEL[r.status] || r.status}</span>
                   <span className="text-[var(--text-muted)]"> · {r.at ? formatDateTime(r.at) : ''}</span>
                 </span>
               </li>

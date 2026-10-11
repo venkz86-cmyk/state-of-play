@@ -9,7 +9,7 @@ import { formatDate } from '../../lib/format';
 // to them. Without one, it's an event link: share it or show the QR.
 const field = 'w-full bg-transparent border-0 border-b border-[var(--rule)] font-plex text-[15px] py-2 focus:outline-none focus:border-[var(--accent-burgundy)]';
 const label = 'block font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]';
-const quiet = 'font-plex text-[13px] text-[var(--accent)] underline underline-offset-[5px] decoration-1 hover:decoration-2 disabled:opacity-50';
+const quiet = 'font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2 disabled:opacity-50';
 const STATE_TEXT = { open: 'Open', full: 'Used up', expired: 'Past its last day', closed: 'Closed' };
 const STATE_TONE = { open: 'var(--text)', full: 'var(--text-muted)', expired: 'var(--text-muted)', closed: 'var(--text-muted)' };
 
@@ -146,7 +146,7 @@ export const InviteLinksPanel = ({ onAuthError }) => {
     <button
       type="button" onClick={() => setKind(value)} aria-pressed={kind === value} data-testid={`invite-kind-${value}`}
       className={`font-plex text-[13px] px-4 h-9 border transition-colors ${
-        kind === value ? 'border-[var(--accent-burgundy)] text-[var(--accent-burgundy)]' : 'border-[var(--rule)] text-[var(--text-muted)] hover:text-[var(--text)]'
+        kind === value ? 'border-[var(--accent-burgundy)] text-[var(--accent-ink)]' : 'border-[var(--rule)] text-[var(--text-muted)] hover:text-[var(--text)]'
       }`}
     >
       {text}
@@ -208,7 +208,7 @@ export const InviteLinksPanel = ({ onAuthError }) => {
           className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex font-medium text-[12px] uppercase tracking-[0.05em] h-11 px-6 disabled:opacity-50">
           {busy ? 'Making…' : (kind === 'person' && email.trim() ? 'Make and email the link' : 'Make the link')}
         </button>
-        {error && <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>}
+        {error && <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>}
         {made && (
           <p data-testid="invite-made" className="font-plex text-[14px]">
             Done. {made.email ? (made.email_sent ? `The link is on its way to ${made.email}.` : 'The email didn’t send; copy the link below and send it yourself.') : 'The link is at the top of the list below.'}

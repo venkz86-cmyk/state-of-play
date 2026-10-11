@@ -158,7 +158,9 @@ export const HomeMockup = () => {
     return (
       <div className="theme-transition min-h-screen bg-[var(--bg)] text-[var(--text)]" data-testid="mockup-home">
         <MockupHeader />
+        <main id="main-content">
         {loading ? <StoriesSkeleton /> : <StoriesUnavailable onRetry={() => setAttempt((n) => n + 1)} />}
+        </main>
         <MockupFooter />
       </div>
     );
@@ -179,6 +181,7 @@ export const HomeMockup = () => {
         description="India's sports business publication. Reportage, analysis and intelligence from sport's most consequential rooms, written for the people who run the game."
       />
       <MockupHeader />
+      <main id="main-content">
       {isMember && <SurveyBanner />}
 
       {/* DATELINE — Schibsted Grotesk, #444, weight 400, "No. X · Season One" */}
@@ -190,7 +193,7 @@ export const HomeMockup = () => {
           <Link
             to="/season-one"
             data-testid="home-season-link"
-            className="font-plex text-[14px] font-normal text-[var(--text-muted)] hover:text-[var(--accent-burgundy)] transition-colors duration-200"
+            className="font-plex text-[14px] font-normal text-[var(--text-muted)] hover:text-[var(--accent-ink)] transition-colors duration-200"
           >
             {/* Tabular figures on the number only: on the whole line they
                 widen the full stop and render "No . 8". */}
@@ -228,7 +231,7 @@ export const HomeMockup = () => {
                   ? (lead.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
                   : ' · Free'}
               </SectionLabel>
-              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent)] transition-colors duration-300">
+              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent-ink)] transition-colors duration-300">
                 {lead.title}
               </h1>
               {lead.subtitle && (
@@ -251,7 +254,7 @@ export const HomeMockup = () => {
                   The Briefing
                 </p>
                 <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
-                  The Left Field <span className="text-[var(--accent-burgundy)]">· Free</span>
+                  The Left Field <span className="text-[var(--accent-ink)]">· Free</span>
                 </span>
               </div>
               <ul>
@@ -286,7 +289,7 @@ export const HomeMockup = () => {
                 href="https://theleftfield.substack.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-burgundy)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
+                className="inline-block mt-6 font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
               >
                 Get The Left Field free
               </a>
@@ -311,7 +314,7 @@ export const HomeMockup = () => {
                     ? (a.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
                     : ' · Free'}
                 </SectionLabel>
-                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent)] transition-colors duration-300">
+                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent-ink)] transition-colors duration-300">
                   {a.title}
                 </h2>
                 {a.subtitle && (
@@ -423,7 +426,7 @@ export const HomeMockup = () => {
               {user?.tier !== 'trial' && !user?.trial_expired && (
                 <p className="font-plex text-[14px] text-[var(--text-muted)] mt-3" data-testid="home-the-ten">
                   Not ready for a year?{' '}
-                  <Link to="/trial?via=home" className="text-[var(--accent-burgundy)] underline underline-offset-4">
+                  <Link to="/trial?via=home" className="text-[var(--accent-ink)] underline underline-offset-4">
                     Start with The Ten
                   </Link>
                   , ten stories for {pricing.country === 'IN' ? '₹590' : '$9'}.
@@ -446,6 +449,7 @@ export const HomeMockup = () => {
 
       <PartnersBlock />
 
+      </main>
       <MockupFooter />
     </div>
   );

@@ -29,7 +29,7 @@ export const OverviewPanel = ({ onAuthError }) => {
   }, [onAuthError]);
 
   if (error) {
-    return <p className="font-plex text-[14px] text-[var(--accent-burgundy)]">{error}</p>;
+    return <p className="font-plex text-[14px] text-[var(--accent-ink)]">{error}</p>;
   }
   if (!data) {
     return <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading…</p>;
@@ -120,11 +120,11 @@ export const OverviewPanel = ({ onAuthError }) => {
                   data-testid={`needs-${item.key}`}
                   className="w-full flex items-center gap-5 py-4 text-left group"
                 >
-                  <span className="font-editorial text-[32px] leading-none text-[var(--accent-burgundy)] tabular-nums min-w-[2.5ch]">
+                  <span className="font-editorial text-[32px] leading-none text-[var(--accent-ink)] tabular-nums min-w-[2.5ch]">
                     {item.count}
                   </span>
-                  <span className={`font-plex text-[15px] flex-1 ${item.alert ? 'font-medium text-[var(--accent-burgundy)]' : ''}`}>{item.text}</span>
-                  <span className="font-plex text-[13px] text-[var(--text-muted)] group-hover:text-[var(--accent-burgundy)] shrink-0">
+                  <span className={`font-plex text-[15px] flex-1 ${item.alert ? 'font-medium text-[var(--accent-ink)]' : ''}`}>{item.text}</span>
+                  <span className="font-plex text-[13px] text-[var(--text-muted)] group-hover:text-[var(--accent-ink)] shrink-0">
                     Open →
                   </span>
                 </button>
@@ -210,7 +210,7 @@ export const OverviewPanel = ({ onAuthError }) => {
             {attention.expired_but_still_paid.map((r) => (
               <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
-                <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">{formatDate(r.computed_expiry)} · {r.expiry_source}</span>
+                <span className="font-plex text-[13px] text-[var(--accent-ink)]">{formatDate(r.computed_expiry)} · {r.expiry_source}</span>
               </li>
             ))}
           </ul>
@@ -239,7 +239,7 @@ export const OverviewPanel = ({ onAuthError }) => {
           <p className={label}>Payments with no Ghost account</p>
           <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
             Usually someone who paid with a different email than the one they read with. Find their account email and
-            use <button type="button" onClick={() => goTo('tools/link-email')} className="underline underline-offset-4 hover:text-[var(--accent-burgundy)]">Link a payment email</button>.
+            use <button type="button" onClick={() => goTo('tools/link-email')} className="underline underline-offset-4 hover:text-[var(--accent-ink)]">Link a payment email</button>.
           </p>
           <ul>
             {attention.unmatched_payments.map((r) => (
@@ -308,7 +308,7 @@ export const OverviewPanel = ({ onAuthError }) => {
             {attention.ghost_status_downgraded.map((r) => (
               <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
-                <span className="font-plex text-[13px] text-[var(--accent-burgundy)]">
+                <span className="font-plex text-[13px] text-[var(--accent-ink)]">
                   restore to {r.restore_to_date ? formatDate(r.restore_to_date) : 'unknown (no payment on record)'}
                 </span>
               </li>

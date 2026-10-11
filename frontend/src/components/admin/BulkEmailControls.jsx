@@ -17,7 +17,7 @@ export const summarise = (res) => {
   return `Sent ${res.sent}.${skipped.length ? ` Skipped ${skipped.length}.` : ''}`;
 };
 
-const linkButton = 'font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-burgundy)] hover:underline underline-offset-4 disabled:opacity-60';
+const linkButton = 'font-plex text-[12px] uppercase tracking-[0.05em] text-[var(--accent-ink)] hover:underline underline-offset-4 disabled:opacity-60';
 
 // "Email all N" (with a confirm step), "Send me a test", and the result
 // of the last send, including who was skipped and why.

@@ -166,7 +166,7 @@ export const SubscriptionCheckoutButton = ({
         </p>
       )}
       {error && (
-        <p className="font-plex text-sm text-[var(--accent-burgundy)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>
+        <p className="font-plex text-sm text-[var(--accent-ink)] mt-3 max-w-[50ch]" data-testid={`${dataTestId}-error`}>
           {error}
         </p>
       )}
