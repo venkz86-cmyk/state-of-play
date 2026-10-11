@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { authHeader } from '../lib/sessionToken';
@@ -10,20 +10,21 @@ import { ShareRow } from '../components/ShareRow';
 import { BookmarkButton } from '../components/BookmarkButton';
 import { addToReadingHistory } from '../components/ReadingHistory';
 import { ColdLinkAdminButton } from '../components/ColdLinkAdminButton';
-import { PrintInterceptBlock } from '../components/PrintInterceptBlock';
-import { GiftArticleModal } from '../components/GiftArticleModal';
+const PrintInterceptBlock = lazy(() => import('../components/PrintInterceptBlock').then((m) => ({ default: m.PrintInterceptBlock })));
+const GiftArticleModal = lazy(() => import('../components/GiftArticleModal').then((m) => ({ default: m.GiftArticleModal })));
 import { MockupFontSizeToggle, useArticleSize } from '../components/MockupFontSizeToggle';
 import { Paywall } from '../components/Paywall';
 import { EmailGate } from '../components/EmailGate';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { ContinueReading } from '../components/ContinueReading';
-import { CustomComments } from '../components/CustomComments';
+const CustomComments = lazy(() => import('../components/CustomComments').then((m) => ({ default: m.CustomComments })));
 import { SEO } from '../components/SEO';
 import { NotFoundMockup } from './NotFoundMockup';
 import { seasonLabel } from '../lib/season';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { addDollarAmounts } from '../lib/currency';
 import { DollarToggle, useShowDollars } from '../components/DollarToggle';
+import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -376,6 +377,9 @@ export const ArticleMockup = () => {
             <img
               src={article.image_url}
               alt={article.image_alt || ''}
+              srcSet={ghostSrcSet(article.image_url)}
+              sizes="(min-width: 1024px) 760px, 100vw"
+              fetchPriority="high"
               referrerPolicy="no-referrer"
               className="w-full aspect-[16/9] object-cover md:saturate-0 md:hover:saturate-100 transition-all duration-700 ease-out"
             />
@@ -466,10 +470,12 @@ export const ArticleMockup = () => {
             </p>
           )}
           {isMember ? (
-            <CustomComments
-              postSlug={article.id}
-              user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
-            />
+            <Suspense fallback={null}>
+              <CustomComments
+                postSlug={article.id}
+                user={{ email: effectiveSubscriberEmail, name: effectiveSubscriberName }}
+              />
+            </Suspense>
           ) : (
             <>
               <p className="font-plex text-[15px] text-[var(--text-muted)] mb-4 max-w-[55ch]">
@@ -523,6 +529,7 @@ export const ArticleMockup = () => {
       <MockupFooter />
 
       {/* Print / Save-as-PDF intercept. Hidden on screen; activates on @media print */}
+      <Suspense fallback={null}>
       <PrintInterceptBlock
         isPaidSubscriber={!!isMember}
         subscriberName={effectiveSubscriberName}
@@ -530,10 +537,13 @@ export const ArticleMockup = () => {
         subscriberGhostId={effectiveSubscriberGhostId}
         articleSlug={article?.slug || article?.id || ''}
       />
+      </Suspense>
 
       {/* Gift-article modal — opened via the Gift icon in the ShareRow.
           Uses the same backend as nominations; only reader-facing copy
           differs. Only bound for subscribers via onGiftClick above. */}
+      {giftModalOpen && (
+      <Suspense fallback={null}>
       <GiftArticleModal
         open={giftModalOpen}
         onOpenChange={setGiftModalOpen}
@@ -544,6 +554,8 @@ export const ArticleMockup = () => {
         postSlug={article?.slug || article?.id || ''}
         articleTitle={article?.title || ''}
       />
+      </Suspense>
+      )}
     </div>
   );
 };

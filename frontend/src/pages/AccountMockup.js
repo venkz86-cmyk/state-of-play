@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { authHeader } from '../lib/sessionToken';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
-import { InvoiceRequestModal } from '../components/InvoiceRequestModal';
-import { GiftArticleModal } from '../components/GiftArticleModal';
+const InvoiceRequestModal = lazy(() => import('../components/InvoiceRequestModal').then((m) => ({ default: m.InvoiceRequestModal })));
+const GiftArticleModal = lazy(() => import('../components/GiftArticleModal').then((m) => ({ default: m.GiftArticleModal })));
 import { getReadingHistory, clearReadingHistory } from '../components/ReadingHistory';
 import { getBookmarks, removeBookmark, clearBookmarks } from '../components/Bookmarks';
 import { TheTenPanel } from '../components/TheTenPanel';
@@ -462,6 +462,8 @@ export const AccountMockup = () => {
         </section>
       )}
 
+      {giftModalOpen && (
+      <Suspense fallback={null}>
       <GiftArticleModal
         open={giftModalOpen}
         onOpenChange={setGiftModalOpen}
@@ -472,12 +474,18 @@ export const AccountMockup = () => {
         postSlug=""
         articleTitle=""
       />
+      </Suspense>
+      )}
 
-      <InvoiceRequestModal
-        open={invoiceOpen}
-        onClose={() => setInvoiceOpen(false)}
-        memberEmail={memberEmail}
-      />
+      {invoiceOpen && (
+        <Suspense fallback={null}>
+          <InvoiceRequestModal
+            open={invoiceOpen}
+            onClose={() => setInvoiceOpen(false)}
+            memberEmail={memberEmail}
+          />
+        </Suspense>
+      )}
     </MockupLayout>
   );
 };

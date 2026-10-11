@@ -9,19 +9,9 @@ import { ghostAPI } from '../services/ghostAPI';
    site-wide and results were broken). Posts are fetched lazily on first
    open, then cached in memory for the rest of the session. */
 
-let cachedPosts = null;
-let cachedPromise = null;
-
-const loadPosts = () => {
-  if (cachedPosts) return Promise.resolve(cachedPosts);
-  if (!cachedPromise) {
-    cachedPromise = ghostAPI.getAllPosts().then((posts) => {
-      cachedPosts = posts;
-      return posts;
-    });
-  }
-  return cachedPromise;
-};
+// ghostAPI keeps one shared copy of the story list (the archive uses it
+// too), so search doesn't fetch its own.
+const loadPosts = () => ghostAPI.getAllPosts();
 
 const matches = (post, q) => {
   if (!q) return false;
