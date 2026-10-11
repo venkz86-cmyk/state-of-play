@@ -348,3 +348,28 @@ Site polish, releases 1 to 4 (first part) are live. Left from the plan:
   Resend); suggested `v=DMARC1; p=none; rua=mailto:venkat@stateofplay.club`.
 - Razorpay webhook events refund.created/processed/failed are ticked
   (done October 11).
+
+## Next session: rethink the story labels ("kickers")
+Venkat (October 11): the grey uppercase "TOPIC · FREE" / "REPORTAGE · FOR
+SUBSCRIBERS" / "THE LEFT FIELD · FREE" labels read generic and templated.
+Wants better visibility. Starting proposal, to mock up before building:
+- Split what the label is doing. Topic (a real beat: Franchises, Media
+  rights) and access (paid or free) are two different facts crammed into
+  one grey line. Give each its own treatment.
+- Drop "Reportage". It's only the fallback when a story has no topic tag,
+  and it says nothing. Show no topic rather than a filler word.
+- Mark the exception, not the rule. Most stories are for members, so
+  don't label them; give the free ones a small, visible "Free to read"
+  mark. "For subscribers" on nearly every card is noise.
+- The Left Field is a publication, not a status: give it its own small
+  identity (its name in a distinct style or colour), not the same grey
+  kicker as a topic.
+- Typography: try sentence case at a readable size instead of
+  letterspaced 11px caps, and keep colour for the one thing that matters
+  (free, or a format like Exclusive / Interview / Part 2 of 3 if Ghost
+  tags carry it).
+- Mock 2 or 3 options on the home page and a story header, light and
+  dark, phone and desktop, then pick.
+Code: labels are built in HomeMockup.js, FeedMockup.js, ArticleMockup.js,
+Archive.js and the related-stories block; "Reportage" fallback is in
+services/ghostAPI.js (transformPost, `theme`).
