@@ -144,10 +144,13 @@ class GhostAPI {
       }
 
       // Fallback: fetch recent posts and find by slug (gets metadata for paid posts)
+      // One post by slug through the list endpoint (which returns paid
+      // posts' metadata), instead of downloading every post to search them.
       const listParams = new URLSearchParams({
         key: GHOST_CONTENT_KEY,
         include: 'tags,authors',
-        limit: 'all'
+        filter: `slug:${slug}`,
+        limit: '1'
       });
 
       const listResponse = await axios.get(`${this.contentURL}/posts/?${listParams}`);

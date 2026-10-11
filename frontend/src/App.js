@@ -1,5 +1,5 @@
 import "@/index.css";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { captureRef } from "./lib/attribution";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -38,7 +38,8 @@ import { TeamsManage } from "./pages/TeamsManage";
 import { TeamsLogin } from "./pages/TeamsLogin";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AdminLogin } from "./pages/AdminLogin";
-import { AdminDashboard } from "./pages/AdminDashboard";
+// The dashboard only loads for admins, not in every reader's download.
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 import { Toaster } from "./components/ui/sonner";
 
 // One AdminAuthProvider instance shared by /admin/login and
@@ -52,7 +53,7 @@ function AdminArea() {
     <AdminAuthProvider>
       <Routes>
         <Route path="login" element={<AdminLogin />} />
-        <Route path="dashboard/*" element={<AdminDashboard />} />
+        <Route path="dashboard/*" element={<Suspense fallback={null}><AdminDashboard /></Suspense>} />
       </Routes>
     </AdminAuthProvider>
   );

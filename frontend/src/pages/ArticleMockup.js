@@ -95,14 +95,15 @@ export const ArticleMockup = () => {
         }
         if (!active) return;
         setArticle(post);
+        // The story shows now; related stories and the season number load
+        // underneath, side by side, instead of holding the page back.
+        setLoading(false);
+        if (!post) return;
         addToReadingHistory(post);
-        const rel = await ghostAPI.getRelatedPosts(post, 3);
-        if (!active) return;
-        setRelated(rel);
+        ghostAPI.getRelatedPosts(post, 3).then((rel) => { if (active) setRelated(rel); }).catch(() => {});
         // Same real edition count HomeMockup.js uses for its own dateline
         // -- so the two never disagree on which season it is.
-        const count = await ghostAPI.getSeasonStoryCount();
-        if (active && count > 0) setEditionNo(count);
+        ghostAPI.getSeasonStoryCount().then((count) => { if (active && count > 0) setEditionNo(count); }).catch(() => {});
       } catch (e) {
         console.error(e);
       } finally {
