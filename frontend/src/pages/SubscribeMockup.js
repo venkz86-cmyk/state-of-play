@@ -18,19 +18,19 @@ const longDate = (iso) =>
 const heroTestimonial = TESTIMONIALS.find((t) => t.name === 'Joy Bhattacharjya') || TESTIMONIALS[0];
 
 const BENEFITS = [
-  ['The weekly story', 'Deep reportage and long-form analysis on Indian sports business.'],
+  ['The weekly story', 'A reported long read on the business of Indian sport, most Fridays.'],
   ['The Left Field briefing', 'News briefs covering Indian and global sports business, twice a week.'],
   ['The full archive', 'Every premium story since launch, searchable and always available.'],
-  ['First on the big deals', 'The desk reports major transactions and announcements before anyone else covers them properly.'],
+  ['First on the big deals', 'The desk reports major transactions and announcements, often before anyone else.'],
   ['The TSOP Transcript', 'Q&As with the people actually running the business of Indian sport.'],
   ['The numbers behind the story', 'IRR models and valuation breakdowns.'],
-  ['No advertising', 'No sponsored content, no ads. Just journalism.'],
+  ['No ads in the stories', 'Every story reads without ads or sponsored content.'],
   ['A direct line to the desk', 'Reply to any email from The State of Play and Venkat answers.'],
 ];
 
 const FAQS = [
   ['What sports do you cover?', 'The full business of Indian sport: cricket, football, kabaddi, badminton, hockey, motorsport, emerging leagues, private equity deals, media rights, sports tech, governance and regulatory developments.'],
-  ['How is this different from The Left Field?', 'The Left Field is a free news brief. TSOP is original, reported long-form analysis, plus exclusive interviews and data breakdowns.'],
+  ['How is this different from The Left Field?', 'The Left Field is a free news brief. The State of Play is reported long-form analysis, with interviews and data.'],
   ['What happens after I subscribe?', 'Your account is set up the moment your payment goes through. Sign in with the same email and we send you a code.'],
   ['How long is the subscription?', 'Annual. 12 months from purchase. You’ll receive a renewal reminder before it expires.'],
 ];
@@ -80,7 +80,7 @@ export const SubscribeMockup = () => {
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">
-            Original reporting on the business of Indian sport: the deals and the people making them. Delivered weekly.
+            Original reporting on the business of Indian sport: the deals and the people making them. One story a week.
           </p>
         </div>
         <aside className="lg:col-span-4 lg:border-l lg:border-[var(--rule)]/15 lg:pl-10">

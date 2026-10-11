@@ -142,7 +142,7 @@ export const LeftFieldMockup = () => {
               <em className="italic font-normal text-[var(--accent-ink)]">Indian sport, in your inbox.</em>
             </h1>
             <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
-              Short, sharp news briefs on the deals and people moving Indian sport. Published twice a week on Substack. Free to read. The on-ramp to the full TSOP desk.
+              Short, sharp news briefs on the deals and people moving Indian sport, published twice a week on Substack and free to read. The State of Play’s weekly story goes further.
             </p>
           </div>
           <div className="lg:col-span-4">

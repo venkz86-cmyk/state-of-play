@@ -8,7 +8,7 @@ const COVERAGE = [
   ['Media Rights', 'Broadcasting deals and streaming wars.'],
   ['Governance', 'BCCI, IOA, federations and sports policy.'],
   ['Sponsorship', 'Brand deals and endorsements.'],
-  ['Infrastructure', 'Stadiums and real estate in sport.'],
+  ['Venues', 'Stadiums and real estate in sport.'],
 ];
 
 const READERS = [
@@ -35,7 +35,7 @@ export const AboutMockup = () => (
         How sport actually works.
       </h1>
       <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">
-        The State of Play is a subscription-only publication providing in-depth, original insight into the business of sport, with sharp reporting and a distinct editorial voice grounded in India.
+        The State of Play is a subscription publication on the business of sport, reported from India.
       </p>
     </section>
 
@@ -43,13 +43,13 @@ export const AboutMockup = () => (
       <div className="lg:col-span-3"><p className="font-editorial italic text-lg">Editor’s note</p></div>
       <div className="lg:col-span-9 space-y-5 font-plex text-base lg:text-lg leading-relaxed text-[var(--text-secondary)] max-w-[65ch]">
         <p className="font-editorial font-medium text-xl lg:text-[1.5rem] leading-snug tracking-tight text-[var(--text)]">
-          Sport is no longer just what happens on the field. It is a capital-intensive global business, and the money is moving faster than the coverage of it.
+          Sport in India is a capital-intensive business now, and the money is moving faster than the coverage of it.
         </p>
         <p>
-          In India, however, most coverage still gravitates to match results or off-field drama. As social media accelerates that cycle, a gap has opened for sustained reporting on how sport actually works.
+          Most coverage still goes to match results and off-field drama, and social media has sped that cycle up. That leaves a gap for sustained reporting on how sport works.
         </p>
         <p>
-          The State of Play aims to fill that gap. Each week, you’ll receive a carefully reported edition on how money and power are reordering Indian sport, and what those shifts mean for the wider sporting economy.
+          The State of Play reports one story a week on how money and power are reordering Indian sport, and what that means for the wider sporting economy.
         </p>
       </div>
     </section>
@@ -74,7 +74,7 @@ export const AboutMockup = () => (
         <div className="lg:col-span-4">
           <p className="font-editorial italic text-lg mb-3">Our readers</p>
           <p className="font-plex text-sm text-[var(--text-muted)] max-w-[40ch] leading-relaxed">
-            Indian sport is no longer a local story. International funds and franchises are evaluating Indian sport as a serious asset class. They read us first.
+            International funds and franchises now weigh Indian sport as a serious asset class, and their people read The State of Play.
           </p>
         </div>
         <div className="lg:col-span-8">
@@ -100,7 +100,7 @@ export const AboutMockup = () => (
             Venkat Ananth.
           </h2>
           <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)] mb-4">
-            A Bengaluru-based journalist who focuses on deeply reported stories about the business of sport and technology.
+            A Bengaluru-based journalist who reports on the business of sport and technology.
           </p>
           <p className="font-plex text-base leading-relaxed text-[var(--text-muted)] mb-6">
             Over 18 years he has worked with Indian publications including <em>Hindustan Times</em>, Yahoo! Cricket, <em>Mint</em>, <em>The Ken</em>, <em>The Economic Times</em>, <em>The Times of India</em> and <em>The Indian Express</em>.
