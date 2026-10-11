@@ -351,20 +351,20 @@ export const ArticleMockup = () => {
             isPremium={!!article.is_premium}
           />
 
-          {/* Utility strip: text size (leftmost, prioritised for
-              discoverability per audit). Save and Share sit at the end of a
-              story the reader can open, where people share; on a locked
-              story the end is behind the paywall, so they stay here. */}
+          {/* Utility strip: Text-size toggle (leftmost, prioritised for
+              discoverability per audit) + Save + Share row */}
           <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               <MockupFontSizeToggle value={size} onChange={setSize} />
               {hasAmounts && <DollarToggle on={showDollars} onChange={setShowDollars} />}
             </div>
-            {isGated && (
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <ShareRow title={article.title} />
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              {isMember && <BookmarkButton article={article} />}
+              <ShareRow
+                title={article.title}
+                onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
+              />
+            </div>
           </div>
         </header>
 
@@ -426,17 +426,7 @@ export const ArticleMockup = () => {
         {needsRegistration && <EmailGate />}
 
         {!isGated && (
-          <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3" data-testid="story-end-share">
-            {isMember && <BookmarkButton article={article} />}
-            <ShareRow
-              title={article.title}
-              onGiftClick={isMember ? () => setGiftModalOpen(true) : undefined}
-            />
-          </div>
-        )}
-
-        {!isGated && (
-          <div className="mt-6 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <div className="mt-12 pt-6 border-t border-[var(--rule)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <p className="font-plex text-[13px] text-[var(--text-label)] flex flex-wrap items-baseline gap-x-2">
               <span>Filed under</span>
               {articleTags.map((t, i) => (
