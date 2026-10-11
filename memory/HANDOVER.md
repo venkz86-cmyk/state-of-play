@@ -338,6 +338,21 @@ pages load on demand; Literata and Schibsted Grotesk are self-hosted in
   To set a story's format in Ghost, add an internal tag: #format-analysis,
   #format-interview, #format-explainer, #format-profile, #format-opinion
   (names in services/ghostAPI.js FORMATS). No tag means Reportage.
+- Site review (October 11): fixes release shipped (Left Field corner
+  fallback, partner logo 600px, no comments block under the paywall,
+  plain desk count). Next, one release at a time:
+  2. Story page: end-of-story box for non-subscribers on free stories,
+     sharing moved to the end, bigger story headline, softer paywall top,
+     decide on the "Bengaluru ... page name" strip under the header
+     (about 17 pages; show before/after first).
+  3. Copy pass through story-drafting + proofreader, Venkat approves:
+     About page (marketing phrasing, "Infrastructure", newsletter framing),
+     paywall/sign-up ("deeply reported edition", "Weekly deep-dives",
+     "covers them properly", IRR line), Left Field "on-ramp", one word for
+     readers (subscriber) vs product (membership), "No ads" vs the home
+     page's partner block.
+  Parked by Venkat: Start here (now "the five latest stories"). No new
+  Ghost tags for it; options are a fixed list in code or most-read.
 - Team renewals (done October 11, backend live): a second Team-5/10 payment
   from an admin whose team is over 30 days old calls the Apps Script's
   `renew_account` (v7), which extends the same row a year from its
