@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { StoriesUnavailable } from '../components/StoriesUnavailable';
 
 const fmtDate = (iso) => {
   if (!iso) return '';
@@ -14,19 +15,31 @@ const fmtDate = (iso) => {
 export const FeedMockup = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
     (async () => {
       try {
         const list = await ghostAPI.getPosts({ limit: 20 });
-        setPosts(list);
+        if (active) setPosts(list);
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     })();
-  }, []);
+    return () => { active = false; };
+  }, [attempt]);
+
+  if (!loading && posts.length === 0) {
+    return (
+      <MockupLayout testId="mockup-feed" seo={{ title: 'Latest', path: '/state-of-play', description: 'The latest reportage and analysis from The State of Play, India\'s sports business desk.' }}>
+        <StoriesUnavailable onRetry={() => setAttempt((n) => n + 1)} />
+      </MockupLayout>
+    );
+  }
 
   if (loading) {
     return (

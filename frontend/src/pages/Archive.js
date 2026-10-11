@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { StoriesUnavailable } from '../components/StoriesUnavailable';
 
 /* =============================================================================
    /archive — chronological index of everything published.
@@ -58,6 +59,7 @@ const ArchiveEntry = ({ post }) => (
 export const Archive = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState('all'); // all | state-of-play | left-field
   const [searchParams] = useSearchParams();
   const { slug } = useParams();
@@ -66,6 +68,7 @@ export const Archive = () => {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
     (async () => {
       try {
         const list = await ghostAPI.getAllPosts();
@@ -77,7 +80,8 @@ export const Archive = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+  const failed = !loading && posts.length === 0;
 
   const tagName = useMemo(() => {
     if (!tagSlug) return '';
@@ -228,7 +232,8 @@ export const Archive = () => {
           {loading && (
             <p className="font-plex text-[14px] text-[var(--text-muted)]">Loading the archive…</p>
           )}
-          {!loading && filtered.length === 0 && (
+          {failed && <StoriesUnavailable onRetry={() => setAttempt((n) => n + 1)} />}
+          {!loading && !failed && filtered.length === 0 && (
             <p className="font-plex text-[14px] text-[var(--text-muted)]">
               No stories in this section yet.
             </p>

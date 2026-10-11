@@ -134,7 +134,7 @@ export const SEO = ({
           publisher: {
             '@type': 'Organization',
             name: 'The State of Play',
-            logo: { '@type': 'ImageObject', url: SITE + '/logo512.png' },
+            logo: { '@type': 'ImageObject', url: SITE + '/icon-512.png', width: 512, height: 512 },
           },
           mainEntityOfPage: { '@type': 'WebPage', '@id': url },
           isAccessibleForFree: !article.is_premium,
