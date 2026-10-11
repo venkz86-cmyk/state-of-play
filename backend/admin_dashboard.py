@@ -266,10 +266,18 @@ async def _build_subscriber_rows() -> list[dict]:
         ghost_subscription_expires = _ghost_subscription_end(member.get('subscriptions'))
         # A Razorpay member comped in Ghost by hand (to keep Ghost's lists
         # right) has a $0 comp with its own date; their real year comes
-        # from the Razorpay payment, same as on their account page.
-        if (member.get('status') == 'comped' and last_payment
-                and not last_payment.get('subscription_id') and last_payment.get('plan') != 'trial'):
-            ghost_subscription_expires = None
+        # from the Razorpay payment, same as on their account page. Once
+        # that comp lapses Ghost shows them as free but still lists the
+        # old comp and its date, which then hid a renewal (the first
+        # members' comps ended October 7, 2026, the day several renewed),
+        # so a Ghost date only wins when it's later than the payment's.
+        if (last_payment and not last_payment.get('subscription_id')
+                and last_payment.get('plan') != 'trial'):
+            payment_end = _utc(compute_synthetic_expiry(last_payment))
+            if member.get('status') == 'comped' or (
+                payment_end and (not ghost_subscription_expires or payment_end >= ghost_subscription_expires)
+            ):
+                ghost_subscription_expires = None
         corp_account_id = _corp_account_id(label_names)
         company_name = corp_name_map.get(corp_account_id) if corp_account_id else None
 
