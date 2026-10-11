@@ -140,16 +140,16 @@ def _paid_twice_email(thing: str, paid_on: str, amount: str) -> tuple[str, str]:
     )
 
 
-def _overpaid_email(paid: str, renewal: str, difference: str, starts: str) -> tuple[str, str]:
-    start_line = f'Your new year starts when your current one ends, on {starts}.' if starts else \
-        'Your new year starts today.'
+def _overpaid_email(paid: str, renewal: str, difference: str, start_line: str = '') -> tuple[str, str]:
+    """start_line: when their new year starts, or '' to leave it out (a
+    refund from the dashboard doesn't move their year)."""
     return f'We’ve refunded {difference}', email_shell(
         'You paid <em style="font-style: italic;">too much.</em>',
         (
             '<p>Dear reader,</p>'
             f'<p>You’ve been a member before, so your year should have cost the renewal rate of {renewal}. '
             f'You paid the new-reader price of {paid}, and we’ve refunded the difference of {difference}.</p>'
-            f'<p>Razorpay usually returns it within 5 to 7 working days. {start_line}</p>'
+            f'<p>Razorpay usually returns it within 5 to 7 working days.{" " + start_line if start_line else ""}</p>'
         ),
         compliance_footer=True,
     )
@@ -336,9 +336,11 @@ async def _refund_if_overpaid(doc: dict, paid_at: datetime) -> bool:
         {'$set': {'plan': 'renewal', 'access_from': starts, 'was_plan': 'standard'}},
     )
     logger.info(f'refunds: {pid} part-refunded {difference}, {email} is a returning member; now a renewal')
+    start_line = (f'Your new year starts when your current one ends, on {_date(starts)}.' if starts > paid_at
+                  else 'Your new year starts today.')
     subject, html = _overpaid_email(
         money(NEW_READER_PRICE[currency], currency), money(RENEWAL_PRICE[currency], currency),
-        money(difference, currency), _date(starts) if starts > paid_at else '',
+        money(difference, currency), start_line,
     )
     await send_email(to=email, subject=subject, html=html)
     return True
@@ -409,6 +411,21 @@ def _row(doc: dict) -> dict:
     }
 
 
+def _email_for_reason(reason: str, doc: dict, row: dict, amount: int, access_note: str) -> tuple[str, str]:
+    """The note a dashboard refund sends: the one for the reason Venkat
+    picked, when what it says is true of this refund, else the general one."""
+    currency = row['currency']
+    paid_on = _date(doc.get('razorpay_created_at'))
+    thing = _PLAN_NAME.get(_SAME_THING.get(row['plan'], 'annual'), 'your membership')
+    ended = access_note == 'Ended their membership.'
+    gap = NEW_READER_PRICE.get(currency, 0) - RENEWAL_PRICE.get(currency, 0)
+    if reason == 'overpaid' and row['amount'] == NEW_READER_PRICE.get(currency) and amount == gap:
+        return _overpaid_email(money(row['amount'], currency), money(RENEWAL_PRICE[currency], currency), money(amount, currency))
+    if reason == 'paid_twice' and amount == row['amount'] and not ended:
+        return _paid_twice_email(thing, paid_on, money(amount, currency))
+    return _manual_email(money(amount, currency), paid_on, thing, ended)
+
+
 @router.get('/api/admin/refunds/lookup')
 async def lookup(q: str, _admin: None = Depends(require_admin_key_or_session)):
     q = (q or '').strip()
@@ -463,9 +480,7 @@ async def refund(body: RefundBody, _admin: None = Depends(require_admin_key_or_s
         access_note = 'Their access stays as it is.'
     emailed = False
     if body.notify and doc.get('email'):
-        thing = _PLAN_NAME.get(_SAME_THING.get(row['plan'], 'annual'), 'your membership')
-        ended = access_note == 'Ended their membership.'
-        subject, html = _manual_email(money(amount, row['currency']), _date(doc.get('razorpay_created_at')), thing, ended)
+        subject, html = _email_for_reason(reason, doc, row, amount, access_note)
         emailed = await send_email(to=doc['email'], subject=subject, html=html)
     return {
         'refunded': amount, 'display': money(amount, row['currency']), 'status': entry['status'],
