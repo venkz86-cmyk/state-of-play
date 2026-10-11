@@ -325,3 +325,26 @@ cd /app/backend && ADMIN_KEY=... python -m pytest tests/ -q
 ---
 
 _Anything unclear or out of date — update this file in the same commit as the code change. The whole point of it is that the next person opening the repo cold shouldn't need to re-derive any of this from grep._
+
+## Still to do (as of October 11, 2026)
+
+Site polish, releases 1 to 4 (first part) are live. Left from the plan:
+- Speed, rest: archive and search ask Ghost for list fields only
+  (`fields=` in `ghostAPI.getAllPosts`, one shared cached promise for
+  Archive.js, SiteSearch.js, StartHere, Season). Check on the live site
+  that reading times still show; if Ghost drops `reading_time` with
+  `fields`, show nothing rather than "5m".
+- Image `srcset` from Ghost's `/size/wN/` (helper `sized()` in
+  TenCoverStack.jsx) on home, feed and story lead images; `fetchpriority`
+  on the story's lead image.
+- Lazy-load story-page extras (comments, gift modal, print block with
+  qrcode.react) and other rarely used pages.
+- Fonts: self-host Literata and Schibsted Grotesk like Gloock, trimmed
+  to the weights used.
+- Teams off the Apps Script (parked while teams are active); before the
+  first team renewals (around April 2027) make checkout extend an
+  existing team instead of adding a second Sheet row.
+- DMARC record for stateofplay.club: check it exists (not visible from
+  Resend); suggested `v=DMARC1; p=none; rua=mailto:venkat@stateofplay.club`.
+- Razorpay webhook events refund.created/processed/failed are ticked
+  (done October 11).
