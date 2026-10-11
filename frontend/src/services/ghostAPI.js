@@ -38,6 +38,19 @@ const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'publ
 // are editorial plumbing, e.g. #start-here, and never shown to readers.
 const isHiddenTag = (slug) => !slug || INTERNAL_TAGS.has(slug) || slug.startsWith('hash-');
 
+// A story's format, set in Ghost with an internal tag: #format-analysis
+// arrives as slug 'hash-format-analysis'. Reportage when none is set.
+const FORMATS = {
+  reportage: 'Reportage', analysis: 'Analysis', interview: 'Interview', explainer: 'Explainer',
+  profile: 'Profile', opinion: 'Opinion', data: 'Data', 'q-and-a': 'Q&A', transcript: 'Transcript',
+};
+const storyFormat = (tags) => {
+  const tag = (tags || []).find((t) => (t.slug || '').startsWith('hash-format-'));
+  if (!tag) return 'Reportage';
+  const key = tag.slug.slice('hash-format-'.length);
+  return FORMATS[key] || (tag.name || '').replace(/^#\s*format[-:\s]*/i, '').replace(/^\w/, (c) => c.toUpperCase()) || 'Reportage';
+};
+
 const LIST_FIELDS = 'id,slug,title,custom_excerpt,excerpt,published_at,updated_at,reading_time,visibility,feature_image,feature_image_alt,feature_image_caption';
 
 class GhostAPI {
@@ -240,6 +253,9 @@ class GhostAPI {
       is_premium: isPremium,
       requires_registration: requiresRegistration,
       theme: post.primary_tag?.name || (post.tags || []).find((t) => !isHiddenTag(t.slug))?.name || 'Reportage',
+      format: storyFormat(post.tags),
+      topic: (post.primary_tag && !isHiddenTag(post.primary_tag.slug) ? post.primary_tag.name : '')
+        || (post.tags || []).find((t) => !isHiddenTag(t.slug))?.name || '',
       primary_tag_slug: post.primary_tag?.slug || post.tags?.[0]?.slug || null,
       tag_slugs: (post.tags || []).map(t => t.slug).filter(Boolean),
       // Reader-facing topic tags for "Filed under" chips and tag browsing —

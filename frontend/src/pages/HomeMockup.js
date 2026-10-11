@@ -13,6 +13,7 @@ import { SEO } from '../components/SEO';
 import { TESTIMONIALS } from '../data/testimonials';
 import { seasonLabel } from '../lib/season';
 import { annualPricingFor } from '../lib/octoberPricing';
+import { StoryLabel, LeftFieldMark } from '../components/StoryLabel';
 import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -230,11 +231,7 @@ export const HomeMockup = () => {
                   />
                 </div>
               )}
-              <SectionLabel className="mb-3">
-                {lead.theme}{lead.is_premium
-                  ? (lead.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
-                  : ' · Free'}
-              </SectionLabel>
+              <StoryLabel post={lead} className="mb-3" />
               <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent-ink)] transition-colors duration-300">
                 {lead.title}
               </h1>
@@ -257,9 +254,7 @@ export const HomeMockup = () => {
                 <p className="font-editorial italic text-[18px] text-[var(--text)]">
                   The Briefing
                 </p>
-                <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
-                  The Left Field <span className="text-[var(--accent-ink)]">· Free</span>
-                </span>
+                <LeftFieldMark />
               </div>
               <ul>
                 {(briefs.length > 0 ? briefs : []).map((b, i, arr) => (
@@ -313,11 +308,7 @@ export const HomeMockup = () => {
                 data-testid={`secondary-${a.id}`}
                 className="group block"
               >
-                <SectionLabel className="mb-3">
-                  {a.theme}{a.is_premium
-                    ? (a.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
-                    : ' · Free'}
-                </SectionLabel>
+                <StoryLabel post={a} className="mb-3" />
                 <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent-ink)] transition-colors duration-300">
                   {a.title}
                 </h2>

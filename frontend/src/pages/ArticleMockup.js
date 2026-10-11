@@ -24,6 +24,7 @@ import { seasonLabel } from '../lib/season';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { addDollarAmounts } from '../lib/currency';
 import { DollarToggle, useShowDollars } from '../components/DollarToggle';
+import { StoryLabel } from '../components/StoryLabel';
 import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -305,11 +306,7 @@ export const ArticleMockup = () => {
       {/* ARTICLE BODY — max 680px per spec */}
       <article className="max-w-[680px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
         <header className="mb-8 lg:mb-10">
-          <SectionLabel className="mb-5">
-            {beat}{article.is_premium
-              ? (article.requires_registration ? ' · Free, sign up to read' : ' · For Subscribers')
-              : ' · Free'}
-          </SectionLabel>
+          <StoryLabel post={article} className="mb-5" />
           <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[40px] leading-[1.08] text-[var(--text)] mb-5 max-w-[24ch]">
             {article.title}
           </h1>
