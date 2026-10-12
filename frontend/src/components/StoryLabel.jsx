@@ -1,7 +1,10 @@
 /* The indicator above a story's headline: what kind of piece it is, and
    a mark on free stories. The format is set per story in Ghost with an
    internal tag such as #format-analysis (Reportage when none is set).
-   Free stories are the exception, so they get the colour: a filled
+   The format is metadata, so it is set in the text colour: burgundy on
+   the site means free (and the wordmark, the active nav item and real
+   calls to action), nothing else. Free stories are the exception, so they
+   get the colour: a filled
    burgundy pill ("Free to read"), or a burgundy outline when the reader
    has to sign up first. Paywalled stories are the default, so their mark
    is quiet grey text, shown only to readers who would hit the paywall
@@ -39,7 +42,7 @@ export const StoryLabel = ({ post, small = false, showAccess = true, as: Tag = '
   const paywalled = showAccess && !loading && post.is_premium && !post.requires_registration && !subscriber;
   return (
     <Tag className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 font-plex ${className}`} data-testid="story-label">
-      <span className={`${small ? 'text-[11px]' : 'text-[12px]'} uppercase tracking-[0.1em] font-semibold text-[var(--accent-ink)]`}>
+      <span className={`${small ? 'text-[11px]' : 'text-[12px]'} uppercase tracking-[0.1em] font-semibold text-[var(--text)]`} data-testid="story-format">
         {post.format || 'Reportage'}
       </span>
       {free && <FreeMark signUp={!!post.requires_registration}>{freeText(post)}</FreeMark>}
