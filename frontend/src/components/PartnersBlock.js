@@ -51,7 +51,7 @@ export const PartnersBlock = ({
               Each cycle is bespoke. If your brand belongs alongside the names above, write to{' '}
               <a
                 href="mailto:prerna@stateofplay.club?subject=Partnerships"
-                className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                className="text-[var(--text)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
               >
                 prerna@stateofplay.club
               </a>
@@ -72,7 +72,7 @@ export const PartnersBlock = ({
               Interested in partnering with The State of Play?{' '}
               <a
                 href="mailto:prerna@stateofplay.club?subject=Partnerships"
-                className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                className="text-[var(--text)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
               >
                 Get in touch
               </a>

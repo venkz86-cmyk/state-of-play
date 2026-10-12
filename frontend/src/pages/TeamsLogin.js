@@ -110,7 +110,7 @@ export const TeamsLogin = () => {
               don&rsquo;t need it. They sign in at{' '}
               <a
                 href="/login"
-                className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1"
+                className="text-[var(--text)] underline underline-offset-[5px] decoration-1"
               >
                 stateofplay.club/login
               </a>{' '}
@@ -131,7 +131,7 @@ export const TeamsLogin = () => {
               Still nothing after five minutes? Write to{' '}
               <a
                 href="mailto:prerna@stateofplay.club?subject=Team%20account%20link"
-                className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1"
+                className="text-[var(--text)] underline underline-offset-[5px] decoration-1"
               >
                 prerna@stateofplay.club
               </a>{' '}

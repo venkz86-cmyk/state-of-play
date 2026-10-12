@@ -30,7 +30,7 @@ export const ContactMockup = () => (
       </h1>
       <p className="font-reading italic text-[18px] md:text-[20px] leading-[1.5] text-[var(--text-muted)] max-w-[55ch]">
         For membership or editorial questions, write to{' '}
-        <a href="mailto:venkat@stateofplay.club" className="not-italic text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1">
+        <a href="mailto:venkat@stateofplay.club" className="not-italic text-[var(--text)] underline underline-offset-[5px] decoration-1">
           venkat@stateofplay.club
         </a>.
       </p>
@@ -51,7 +51,7 @@ export const ContactMockup = () => (
               <div className="col-span-12 md:col-span-4 md:text-right">
                 <a
                   href={`mailto:${email}`}
-                  className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
+                  className="font-plex text-[14px] text-[var(--text)] underline underline-offset-[5px] decoration-1 hover:decoration-2 transition-all"
                 >
                   {email}
                 </a>

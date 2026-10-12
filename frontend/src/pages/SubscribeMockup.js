@@ -219,7 +219,7 @@ export const SubscribeMockup = () => {
                   className="group block py-5 border-b border-[var(--rule)]"
                 >
                   <StoryLabel post={p} small className="mb-2" />
-                  <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">{p.title}</h3>
+                  <h3 className="font-editorial font-medium text-lg leading-snug text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors duration-200">{p.title}</h3>
                   <p className="font-plex text-xs text-[var(--text-muted)] mt-2 tabular-nums">{longDate(p.created_at)}</p>
                 </Link>
               ))}

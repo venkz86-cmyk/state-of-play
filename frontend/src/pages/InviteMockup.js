@@ -11,7 +11,7 @@ const deadline = (iso) =>
   new Date(iso).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
     .replace(' AM', ' am').replace(' PM', ' pm');
 
-const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors';
+const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--text-muted)] transition-colors';
 
 const CLOSED_LINE = {
   expired: 'This invitation has closed.',
@@ -53,7 +53,7 @@ export const InviteMockup = () => {
           <p className="font-plex text-[15px] text-[var(--text-muted)] leading-relaxed">
             A welcome note is on its way to {paidEmail}. Sign in with that email to start reading.
           </p>
-          <a href="/login" className="inline-block mt-4 font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4">Sign in</a>
+          <a href="/login" className="inline-block mt-4 font-plex text-sm text-[var(--text)] underline underline-offset-4">Sign in</a>
         </div>
       );
     }

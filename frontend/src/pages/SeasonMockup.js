@@ -80,7 +80,7 @@ export const SeasonMockup = () => {
                 <span
                   key={i}
                   className="h-5 lg:h-7"
-                  style={{ backgroundColor: s ? 'var(--accent-burgundy)' : 'var(--rule)' }}
+                  style={{ backgroundColor: s ? 'var(--text)' : 'var(--rule)' }}
                 />
               ))}
             </div>
@@ -109,7 +109,7 @@ export const SeasonMockup = () => {
                   <span className="col-span-2 lg:col-span-1 font-plex text-[12px] tracking-[0.08em] text-[var(--text-label)]">
                     No.&nbsp;<span className="tabular-nums">{pad(no)}</span>
                   </span>
-                  <h2 className="col-span-10 lg:col-span-7 font-editorial font-medium text-lg lg:text-xl leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
+                  <h2 className="col-span-10 lg:col-span-7 font-editorial font-medium text-lg lg:text-xl leading-snug text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors duration-200">
                     {s.title}
                   </h2>
                   <StoryLabel post={s} small as="span" className="col-span-10 col-start-3 lg:col-span-2 lg:col-start-auto" />

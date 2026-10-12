@@ -31,7 +31,7 @@ export const DollarToggle = ({ on, onChange }) => (
     <span
       aria-hidden="true"
       className={`relative inline-block w-8 h-[18px] border transition-colors ${
-        on ? 'bg-[var(--accent-burgundy)] border-[var(--accent-burgundy)]' : 'bg-transparent border-[var(--text-label)]'
+        on ? 'bg-[var(--text)] border-[var(--text)]' : 'bg-transparent border-[var(--text-label)]'
       }`}
     >
       <span

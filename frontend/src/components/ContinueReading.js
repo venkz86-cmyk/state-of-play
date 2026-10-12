@@ -65,7 +65,7 @@ export const ContinueReading = ({ articleId }) => {
           setDismissed(true);
         }}
         data-testid="continue-reading-cta"
-        className="font-plex text-[13px] text-[var(--accent-ink)] underline underline-offset-[4px] decoration-1 hover:decoration-2 transition-all text-left"
+        className="font-plex text-[13px] text-[var(--text)] underline underline-offset-[4px] decoration-1 hover:decoration-2 transition-all text-left"
       >
         Continue where you left off
       </button>

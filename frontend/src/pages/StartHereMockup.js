@@ -75,7 +75,7 @@ export const StartHereMockup = () => {
               <li key={s.id} className="border-b border-[var(--rule)]">
                 <Link to={`/${s.id}`} data-testid="start-here-story" className="group block py-7 lg:py-8 max-w-[800px]">
                   <StoryLabel post={s} className="mb-2" />
-                  <h2 className="font-editorial font-semibold text-2xl lg:text-[2rem] leading-[1.15] tracking-tight text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200 mb-3">
+                  <h2 className="font-editorial font-semibold text-2xl lg:text-[2rem] leading-[1.15] tracking-tight text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors duration-200 mb-3">
                     {s.title}
                   </h2>
                   {s.subtitle && (
@@ -93,7 +93,7 @@ export const StartHereMockup = () => {
           <Link
             to="/season-one"
             data-testid="start-here-season"
-            className="inline-block mt-8 font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4"
+            className="inline-block mt-8 font-plex text-sm text-[var(--text)] underline underline-offset-4"
           >
             See all of Season One
           </Link>

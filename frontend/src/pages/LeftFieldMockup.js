@@ -133,13 +133,13 @@ export const LeftFieldMockup = () => {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
           <div className="lg:col-span-8">
             <div className="flex items-center gap-3 mb-5">
-              <Overline className="text-[var(--accent-ink)]">The Left Field</Overline>
-              <span className="h-px w-8 bg-[var(--accent)]/40" />
-              <Overline className="text-[var(--accent-ink)]">Free · Twice a week</Overline>
+              <Overline>The Left Field</Overline>
+              <span className="h-px w-8 bg-[var(--rule)]" />
+              <Overline>Free · Twice a week</Overline>
             </div>
             <h1 className="font-editorial font-semibold tracking-tight text-[2.5rem] sm:text-5xl lg:text-[5rem] leading-[1] mb-6">
               The brief on{' '}
-              <em className="italic font-normal text-[var(--accent-ink)]">Indian sport, in your inbox.</em>
+              <em className="italic font-normal">Indian sport, in your inbox.</em>
             </h1>
             <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] max-w-[60ch] leading-relaxed">
               Short, sharp news briefs on the deals and people moving Indian sport, published twice a week on Substack and free to read. The State of Play’s weekly story goes further.
@@ -155,7 +155,7 @@ export const LeftFieldMockup = () => {
       <section className="border-b border-[var(--rule)] bg-[var(--surface)]">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">
-            <Overline className="text-[var(--accent-ink)]">What it is</Overline>
+            <Overline>What it is</Overline>
           </div>
           <div className="lg:col-span-9 max-w-[60ch]">
             <p className="font-editorial italic text-2xl lg:text-[2rem] leading-[1.2] tracking-tight text-[var(--text)]">
@@ -182,7 +182,7 @@ export const LeftFieldMockup = () => {
               href="https://theleftfield.substack.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 hover:text-[var(--accent-ink)] hover:border-[var(--accent)] transition-colors duration-200"
+              className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 hover:text-[var(--text-muted)] hover:border-[var(--text-muted)] transition-colors duration-200"
             >
               Read The Left Field <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             </a>
@@ -202,8 +202,8 @@ export const LeftFieldMockup = () => {
                   className="group block"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <Overline className="text-[var(--accent-ink)]">Latest Brief</Overline>
-                    <span className="h-px w-6 bg-[var(--accent)]/40" />
+                    <Overline>Latest Brief</Overline>
+                    <span className="h-px w-6 bg-[var(--rule)]" />
                     <Overline>{fmtDate(lead.created_at)}</Overline>
                   </div>
                   <h2 className="headline-lock font-editorial font-semibold tracking-tight text-3xl lg:text-[3rem] leading-[1.05] mb-5">
@@ -214,7 +214,7 @@ export const LeftFieldMockup = () => {
                       {lead.subtitle}
                     </p>
                   )}
-                  <span className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 group-hover:text-[var(--accent-ink)] group-hover:border-[var(--accent)] transition-colors duration-200">
+                  <span className="inline-flex items-center gap-2 font-plex btn-type text-[var(--text)] border-b border-[var(--text)] pb-1 group-hover:text-[var(--text-muted)] group-hover:border-[var(--text-muted)] transition-colors duration-200">
                     Read on Substack
                     <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
                   </span>
@@ -230,8 +230,8 @@ export const LeftFieldMockup = () => {
                     className="group block mt-12 pt-10 border-t border-[var(--rule)]"
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <Overline className="text-[var(--accent-ink)]">Also this week</Overline>
-                      <span className="h-px w-6 bg-[var(--accent)]/40" />
+                      <Overline>Also this week</Overline>
+                      <span className="h-px w-6 bg-[var(--rule)]" />
                       <Overline>{fmtDate(secondary.created_at)}</Overline>
                     </div>
                     <h3 className="headline-lock font-editorial font-semibold tracking-tight text-2xl lg:text-[1.875rem] leading-[1.15] mb-3">
@@ -247,7 +247,7 @@ export const LeftFieldMockup = () => {
               </div>
 
                 <aside className="lg:col-span-5 lg:pl-10 lg:border-l lg:border-[var(--rule)]">
-                  <Overline className="text-[var(--accent-ink)] mb-8 block">Recent briefs</Overline>
+                  <Overline className="mb-8 block">Recent briefs</Overline>
                   <ul>
                     {grid.map((p, i) => (
                       <li
@@ -285,7 +285,7 @@ export const LeftFieldMockup = () => {
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
                 <div className="flex items-end justify-between mb-12">
                   <div>
-                    <Overline className="text-[var(--accent-ink)] mb-3 block">The archive</Overline>
+                    <Overline className="mb-3 block">The archive</Overline>
                     <h2 className="font-editorial font-semibold tracking-tight text-3xl lg:text-5xl leading-[1.05]">
                       Earlier briefs.
                     </h2>
@@ -306,14 +306,14 @@ export const LeftFieldMockup = () => {
                           {String(i + 1).padStart(2, '0')}
                         </span>
                         <div className="col-span-12 md:col-span-2">
-                          <Overline className="text-[var(--accent-ink)]">Brief</Overline>
+                          <Overline>Brief</Overline>
                         </div>
-                        <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
+                        <h3 className="col-span-12 md:col-span-7 font-editorial font-semibold text-xl lg:text-[1.5rem] leading-[1.2] group-hover:text-[var(--text-muted)] transition-colors duration-200">
                           {p.title}
                         </h3>
                         <div className="hidden md:flex col-span-2 items-center justify-end gap-3">
                           <Overline>{fmtDate(p.created_at)}</Overline>
-                          <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent-ink)] transition-colors duration-200" strokeWidth={1.5} />
+                          <ArrowUpRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors duration-200" strokeWidth={1.5} />
                         </div>
                       </a>
                     </li>
@@ -335,7 +335,7 @@ export const LeftFieldMockup = () => {
             <Link
               to="/state-of-play"
               data-testid="leftfield-upgrade"
-              className="font-plex text-base text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-colors duration-200"
+              className="font-plex text-base text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-colors duration-200"
             >
               Read The State of Play
             </Link>
