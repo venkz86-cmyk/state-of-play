@@ -23,7 +23,7 @@ const Meta = ({ post, read, className = '' }) => (
 );
 
 const titleClass = (read) =>
-  `transition-colors duration-300 ${read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--accent-ink)]'}`;
+  `transition-colors duration-300 ${read ? 'text-[var(--text-muted)]' : 'text-[var(--text)] group-hover:text-[var(--text)]'}`;
 
 // Lead card -- the single most recent story, same treatment as the
 // homepage's own hero: image (when the post has one), theme label, big

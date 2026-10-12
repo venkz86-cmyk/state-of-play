@@ -311,7 +311,7 @@ export const AccountMockup = () => {
                 >
                   <Link to={`/${p.id}`} className="flex-1 min-w-0">
                     <StoryLabel post={p} small showAccess={false} className="mb-1" />
-                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
+                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors duration-200">
                       {p.title}
                     </h3>
                   </Link>
@@ -324,7 +324,7 @@ export const AccountMockup = () => {
                       onClick={() => handleRemoveSaved(p.id)}
                       data-testid={`account-unsave-${p.id}`}
                       aria-label={`Remove ${p.title} from saved`}
-                      className="font-plex text-xs text-[var(--text-muted)] hover:text-[var(--accent-ink)] underline underline-offset-[4px] decoration-1 transition-colors duration-200"
+                      className="font-plex text-xs text-[var(--text-muted)] hover:text-[var(--text)] underline underline-offset-[4px] decoration-1 transition-colors duration-200"
                     >
                       Remove
                     </button>
@@ -361,7 +361,7 @@ export const AccountMockup = () => {
                   <div className="flex-1 min-w-0">
                     {/* Fallback only for history recorded before theme was added to addToReadingHistory */}
                     <StoryLabel post={p} small showAccess={false} className="mb-1" />
-                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors duration-200">
+                    <h3 className="font-editorial font-medium text-base lg:text-[1.0625rem] leading-snug text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors duration-200">
                       {p.title}
                     </h3>
                   </div>
@@ -420,7 +420,7 @@ export const AccountMockup = () => {
                       type="button"
                       onClick={onClick}
                       data-testid={`account-tool-${title.toLowerCase().split(' ')[0]}`}
-                      className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                      className="font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                     >
                       {cta}
                     </button>
@@ -428,7 +428,7 @@ export const AccountMockup = () => {
                     <a
                       href={href}
                       data-testid={`account-tool-${title.toLowerCase().split(' ')[0]}`}
-                      className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                      className="font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                     >
                       {cta}
                     </a>

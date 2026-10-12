@@ -106,11 +106,11 @@ export const AboutMockup = () => (
             Over 18 years he has worked with Indian publications including <em>Hindustan Times</em>, Yahoo! Cricket, <em>Mint</em>, <em>The Ken</em>, <em>The Economic Times</em>, <em>The Times of India</em> and <em>The Indian Express</em>.
           </p>
           <div className="flex items-center gap-6">
-            <a href="https://www.linkedin.com/in/venkat-ananth/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:text-[var(--accent-ink)] hover:decoration-2 transition-all">
+            <a href="https://www.linkedin.com/in/venkat-ananth/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:text-[var(--text-muted)] hover:decoration-2 transition-all">
               <Linkedin className="h-3.5 w-3.5" strokeWidth={1.5} />
               LinkedIn
             </a>
-            <a href="mailto:venkat@stateofplay.club" className="inline-flex items-center gap-2 font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:text-[var(--accent-ink)] hover:decoration-2 transition-all">
+            <a href="mailto:venkat@stateofplay.club" className="inline-flex items-center gap-2 font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:text-[var(--text-muted)] hover:decoration-2 transition-all">
               <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
               venkat@stateofplay.club
             </a>

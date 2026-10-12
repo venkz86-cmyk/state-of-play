@@ -67,7 +67,7 @@ const Notice = ({ title, body }) => (
     </p>
     <a
       href="https://www.stateofplay.club"
-      className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+      className="font-plex text-[14px] text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
     >
       ← Back to The State of Play
     </a>
@@ -212,7 +212,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
     () => (seatsTotal > 0 ? Math.min(100, (seatsUsed / seatsTotal) * 100) : 0),
     [seatsUsed, seatsTotal]
   );
-  const fillColor = seatsFull ? 'var(--text)' : 'var(--accent-burgundy)';
+  const fillColor = seatsFull ? 'var(--text)' : 'var(--text)';
   // company_domain may be a single domain ("acme.in") OR a comma/whitespace
   // separated list ("sportzinteractive.net, marathon-edge.com") for bespoke
   // clients that span multiple corporate domains.
@@ -345,7 +345,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">{k}</Overline>
                 <p
                   className="font-editorial font-medium text-lg lg:text-xl leading-tight"
-                  style={{ color: accent ? 'var(--accent-burgundy)' : 'var(--text)' }}
+                  style={{ color: accent ? 'var(--text)' : 'var(--text)' }}
                 >
                   {v}
                 </p>
@@ -409,7 +409,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 </p>
               )}
               {successMessage && (
-                <p className="font-plex text-[13px] mt-3" style={{ color: 'var(--accent-burgundy)' }} data-testid="teams-add-success">
+                <p className="font-plex text-[13px] mt-3" style={{ color: 'var(--text)' }} data-testid="teams-add-success">
                   ✓ {successMessage}
                 </p>
               )}
@@ -421,7 +421,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 All {seatsTotal} seats are in use. Remove a member to add someone new, or write to{' '}
                 <a
                   href="mailto:prerna@stateofplay.club?subject=Upgrade%20team%20plan"
-                  className="text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1"
+                  className="text-[var(--text)] underline underline-offset-[5px] decoration-1"
                 >
                   prerna@stateofplay.club
                 </a>{' '}
@@ -445,7 +445,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                 const isPending = pendingRemove === m.member_id;
                 const status = memberStatus(m.last_seen_at);
                 const statusColor =
-                  status.tone === 'accent' ? 'var(--accent-burgundy)' : 'var(--text-muted)';
+                  status.tone === 'accent' ? 'var(--text)' : 'var(--text-muted)';
                 return (
                   <li
                     key={m.member_id}
@@ -472,7 +472,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                             type="button"
                             onClick={() => { setRemoveError(''); setPendingRemove(m.member_id); }}
                             data-testid={`teams-remove-${m.member_id}`}
-                            className="font-plex text-[12px] text-[var(--text-muted)] hover:text-[var(--accent-ink)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
+                            className="font-plex text-[12px] text-[var(--text-muted)] hover:text-[var(--text)] hover:underline underline-offset-[4px] decoration-1 transition-colors"
                           >
                             Remove
                           </button>
@@ -539,7 +539,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
               <button
                 type="button"
                 onClick={() => setInvoiceOpen(true)}
-                className="font-plex text-[14px] text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+                className="font-plex text-[14px] text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
                 data-testid="teams-invoice-link"
               >
                 Download invoice
@@ -557,7 +557,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
             Questions about your subscription? Write to{' '}
             <a
               href="mailto:prerna@stateofplay.club"
-              className="text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
+              className="text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2 transition-all"
             >
               prerna@stateofplay.club
             </a>

@@ -83,7 +83,7 @@ const TestimonialBlock = () => {
               </div>
             )}
           </div>
-          <div className="lg:col-span-9 max-w-[60ch] border-l-2 border-[var(--accent-burgundy)] pl-6 lg:pl-8">
+          <div className="lg:col-span-9 max-w-[60ch] border-l-2 border-[var(--text)] pl-6 lg:pl-8">
             <blockquote className="font-reading italic text-[19px] leading-relaxed text-[var(--text)]">
               {t.quote.map((para, idx) => (
                 <p key={idx} className={idx < t.quote.length - 1 ? 'mb-4' : ''}>
@@ -201,7 +201,7 @@ export const HomeMockup = () => {
           <Link
             to="/season-one"
             data-testid="home-season-link"
-            className="font-plex text-[14px] font-normal text-[var(--text-muted)] hover:text-[var(--accent-ink)] transition-colors duration-200"
+            className="font-plex text-[14px] font-normal text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
           >
             {/* Tabular figures on the number only: on the whole line they
                 widen the full stop and render "No . 8". */}
@@ -238,7 +238,7 @@ export const HomeMockup = () => {
                 </div>
               )}
               <StoryLabel post={lead} className="mb-3" />
-              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--accent-ink)] transition-colors duration-300">
+              <h1 className="font-editorial font-semibold tracking-tight text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] text-[var(--text)] mb-4 max-w-[22ch] group-hover:text-[var(--text-muted)] transition-colors duration-300">
                 {lead.title}
               </h1>
               {lead.subtitle && (
@@ -320,7 +320,7 @@ export const HomeMockup = () => {
                 className="group block"
               >
                 <StoryLabel post={a} className="mb-3" />
-                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--accent-ink)] transition-colors duration-300">
+                <h2 className="font-editorial font-medium tracking-tight text-xl lg:text-[1.5rem] leading-[1.2] text-[var(--text)] mb-3 group-hover:text-[var(--text-muted)] transition-colors duration-300">
                   {a.title}
                 </h2>
                 {a.subtitle && (

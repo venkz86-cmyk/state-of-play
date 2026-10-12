@@ -22,7 +22,7 @@ export const STATUS_LABELS = {
 // green once it held, struck through once it didn't.
 const STATUS_STYLES = {
   heard: 'border-[var(--rule)] text-[var(--text)]',
-  checking: 'border-[var(--accent-burgundy)] text-[var(--accent-ink)]',
+  checking: 'border-[var(--text)] text-[var(--text)]',
   confirmed: 'border-[#2F6B3A] text-[#2F6B3A] dark:border-[#7FBF8A] dark:text-[#7FBF8A]',
   didnt_hold: 'border-[var(--rule)] text-[var(--text-label)] line-through',
 };
@@ -64,7 +64,7 @@ const P = ({ children }) => (
 
 const buttonClass =
   'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-11 px-6 transition-colors duration-200 disabled:opacity-60';
-const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors';
+const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--text-muted)] transition-colors';
 
 const ReplyBox = ({ dropId }) => {
   const [open, setOpen] = useState(false);
@@ -87,7 +87,7 @@ const ReplyBox = ({ dropId }) => {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="mz-reply-open"
-        className="mt-4 font-plex text-sm text-[var(--accent-ink)] underline underline-offset-[6px] decoration-1 hover:decoration-2"
+        className="mt-4 font-plex text-sm text-[var(--text)] underline underline-offset-[6px] decoration-1 hover:decoration-2"
       >
         Know something about this?
       </button>
@@ -163,7 +163,7 @@ const Note = ({ drop, isNew }) => (
       <StatusChip status={drop.status} />
       <span className="font-plex text-sm text-[var(--text-label)]">{longDate(drop.created_at)}</span>
       {isNew && (
-        <span data-testid="mz-new" className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--accent-ink)]">New</span>
+        <span data-testid="mz-new" className="font-plex text-[11px] uppercase tracking-[0.06em] text-[var(--text)]">New</span>
       )}
       {drop.tags.map((tag) => (
         <span key={tag} className="font-plex text-sm text-[var(--text-muted)]">#{tag}</span>

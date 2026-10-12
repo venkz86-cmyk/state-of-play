@@ -95,7 +95,7 @@ export const MockupHeader = () => {
                 className={`font-plex text-[15px] whitespace-nowrap transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'text-[var(--accent-ink)]'
-                    : 'text-[var(--text)] hover:text-[var(--accent-ink)]'
+                    : 'text-[var(--text)] hover:text-[var(--text-muted)]'
                 }`}
               >
                 {item.label}
@@ -125,7 +125,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/account"
                   data-testid="mockup-header-account"
-                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-ink)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--text-muted)] transition-colors duration-200"
                 >
                   {memberName ? memberName.split(' ')[0] : 'My Account'}
                 </Link>
@@ -133,7 +133,7 @@ export const MockupHeader = () => {
                   type="button"
                   onClick={logout}
                   data-testid="mockup-header-logout"
-                  className="font-plex text-[15px] text-[var(--text-muted)] hover:text-[var(--accent-ink)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
                 >
                   Sign out
                 </button>
@@ -143,7 +143,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/login"
                   data-testid="mockup-header-login"
-                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--accent-ink)] transition-colors duration-200"
+                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--text-muted)] transition-colors duration-200"
                 >
                   Sign in
                 </Link>

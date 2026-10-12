@@ -50,7 +50,7 @@ export const GiftMockup = () => {
         </p>
         <p className="font-plex text-sm text-[var(--text-muted)]">
           Already have a gift code?{' '}
-          <Link to="/gift/redeem" className="text-[var(--accent-ink)] underline underline-offset-4" data-testid="gift-redeem-link">
+          <Link to="/gift/redeem" className="text-[var(--text)] underline underline-offset-4" data-testid="gift-redeem-link">
             Redeem it
           </Link>.
         </p>

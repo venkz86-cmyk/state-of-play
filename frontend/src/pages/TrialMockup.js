@@ -123,11 +123,11 @@ export const TrialMockup = () => {
             )}
             <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
               {!user?.email && (
-                <a href="/login" className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4">
+                <a href="/login" className="font-plex text-sm text-[var(--text)] underline underline-offset-4">
                   Sign in
                 </a>
               )}
-              <a href="/" className="font-plex text-sm text-[var(--accent-ink)] underline underline-offset-4">
+              <a href="/" className="font-plex text-sm text-[var(--text)] underline underline-offset-4">
                 Start reading
               </a>
             </div>
@@ -187,7 +187,7 @@ export const TrialMockup = () => {
           <p className="font-editorial italic text-lg mb-8">How the month works</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8" data-testid="trial-track">
             {TRACK.map(([day, title, desc], i) => (
-              <div key={day} className="border-l-2 pl-4" style={{ borderColor: i === 0 ? 'var(--accent-burgundy)' : 'var(--rule)' }}>
+              <div key={day} className="border-l-2 pl-4" style={{ borderColor: i === 0 ? 'var(--text)' : 'var(--rule)' }}>
                 <p className="font-plex text-xs tracking-[0.1em] uppercase text-[var(--text-label)] tabular-nums mb-2">{day}</p>
                 <h3 className="font-editorial font-medium text-xl leading-snug mb-1.5">{title}</h3>
                 <p className="font-plex text-[15px] leading-relaxed text-[var(--text-muted)]">{desc}</p>
@@ -224,7 +224,7 @@ export const TrialMockup = () => {
             {!user ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]" data-testid="trial-upgrade-signin">
                 <span className="font-editorial font-medium text-lg text-[var(--text)]">Already in The Ten?</span>{' '}
-                <a href="/login" className="text-[var(--accent-ink)] underline underline-offset-4">Sign in to upgrade.</a>
+                <a href="/login" className="text-[var(--text)] underline underline-offset-4">Sign in to upgrade.</a>
               </p>
             ) : justUpgraded ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]">

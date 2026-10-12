@@ -193,7 +193,7 @@ export const GiftRedeemMockup = () => {
         ) : (
           <>
             {gift?.personal_note && (
-              <p className="font-plex text-base italic text-[var(--text-muted)] border-l-2 border-[var(--accent-burgundy)] pl-4 mb-8">
+              <p className="font-plex text-base italic text-[var(--text-muted)] border-l-2 border-[var(--text)] pl-4 mb-8">
                 “{gift.personal_note}”
               </p>
             )}

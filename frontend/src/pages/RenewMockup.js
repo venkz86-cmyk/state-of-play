@@ -16,7 +16,7 @@ const P = ({ children }) => (
   <p className="font-plex text-base lg:text-lg leading-relaxed text-[var(--text-muted)]">{children}</p>
 );
 
-const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors';
+const linkClass = 'text-[var(--text)] underline underline-offset-4 hover:text-[var(--text-muted)] transition-colors';
 
 /* Venkat's letter to members at the end of their first year, laid out
    like /teams. annual_renewal.py's reminder and grace emails link here

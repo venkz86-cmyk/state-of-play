@@ -139,7 +139,7 @@ export const GiftArticleModal = ({
         {/* Editorial header strip */}
         <div className="px-8 pt-8 pb-6 border-b border-[var(--rule)]">
           <div className="flex items-center gap-2 mb-4">
-            <Gift className="w-4 h-4 text-[var(--accent-ink)]" strokeWidth={1.5} />
+            <Gift className="w-4 h-4 text-[var(--text)]" strokeWidth={1.5} />
             <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)]">
               {view === 'link' ? 'Gift · reader to reader' : 'Nominate a reader'}
             </span>
@@ -246,7 +246,7 @@ export const GiftArticleModal = ({
                   type="button"
                   onClick={() => setView('email')}
                   data-testid="gift-modal-switch-email"
-                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--accent-ink)] transition-colors"
+                  className="text-[var(--text)] underline underline-offset-4 hover:text-[var(--text-muted)] transition-colors"
                 >
                   Nominate a reader instead
                 </button>.
@@ -259,7 +259,7 @@ export const GiftArticleModal = ({
                   type="button"
                   onClick={() => setView('link')}
                   data-testid="gift-modal-switch-link"
-                  className="font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--accent-ink)] transition-colors mb-6"
+                  className="font-plex text-[13px] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6"
                 >
                   ← Get a shareable link instead
                 </button>
@@ -286,7 +286,7 @@ export const GiftArticleModal = ({
                     type="button"
                     onClick={clearBlock}
                     data-testid="gift-modal-blocked-duplicate-try-another"
-                    className="font-plex text-[15px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                    className="font-plex text-[15px] text-[var(--text)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
                     Nominate someone else
                   </button>
@@ -385,8 +385,8 @@ export const GiftArticleModal = ({
               ) : (
                 <div data-testid="gift-modal-confirmation" className="max-w-[46ch]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-[var(--accent-ink)]" strokeWidth={1.5} />
-                    <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--accent-ink)]">
+                    <Sparkles className="w-4 h-4 text-[var(--text)]" strokeWidth={1.5} />
+                    <span className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text)]">
                       Name put forward
                     </span>
                   </div>
@@ -400,7 +400,7 @@ export const GiftArticleModal = ({
                     type="button"
                     onClick={reset}
                     data-testid="gift-modal-again"
-                    className="font-plex text-[15px] text-[var(--accent-ink)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
+                    className="font-plex text-[15px] text-[var(--text)] underline underline-offset-[5px] decoration-1 hover:decoration-2"
                   >
                     Nominate someone else
                   </button>
