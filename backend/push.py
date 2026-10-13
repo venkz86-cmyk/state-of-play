@@ -51,7 +51,6 @@ PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 CHECK_EVERY_SECONDS = 300
 LEFT_FIELD_EVERY = 2          # loops, so every 10 minutes
-LEFT_FIELD_FEED = 'https://theleftfield.substack.com/feed'
 FRESH_HOURS = 6
 VAPID_CONTACT = 'mailto:venkat@stateofplay.club'
 # The server sends to whatever address a browser gives it, so only the
@@ -327,24 +326,19 @@ async def check_new_stories() -> list:
     return out
 
 
-def _read_left_field() -> list:
-    import feedparser
-    import calendar
-    out = []
-    for e in feedparser.parse(LEFT_FIELD_FEED).entries[:5]:
-        stamp = e.get('published_parsed') or e.get('updated_parsed')
-        out.append({
-            'id': 'lf:' + str(e.get('id') or e.get('link') or ''),
-            'title': (e.get('title') or '').strip(),
-            'url': e.get('link') or 'https://theleftfield.substack.com',
-            'published': datetime.fromtimestamp(calendar.timegm(stamp), tz=timezone.utc) if stamp else None,
-        })
-    return [x for x in out if x['id'] != 'lf:']
+def _push_entries(editions: list) -> list:
+    """The five newest editions from left_field_notes.refresh(), keyed as
+    they always were ('lf:' + the feed's id) so nothing is sent twice."""
+    return [{'id': 'lf:' + e['guid'], 'title': e['title'], 'url': e['url'], 'published': e['published']}
+            for e in editions[:5]]
 
 
-async def check_left_field() -> list:
+async def check_left_field(editions: Optional[list] = None) -> list:
     """One pass over the Substack feed: notify for editions not yet sent."""
-    entries = await asyncio.to_thread(_read_left_field)
+    if editions is None:
+        from left_field_notes import refresh
+        editions = await refresh()
+    entries = _push_entries(editions)
     if not entries:
         return []
     if not await _db.push_sent.find_one({'_id': 'lf-started'}):
@@ -385,12 +379,8 @@ async def watch_loop():
                 logger.error(f'push: story check failed: {e!r}')
             if loops % LEFT_FIELD_EVERY == 0:
                 try:
-                    from left_field_notes import ingest
-                    await ingest()
-                except Exception as e:
-                    logger.error(f'push: Left Field notes failed: {e!r}')
-                try:
-                    await check_left_field()
+                    from left_field_notes import refresh
+                    await check_left_field(await refresh())
                 except Exception as e:
                     logger.error(f'push: Left Field check failed: {e!r}')
         loops += 1
