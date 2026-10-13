@@ -129,6 +129,8 @@ export const AppMockup = () => {
                 <ul className="border-t border-[var(--rule)]">
                   <Choice title="New stories" desc="When a story is published" testId="app-pref-stories"
                     on={prefs ? prefs.stories : true} disabled={!prefs} onChange={(v) => choose('stories', v)} />
+                  <Choice title="The Left Field" desc="Each new edition, twice a week" testId="app-pref-left-field"
+                    on={prefs ? prefs.left_field : true} disabled={!prefs} onChange={(v) => choose('left_field', v)} />
                   {mzEligible && (
                     <Choice title="Mixed Zone notes" desc="New notes, and when one is confirmed" testId="app-pref-mixed-zone"
                       on={prefs ? prefs.mixed_zone : true} disabled={!prefs} onChange={(v) => choose('mixed_zone', v)} />

@@ -17,8 +17,11 @@ story. It doesn't depend on email, so it never lands in Promotions.
     published in the last 6 hours count, so a backdated post stays quiet.
   * Dashboard: GET /api/admin/push (devices, last sent, paused),
     POST /api/admin/push/pause, POST /api/admin/push/test.
-  * Choices: each phone keeps its own (topics.stories, topics.mixed_zone,
-    both on until switched off at /app). Mixed Zone notes go only to phones
+  * The Left Field: the Substack feed is checked every 10 minutes and each
+    new edition goes out the same way (first run marks what's out as sent,
+    only editions from the last 6 hours count).
+  * Choices: each phone keeps its own (topics.stories, topics.left_field,
+    topics.mixed_zone, all on until switched off at /app). Mixed Zone notes go only to phones
     signed in as an annual member (mixed_zone.is_annual_member), checked at
     the moment of sending: a new note, and a note marked confirmed.
 """
@@ -47,6 +50,8 @@ _db = None
 PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 CHECK_EVERY_SECONDS = 300
+LEFT_FIELD_EVERY = 2          # loops, so every 10 minutes
+LEFT_FIELD_FEED = 'https://theleftfield.substack.com/feed'
 FRESH_HOURS = 6
 VAPID_CONTACT = 'mailto:venkat@stateofplay.club'
 # The server sends to whatever address a browser gives it, so only the
@@ -165,7 +170,7 @@ async def subscribe(body: SubscribeBody, request: Request):
         {'$set': {'endpoint': body.endpoint, 'keys': {'p256dh': p256dh, 'auth': auth},
                   'email': (session.get('email') or '').lower() or None,
                   'agent': (request.headers.get('user-agent') or '')[:200], 'updated_at': now},
-         '$setOnInsert': {'created_at': now, 'topics': {'stories': True, 'mixed_zone': True}}},
+         '$setOnInsert': {'created_at': now, 'topics': {'stories': True, 'left_field': True, 'mixed_zone': True}}},
         upsert=True,
     )
     return {'ok': True}
@@ -185,12 +190,13 @@ async def unsubscribe(body: UnsubscribeBody):
 class PrefsBody(BaseModel):
     endpoint: str = Field(..., min_length=10, max_length=1000)
     stories: Optional[bool] = None
+    left_field: Optional[bool] = None
     mixed_zone: Optional[bool] = None
 
 
 def _topics(doc: Optional[dict]) -> dict:
     t = (doc or {}).get('topics') or {}
-    return {'stories': t.get('stories', True) is not False, 'mixed_zone': t.get('mixed_zone', True) is not False}
+    return {k: t.get(k, True) is not False for k in ('stories', 'left_field', 'mixed_zone')}
 
 
 @router.post('/api/push/prefs')
@@ -203,7 +209,8 @@ async def prefs(body: PrefsBody):
     doc = await _db.push_subscriptions.find_one({'_id': key})
     if not doc:
         raise HTTPException(status_code=404, detail='Turn on notifications first.')
-    changes = {f'topics.{k}': v for k, v in (('stories', body.stories), ('mixed_zone', body.mixed_zone)) if v is not None}
+    changes = {f'topics.{k}': v for k, v in (('stories', body.stories), ('left_field', body.left_field),
+                                              ('mixed_zone', body.mixed_zone)) if v is not None}
     if changes:
         await _db.push_subscriptions.update_one({'_id': key}, {'$set': changes})
         doc = await _db.push_subscriptions.find_one({'_id': key})
@@ -320,14 +327,66 @@ async def check_new_stories() -> list:
     return out
 
 
+def _read_left_field() -> list:
+    import feedparser
+    import calendar
+    out = []
+    for e in feedparser.parse(LEFT_FIELD_FEED).entries[:5]:
+        stamp = e.get('published_parsed') or e.get('updated_parsed')
+        out.append({
+            'id': 'lf:' + str(e.get('id') or e.get('link') or ''),
+            'title': (e.get('title') or '').strip(),
+            'url': e.get('link') or 'https://theleftfield.substack.com',
+            'published': datetime.fromtimestamp(calendar.timegm(stamp), tz=timezone.utc) if stamp else None,
+        })
+    return [x for x in out if x['id'] != 'lf:']
+
+
+async def check_left_field() -> list:
+    """One pass over the Substack feed: notify for editions not yet sent."""
+    entries = await asyncio.to_thread(_read_left_field)
+    if not entries:
+        return []
+    if not await _db.push_sent.find_one({'_id': 'lf-started'}):
+        for e in entries:
+            await _db.push_sent.update_one({'_id': e['id']}, {'$setOnInsert': {'title': e['title'], 'skipped': True}}, upsert=True)
+        await _db.push_sent.insert_one({'_id': 'lf-started', 'at': datetime.now(timezone.utc)})
+        return []
+    settings = await _db.app_settings.find_one({'_id': 'push'}) or {}
+    now = datetime.now(timezone.utc)
+    out = []
+    for e in reversed(entries):
+        if not e['published'] or now - e['published'] > timedelta(hours=FRESH_HOURS):
+            continue
+        try:
+            await _db.push_sent.insert_one({'_id': e['id'], 'title': e['title'], 'claimed_at': now})
+        except Exception:
+            continue
+        if settings.get('paused'):
+            await _db.push_sent.update_one({'_id': e['id']}, {'$set': {'skipped': True, 'reason': 'paused'}})
+            continue
+        result = await send('The Left Field', e['title'][:140], e['url'], {'topics.left_field': {'$ne': False}})
+        await _db.push_sent.update_one({'_id': e['id']}, {'$set': {**result, 'sent_at': datetime.now(timezone.utc)}})
+        logger.info(f"push: Left Field '{e['title']}' {result}")
+        out.append({'title': e['title'], **result})
+    return out
+
+
 async def watch_loop():
     await asyncio.sleep(30)
+    loops = 0
     while True:
-        try:
-            if _db is not None:
+        if _db is not None:
+            try:
                 await check_new_stories()
-        except Exception as e:
-            logger.error(f'push: story check failed: {e!r}')
+            except Exception as e:
+                logger.error(f'push: story check failed: {e!r}')
+            if loops % LEFT_FIELD_EVERY == 0:
+                try:
+                    await check_left_field()
+                except Exception as e:
+                    logger.error(f'push: Left Field check failed: {e!r}')
+        loops += 1
         await asyncio.sleep(CHECK_EVERY_SECONDS)
 
 
