@@ -23,8 +23,7 @@ import logging
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
@@ -109,32 +108,3 @@ async def send_email(
         logger.warning(f'Resend send error: {e!r}')
         await _record_failure(to, subject, f'Could not reach Resend: {e!r}')
         return False
-
-
-class TestSendRequest(BaseModel):
-    to: EmailStr
-
-
-@router.post('/api/admin/test-email')
-async def test_email(
-    req: TestSendRequest,
-    x_admin_key: Optional[str] = Header(None, alias='X-Admin-Key'),
-):
-    """Temporary, admin-gated: fires one real send through Resend so
-    delivery can be confirmed against the real deployed backend (checking
-    both the inbox and Resend's own dashboard logs) before anything real
-    is built on top of this module. Remove once the gift flow's own
-    emails are live and have been verified once."""
-    if not ADMIN_KEY:
-        raise HTTPException(status_code=503, detail='Admin key not configured on server')
-    if not x_admin_key or x_admin_key != ADMIN_KEY:
-        raise HTTPException(status_code=403, detail='Invalid admin key')
-
-    ok = await send_email(
-        to=req.to,
-        subject='Resend test — backend integration',
-        html='<p>This is a live test send from the backend, confirming Resend delivery works end to end before anything real depends on it.</p>',
-    )
-    if not ok:
-        raise HTTPException(status_code=502, detail='Send failed — check Render logs for the Resend response')
-    return {'sent': True}

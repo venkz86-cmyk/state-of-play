@@ -45,7 +45,7 @@ from typing import Optional
 
 import jwt
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 
 from admin_auth import require_admin_key_or_session
 from tiers import find_ghost_member, is_genuinely_paid

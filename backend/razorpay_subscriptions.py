@@ -62,14 +62,10 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter
 
-from tiers import PLAN_LABELS, ensure_member_labeled
-from payments import fetch_and_record, claim_payment
 from subscription_grace import start_grace_period
-from resend_email import send_email
-from email_layout import email_shell, email_cta_button
+from email_layout import email_shell
 
 logger = logging.getLogger(__name__)
 
@@ -115,52 +111,6 @@ SUBSCRIPTION_PLANS = {
 # A Razorpay Subscription needs a finite total_count, not true "forever".
 # 100 yearly cycles reads as effectively indefinite for a publication.
 TOTAL_COUNT_YEARS = 100
-
-
-def _resolve_plan_config(country: str) -> Optional[dict]:
-    geo = country if country in SUBSCRIPTION_PLANS else 'IN'
-    return SUBSCRIPTION_PLANS.get(geo)
-
-
-class CreateSubscriptionRequest(BaseModel):
-    country: str = 'IN'
-
-
-@router.post('/api/razorpay/create-subscription')
-async def create_subscription(req: CreateSubscriptionRequest):
-    if not _razorpay_client:
-        raise HTTPException(status_code=503, detail='Razorpay not configured')
-
-    config = _resolve_plan_config(req.country)
-    if not config:
-        raise HTTPException(
-            status_code=400,
-            detail=f"No pricing configured for country='{req.country}'",
-        )
-    if not config['plan_id']:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Razorpay Plan not yet created for country='{req.country}'",
-        )
-
-    try:
-        subscription = _razorpay_client.subscription.create({
-            'plan_id': config['plan_id'],
-            'customer_notify': 1,
-            'total_count': TOTAL_COUNT_YEARS,
-            'notes': {'country': req.country},
-        })
-    except Exception as e:
-        logger.error(f'Razorpay subscription creation failed: {e!r}')
-        raise HTTPException(status_code=502, detail='Could not create subscription')
-
-    return {
-        'subscription_id': subscription['id'],
-        'amount': config['amount'],
-        'currency': config['currency'],
-        'key_id': os.environ.get('RAZORPAY_KEY_ID', ''),
-        'label': config['label'],
-    }
 
 
 def _renewal_thank_you_email_html() -> str:
@@ -212,70 +162,6 @@ def _renewal_thank_you_email_html() -> str:
         ),
         signoff_title='Founder and editor,<br>The State of Play',
     )
-
-
-class VerifySubscriptionRequest(BaseModel):
-    razorpay_subscription_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
-    email: EmailStr
-    name: Optional[str] = ''
-
-
-@router.post('/api/razorpay/verify-subscription')
-async def verify_subscription(req: VerifySubscriptionRequest, request: Request):
-    if not _razorpay_client:
-        raise HTTPException(status_code=503, detail='Razorpay not configured')
-
-    try:
-        _razorpay_client.utility.verify_subscription_payment_signature({
-            'razorpay_subscription_id': req.razorpay_subscription_id,
-            'razorpay_payment_id': req.razorpay_payment_id,
-            'razorpay_signature': req.razorpay_signature,
-        })
-    except Exception:
-        logger.warning(f'Razorpay subscription signature verification failed for subscription={req.razorpay_subscription_id}')
-        raise HTTPException(status_code=400, detail='Payment signature verification failed')
-
-    if not GHOST_ADMIN_API_KEY:
-        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
-
-    token = _create_ghost_admin_token()
-    if not token:
-        raise HTTPException(status_code=503, detail='Failed to create Ghost admin token')
-
-    # The signed-in member renewing, when there is one (renewals start
-    # from the account page); a typed email only for an anonymous checkout.
-    from session_auth import get_current_member
-    session = await get_current_member(request)
-    email = session['email'] if session else req.email.lower().strip()
-
-    # One payment, one account (see payments.claim_payment).
-    is_repeat = await claim_payment(req.razorpay_payment_id, email, 'subscription') == 'repeat'
-
-    # Same full paid membership access as the one-shot standard plan --
-    # just billed on a real recurring schedule instead of once.
-    member = await ensure_member_labeled(email, req.name or '', PLAN_LABELS['standard'], token)
-    if not member:
-        raise HTTPException(
-            status_code=502,
-            detail='Payment verified but member setup failed, contact support',
-        )
-
-    if _recent_payments is not None:
-        _recent_payments[email] = datetime.now(timezone.utc)
-
-    await fetch_and_record(
-        _razorpay_client, req.razorpay_payment_id, source='subscription_verify',
-        fallback_email=email, fallback_plan='',
-    )
-
-    if not is_repeat:
-        sent = await send_email(to=email, subject='Thank you for staying', html=_renewal_thank_you_email_html())
-        if not sent:
-            logger.warning(f'verify-subscription: renewal thank-you email failed to send for {email}')
-
-    return {'verified': True, 'email': email}
 
 
 async def handle_subscription_webhook_event(event: str, payload: dict) -> None:

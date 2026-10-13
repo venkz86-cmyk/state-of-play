@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { authHeader } from '../lib/sessionToken';
 import { ghostAPI } from '../services/ghostAPI';
 import { Overline } from './MockupLayout';
 import { RazorpayCheckoutButton } from './RazorpayCheckoutButton';
@@ -104,7 +105,7 @@ export const TheTenPanel = ({ email, country = 'IN' }) => {
     if (!email || !API) return;
     (async () => {
       try {
-        const r = await axios.get(`${API}/api/trial/status`, { params: { email } });
+        const r = await axios.get(`${API}/api/trial/status`, { headers: authHeader() });
         if (!active) return;
         setStatus(r.data);
 
