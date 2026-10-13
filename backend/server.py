@@ -2366,6 +2366,21 @@ async def no_store_for_auth(request: Request, call_next):
     return response
 
 
+# Server errors for the dashboard's Today page (October 2026). Mounted
+# here, and started once the server's event loop is running.
+try:
+    from error_log import router as error_log_router, install as error_log_install, ensure_indexes as error_log_indexes
+    app.include_router(error_log_router)
+
+    @app.on_event("startup")
+    async def start_error_log():
+        if db is not None:
+            error_log_install(db)
+            await error_log_indexes()
+except Exception as _e:
+    logging.warning(f"error_log module not mounted: {_e!r}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     if client:

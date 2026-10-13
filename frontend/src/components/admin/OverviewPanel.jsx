@@ -14,6 +14,12 @@ export const OverviewPanel = ({ onAuthError }) => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  // Server errors (backend error_log.py); a failure to load them never
+  // blocks the rest of Today.
+  const [errors, setErrors] = useState([]);
+  useEffect(() => {
+    adminFetch('/api/admin/errors').then((r) => setErrors(r.errors || [])).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -74,6 +80,10 @@ export const OverviewPanel = ({ onAuthError }) => {
       key: 'unmatched', count: attention.unmatched_payments_count, path: 'tools/link-email',
       text: `${attention.unmatched_payments_count === 1 ? 'payment' : 'payments'} with no Ghost account to match`,
     },
+    errors.length > 0 && {
+      key: 'errors', count: errors.length, anchor: 'today-errors',
+      text: `${errors.length === 1 ? 'error' : 'different errors'} on the server since yesterday`,
+    },
     (attention.email_failures || []).length > 0 && {
       key: 'emails', count: attention.email_failures.length, anchor: 'today-email-failures',
       text: `${attention.email_failures.length === 1 ? 'email' : 'emails'} that failed to send`,
@@ -90,6 +100,14 @@ export const OverviewPanel = ({ onAuthError }) => {
   const open = (item) => {
     if (item.anchor) document.getElementById(item.anchor)?.scrollIntoView({ behavior: 'smooth' });
     else goTo(item.path);
+  };
+  const clearErrors = async () => {
+    try {
+      await adminFetch('/api/admin/errors/clear', { method: 'POST' });
+      setErrors([]);
+    } catch (e) {
+      if (e instanceof AdminAuthError) onAuthError?.();
+    }
   };
   const clearFailures = async () => {
     try {
@@ -269,6 +287,35 @@ export const OverviewPanel = ({ onAuthError }) => {
               <li key={`${r.email}-${r.at}`} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="font-plex text-[14px]">{r.email} <span className="text-[var(--text-muted)]">· {r.reason}</span></span>
                 <span className="font-plex text-[13px] tabular-nums">{r.display} <span className="text-[var(--text-muted)]">· {r.at ? formatDateTime(r.at) : ''}</span></span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {errors.length > 0 && (
+        <section className="mb-10" id="today-errors" data-testid="today-errors">
+          <div className="flex items-baseline justify-between gap-4">
+            <p className={label}>Errors on the server, last 48 hours</p>
+            <button type="button" onClick={clearErrors} data-testid="clear-errors"
+              className="font-plex text-[13px] text-[var(--text-muted)] underline underline-offset-4 hover:text-[var(--text)] shrink-0">
+              Clear the list
+            </button>
+          </div>
+          <p className="font-plex text-[13px] text-[var(--text-muted)] mb-2 max-w-[64ch]">
+            Ask Claude to &ldquo;check the errors&rdquo;. It reads the details from the server logs, so there&rsquo;s
+            nothing to copy. A cleared error comes back if it happens again.
+          </p>
+          <ul>
+            {errors.map((e) => (
+              <li key={e.id} className="border-b border-[var(--rule)] py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                  <span className="font-plex text-[13px] text-[var(--text-muted)]">{e.where}</span>
+                  <span className="font-plex text-[13px] text-[var(--text-muted)]">
+                    {e.count > 1 ? `${e.count} times, last ` : ''}{e.last_at ? formatDateTime(e.last_at) : ''}
+                  </span>
+                </div>
+                <p className="font-plex text-[13px] mt-1 break-words">{e.message.length > 240 ? `${e.message.slice(0, 240)}…` : e.message}</p>
               </li>
             ))}
           </ul>
