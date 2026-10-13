@@ -324,6 +324,14 @@ async def _build_subscriber_rows() -> list[dict]:
         # is confirmed against a real record instead of guessed at.
         ghost_status_downgraded = 'paid-via-razorpay' in label_names and (member.get('status') or 'free') == 'free'
         restore_to_date = compute_synthetic_expiry(last_payment) if ghost_status_downgraded else None
+        # Only someone whose paid year is still running belongs here. A
+        # member whose year has ended keeps their labels through the grace
+        # period, but isn't paying: re-comping them "to" a past date means
+        # nothing, and the Renewals panel already lists them (October 13).
+        if ghost_status_downgraded:
+            restore_end = _utc(restore_to_date)
+            if restore_end is not None and restore_end <= datetime.now(timezone.utc):
+                ghost_status_downgraded, restore_to_date = False, None
 
         rows.append({
             'email': email,
