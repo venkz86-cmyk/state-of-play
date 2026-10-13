@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, formatDateTime } from '../../lib/format';
+import { GhostRestoreRow } from './GhostRestoreRow';
 
 // Phase 6, the checkpoint the whole build was aimed at: one page that
 // answers "who's subscribed, what did they pay, what's expiring, what
@@ -301,17 +302,12 @@ export const OverviewPanel = ({ onAuthError }) => {
         <section className="mb-10">
           <p className={label}>Paying, but Ghost shows free</p>
           <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
-            Ghost's own comp ran out on its own clock. They still read everything on the site. Restore their Ghost
-            status by hand to the date shown.
+            Ghost's own comp ran out on its own clock. They still read everything on the site. Restore in Ghost
+            shows you their payment and access dates first, then comps them in Ghost until their access ends.
           </p>
           <ul>
             {attention.ghost_status_downgraded.map((r) => (
-              <li key={r.email} className="border-b border-[var(--rule)] py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <span className="font-plex text-[14px]">{r.name || r.email} <span className="text-[var(--text-muted)]">({r.email})</span></span>
-                <span className="font-plex text-[13px] text-[var(--accent-ink)]">
-                  restore to {r.restore_to_date ? formatDate(r.restore_to_date) : 'unknown (no payment on record)'}
-                </span>
-              </li>
+              <GhostRestoreRow key={r.email} row={r} onAuthError={onAuthError} />
             ))}
           </ul>
         </section>

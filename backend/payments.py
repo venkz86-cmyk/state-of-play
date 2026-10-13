@@ -486,6 +486,47 @@ async def get_last_membership_payment_for_email(email: str) -> Optional[dict]:
     }
 
 
+# Plans that buy the payer's own year of access. Gifts and team plans are
+# bought for other people, and The Ten is its own 30-day product.
+MEMBERSHIP_PLANS = ('standard', 'renewal', 'trial-upgrade', 'student', 'unknown')
+
+
+async def membership_access(email: str) -> Optional[dict]:
+    """The one answer to "when does this member's paid access run to",
+    from their latest membership payment that still counts (not refunded):
+    {'access_to', 'access_from', 'paid_at', 'plan', 'amount', 'currency',
+    'payment_id'}. access_from is when that year started (a renewal's
+    year starts when the previous one ends) and access_to is the end of
+    it, by compute_synthetic_expiry: the same rule the account page, the
+    dashboard and the renewal run use. None without such a payment, or for
+    an auto-renewing subscription (Razorpay keeps that one's dates)."""
+    if _db is None or not email:
+        return None
+    doc = await _db.payments.find_one(
+        {'email': email.lower().strip(), 'plan': {'$in': list(MEMBERSHIP_PLANS)}, **COUNTS_FOR_ACCESS},
+        sort=[('razorpay_created_at', -1)],
+    )
+    if not doc or doc.get('subscription_id'):
+        return None
+    snapshot = {
+        'plan': doc.get('plan'),
+        'razorpay_created_at': _iso(doc.get('razorpay_created_at')),
+        'access_from': _iso(doc.get('access_from')),
+    }
+    access_to = compute_synthetic_expiry(snapshot)
+    if not access_to:
+        return None
+    return {
+        'access_to': access_to,
+        'access_from': snapshot['access_from'] or snapshot['razorpay_created_at'],
+        'paid_at': snapshot['razorpay_created_at'],
+        'plan': doc.get('plan'),
+        'amount': doc.get('amount'),
+        'currency': doc.get('currency'),
+        'payment_id': doc.get('payment_id'),
+    }
+
+
 async def has_paid_before(email: str, exclude_payment_id: str = '') -> bool:
     """True if this email has a real, non-Trial payment on the ledger
     other than exclude_payment_id. verify_payment uses it to decide

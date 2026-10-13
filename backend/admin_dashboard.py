@@ -42,7 +42,7 @@ from pydantic import BaseModel
 
 from admin_auth import require_admin_key_or_session
 from tiers import list_all_ghost_members, resolve_tier, is_paid_from_labels, delete_ghost_member
-from payments import get_subscriber_payment_summaries, compute_synthetic_expiry, COUNTS_FOR_ACCESS
+from payments import get_subscriber_payment_summaries, compute_synthetic_expiry, COUNTS_FOR_ACCESS, membership_access
 from corporate import fetch_accounts as fetch_corporate_accounts
 
 logger = logging.getLogger(__name__)
@@ -323,7 +323,10 @@ async def _build_subscriber_rows() -> list[dict]:
         # exact Admin API call for re-granting a dated comp subscription
         # is confirmed against a real record instead of guessed at.
         ghost_status_downgraded = 'paid-via-razorpay' in label_names and (member.get('status') or 'free') == 'free'
-        restore_to_date = compute_synthetic_expiry(last_payment) if ghost_status_downgraded else None
+        # Their access end date, from payments.membership_access: the same
+        # date "Restore in Ghost" writes and their account page shows. Not
+        # last_payment, which can be a The Ten or a gift bought for someone.
+        restore_to_date = (await membership_access(email) or {}).get('access_to') if ghost_status_downgraded else None
         # Only someone whose paid year is still running belongs here. A
         # member whose year has ended keeps their labels through the grace
         # period, but isn't paying: re-comping them "to" a past date means
@@ -376,6 +379,144 @@ def _within_days(computed_expiry: Optional[str], days: int, now: datetime) -> bo
     except (ValueError, TypeError):
         return False
     return now <= exp_dt <= now + timedelta(days=days)
+
+
+# ─── Restore in Ghost: re-comp a paying member whose Ghost comp ran out ──────
+# Razorpay members are comped by hand in Ghost so Ghost's free/paid lists
+# (and any email sent only to paid members) stay right. Those comps were
+# set to end a year after the first payment, so a member who renews shows
+# as free in Ghost though they're paying ("Paying, but Ghost shows free" on
+# Today). This sets their Ghost comp to end on their access end date.
+#
+# The date is never taken from the browser: it's worked out here, from the
+# payments ledger (payments.membership_access, the same date the account
+# page and the renewal run use), and the request is refused if the date
+# the page showed differs. After writing, the member is read back from
+# Ghost and the restore only counts if Ghost shows them comped until that
+# date with their paid labels intact. One member per request.
+RESTORE_MAX_DAYS = 400  # a year, plus The Ten upgrade's extra month, plus slack
+
+
+class GhostRestoreBody(BaseModel):
+    email: str
+    access_to: str  # the access end date the page showed, echoed back
+
+
+def _same_instant(a: Optional[str], b: Optional[str], tolerance: timedelta = timedelta(hours=24)) -> bool:
+    # Ghost may keep a comp's end as the start of that day rather than to
+    # the minute; the exact value it stored is always reported back.
+    x, y = _utc(a), _utc(b)
+    return bool(x and y and abs(x - y) <= tolerance)
+
+
+async def _restore_plan(email: str, token: str) -> dict:
+    """Everything the preview shows and the restore checks, in one place."""
+    from tiers import find_ghost_member
+    email = (email or '').lower().strip()
+    out = {'email': email, 'ok': False, 'problem': ''}
+    member = await find_ghost_member(email, token)
+    if not member:
+        out['problem'] = 'No Ghost member with this email.'
+        return out
+    labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
+    out.update({'name': member.get('name') or '', 'member_id': member.get('id'),
+                'ghost_status': member.get('status') or 'free', 'labels': labels})
+    if 'paid-via-razorpay' not in labels:
+        out['problem'] = 'Not a Razorpay member (no paid-via-razorpay label).'
+        return out
+    access = await membership_access(email)
+    if not access:
+        out['problem'] = 'No membership payment on record to take a date from.'
+        return out
+    out['payment'] = access
+    out['access_to'] = access['access_to']
+    end = _utc(access['access_to'])
+    now = datetime.now(timezone.utc)
+    if not end or end <= now:
+        out['problem'] = 'Their paid year has already ended, so there is nothing to restore.'
+        return out
+    if end - now > timedelta(days=RESTORE_MAX_DAYS):
+        out['problem'] = 'The access end date is more than a year away, which no single payment gives. Check their payments first.'
+        return out
+    if out['ghost_status'] != 'free':
+        out['problem'] = f"Ghost already shows them as {out['ghost_status']}."
+        return out
+    out['ok'] = True
+    return out
+
+
+async def _paid_tier_id(client, token: str) -> tuple[Optional[str], str]:
+    r = await client.get(
+        f'{GHOST_URL}/ghost/api/admin/tiers/',
+        params={'filter': 'type:paid+active:true', 'limit': 'all'},
+        headers={'Authorization': f'Ghost {token}'},
+    )
+    if r.status_code != 200:
+        return None, f'Ghost tiers lookup failed: HTTP {r.status_code}'
+    tiers = r.json().get('tiers') or []
+    if len(tiers) != 1:
+        return None, f'Expected one active paid tier in Ghost, found {len(tiers)}; restore it by hand.'
+    return tiers[0].get('id'), ''
+
+
+@router.get('/api/admin/ghost-restore')
+async def ghost_restore_preview(email: str, _admin: None = Depends(require_admin_key_or_session)):
+    """What a restore would do for this member, without changing anything."""
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+    return await _restore_plan(email, token)
+
+
+@router.post('/api/admin/ghost-restore')
+async def ghost_restore(body: GhostRestoreBody, _admin: None = Depends(require_admin_key_or_session)):
+    token = _create_ghost_admin_token()
+    if not token:
+        raise HTTPException(status_code=503, detail='Ghost Admin API not configured')
+    plan = await _restore_plan(body.email, token)
+    if not plan['ok']:
+        raise HTTPException(status_code=409, detail=plan['problem'])
+    if plan['access_to'] != body.access_to:
+        raise HTTPException(
+            status_code=409,
+            detail='Their payments changed since this page loaded, so the date is different now. Refresh Today and check it again.',
+        )
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        tier_id, problem = await _paid_tier_id(client, token)
+        if not tier_id:
+            raise HTTPException(status_code=502, detail=problem)
+        # Ghost's Admin API comps a member by giving them a tier with an
+        # expiry date (the 'comped' flag is the old way).
+        r = await client.put(
+            f"{GHOST_URL}/ghost/api/admin/members/{plan['member_id']}/",
+            json={'members': [{'tiers': [{'id': tier_id, 'expiry_at': plan['access_to']}]}]},
+            headers={'Authorization': f'Ghost {token}'},
+        )
+        if r.status_code != 200:
+            logger.error(f"ghost-restore: PUT failed for {plan['email']}: HTTP {r.status_code} {r.text[:300]}")
+            raise HTTPException(status_code=502, detail=f'Ghost refused the change (HTTP {r.status_code}). Nothing was changed on our side; restore by hand.')
+        # Read back what Ghost now holds; that's the only thing that counts.
+        g = await client.get(
+            f"{GHOST_URL}/ghost/api/admin/members/{plan['member_id']}/",
+            params={'include': 'labels,tiers'},
+            headers={'Authorization': f'Ghost {token}'},
+        )
+    after = ((g.json().get('members') or [{}])[0]) if g.status_code == 200 else {}
+    after_labels = [(l.get('name') or '').lower() for l in (after.get('labels') or [])]
+    tier_ends = [t.get('expiry_at') for t in (after.get('tiers') or []) if t.get('id') == tier_id]
+    checks = {
+        'comped': after.get('status') == 'comped',
+        'ends_on_access_date': any(_same_instant(e, plan['access_to']) for e in tier_ends),
+        'paid_labels_kept': all(l in after_labels for l in plan['labels'] if l in ('paid-via-razorpay', 'premium-subscriber')),
+    }
+    ok = all(checks.values())
+    log = logger.info if ok else logger.error
+    log(f"ghost-restore: {plan['email']} to {plan['access_to']} (payment {plan['payment'].get('payment_id')}, "
+        f"{plan['payment'].get('plan')}): {checks}; Ghost now status={after.get('status')} tier_ends={tier_ends}")
+    return {
+        'ok': ok, 'email': plan['email'], 'access_to': plan['access_to'], 'checks': checks,
+        'ghost_status': after.get('status'), 'ghost_tier_ends': tier_ends,
+    }
 
 
 # ─── Today: what the overview adds for the Today page ───────────────────────
