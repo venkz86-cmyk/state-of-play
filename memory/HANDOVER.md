@@ -395,3 +395,16 @@ backend/razorpay_orders.py (and the amount_paid sent to Apps Script in
 setup_team_account), the Teams page prices, and
 member_invoices.TEAM_FOUNDING_TAXABLE / TEAM_FOUNDING_LAST_DAY. Invoices
 already use what each team actually paid. Routine: trig_01Ccnea3Qht71AD3U2qKB6AZ.
+
+## Principles for the app (Venkat, October 13, 2026)
+- Reader-friendly design is fundamental: no compromises. Every screen is
+  judged first on how it reads and feels for a reader.
+- The installable site (/app, notifications for new stories, shipped
+  October 13) is the first step to a real iPhone app, then Android.
+  Build towards it; it will take time.
+- Open items before promoting /app: in home-screen mode there are no
+  browser bars (no back button, no pull-to-refresh), so the site needs its
+  own way back from a story and must respect the notch and home bar.
+- Later app plan: Expo; Apple in-app subscription is fine (price covers
+  Apple's cut, Small Business Program 15%); Apple purchases grant the same
+  Ghost labels and go in the payments ledger as "Apple".
