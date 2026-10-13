@@ -5,7 +5,7 @@ access came from a single Razorpay Order, not a Subscription) whose year
 lapses without being renewed.
 
 Distinct from subscription_grace.py, which only reacts to a real
-Razorpay/PayPal Subscription's FAILED CHARGE webhook. A plain one-time
+Razorpay Subscription's FAILED CHARGE webhook. A plain one-time
 Order never attempts to charge again at all -- there's no event to hang
 a response on. So this instead runs as a daily date-driven sweep over
 every standard-equivalent member's computed synthetic expiry
