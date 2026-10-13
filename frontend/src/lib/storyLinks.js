@@ -3,7 +3,10 @@
 // into a bookmark card); the story page shows a card for that story in its
 // place. A link inside a sentence stays a link.
 
-const SITE = String.raw`https?:\/\/(?:www\.)?stateofplay\.club\/([a-z0-9][a-z0-9-]*)\/?(?:[?#][^"]*)?`;
+// Ghost writes links to its own posts with its own address
+// (the-state-of-play.ghost.io); ghostAPI.fixContentLinks normally turns
+// those into stateofplay.club first, and both are accepted here anyway.
+const SITE = String.raw`https?:\/\/(?:(?:www\.)?stateofplay\.club|the-state-of-play\.ghost\.io)\/([a-z0-9][a-z0-9-]*)\/?(?:[?#][^"]*)?`;
 
 // A paragraph holding nothing but one link to a site address.
 const BARE_LINK = new RegExp(String.raw`<p>\s*<a\s[^>]*href="${SITE}"[^>]*>[^<]*<\/a>\s*<\/p>`, 'gi');
@@ -14,7 +17,7 @@ const BOOKMARK = new RegExp(String.raw`<figure[^>]*\bkg-bookmark-card\b[^>]*>\s*
    order. Cards next to each other (only whitespace between) form one group.
    Each card segment keeps its original HTML, shown if a slug isn't a story. */
 export const splitStoryLinks = (html) => {
-  if (!html || !/stateofplay\.club\//i.test(html)) return [{ html: html || '' }];
+  if (!html || !/(stateofplay\.club|the-state-of-play\.ghost\.io)\//i.test(html)) return [{ html: html || '' }];
   const hits = [];
   for (const re of [BARE_LINK, BOOKMARK]) {
     re.lastIndex = 0;
