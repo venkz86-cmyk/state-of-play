@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, ChevronLeft } from 'lucide-react';
 import { SiteSearchTrigger } from './SiteSearch';
+import { IS_APP_MODE, TAB_ROOTS } from '../lib/appMode';
 
 // Single asset. The logo is a flat single-color PNG (brand blue on
 // transparent), so a plain CSS `invert` produced a muddy khaki tone
@@ -44,6 +45,11 @@ export const MockupHeader = () => {
     (previewMember ? 'Venkatesh' : null);
 
   const isActive = (p) => location.pathname === p;
+  // Home-screen app: no browser back button, so every page that isn't a
+  // tab gets one here (back through the app's own history, else home).
+  const navigate = useNavigate();
+  const showBack = IS_APP_MODE && !TAB_ROOTS.includes(location.pathname);
+  const goBack = () => (window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/'));
 
   // The phone menu closes on a new page and on Escape.
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
@@ -72,7 +78,14 @@ export const MockupHeader = () => {
       <a href="#main-content" className="skip-link font-plex text-[14px]" onClick={skipToContent}>Skip to content</a>
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-6">
-          {/* Logo */}
+          {/* Logo, with a back arrow before it in the home-screen app */}
+          <div className="flex items-center gap-1 shrink-0">
+          {showBack && (
+            <button type="button" onClick={goBack} aria-label="Back" data-testid="app-back"
+              className="h-11 w-9 -ml-2.5 inline-flex items-center justify-center text-[var(--text)]">
+              <ChevronLeft className="h-6 w-6" strokeWidth={1.6} />
+            </button>
+          )}
           <Link
             to="/"
             data-testid="mockup-header-logo"
@@ -84,6 +97,7 @@ export const MockupHeader = () => {
               className={`h-10 lg:h-12 w-auto transition-opacity duration-200 group-hover:opacity-80 ${isDark ? 'brightness-0 invert' : ''}`}
             />
           </Link>
+          </div>
 
           {/* Desktop nav — Schibsted Grotesk 15px */}
           <nav className="hidden lg:flex items-center gap-5 xl:gap-8 flex-1 justify-center">
