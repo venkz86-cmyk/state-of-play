@@ -410,6 +410,31 @@ async def get_member_details(request: MemberVerifyRequest, http_request: Request
                     )
                     if comped_razorpay_member:
                         subscriptions = []
+                    # Those comps are set to run out a year after the
+                    # first payment. Once one does, Ghost shows the member
+                    # as free but still lists the old comp and its date,
+                    # which hid a renewal: the first members' comps ended
+                    # October 7, 2026, the day several renewed, and their
+                    # account pages said "lapsed" (Saumil Majmudar, October
+                    # 13). So for a Razorpay member a Ghost date only wins
+                    # when it's later than their payment's, as on the
+                    # admin dashboard (admin_dashboard._build_subscriber_rows).
+                    elif subscriptions and not is_trial_member and (
+                        has_razorpay_label or await has_paid_beyond_trial(member_email)
+                    ):
+                        from admin_dashboard import _ghost_subscription_end
+                        ledger_payment = await get_last_membership_payment_for_email(member_email)
+                        if ledger_payment and not ledger_payment.get('subscription_id'):
+                            payment_end_iso = compute_synthetic_expiry(ledger_payment)
+                            payment_end = (
+                                datetime.fromisoformat(payment_end_iso.replace('Z', '+00:00'))
+                                if payment_end_iso else None
+                            )
+                            if payment_end is not None and payment_end.tzinfo is None:
+                                payment_end = payment_end.replace(tzinfo=timezone.utc)
+                            ghost_end = _ghost_subscription_end(subscriptions)
+                            if payment_end and (not ghost_end or payment_end >= ghost_end):
+                                subscriptions = []
                     # A complimentary year (complimentary.py) shows as
                     # that, with its own end date, instead of Ghost's comp
                     # (which would read as "Renews" with a next charge).
