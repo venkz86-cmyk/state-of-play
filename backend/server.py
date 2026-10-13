@@ -2124,6 +2124,21 @@ except Exception as _e:
     logging.warning(f"error_log module not mounted: {_e!r}")
 
 
+# Phone notifications for new stories (October 2026).
+try:
+    from push import router as push_router, init as push_init, watch_loop as push_watch_loop
+    push_init(db)
+    app.include_router(push_router)
+
+    @app.on_event("startup")
+    async def start_push_watch():
+        if db is not None:
+            import asyncio as _asyncio
+            _asyncio.get_running_loop().create_task(push_watch_loop())
+except Exception as _e:
+    logging.warning(f"push module not mounted: {_e!r}")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     if client:

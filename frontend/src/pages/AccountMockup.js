@@ -403,6 +403,12 @@ export const AccountMockup = () => {
                 href: canAccessPremium ? null : '#',
               },
               {
+                title: 'On your phone',
+                desc: 'Add The State of Play to your home screen and get each new story as a notification.',
+                cta: 'Set it up',
+                href: '/app',
+              },
+              {
                 title: 'Give a year',
                 desc: 'Buy someone a year of The State of Play. It costs the same as your own.',
                 cta: 'Give a year',
