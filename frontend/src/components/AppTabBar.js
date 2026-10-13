@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { IS_APP_MODE } from '../lib/appMode';
+import { latestSlug, readSlugs } from '../lib/leftFieldRead';
 
 const STALE_AFTER_MS = 30 * 60 * 1000;
 
@@ -13,6 +14,10 @@ const STALE_AFTER_MS = 30 * 60 * 1000;
    (no rounded ends), Home is the logo's open frame with lines of type, and
    the current tab is in the logo's blue with the frame's top corner above
    it.
+
+   A blue square on The Left Field marks an edition this reader hasn't
+   opened yet (lib/leftFieldRead.js), checked when the app opens or comes
+   back to the front.
 
    Every tap is sent to Google Analytics as an 'app_tab' event, so which
    tabs get used decides what stays. It slides away while a reader scrolls
@@ -61,6 +66,21 @@ export const AppTabBar = () => {
   const { pathname } = useLocation();
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+  const [lfNew, setLfNew] = useState(false);
+
+  useEffect(() => {
+    if (!IS_APP_MODE) return undefined;
+    let live = true;
+    const check = async () => {
+      const slug = await latestSlug();
+      if (live) setLfNew(Boolean(slug) && !readSlugs().has(slug));
+    };
+    const onVis = () => { if (document.visibilityState === 'visible') check(); };
+    check();
+    window.addEventListener('lf-read', check);
+    document.addEventListener('visibilitychange', onVis);
+    return () => { live = false; window.removeEventListener('lf-read', check); document.removeEventListener('visibilitychange', onVis); };
+  }, []);
 
   useEffect(() => {
     if (!IS_APP_MODE) return undefined;
@@ -120,7 +140,13 @@ export const AppTabBar = () => {
               data-testid={`app-tab-${key}`}
               className={`app-tab flex flex-col items-center justify-center gap-[5px] h-[58px] transition-colors ${on ? 'text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`}
             >
-              <Icon name={icon} on={on} />
+              <span className="relative">
+                <Icon name={icon} on={on} />
+                {key === 'left-field' && lfNew && (
+                  <span aria-label="New edition" data-testid="app-tab-lf-new"
+                    className="absolute -top-[3px] -right-[5px] h-[9px] w-[9px] bg-[var(--accent-ink)] ring-2 ring-[var(--nav-bg)]" />
+                )}
+              </span>
               <span className={`whitespace-nowrap text-[11px] leading-none tracking-[0.02em] ${on ? 'font-semibold' : 'font-medium'}`}>{label}</span>
             </Link>
           </li>

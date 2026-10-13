@@ -326,7 +326,8 @@ def clean_edition(html: str) -> str:
             continue
         level = _heading_level(b)
         if level is not None and len(b['text']) <= 160:
-            out.append(f'<h{level}>{htmllib.escape(_title(b["text"]))}</h{level}>')
+            n = sum(1 for x in out if x.startswith(('<h2', '<h3'))) + 1
+            out.append(f'<h{level} id="lf-{n}">{htmllib.escape(_title(b["text"]))}</h{level}>')
             continue
         part = clean(b['html'])
         if part:
@@ -336,6 +337,17 @@ def clean_edition(html: str) -> str:
     while out and out[0] == '<hr>':
         out.pop(0)
     return ''.join(out)
+
+
+def edition_contents(body: str) -> list:
+    """The edition's headings, for "In this edition": [{id, level, title}]."""
+    return [{'id': m.group(2), 'level': int(m.group(1)), 'title': htmllib.unescape(m.group(3))}
+            for m in re.finditer(r'<h([23]) id="([^"]+)">(.*?)</h\1>', body)]
+
+
+def reading_minutes(body: str) -> int:
+    words = len(re.sub(r'<[^>]+>', ' ', re.sub(r'<figcaption>.*?</figcaption>', ' ', body, flags=re.S)).split())
+    return max(1, -(-words // 230))
 
 
 def _first_paragraph(html: str) -> str:
@@ -405,7 +417,8 @@ async def refresh() -> list:
             m = re.search(r'<img src="([^"]+)" alt="([^"]*)"', body)
             await _db.lf_editions.update_one({'_id': ed['slug']}, {'$set': {
                 **{k: ed[k] for k in ('guid', 'url', 'title', 'subtitle', 'author', 'published')},
-                'html': body, 'image': htmllib.unescape(m.group(1)) if m else None,
+                'html': body, 'contents': edition_contents(body), 'minutes': reading_minutes(body) if body else 0,
+                'image': htmllib.unescape(m.group(1)) if m else None,
                 'image_alt': htmllib.unescape(m.group(2)) if m else ''}}, upsert=True)
         await ingest([ed for ed in editions if ed['html']])
     return editions
@@ -507,7 +520,8 @@ def _edition_out(d: dict, full: bool) -> dict:
     o = {'slug': d['_id'], 'title': d.get('title') or '', 'subtitle': d.get('subtitle') or '',
          'author': d.get('author') or '', 'url': d.get('url') or '',
          'published': p.isoformat() if isinstance(p, datetime) else None,
-         'image': d.get('image'), 'image_alt': d.get('image_alt') or ''}
+         'image': d.get('image'), 'image_alt': d.get('image_alt') or '',
+         'contents': d.get('contents') or [], 'minutes': d.get('minutes') or 0}
     if full:
         o['html'] = d.get('html') or ''
     return o
