@@ -34,10 +34,10 @@ const StoryRow = ({ item, onRemove }) => (
 
 const LinkRow = ({ to, title, desc, testId }) => (
   <li className="border-b border-[var(--rule)]">
-    <Link to={to} data-testid={testId} className="group flex items-center justify-between gap-4 py-4">
+    <Link to={to} data-testid={testId} className={`group flex items-center justify-between gap-4 ${desc ? 'py-4' : 'py-3.5'}`}>
       <span>
-        <span className="block font-plex text-[16px] font-medium">{title}</span>
-        <span className="block font-plex text-[13px] text-[var(--text-muted)] mt-0.5">{desc}</span>
+        <span className={`block font-plex ${desc ? 'text-[16px] font-medium' : 'text-[15px]'}`}>{title}</span>
+        {desc && <span className="block font-plex text-[13px] text-[var(--text-muted)] mt-0.5">{desc}</span>}
       </span>
       <span className="font-plex text-[18px] text-[var(--text-label)] group-hover:text-[var(--text)]" aria-hidden="true">›</span>
     </Link>
@@ -113,12 +113,15 @@ export const YouMockup = () => {
           )}
         </section>
 
-        <p className="font-plex text-[13px] text-[var(--text-muted)] mt-12 flex flex-wrap gap-x-5 gap-y-2" data-testid="you-links">
-          <Link to="/about" className="hover:text-[var(--text)]">About</Link>
-          <Link to="/contact" className="hover:text-[var(--text)]">Contact</Link>
-          <Link to="/terms" className="hover:text-[var(--text)]">Terms</Link>
-          <Link to="/privacy" className="hover:text-[var(--text)]">Privacy</Link>
-        </p>
+        <section className="mt-12" data-testid="you-links">
+          <div className="border-b border-[var(--text)] pb-3"><p className={label}>The State of Play</p></div>
+          <ul>
+            <LinkRow to="/about" title="About" />
+            <LinkRow to="/contact" title="Contact" />
+            <LinkRow to="/terms" title="Terms" />
+            <LinkRow to="/privacy" title="Privacy" />
+          </ul>
+        </section>
       </div>
     </MockupLayout>
   );
