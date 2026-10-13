@@ -6,14 +6,14 @@ import os
 import re
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 
 from tiers import resolve_tier, is_genuinely_paid, ensure_member_labeled, PLAN_LABELS, find_ghost_member, AMOUNT_TO_PLAN
-from payments import get_last_payment_for_email, get_last_membership_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial, complimentary_grant_for
+from payments import get_last_membership_payment_for_email, compute_synthetic_expiry, has_paid_beyond_trial, complimentary_grant_for
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -209,101 +209,6 @@ def _require_session_email(http_request: Request) -> str:
         raise HTTPException(status_code=401, detail='Sign in to continue.')
     return session['email'].lower().strip()
 
-class MemberVerifyResponse(BaseModel):
-    is_member: bool
-    is_paid: bool
-    email: str
-    name: Optional[str] = None
-    status: Optional[str] = None
-    # Ghost's internal member id (24-char hex). Needed downstream by
-    # /api/nominations/submit so we can attribute nominations to the
-    # authenticated subscriber even if their email later changes.
-    id: Optional[str] = None
-    # True when the member carries the "sandbox-event-comp" Ghost label
-    # (complimentary access granted at an Outfield Sandbox event) but is
-    # no longer paid, i.e. their comp window has lapsed and Ghost has
-    # already downgraded them to a free member. Lets the paywall show a
-    # targeted "your trial has ended" message instead of the generic one.
-    trial_expired: bool = False
-    # Which plan this member is on: 'student' | 'trial' | 'standard' | 'free'.
-    # See tiers.py — a specialization of is_paid, not a replacement for it.
-    tier: str = 'free'
-
-@api_router.post("/ghost/verify-member", response_model=MemberVerifyResponse)
-async def verify_ghost_member(request: MemberVerifyRequest, http_request: Request):
-    """Verify the signed-in reader's Ghost membership and subscription status"""
-    request.email = _require_session_email(http_request)
-    import httpx
-    from urllib.parse import quote
-    
-    # Try Admin API first (most reliable)
-    if GHOST_ADMIN_API_KEY:
-        token = create_ghost_admin_token()
-        if token:
-            try:
-                # Ghost filter with email - wrap in quotes and properly encode
-                # Ghost NQL filter syntax: email:'value'
-                encoded_email = quote(request.email, safe='')
-                url = f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{encoded_email}'"
-                
-                async with httpx.AsyncClient() as http_client:
-                    response = await http_client.get(
-                        url,
-                        headers={'Authorization': f'Ghost {token}'}
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        members = data.get('members', [])
-                        
-                        if members:
-                            member = members[0]
-                            # Check subscription status - comped members are also paid
-                            status = member.get('status', 'free')
-                            
-                            # Check for paid labels (Razorpay individual + corporate team seats + invoice-billed)
-                            # Also any label prefixed with "team-" (e.g. team-sportz-interactive)
-                            # so bespoke clients can be onboarded by Ghost label alone, no backend redeploy.
-                            labels = member.get('labels', [])
-                            label_names = [lbl.get('name', '').lower() for lbl in labels]
-                            # Single source of truth (tiers.is_genuinely_paid) -- also
-                            # correctly excludes a Trial member whose paid-looking
-                            # label/status/subscription came from the still-live
-                            # "Razorpay Payment Capture" Zap rather than a real payment.
-                            is_paid = await is_genuinely_paid(
-                                label_names, status, request.email,
-                                has_native_subscription=len(member.get('subscriptions', [])) > 0,
-                            )
-
-                            has_sandbox_trial_label = 'sandbox-event-comp' in label_names
-
-                            return MemberVerifyResponse(
-                                is_member=True,
-                                is_paid=is_paid,
-                                email=member.get('email', request.email),
-                                name=member.get('name'),
-                                status=status if not is_paid else 'paid',
-                                id=member.get('id'),
-                                trial_expired=has_sandbox_trial_label and not is_paid,
-                                tier=resolve_tier(label_names, is_paid),
-                            )
-                        else:
-                            return MemberVerifyResponse(
-                                is_member=False,
-                                is_paid=False,
-                                email=request.email,
-                                status='not_found'
-                            )
-            except Exception as e:
-                logger.error(f"Ghost Admin API error: {e}")
-    
-    # Fallback: Member is not found or Admin API not configured
-    return MemberVerifyResponse(
-        is_member=False,
-        is_paid=False,
-        email=request.email,
-        status='not_configured' if not GHOST_ADMIN_API_KEY else 'error'
-    )
 
 class MemberDetailsResponse(BaseModel):
     is_member: bool
@@ -859,106 +764,6 @@ async def get_article_preview(request: ArticlePreviewRequest, http_request: Requ
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class MagicLinkRequest(BaseModel):
-    email: EmailStr
-
-@api_router.get("/ghost/integrity-token")
-async def get_ghost_integrity_token():
-    """Proxy endpoint to get Ghost integrity token"""
-    import httpx
-    
-    try:
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.get(
-                f'{GHOST_URL}/members/api/integrity-token/',
-                headers={
-                    'app-pragma': 'no-cache',
-                    'x-ghost-version': '5.98'
-                }
-            )
-            
-            if response.status_code == 200:
-                return {"token": response.text}
-            else:
-                logger.error(f"Failed to get integrity token: {response.status_code}")
-                return {"token": None, "error": "Failed to get integrity token"}
-    except Exception as e:
-        logger.error(f"Integrity token error: {e}")
-        return {"token": None, "error": str(e)}
-
-@api_router.post("/ghost/send-magic-link")
-async def send_ghost_magic_link(request: MagicLinkRequest):
-    """Proxy endpoint to send Ghost magic link"""
-    import httpx
-    
-    try:
-        async with httpx.AsyncClient() as http_client:
-            # First, get the integrity token
-            token_response = await http_client.get(
-                f'{GHOST_URL}/members/api/integrity-token/',
-                headers={
-                    'app-pragma': 'no-cache',
-                    'x-ghost-version': '5.98'
-                }
-            )
-            
-            integrity_token = token_response.text if token_response.status_code == 200 else None
-            
-            # Now send the magic link request
-            payload = {
-                'email': request.email,
-                'emailType': 'signin'
-            }
-            
-            if integrity_token:
-                payload['integrityToken'] = integrity_token
-            
-            response = await http_client.post(
-                f'{GHOST_URL}/members/api/send-magic-link/',
-                json=payload,
-                headers={'Content-Type': 'application/json'}
-            )
-            
-            if response.status_code == 201 or response.status_code == 200:
-                return {"success": True, "message": "Magic link sent successfully"}
-            else:
-                # Try to parse error response
-                try:
-                    error_data = response.json()
-                    error_message = error_data.get('errors', [{}])[0].get('message', 'Failed to send magic link')
-                except:
-                    error_message = f"Ghost returned status {response.status_code}"
-                
-                logger.error(f"Ghost magic link error: {error_message}")
-                raise HTTPException(status_code=response.status_code, detail=error_message)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Ghost magic link error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to communicate with Ghost")
-
-@api_router.get("/ghost/member")
-async def get_ghost_member(request: Request):
-    """Proxy endpoint to get Ghost member details from session"""
-    import httpx
-    
-    # Forward the cookies from the original request
-    cookies = request.cookies
-    
-    try:
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.get(
-                f'{GHOST_URL}/members/api/member/',
-                cookies=cookies
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                return None
-    except Exception as e:
-        logger.error(f"Ghost member fetch error: {e}")
-        return None
 
 # Dynamic OG Image Generator for social sharing
 @api_router.get("/og-image/{slug}")
@@ -968,7 +773,6 @@ async def generate_og_image(slug: str):
     from fastapi.responses import Response, RedirectResponse
     from PIL import Image, ImageDraw, ImageFont, ImageEnhance
     from io import BytesIO
-    import textwrap
     
     LOGO_URL = "https://the-state-of-play.ghost.io/content/images/2025/09/TSOP-Logo-Final-Colour-4.png"
     
@@ -1522,71 +1326,7 @@ async def razorpay_webhook(request: Request):
         # Return 200 anyway to prevent Razorpay from retrying endlessly
         return {"status": "error", "message": str(e)}
 
-class CheckPaymentRequest(BaseModel):
-    email: EmailStr
 
-class CheckPaymentResponse(BaseModel):
-    paid: bool
-    email: str
-    message: str
-
-@api_router.post("/check-recent-payment", response_model=CheckPaymentResponse)
-async def check_recent_payment(request: CheckPaymentRequest):
-    """
-    Check if an email has a recent payment recorded.
-    Used by the Welcome page for seamless login.
-    """
-    email = request.email.lower().strip()
-    
-    # Check if email has a recent payment
-    if email in recent_payments:
-        payment_time = recent_payments[email]
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=PAYMENT_VALID_MINUTES)
-        
-        if payment_time > cutoff:
-            return CheckPaymentResponse(
-                paid=True,
-                email=email,
-                message="Payment confirmed"
-            )
-    
-    # Also check Ghost as fallback (in case webhook didn't fire)
-    # This ensures we don't block legitimate paid users
-    try:
-        import httpx
-        if GHOST_ADMIN_API_KEY:
-            token = create_ghost_admin_token()
-            if token:
-                async with httpx.AsyncClient() as http_client:
-                    response = await http_client.get(
-                        f'{GHOST_URL}/ghost/api/admin/members/',
-                        params={'filter': f'email:{email}'},
-                        headers={'Authorization': f'Ghost {token}'}
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        members = data.get('members', [])
-                        
-                        if members:
-                            member = members[0]
-                            status = member.get('status', 'free')
-                            is_paid = status in ['paid', 'comped'] or len(member.get('subscriptions', [])) > 0
-                            
-                            if is_paid:
-                                return CheckPaymentResponse(
-                                    paid=True,
-                                    email=email,
-                                    message="Member verified via Ghost"
-                                )
-    except Exception as e:
-        logger.error(f"Ghost check error: {e}")
-    
-    return CheckPaymentResponse(
-        paid=False,
-        email=email,
-        message="No recent payment found"
-    )
 
 # Health check endpoint - CRITICAL for Render to keep service warm
 @api_router.get("/health")
@@ -2320,21 +2060,24 @@ except Exception as _e:
     is_trial_slug_accessible = None
     record_trial_open = None
 
-_cors_origins_env = os.environ.get('CORS_ORIGINS', '*').strip()
-if _cors_origins_env == '*':
-    # allow_origins=['*'] combined with allow_credentials=True is broken for
-    # any credentialed request (fetch(..., {credentials: 'include'}), e.g.
-    # session_auth.py's verify-code/me/logout): Starlette's actual (non-
-    # preflight) response echoes the literal '*' rather than the real
-    # origin, which browsers reject outright per the CORS spec whenever
-    # credentials are involved -- surfaces as a generic "Failed to fetch"
-    # with no server-side error to debug. allow_origin_regex matches any
-    # origin the same way the wildcard does, but always echoes the actual
-    # origin back, which is valid alongside Allow-Credentials: true.
+# Only the site itself may call this API from a browser. Reader and admin
+# sessions are bearer tokens, but sign-in also sets a SameSite=None cookie
+# (kept for older sessions); with any origin allowed alongside credentials,
+# any website a signed-in reader visited could have read their account and
+# invoices with that cookie. CORS_ORIGINS (comma-separated) overrides the
+# list; '*' is no longer honoured.
+SITE_ORIGINS_REGEX = (
+    r'^(?:https://(www\.)?stateofplay\.club'
+    r'|https://the-state-of-play\.ghost\.io'
+    r'|https://state-of-play-[a-z0-9-]+-venkats-projects-1cde548d\.vercel\.app'
+    r'|http://(localhost|127\.0\.0\.1)(:\d+)?)$'
+)
+_cors_origins_env = os.environ.get('CORS_ORIGINS', '').strip()
+if _cors_origins_env and _cors_origins_env != '*':
     app.add_middleware(
         CORSMiddleware,
         allow_credentials=True,
-        allow_origin_regex='.*',
+        allow_origins=[o.strip() for o in _cors_origins_env.split(',') if o.strip()],
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -2342,7 +2085,7 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_credentials=True,
-        allow_origins=_cors_origins_env.split(','),
+        allow_origin_regex=SITE_ORIGINS_REGEX,
         allow_methods=["*"],
         allow_headers=["*"],
     )

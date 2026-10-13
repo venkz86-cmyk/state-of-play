@@ -35,7 +35,7 @@ Provides:
     /ghost/article-content right after is_trial_slug_accessible returns
     True, so the day-25 email can say how many of the available stories
     were actually read.
-  * GET /api/trial/status?email=         — what a trial member is
+  * GET /api/trial/status (signed in)    — what a trial member is
     entitled to and how long they have left: the permanent snapshot
     slugs, any bonus slugs published since signup (while the window is
     still open), which of those they've opened, and the days remaining.
@@ -58,7 +58,7 @@ from typing import Optional
 
 import httpx
 import jwt
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, EmailStr
 
 from admin_auth import require_admin_key_or_session
@@ -587,7 +587,14 @@ def _trial_winback_email_html(country: str = 'IN') -> str:
 
 
 @router.get('/api/trial/status')
-async def trial_status(email: str):
+async def trial_status(request: Request):
+    # The signed-in reader's own trial only: this shows what they bought
+    # and what they read, so it never takes an email from the request.
+    from session_auth import _read_session
+    session = _read_session(request)
+    if not session or not session.get('email'):
+        raise HTTPException(status_code=401, detail='Sign in to continue.')
+    email = session['email']
     if _db is None:
         raise HTTPException(status_code=503, detail='Not configured')
     record = await _db.trial_members.find_one({'email': email.lower().strip()})

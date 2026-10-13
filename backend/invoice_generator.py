@@ -15,7 +15,7 @@ Compliance covered:
 """
 
 from __future__ import annotations
-from datetime import datetime, timezone
+from datetime import datetime
 from io import BytesIO
 import re
 
@@ -24,8 +24,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 
 # ───────────────────────────── seller (locked) ─────────────────────────────

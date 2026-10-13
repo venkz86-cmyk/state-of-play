@@ -40,6 +40,7 @@ Dependencies: ADMIN_EMAIL, ADMIN_JWT_SECRET (both new), ADMIN_KEY
 """
 from __future__ import annotations
 
+import hmac
 import os
 import logging
 import secrets
@@ -159,7 +160,7 @@ async def require_admin_key_or_session(
     exists at all). Raises 403 if neither is present -- matches the
     status code every existing inline check already used, so this is a
     behavior-preserving swap for callers using the key."""
-    if x_admin_key and ADMIN_KEY and x_admin_key == ADMIN_KEY:
+    if x_admin_key and ADMIN_KEY and hmac.compare_digest(x_admin_key.encode(), ADMIN_KEY.encode()):
         return
     if _read_admin_session(request):
         return

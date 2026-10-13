@@ -46,9 +46,9 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from tiers import PLAN_LABELS, PAID_LABELS, ensure_member_labeled, remove_member_label, find_ghost_member
+from tiers import PLAN_LABELS, PAID_LABELS, ensure_member_labeled, remove_member_label
 from trial_tracking import start_trial
-from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_payment_for_email, get_last_membership_payment_for_email, complimentary_grant_for
+from payments import fetch_and_record, has_paid_beyond_trial, has_paid_before, compute_synthetic_expiry, claim_payment, record_signup, source_label, clean_tag, get_last_membership_payment_for_email, complimentary_grant_for
 from session_auth import get_current_member, _free_welcome_email_html, early_rate_for_email
 from invite_links import invite_usable, record_invite_use
 from resend_email import send_email, _record_failure as record_email_failure
