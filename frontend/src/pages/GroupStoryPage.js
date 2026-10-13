@@ -187,7 +187,7 @@ export const GroupStoryPage = () => {
       </div>
       <article className="max-w-[720px] mx-auto px-6 pt-12 lg:pt-16 pb-20">
         <h1 className="font-editorial text-[2.2rem] lg:text-[3rem] leading-[1.05] tracking-tight mb-4" style={{ textWrap: 'balance' }}>{link.title}</h1>
-        {link.excerpt && <p className="font-editorial italic text-xl text-[var(--text-muted)] mb-5">{link.excerpt}</p>}
+        {link.excerpt && <p className="font-reading text-[18px] md:text-[21px] leading-[1.55] text-[var(--text-muted)] mb-5">{link.excerpt}</p>}
         <p className="font-plex text-[13px] text-[var(--text-muted)] mb-8">By {link.author || 'Venkat Ananth'}</p>
         {link.feature_image && <img src={link.feature_image} alt="" className="w-full mb-10" />}
         {story ? (
