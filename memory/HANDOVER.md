@@ -353,6 +353,13 @@ pages load on demand; Literata and Schibsted Grotesk are self-hosted in
      page's partner block.
   Parked by Venkat: Start here (now "the five latest stories"). No new
   Ghost tags for it; options are a fixed list in code or most-read.
+- "Also read" story cards (October 13, live): in Ghost, paste a story's
+  address as a plain link on a line of its own (stateofplay.club or Ghost's
+  own the-state-of-play.ghost.io address both work). On the site it shows
+  as a story card (components/StoryLinkCard.jsx, lib/storyLinks.js); in a
+  Ghost email it stays a plain link. Venkat doesn't want cards in emails,
+  so don't use Ghost's bookmark card for these. Links in story text now
+  open in a new tab.
 - Ghost comps for renewers (October 13): Razorpay members are comped by
   hand in Ghost with a one-year expiry, which runs out at the old year end
   even when they renew. Access is unaffected (labels), and the account
