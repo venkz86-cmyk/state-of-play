@@ -56,3 +56,33 @@ export async function turnOff() {
   }).catch(() => {});
   await sub.unsubscribe();
 }
+
+// What this phone gets: { stories, mixed_zone } (backend push.py).
+export async function getPrefs() {
+  const sub = await currentSubscription();
+  if (!sub) return null;
+  const r = await fetch(`${API}/api/push/prefs`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }),
+  });
+  return r.ok ? r.json() : null;
+}
+
+export async function setPref(name, value) {
+  const sub = await currentSubscription();
+  if (!sub) throw new Error('off');
+  const r = await fetch(`${API}/api/push/prefs`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint, [name]: value }),
+  });
+  if (!r.ok) throw new Error('server');
+  return r.json();
+}
+
+// Whether this reader can see the Mixed Zone (annual members only).
+export async function mixedZoneEligible() {
+  try {
+    const r = await fetch(`${API}/api/mixed-zone/new-count`, { headers: authHeader() });
+    return r.ok ? Boolean((await r.json()).eligible) : false;
+  } catch (e) {
+    return false;
+  }
+}

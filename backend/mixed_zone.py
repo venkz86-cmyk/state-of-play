@@ -314,6 +314,9 @@ async def admin_create_drop(req: DropCreate, _admin: None = Depends(require_admi
         'updated_at': now,
     }
     await _db.mixed_zone_notes.insert_one(doc)
+    # Phone notifications for members who have them on (push.py).
+    from push import notify_mixed_zone_later
+    notify_mixed_zone_later('Mixed Zone', body)
     return _serialize_drop(doc)
 
 
@@ -348,6 +351,10 @@ async def admin_edit_drop(drop_id: str, req: DropEdit, _admin: None = Depends(re
     if push:
         update['$push'] = push
     await _db.mixed_zone_notes.update_one({'drop_id': drop_id}, update)
+    # "It happened" is the moment members care about most.
+    if changes.get('status') == 'confirmed':
+        from push import notify_mixed_zone_later
+        notify_mixed_zone_later('Mixed Zone: confirmed', changes.get('body') or doc.get('body', ''))
     return _serialize_drop(await _db.mixed_zone_notes.find_one({'drop_id': drop_id}))
 
 
