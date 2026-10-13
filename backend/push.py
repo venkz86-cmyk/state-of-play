@@ -50,6 +50,7 @@ _db = None
 PUBLIC_BASE_URL = 'https://www.stateofplay.club'
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 CHECK_EVERY_SECONDS = 300
+LINE_MAX = 140                # characters in a story's notification line
 LEFT_FIELD_EVERY = 2          # loops, so every 10 minutes
 FRESH_HOURS = 6
 VAPID_CONTACT = 'mailto:venkat@stateofplay.club'
@@ -318,7 +319,10 @@ async def check_new_stories() -> list:
         if settings.get('paused'):
             await _db.push_sent.update_one({'_id': p['id']}, {'$set': {'skipped': True, 'reason': 'paused'}})
             continue
-        result = await send(p.get('title') or 'The State of Play', (p.get('custom_excerpt') or '')[:140],
+        # The notification line written for it on the dashboard, else the dek.
+        saved = await _db.push_lines.find_one({'_id': p['id']}) or {}
+        line = saved.get('line') or p.get('custom_excerpt') or ''
+        result = await send(p.get('title') or 'The State of Play', line[:LINE_MAX],
                             f"{PUBLIC_BASE_URL}/{p['slug']}?source=push", {'topics.stories': {'$ne': False}})
         await _db.push_sent.update_one({'_id': p['id']}, {'$set': {**result, 'sent_at': datetime.now(timezone.utc)}})
         logger.info(f"push: '{p.get('title')}' {result}")
@@ -427,3 +431,53 @@ async def push_test(body: TestBody, request: Request, _admin: None = Depends(req
     result = await send('The State of Play', 'Notifications are working. You’ll get new stories here.',
                         f'{PUBLIC_BASE_URL}/', {'email': email})
     return {'email': email, **result}
+
+
+# ─── notification lines, written ahead of publishing ───────────────────────
+# A story's notification says its headline and, under it, a line written
+# for the lock screen on the dashboard's Today page (push_lines, keyed by
+# the Ghost post id). With no line, the story's dek goes out instead.
+@router.get('/api/admin/push/upcoming')
+async def push_upcoming(_admin: None = Depends(require_admin_key_or_session)):
+    """Scheduled stories first, then recent drafts, each with its line."""
+    from tiers import _create_ghost_admin_token
+    token = _create_ghost_admin_token()
+    if not token:
+        return {'posts': []}
+    posts = []
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        for status, order, limit in (('scheduled', 'published_at asc', 5), ('draft', 'updated_at desc', 5)):
+            r = await client.get(
+                f'{GHOST_URL}/ghost/api/admin/posts/',
+                params={'filter': f'status:{status}', 'order': order, 'limit': limit,
+                        'fields': 'id,title,custom_excerpt,status,published_at,updated_at'},
+                headers={'Authorization': f'Ghost {token}'},
+            )
+            if r.status_code == 200:
+                posts.extend(r.json().get('posts') or [])
+    lines = {}
+    if posts and _db is not None:
+        async for d in _db.push_lines.find({'_id': {'$in': [p['id'] for p in posts]}}):
+            lines[d['_id']] = d.get('line') or ''
+    return {'max': LINE_MAX, 'posts': [{
+        'id': p['id'], 'title': p.get('title') or '', 'status': p.get('status'),
+        'scheduled_for': p.get('published_at') if p.get('status') == 'scheduled' else None,
+        'excerpt': p.get('custom_excerpt') or '', 'line': lines.get(p['id'], ''),
+    } for p in posts]}
+
+
+class LineBody(BaseModel):
+    post_id: str = Field(..., min_length=1, max_length=64)
+    line: str = Field('', max_length=LINE_MAX)
+    title: str = Field('', max_length=300)
+
+
+@router.post('/api/admin/push/line')
+async def push_line(body: LineBody, _admin: None = Depends(require_admin_key_or_session)):
+    line = ' '.join(body.line.split())
+    if line:
+        await _db.push_lines.update_one({'_id': body.post_id}, {'$set': {
+            'line': line, 'title': body.title, 'updated_at': datetime.now(timezone.utc)}}, upsert=True)
+    else:
+        await _db.push_lines.delete_one({'_id': body.post_id})
+    return {'post_id': body.post_id, 'line': line}
