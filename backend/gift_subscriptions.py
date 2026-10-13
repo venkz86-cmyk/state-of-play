@@ -273,6 +273,7 @@ def _gift_receipt_email_html(redeem_url: str, code: str) -> str:
             + email_cta_button(redeem_url, redeem_url)
             + f'<p style="color: #555555;">Or give them the code: <strong style="color: #1A1A1A;">{html.escape(code)}</strong>. They can enter it at stateofplay.club/gift/redeem.</p>'
             '<p style="color: #555555;">Already paid for. This link (or the code) is just how they claim it.</p>'
+            '<p style="color: #555555;">For a GST invoice, reply to this email with the name and address to bill.</p>'
         ),
     )
 

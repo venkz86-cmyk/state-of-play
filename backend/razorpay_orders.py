@@ -513,7 +513,8 @@ def _standard_welcome_email_html(expiry_date_str: str) -> str:
             '</ul>'
             f'<p>Your access runs through {expiry_date_str}. This is a one-time payment, not an '
             'auto-renewing subscription. You’ll get a reminder before it lapses, and you can renew any '
-            'time from your account page.</p>'
+            f'time from <a href="{PUBLIC_BASE_URL}/account?invoice=1" style="color: #1A1A1A;">your account '
+            'page</a>, where your GST invoice is ready to download.</p>'
             '<p>One honest note. This is a one-person publication. Some Fridays, flu or a story that isn’t '
             'ready means an issue arrives late, and I’d rather tell you that than publish something thin. '
             'You’ll always hear about it from me.</p>'
@@ -557,6 +558,8 @@ def _student_welcome_email_html() -> str:
             '<li>A direct line to me. Reply to an issue or to this email. It comes to me, and I read '
             'everything.</li>'
             '</ul>'
+            f'<p>Your GST invoice is ready to download from '
+            f'<a href="{PUBLIC_BASE_URL}/account?invoice=1" style="color: #1A1A1A;">your account page</a>.</p>'
             '<p>If you only read one older story to begin with, make it the RCB sale story.</p>'
             + email_cta_button('Read it &rarr;', f'{PUBLIC_BASE_URL}/inside-the-rcb-sale-birla-blitzer-times-blackstone')
             + f'<p>More of my picks are on one page: <a href="{PUBLIC_BASE_URL}/start-here" '
