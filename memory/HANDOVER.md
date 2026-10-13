@@ -385,3 +385,13 @@ The line above a headline is components/StoryLabel.jsx: the story's format
 in small red capitals and, on free stories only, a round "Free to read" or
 "Free with sign-up" mark. Topics are not shown there; they stay as tags in
 the archive and "Filed under". The Left Field gets LeftFieldMark.
+
+## Team prices after December 31, 2026 (reminder set for December 1)
+Team prices change in January. Before then, get the new Team-5/Team-10 prices
+and build the rate: new teams pay the new price; founding teams (started on or
+before December 31, 2026) keep renewing at ₹10,000 / ₹20,000 + GST, as the
+team page promises. Code: PLAN_PRICING team-5/team-10 in
+backend/razorpay_orders.py (and the amount_paid sent to Apps Script in
+setup_team_account), the Teams page prices, and
+member_invoices.TEAM_FOUNDING_TAXABLE / TEAM_FOUNDING_LAST_DAY. Invoices
+already use what each team actually paid. Routine: trig_01Ccnea3Qht71AD3U2qKB6AZ.
