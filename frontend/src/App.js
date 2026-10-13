@@ -24,6 +24,7 @@ import { StudentsMockup as Students } from "./pages/StudentsMockup";
 import { AppMockup } from "./pages/AppMockup";
 import { SearchMockup } from "./pages/SearchMockup";
 import { YouMockup } from "./pages/YouMockup";
+import { IS_APP_MODE } from "./lib/appMode";
 const StudentPay = lazy(() => import("./pages/StudentPayMockup").then((m) => ({ default: m.StudentPayMockup })));
 import { GiftMockup as Gift } from "./pages/GiftMockup";
 const GiftRedeem = lazy(() => import("./pages/GiftRedeemMockup").then((m) => ({ default: m.GiftRedeemMockup })));
@@ -92,8 +93,9 @@ function Shell() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/subscribe" element={<Navigate to="/signup" replace />} />
-          <Route path="/dashboard" element={<MemberDashboard />} />
-          <Route path="/account" element={<MemberDashboard />} />
+          {/* In the app, the account lives in the You tab. */}
+          <Route path="/dashboard" element={IS_APP_MODE ? <YouMockup /> : <MemberDashboard />} />
+          <Route path="/account" element={IS_APP_MODE ? <YouMockup /> : <MemberDashboard />} />
           <Route path="/renew" element={<Renew />} />
           <Route path="/mixed-zone" element={<MixedZone />} />
           <Route path="/invite/:code" element={<Invite />} />
