@@ -44,7 +44,7 @@ SELLER = {
 }
 
 SAC_CODE = "998431"                         # online news / journals
-DESCRIPTION = "The State of Play — Annual Subscription"
+DESCRIPTION = "The State of Play, annual membership"
 
 
 # ───────────────────────────── helpers ─────────────────────────────
@@ -65,12 +65,29 @@ def validate_gstin(gstin: str | None) -> bool:
     return bool(GSTIN_RE.match(gstin.strip().upper()))
 
 
-def amount_in_words_inr(rupees: int) -> str:
-    """₹2949 → 'Indian Rupees Two Thousand Nine Hundred and Forty-Nine only.'"""
-    words = num2words(rupees, lang="en_IN").title()
+def _words(n: int, lang: str) -> str:
     # num2words returns 'Two Thousand, Nine Hundred And Forty-Nine'
-    words = words.replace(",", "").replace(" And ", " and ")
-    return f"Indian Rupees {words} only."
+    return num2words(n, lang=lang).title().replace(",", "").replace(" And ", " and ")
+
+
+def amount_in_words_inr(rupees) -> str:
+    """₹2949 → 'Indian Rupees Two Thousand Nine Hundred and Forty-Nine only.'
+    Paise, when there are any, are spelled out after the rupees."""
+    return amount_in_words(rupees, "INR")
+
+
+def amount_in_words(amount, currency: str = "INR") -> str:
+    whole = int(amount)
+    fraction = int(round((float(amount) - whole) * 100))
+    if currency == "INR":
+        text = f"Indian Rupees {_words(whole, 'en_IN')}"
+        if fraction:
+            text += f" and {_words(fraction, 'en_IN')} Paise"
+    else:
+        text = f"US Dollars {_words(whole, 'en')}"
+        if fraction:
+            text += f" and {_words(fraction, 'en')} Cents"
+    return f"{text} only."
 
 
 def compute_tax(taxable_value: int, buyer_state_code: str | None, is_international: bool) -> dict:
@@ -79,7 +96,7 @@ def compute_tax(taxable_value: int, buyer_state_code: str | None, is_internation
         return {
             "cgst": 0, "sgst": 0, "igst": 0,
             "total": taxable_value,
-            "tax_label": "Export of services — GST not applicable (LUT)",
+            "tax_label": "Export under LUT, no GST charged",
             "is_export": True,
         }
     intra_state = (buyer_state_code or "").strip() == SELLER["state_code"]
@@ -108,10 +125,14 @@ GREY = HexColor("#666666")
 RULE = HexColor("#E5E2DC")
 
 
-def _rupee(n: int) -> str:
+def _rupee(n) -> str:
     """Format an INR amount. Helvetica core PDF font lacks the \u20B9 glyph,
     so we use the conventional 'Rs.' prefix which renders everywhere."""
-    return f"Rs. {n:,}.00"
+    return f"Rs. {n:,.2f}"
+
+
+def _money(n, currency: str = "INR") -> str:
+    return _rupee(n) if currency == "INR" else f"USD {n:,.2f}"
 
 
 def _draw_label(c, x, y, text):
@@ -230,14 +251,20 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
 
     _draw_text(c, MARGIN, cursor_y, invoice_data.get("description_override") or DESCRIPTION, "Helvetica", 10.5)
     _draw_text(c, W * 0.62, cursor_y, SAC_CODE)
-    _draw_right(c, W - MARGIN, cursor_y, _rupee(invoice_data['taxable_value']))
+    cur = invoice_data.get("currency") or "INR"
+    _draw_right(c, W - MARGIN, cursor_y, _money(invoice_data['taxable_value'], cur))
     cursor_y -= 14
-    _draw_text(
-        c, MARGIN, cursor_y,
-        f"Subscription period: {invoice_data['period_start']} to {invoice_data['period_end']}",
-        "Helvetica", 9, GREY,
-    )
-    cursor_y -= 12
+    # period_line replaces the default when a payment has no fixed period
+    # (an unredeemed gift code), or describes it differently.
+    period_line = invoice_data.get("period_line")
+    if period_line is None and invoice_data.get("period_start"):
+        period_line = f"Membership period: {invoice_data['period_start']} to {invoice_data['period_end']}"
+    if period_line:
+        _draw_text(c, MARGIN, cursor_y, period_line, "Helvetica", 9, GREY)
+        cursor_y -= 12
+    if invoice_data.get("paid_on"):
+        _draw_text(c, MARGIN, cursor_y, f"Paid on {invoice_data['paid_on']}", "Helvetica", 8.5, GREY)
+        cursor_y -= 12
     _draw_text(c, MARGIN, cursor_y, f"Razorpay ref: {invoice_data['razorpay_ref']}", "Helvetica", 8.5, GREY)
     cursor_y -= 18
     c.setStrokeColor(RULE); c.setLineWidth(0.6)
@@ -256,7 +283,7 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
         _draw_right(c, summary_x_amt, cursor_y, amount_text, font, 10)
         cursor_y -= 14
 
-    row("Taxable value", _rupee(invoice_data['taxable_value']))
+    row("Taxable value", _money(invoice_data['taxable_value'], cur))
     if tax["is_export"]:
         _draw_text(c, summary_x_label, cursor_y, tax["tax_label"], "Helvetica-Oblique", 9, GREY)
         cursor_y -= 14
@@ -265,15 +292,17 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
         row("SGST @ 9%", _rupee(tax['sgst']))
     else:
         row("IGST @ 18%", _rupee(tax['igst']))
+    if tax.get("round_off"):
+        row("Round off", _money(tax['round_off'], cur))
 
     cursor_y -= 4
     c.setStrokeColor(DARK); c.setLineWidth(0.8)
     c.line(summary_x_label, cursor_y, W - MARGIN, cursor_y)
     cursor_y -= 14
-    row("Total payable", _rupee(tax['total']), bold=True)
+    row("Total paid" if invoice_data.get("paid_on") else "Total payable", _money(tax['total'], cur), bold=True)
 
     cursor_y -= 8
-    _draw_text(c, MARGIN, cursor_y, f"Amount in words: {amount_in_words_inr(tax['total'])}",
+    _draw_text(c, MARGIN, cursor_y, f"Amount in words: {amount_in_words(tax['total'], cur)}",
                "Helvetica-Oblique", 9, GREY)
     cursor_y -= 24
 
