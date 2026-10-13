@@ -1,16 +1,11 @@
 """
 subscription_grace.py — shared grace-period handling for a failed
-recurring-subscription charge, used by BOTH razorpay_subscriptions.py
-and paypal_subscriptions.py. Extracted out of razorpay_subscriptions.py
-(where this was first built) so two payment providers' worth of
-subscription lifecycle don't each reimplement -- and risk disagreeing
-on -- the same policy: Venkat's call is a one-week grace period before
-paid access is pulled, never an immediate downgrade.
+recurring-subscription charge, used by razorpay_subscriptions.py.
+Venkat's call is a one-week grace period before paid access is pulled,
+never an immediate downgrade.
 
-One subscription_grace Mongo collection, keyed by subscription_id --
-Razorpay's own ids ("sub_...") and PayPal's ("I-...") look nothing
-alike, so there's no realistic collision between the two providers
-sharing it.
+One subscription_grace Mongo collection, keyed by Razorpay's
+subscription_id ("sub_...").
 
 Provides:
   * GRACE_PERIOD_DAYS
@@ -51,9 +46,9 @@ logger = logging.getLogger(__name__)
 GHOST_URL = os.environ.get('GHOST_URL', 'https://the-state-of-play.ghost.io')
 GHOST_ADMIN_API_KEY = os.environ.get('GHOST_ADMIN_API_KEY', '')
 
-# A subscription (either provider) only ever confers standard-equivalent
-# access -- see razorpay_subscriptions.py/paypal_subscriptions.py's own
-# docstrings -- so a downgrade just reverses exactly that grant.
+# A subscription only ever confers standard-equivalent access -- see
+# razorpay_subscriptions.py's own docstring -- so a downgrade just
+# reverses exactly that grant.
 GRACE_PERIOD_DAYS = 7
 _DOWNGRADE_LABELS = ('paid-via-razorpay', 'premium-subscriber')
 

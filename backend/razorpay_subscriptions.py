@@ -34,9 +34,8 @@ Provides:
 
 When a renewal auto-charge fails and Razorpay gives up retrying, it
 sends `subscription.halted` -- Venkat's call: a one-week grace period,
-not an immediate downgrade. Handled by subscription_grace.py, shared
-with paypal_subscriptions.py so two payment providers can't disagree
-on this policy: start_grace_period() records the halt and emails the
+not an immediate downgrade. Handled by subscription_grace.py:
+start_grace_period() records the halt and emails the
 subscriber once; POST /api/subscriptions/grace/expire-check (an
 admin-gated sweep, wired to run daily via a Render Cron Job) strips
 paid access from anyone still in grace past their `grace_ends_at`. If
