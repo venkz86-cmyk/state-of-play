@@ -19,6 +19,11 @@ const meta = 'font-plex text-[11px] uppercase tracking-[0.1em] text-[var(--text-
 const NoteCard = ({ note }) => (
   <li className="border-b border-[var(--rule)]">
     <Link to={`/left-field/n/${note.id}`} className="group block py-7" data-testid="lf-note">
+      {note.image && (
+        <div className="aspect-[16/9] mb-5 overflow-hidden bg-[var(--surface)]">
+          <img src={note.image} alt={note.image_alt || ''} loading="lazy" className="w-full h-full object-cover" data-testid="lf-note-image" />
+        </div>
+      )}
       <p className={meta}>
         {dayShort(note.published)}{note.kind === 'opener' ? ' · Opener' : ''}
       </p>

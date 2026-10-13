@@ -74,39 +74,12 @@ class Subscription(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     subscription_end_date: Optional[datetime] = None
 
-def _plain_feed_text(value: str, limit: Optional[int] = None) -> str:
-    """Substack's feed text as plain text: tags removed and entities like
-    &#8217; turned into the characters they stand for (they were showing
-    raw on /left-field), then cut to `limit` characters on a word
-    boundary."""
-    import html as _html
-    import re as _re
-    text = _html.unescape(_re.sub(r'<[^>]+>', ' ', value or ''))
-    text = _re.sub(r'\s+', ' ', text).strip()
-    if limit and len(text) > limit:
-        text = text[:limit].rsplit(' ', 1)[0].rstrip(' ,.;:') + '…'
-    return text
-
-
 @api_router.get("/substack/feed")
 async def get_substack_feed():
+    """The Left Field's latest editions, from the copy left_field_notes keeps."""
+    from left_field_notes import website_feed
     try:
-        import feedparser
-        feed = feedparser.parse('https://theleftfield.substack.com/feed')
-        
-        articles = []
-        for entry in feed.entries[:15]:
-            articles.append({
-                "id": entry.get('id', entry.link),
-                "title": _plain_feed_text(entry.get('title', '')),
-                "subtitle": _plain_feed_text(entry.get('summary', ''), 200),
-                "author": entry.get('author', 'The Left Field'),
-                "external_url": entry.get('link', ''),
-                "created_at": entry.get('published', ''),
-                "image_url": None
-            })
-        
-        return articles
+        return await website_feed()
     except Exception as e:
         logger.error(f"Substack feed error: {e}")
         return []
