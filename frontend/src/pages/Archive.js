@@ -18,20 +18,20 @@ import { StoriesUnavailable } from '../components/StoriesUnavailable';
 // as new beats enter the taxonomy; there's no way to distinguish a "beat"
 // tag from an entity tag (person/company) in Ghost's own data model, so
 // the curation has to live here.
-const BEAT_TAGS = [
+export const BEAT_TAGS = [
   'Cricket Markets', 'IPL', 'Franchise Valuations', 'Football', 'Media Rights',
   'Governance', 'Sponsorship', 'Infrastructure', 'Private Equity in Sport',
   'Sportswear & Apparel', 'Fitness & Wellness', 'Sports-Tech & Booking Platforms',
   'Fantasy Sports & Gaming', 'Sporting Goods & Equipment',
 ];
 
-const monthLabel = (iso) =>
+export const monthLabel = (iso) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
 const dayLabel = (iso) =>
   new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
-const ArchiveEntry = ({ post }) => (
+export const ArchiveEntry = ({ post }) => (
   <li className="border-b border-[var(--rule)]">
     <Link
       to={`/${post.slug || post.id}`}

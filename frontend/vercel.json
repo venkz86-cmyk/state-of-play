@@ -101,7 +101,7 @@
       "destination": "https://stateofplay-backend.onrender.com/api/:path*"
     },
     {
-      "source": "/:slug((?!api/|s/|g/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|subscribe$|students|app$|trial$|season-one$|start-here$|topic/|gift|renew$|mockup$|mockup/).+)",
+      "source": "/:slug((?!api/|s/|g/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|subscribe$|students|app$|search$|you$|trial$|season-one$|start-here$|topic/|gift|renew$|mockup$|mockup/).+)",
       "has": [
         {
           "type": "header",
@@ -112,7 +112,7 @@
       "destination": "https://stateofplay-backend.onrender.com/api/story/:slug"
     },
     {
-      "source": "/:slug((?!api/|s/|g/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|subscribe$|students|app$|trial$|season-one$|start-here$|topic/|gift|renew$|mockup$|mockup/).+)",
+      "source": "/:slug((?!api/|s/|g/|content/|static/|assets/|favicon|robots|sitemap|manifest|asset-manifest|logo|_next|about$|contact$|login$|signup$|account$|dashboard$|welcome$|teams$|teams/|partnerships$|privacy$|terms$|state-of-play$|left-field$|outfield$|archive$|membership$|subscribe$|students|app$|search$|you$|trial$|season-one$|start-here$|topic/|gift|renew$|mockup$|mockup/).+)",
       "has": [
         {
           "type": "header",

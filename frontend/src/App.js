@@ -21,6 +21,8 @@ import { ContactMockup as Contact } from "./pages/ContactMockup";
 import { TeamsMockup as Teams } from "./pages/TeamsMockup";
 import { StudentsMockup as Students } from "./pages/StudentsMockup";
 import { AppMockup } from "./pages/AppMockup";
+import { SearchMockup } from "./pages/SearchMockup";
+import { YouMockup } from "./pages/YouMockup";
 const StudentPay = lazy(() => import("./pages/StudentPayMockup").then((m) => ({ default: m.StudentPayMockup })));
 import { GiftMockup as Gift } from "./pages/GiftMockup";
 const GiftRedeem = lazy(() => import("./pages/GiftRedeemMockup").then((m) => ({ default: m.GiftRedeemMockup })));
@@ -102,6 +104,8 @@ function Shell() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/students" element={<Students />} />
           <Route path="/app" element={<AppMockup />} />
+          <Route path="/search" element={<SearchMockup />} />
+          <Route path="/you" element={<YouMockup />} />
           <Route path="/students/pay" element={<StudentPay />} />
           <Route path="/gift" element={<Gift />} />
           <Route path="/gift/redeem" element={<GiftRedeem />} />

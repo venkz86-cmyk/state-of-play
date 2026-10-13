@@ -8,4 +8,4 @@ export const IS_APP_MODE = typeof window !== 'undefined' && (
 );
 
 // The bottom tab bar's tabs; every other page shows a back arrow.
-export const TAB_ROOTS = ['/', '/archive', '/left-field', '/account', '/login'];
+export const TAB_ROOTS = ['/', '/left-field', '/search', '/you'];

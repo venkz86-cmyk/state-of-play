@@ -119,7 +119,8 @@ export const MockupHeader = () => {
 
           {/* Right rail */}
           <div className="flex items-center gap-4 lg:gap-5 shrink-0">
-            <SiteSearchTrigger />
+            {/* In the app the Search tab does this. */}
+            <span className="app-hide"><SiteSearchTrigger /></span>
 
             {/* Dark mode toggle */}
             <button
