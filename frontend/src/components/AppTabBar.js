@@ -5,7 +5,7 @@ import { IS_APP_MODE } from '../lib/appMode';
 const STALE_AFTER_MS = 30 * 60 * 1000;
 
 /* Bottom tab bar, shown only when the site is opened from the home screen
-   (lib/appMode.js): Home, Left Field, Search, You. Chosen from how readers
+   (lib/appMode.js): Home, The Left Field, Search, You. Chosen from how readers
    use a weekly publication: the latest stories, the twice-weekly Left
    Field, looking up an old story by name, and stories saved for later.
 
@@ -92,10 +92,10 @@ export const AppTabBar = () => {
   if (!IS_APP_MODE || pathname.startsWith('/admin') || pathname.startsWith('/teams/manage')) return null;
 
   const tabs = [
-    { to: '/', label: 'Home', icon: 'home', on: pathname === '/' },
-    { to: '/left-field', label: 'Left Field', icon: 'left-field', on: pathname.startsWith('/left-field') },
-    { to: '/search', label: 'Search', icon: 'search', on: pathname.startsWith('/search') || pathname.startsWith('/archive') || pathname.startsWith('/topic/') },
-    { to: '/you', label: 'You', icon: 'you', on: pathname.startsWith('/you') || pathname.startsWith('/account') || pathname === '/app' },
+    { to: '/', label: 'Home', key: 'home', icon: 'home', on: pathname === '/' },
+    { to: '/left-field', label: 'The Left Field', key: 'left-field', icon: 'left-field', on: pathname.startsWith('/left-field') },
+    { to: '/search', label: 'Search', key: 'search', icon: 'search', on: pathname.startsWith('/search') || pathname.startsWith('/archive') || pathname.startsWith('/topic/') },
+    { to: '/you', label: 'You', key: 'you', icon: 'you', on: pathname.startsWith('/you') || pathname.startsWith('/account') || pathname === '/app' },
   ];
   const track = (tab) => {
     try { window.gtag && window.gtag('event', 'app_tab', { tab, from: pathname }); } catch (e) { /* analytics never blocks a tap */ }
@@ -108,7 +108,7 @@ export const AppTabBar = () => {
       className={`app-tab-bar fixed inset-x-0 bottom-0 z-50 border-t border-[var(--rule)] backdrop-blur-xl transition-transform duration-200 ${hidden ? 'translate-y-full' : ''}`}
     >
       <ul className="flex max-w-[560px] mx-auto px-1">
-        {tabs.map(({ to, label, icon, on }) => (
+        {tabs.map(({ to, label, key, icon, on }) => (
           <li key={label} className="flex-1 relative">
             {/* the top corner of the logo's frame, over the current tab */}
             <span aria-hidden="true"
@@ -117,11 +117,11 @@ export const AppTabBar = () => {
               to={to}
               onClick={() => track(label)}
               aria-current={on ? 'page' : undefined}
-              data-testid={`app-tab-${label.toLowerCase().replace(' ', '-')}`}
+              data-testid={`app-tab-${key}`}
               className={`app-tab flex flex-col items-center justify-center gap-[5px] h-[58px] transition-colors ${on ? 'text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`}
             >
               <Icon name={icon} on={on} />
-              <span className={`text-[11px] leading-none tracking-[0.02em] ${on ? 'font-semibold' : 'font-medium'}`}>{label}</span>
+              <span className={`whitespace-nowrap text-[11px] leading-none tracking-[0.02em] ${on ? 'font-semibold' : 'font-medium'}`}>{label}</span>
             </Link>
           </li>
         ))}

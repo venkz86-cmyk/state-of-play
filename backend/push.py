@@ -359,8 +359,9 @@ async def check_left_field(editions: Optional[list] = None) -> list:
         if settings.get('paused'):
             await _db.push_sent.update_one({'_id': e['id']}, {'$set': {'skipped': True, 'reason': 'paused'}})
             continue
-        # Opens the app's running feed of notes (left_field_notes.py).
-        result = await send('The Left Field', e['title'][:140], f'{PUBLIC_BASE_URL}/left-field?source=push',
+        # Opens the edition in the app (left_field_notes.py).
+        slug = urlparse(e['url']).path.rstrip('/').split('/')[-1]
+        result = await send('The Left Field', e['title'][:140], f'{PUBLIC_BASE_URL}/left-field/e/{slug}?source=push',
                             {'topics.left_field': {'$ne': False}})
         await _db.push_sent.update_one({'_id': e['id']}, {'$set': {**result, 'sent_at': datetime.now(timezone.utc)}})
         logger.info(f"push: Left Field '{e['title']}' {result}")

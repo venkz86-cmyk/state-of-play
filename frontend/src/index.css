@@ -494,7 +494,7 @@ a:visited { color: inherit; }
 html.app-mode { -webkit-tap-highlight-color: transparent; }
 html.app-mode a, html.app-mode button { touch-action: manipulation; }
 html.app-mode body {
-  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: calc(58px + env(safe-area-inset-bottom));
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }

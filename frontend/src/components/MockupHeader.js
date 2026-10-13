@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Sun, Moon, ChevronLeft } from 'lucide-react';
 import { SiteSearchTrigger } from './SiteSearch';
 import { IS_APP_MODE, TAB_ROOTS } from '../lib/appMode';
+import { AppMenu } from './AppMenu';
 
 // Single asset. The logo is a flat single-color PNG (brand blue on
 // transparent), so a plain CSS `invert` produced a muddy khaki tone
@@ -30,6 +31,7 @@ export const MockupHeader = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef(null);
 
   const previewMember = searchParams.get('preview') === 'member';
   // Whether to show "My Account/Sign out" vs "Sign in/Subscribe" -- any
@@ -72,6 +74,7 @@ export const MockupHeader = () => {
 
   return (
     <header
+      ref={headerRef}
       data-testid="mockup-header"
       className="theme-transition sticky top-0 z-50 bg-[var(--nav-bg)] border-b border-[var(--rule)]"
     >
@@ -122,13 +125,13 @@ export const MockupHeader = () => {
             {/* In the app the Search tab does this. */}
             <span className="app-hide"><SiteSearchTrigger /></span>
 
-            {/* Dark mode toggle */}
+            {/* Dark mode toggle (in the app, it's in the menu) */}
             <button
               type="button"
               onClick={toggleTheme}
               data-testid="mockup-header-theme-toggle"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="h-11 w-11 -mx-1 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
+              className="app-hide h-11 w-11 -mx-1 inline-flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-200"
             >
               {isDark
                 ? <Sun className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -187,8 +190,9 @@ export const MockupHeader = () => {
           </div>
         </div>
 
-        {/* Mobile drawer */}
-        {mobileOpen && (
+        {/* Mobile drawer; the app has its own menu */}
+        {IS_APP_MODE && <AppMenu open={mobileOpen} onClose={() => setMobileOpen(false)} anchorRef={headerRef} />}
+        {mobileOpen && !IS_APP_MODE && (
           <div id="mobile-nav" className="lg:hidden border-t border-[var(--rule)] py-6">
             <nav className="flex flex-col gap-5">
               {NAV.map((item) => (

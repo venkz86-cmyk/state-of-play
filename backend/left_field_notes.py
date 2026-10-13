@@ -1,23 +1,24 @@
-"""The Left Field as a running feed of notes, for the app.
+"""The Left Field in the app, read from Substack.
 
-Each edition on Substack is split into notes: the opener (without the
-greeting), each item under its H3 headline, and sections like The Position
-and The Stack as one note each. Editions are separated into notes at the
-divider lines (<hr>), which is the most reliable marker in how Venkat
-writes them; the headline is the H3 (or the section's H2, or a short first
-line when a headline wasn't marked as one).
+The app's The Left Field tab shows each edition whole, as written
+(lf_editions): its headings, dividers, photos with their credits and the
+text, minus Substack's subscribe boxes and buttons. Editions are also split
+into notes (lf_notes: the opener, each item under its H3 headline, The
+Position and The Stack), kept for later use such as search.
 
 Read from the Substack feed (which carries each free edition's full text)
-every 10 minutes by push.watch_loop, and kept in lf_notes. The website
-doesn't show notes: there, The Left Field sends readers to Substack. It
-does use the editions kept here (lf_editions) for its list of briefs.
+every 10 minutes by push.watch_loop. The website doesn't show editions: there,
+The Left Field sends readers to Substack, and lf_editions only feeds its
+list of briefs.
 
 The HTML shown in the app is rebuilt from a short allow-list (paragraphs,
-bold, italics, lists, quotes, http(s) links); everything else, scripts and
-Substack's own widgets included, is dropped.
+headings, bold, italics, lists, quotes, https images, http(s) links);
+everything else, scripts and Substack's own widgets included, is dropped.
 
-  GET /api/left-field/notes?page=0   newest edition first, notes in reading order
-  GET /api/left-field/notes/{id}     one note
+  GET /api/left-field/editions?page=0   whole editions, newest first (the app's tab)
+  GET /api/left-field/editions/{slug}   one edition
+  GET /api/left-field/notes?page=0      the same editions split into notes
+  GET /api/left-field/notes/{id}        one note
 """
 from __future__ import annotations
 
@@ -187,6 +188,7 @@ def clean(html: str) -> str:
     out = ''.join(c.out)
     out = re.sub(r'<p>\s*(<br>)?\s*</p>', '', out)
     out = re.sub(r'<figure>\s*</figure>', '', out)
+    out = re.sub(r'<a [^>]*>\s*(<img [^>]*>)\s*</a>', r'\1', out)  # Substack links each photo to its full-size file
     return out.strip()
 
 
@@ -310,6 +312,32 @@ def split_edition(html: str) -> list:
     return notes
 
 
+def clean_edition(html: str) -> str:
+    """The whole edition for the app, as written: its headings (H2 and H3,
+    the bullet and Substack's link buttons taken off), dividers, photos with
+    their credits and the text, minus subscribe boxes and buttons."""
+    out = []
+    for b in blocks_of(html):
+        if _is_widget(b):
+            continue
+        if _is_hr(b):
+            if out and out[-1] != '<hr>':
+                out.append('<hr>')
+            continue
+        level = _heading_level(b)
+        if level is not None and len(b['text']) <= 160:
+            out.append(f'<h{level}>{htmllib.escape(_title(b["text"]))}</h{level}>')
+            continue
+        part = clean(b['html'])
+        if part:
+            out.append(part)
+    while out and out[-1] == '<hr>':
+        out.pop()
+    while out and out[0] == '<hr>':
+        out.pop(0)
+    return ''.join(out)
+
+
 def _first_paragraph(html: str) -> str:
     m = re.search(r'<(p|ul|ol|blockquote)>.*?</\1>', re.sub(r'<figure>.*?</figure>', '', html, flags=re.S), re.S)
     return m.group(0) if m else html
@@ -373,8 +401,12 @@ async def refresh() -> list:
     editions = await asyncio.to_thread(_fetch_feed)
     if _db is not None:
         for ed in editions:
+            body = clean_edition(ed['html']) if ed['html'] else ''
+            m = re.search(r'<img src="([^"]+)" alt="([^"]*)"', body)
             await _db.lf_editions.update_one({'_id': ed['slug']}, {'$set': {
-                k: ed[k] for k in ('guid', 'url', 'title', 'subtitle', 'author', 'published')}}, upsert=True)
+                **{k: ed[k] for k in ('guid', 'url', 'title', 'subtitle', 'author', 'published')},
+                'html': body, 'image': htmllib.unescape(m.group(1)) if m else None,
+                'image_alt': htmllib.unescape(m.group(2)) if m else ''}}, upsert=True)
         await ingest([ed for ed in editions if ed['html']])
     return editions
 
@@ -462,3 +494,40 @@ async def get_note(note_id: str):
     if not d:
         raise HTTPException(status_code=404, detail='Note not found')
     return _out(d, True)
+
+
+# ─── whole editions, for the app ────────────────────────────────────────────
+EDITIONS_PAGE = 12
+
+
+def _edition_out(d: dict, full: bool) -> dict:
+    p = d.get('published')
+    if isinstance(p, datetime) and p.tzinfo is None:
+        p = p.replace(tzinfo=timezone.utc)
+    o = {'slug': d['_id'], 'title': d.get('title') or '', 'subtitle': d.get('subtitle') or '',
+         'author': d.get('author') or '', 'url': d.get('url') or '',
+         'published': p.isoformat() if isinstance(p, datetime) else None,
+         'image': d.get('image'), 'image_alt': d.get('image_alt') or ''}
+    if full:
+        o['html'] = d.get('html') or ''
+    return o
+
+
+@router.get('/api/left-field/editions')
+async def list_editions(page: int = 0):
+    if _db is None:
+        return {'editions': [], 'more': False}
+    page = max(0, min(page, 200))
+    docs = await _db.lf_editions.find({'html': {'$nin': [None, '']}}, {'html': 0}).sort([('published', -1)]) \
+        .skip(page * EDITIONS_PAGE).limit(EDITIONS_PAGE + 1).to_list(EDITIONS_PAGE + 1)
+    return {'editions': [_edition_out(d, False) for d in docs[:EDITIONS_PAGE]], 'more': len(docs) > EDITIONS_PAGE}
+
+
+@router.get('/api/left-field/editions/{slug}')
+async def get_edition(slug: str):
+    if _db is None or not re.fullmatch(r'[\w-]{1,200}', slug):
+        raise HTTPException(status_code=404, detail='Edition not found')
+    d = await _db.lf_editions.find_one({'_id': slug})
+    if not d or not d.get('html'):
+        raise HTTPException(status_code=404, detail='Edition not found')
+    return _edition_out(d, True)
