@@ -181,7 +181,15 @@ async def start_trial(email: str, ghost_member_id: str = '', country: str = 'IN'
         'progress_10day_sent': False,
         'created_at': now,
     }
-    await _db.trial_members.insert_one(record)
+    try:
+        await _db.trial_members.insert_one(record)
+    except Exception as e:
+        # The checkout and Razorpay's webhook start the same trial at once
+        # (both found nothing, then both inserted): the other one won, and
+        # sent the welcome email. Theirs is the trial.
+        if 'E11000' in str(e) or 'duplicate key' in str(e).lower():
+            return await _db.trial_members.find_one({'email': email})
+        raise
     logger.info(f'Trial started for {email}: {len(record["snapshot_slugs"])} stories, expires {record["expires_at"].isoformat()}')
 
     sent = await _send_email(

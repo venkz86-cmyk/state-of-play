@@ -826,6 +826,7 @@ async def get_article_preview(request: ArticlePreviewRequest, http_request: Requ
     if not token:
         raise HTTPException(status_code=503, detail="Failed to create admin token")
 
+    import httpx
     try:
         async with httpx.AsyncClient() as http_client:
             r = await http_client.get(
