@@ -408,3 +408,9 @@ already use what each team actually paid. Routine: trig_01Ccnea3Qht71AD3U2qKB6AZ
 - Later app plan: Expo; Apple in-app subscription is fine (price covers
   Apple's cut, Small Business Program 15%); Apple purchases grant the same
   Ghost labels and go in the payments ledger as "Apple".
+
+## Product principle (Venkat, October 13, 2026)
+We solve for behaviour, with a strict reader-first approach. Decide from
+how readers actually use things (tab taps are logged to Google Analytics
+as 'app_tab'), never promise what isn't true, and let readers choose
+(notifications are per phone: New stories, Mixed Zone notes).
