@@ -1627,254 +1627,14 @@ INDIAN_STATES = {
 }
 
 
-class InvoiceGenerateRequest(BaseModel):
-    email: EmailStr
-    legal_name: str = Field(..., min_length=2, max_length=200)
-    gstin: Optional[str] = None        # 15-char; optional → B2C
-    address: str = Field(..., min_length=5, max_length=500)
-    state_code: Optional[str] = None   # "29" etc. None / "00" → international
-    is_international: bool = False
-    issue_date: Optional[str] = None   # ISO date 'YYYY-MM-DD'; default = payment date
-
-
-def _fy_bounds(d: datetime) -> tuple[datetime, datetime]:
-    """Return (fy_start, fy_end_exclusive) for the Indian fiscal year containing d."""
-    y = d.year if d.month >= 4 else d.year - 1
-    fy_start = datetime(y, 4, 1, tzinfo=timezone.utc)
-    fy_end = datetime(y + 1, 4, 1, tzinfo=timezone.utc)
-    return fy_start, fy_end
-
-
-async def _ghost_seq_for_member(member_id: str, member_created_at: datetime) -> int:
-    """1-based chronological position of this member among 'paid-via-razorpay'
-    members in the current FY, ordered by created_at ascending. Deterministic
-    and sequential within the FY — no DB required. Returns 0 on failure."""
-    if not GHOST_ADMIN_API_KEY or not member_id:
-        return 0
-
-    fy_start, fy_end = _fy_bounds(member_created_at)
-    import httpx
-    token = create_ghost_admin_token()
-    members: list[dict] = []
-    page = 1
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            while True:
-                r = await client.get(
-                    f"{GHOST_URL}/ghost/api/admin/members/",
-                    params={
-                        "filter": (
-                            f"label:paid-via-razorpay+"
-                            f"created_at:>='{fy_start.strftime('%Y-%m-%d %H:%M:%S')}'+"
-                            f"created_at:<'{fy_end.strftime('%Y-%m-%d %H:%M:%S')}'"
-                        ),
-                        "limit": 100,
-                        "page": page,
-                        "order": "created_at asc",
-                        "include": "labels",
-                    },
-                    headers={"Authorization": f"Ghost {token}"},
-                )
-                if r.status_code != 200:
-                    break
-                payload = r.json()
-                members.extend(payload.get("members", []))
-                pages = (payload.get("meta", {}).get("pagination") or {}).get("pages") or 1
-                if page >= pages:
-                    break
-                page += 1
-    except Exception as e:
-        logger.warning(f"Ghost FY member listing failed: {e!r}")
-        return 0
-
-    for i, m in enumerate(members):
-        if m.get("id") == member_id:
-            return i + 1
-    return 0
-
-
 @api_router.post("/invoice/generate")
-async def generate_gst_invoice(req: InvoiceGenerateRequest):
-    """Generate a GST tax invoice PDF for a paid member.
-
-    Flow:
-      1. Verify the email belongs to a paid Ghost member (label or comped status)
-      2. Either return the existing invoice (same buyer, same payment ref) OR
-         allocate the next fiscal-year sequence number
-      3. Render the PDF, persist a record, return the bytes
-    """
-    # ─── 1. validate input ────────────────────────────────────
-    gstin = (req.gstin or "").strip().upper() or None
-    if gstin and not inv_validate_gstin(gstin):
-        raise HTTPException(status_code=400, detail="Invalid GSTIN format")
-
-    if not req.is_international:
-        if not req.state_code or req.state_code not in INDIAN_STATES:
-            raise HTTPException(status_code=400, detail="Invalid Indian state code")
-        # Sanity check: GSTIN's first 2 digits should match the chosen state code
-        if gstin and gstin[:2] != req.state_code:
-            raise HTTPException(
-                status_code=400,
-                detail=f"GSTIN state prefix ({gstin[:2]}) does not match selected state ({req.state_code})",
-            )
-
-    # ─── 2. confirm paid member ───────────────────────────────
-    if not GHOST_ADMIN_API_KEY:
-        raise HTTPException(status_code=503, detail="Member verification unavailable")
-
-    import httpx
-    member = None
-    last_err = None
-    token = create_ghost_admin_token()
-    for attempt in range(3):
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as http_client:
-                r = await http_client.get(
-                    f"{GHOST_URL}/ghost/api/admin/members/",
-                    params={"filter": f"email:{req.email}", "include": "subscriptions,labels"},
-                    headers={"Authorization": f"Ghost {token}"},
-                )
-            if r.status_code == 200:
-                members = r.json().get("members", [])
-                if members:
-                    member = members[0]
-                break
-            last_err = f"HTTP {r.status_code}"
-        except Exception as e:
-            last_err = repr(e)
-            logger.warning(f"Ghost lookup for invoice attempt {attempt+1} failed: {last_err}")
-
-    if not member:
-        if last_err:
-            logger.error(f"Ghost lookup for invoice failed after retries: {last_err}")
-            raise HTTPException(status_code=502, detail="Could not reach member directory, please try again")
-        raise HTTPException(status_code=404, detail="No matching member found")
-
-    labels = [(lbl.get("name") or "").lower() for lbl in (member.get("labels") or [])]
-    is_paid = (
-        "paid-via-razorpay" in labels
-        or member.get("status") in ("paid", "comped")
-        or len(member.get("subscriptions") or []) > 0
-    )
-    if not is_paid:
-        raise HTTPException(status_code=403, detail="Invoice available for paid members only")
-
-    # ─── 3. derive subscription period + razorpay ref ─────────
-    created_at_str = member.get("created_at") or datetime.now(timezone.utc).isoformat()
-    try:
-        payment_dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-    except Exception as e:
-        # Falling back to "now" means the GST invoice PDF will show today's
-        # date instead of the real payment date. Log so we can spot Ghost
-        # format drift instead of quietly issuing wrong-dated invoices.
-        logger.warning(
-            f"Invoice payment_dt parse failed — falling back to now(): "
-            f"email={req.email} created_at={created_at_str!r} err={e!r}"
-        )
-        payment_dt = datetime.now(timezone.utc)
-    sub_start = payment_dt
-    sub_end = sub_start + timedelta(days=365)
-
-    # Best-effort Razorpay reference extraction from member note
-    note = member.get("note") or ""
-    rzp_ref = "—"
-    for tok in note.split():
-        if tok.startswith("pay_") and len(tok) > 8:
-            rzp_ref = tok.strip(".,;|")
-            break
-
-    # ─── 4. tax computation ───────────────────────────────────
-    taxable_value = 2499
-    tax = inv_compute_tax(
-        taxable_value=taxable_value,
-        buyer_state_code=req.state_code,
-        is_international=req.is_international,
-    )
-
-    # ─── 5. issued_at: default = payment date, optional override ──
-    issued_at = payment_dt
-    if req.issue_date:
-        try:
-            override = datetime.strptime(req.issue_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="issue_date must be YYYY-MM-DD")
-        today = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59)
-        # Cannot be before payment, cannot be in the future
-        payment_day = payment_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        if override < payment_day:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Issue date cannot be before the payment date ({payment_dt.strftime('%b %-d, %Y')})",
-            )
-        if override > today:
-            raise HTTPException(status_code=400, detail="Issue date cannot be in the future")
-        # Must remain in the same fiscal year as the payment
-        if inv_fiscal_year(override) != inv_fiscal_year(payment_dt):
-            raise HTTPException(
-                status_code=400,
-                detail="Issue date must fall within the same fiscal year as the payment",
-            )
-        issued_at = override
-
-    # ─── 6. invoice number — Ghost-derived sequential ─────────
-    fy = inv_fiscal_year(issued_at)
-    seq = await _ghost_seq_for_member(member.get("id"), payment_dt)
-    if seq <= 0:
-        # Defensive fallback — should never normally fire
-        seq = abs(hash(member.get("id") or req.email)) % 9999 + 1
-    invoice_number = f"TSOP/{fy}/{seq:04d}"
-
-    # Optional persistence (only if Mongo is wired) — for auditing only
-    if db is not None:
-        try:
-            await db.invoices.update_one(
-                {"member_id": member.get("id"), "fy": fy},
-                {"$set": {
-                    "invoice_number": invoice_number,
-                    "email": req.email,
-                    "razorpay_ref": rzp_ref,
-                    "buyer_name": req.legal_name,
-                    "buyer_gstin": gstin,
-                    "buyer_state_code": req.state_code,
-                    "is_international": req.is_international,
-                    "taxable_value": taxable_value,
-                    "total": tax["total"],
-                    "issued_at": issued_at.isoformat(),
-                }},
-                upsert=True,
-            )
-        except Exception as e:
-            logger.warning(f"Invoice persistence failed (non-fatal): {e!r}")
-
-    # ─── 6. render PDF ────────────────────────────────────────
-    buyer_state_name = (
-        "International" if req.is_international
-        else INDIAN_STATES.get(req.state_code or "", "—")
-    )
-    pdf_bytes = build_invoice_pdf({
-        "invoice_number": invoice_number,
-        "issued_at": issued_at,
-        "buyer": {
-            "name": req.legal_name,
-            "gstin": gstin,
-            "address": req.address,
-            "state_name": buyer_state_name,
-            "state_code": req.state_code or "—",
-            "is_international": req.is_international,
-        },
-        "period_start": sub_start.strftime("%b %-d, %Y"),
-        "period_end": sub_end.strftime("%b %-d, %Y"),
-        "razorpay_ref": rzp_ref,
-        "taxable_value": taxable_value,
-        "tax": tax,
-    })
-
-    safe_num = invoice_number.replace("/", "-")
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{safe_num}.pdf"'},
-    )
+async def generate_gst_invoice_retired():
+    """Replaced by member_invoices (/api/invoice/payments and /download),
+    which builds each invoice from the payment itself. This took its date
+    from the Ghost account and charged everyone ₹2,499, so renewers got
+    last year's invoice. Kept only to tell a page loaded before the change
+    what to do."""
+    raise HTTPException(status_code=410, detail="Reload this page to download your invoice.")
 
 
 # ════════════════════════════════════════════════════════════════════════
@@ -2678,6 +2438,15 @@ try:
     app.include_router(gift_subscriptions_router)
 except Exception as _e:
     logging.warning(f"gift_subscriptions module not mounted: {_e!r}")
+
+# Mount member GST invoices (October 2026): one invoice per payment, from
+# the payments ledger, for the signed-in reader.
+try:
+    from member_invoices import router as member_invoices_router, init as member_invoices_init
+    member_invoices_init(db)
+    app.include_router(member_invoices_router)
+except Exception as _e:
+    logging.warning(f"member_invoices module not mounted: {_e!r}")
 
 # Mount corporate.py (Phase 4) -- before admin_dashboard, which now imports
 # fetch_accounts from it to resolve corp-* members' real renewal dates.

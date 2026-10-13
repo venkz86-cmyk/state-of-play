@@ -303,7 +303,7 @@ export const OverviewPanel = ({ onAuthError }) => {
           <p className={label}>Paying, but Ghost shows free</p>
           <p className="font-plex text-[14px] text-[var(--text-muted)] mb-3 max-w-[64ch]">
             Ghost's own comp ran out on its own clock. They still read everything on the site. Restore in Ghost
-            shows you their payment and access dates first, then comps them in Ghost until their access ends.
+            shows you their payment and access dates first, then comps them until their access ends.
           </p>
           <ul>
             {attention.ghost_status_downgraded.map((r) => (

@@ -390,7 +390,7 @@ export const AccountMockup = () => {
               {
                 title: 'Billing',
                 desc: billingLine,
-                cta: 'Need GST invoice? Download',
+                cta: 'Download a GST invoice',
                 onClick: canAccessPremium ? () => setInvoiceOpen(true) : null,
                 href: canAccessPremium ? null : '#',
               },
