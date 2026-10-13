@@ -405,6 +405,14 @@ already use what each team actually paid. Routine: trig_01Ccnea3Qht71AD3U2qKB6AZ
 - Open items before promoting /app: in home-screen mode there are no
   browser bars (no back button, no pull-to-refresh), so the site needs its
   own way back from a story and must respect the notch and home bar.
+- The app is its own product, not the website in a frame (Venkat,
+  October 13): every screen gets an app version. Done so far: tab bar
+  (Home, The Left Field, Search, You), app menu (what the tabs don't
+  cover, plus settings), The Left Field tab (latest edition whole, In
+  this edition, earlier editions, unread marker), You tab as the account
+  (/account opens it in the app), no Briefing list on home. Website-only
+  pages still reached from the app: story pages, /app, /mixed-zone,
+  /gift, /trial, /teams, /outfield, /login, /signup.
 - Later app plan: Expo; Apple in-app subscription is fine (price covers
   Apple's cut, Small Business Program 15%); Apple purchases grant the same
   Ghost labels and go in the payments ledger as "Apple".
