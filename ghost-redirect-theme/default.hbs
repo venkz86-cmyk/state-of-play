@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>The State of Play</title>
+  {{ghost_head}}
+  <script>
+    // Every public page moves to the same page on stateofplay.club. Ghost
+    // Admin's previews (/p/...) stay here so drafts can still be checked.
+    (function () {
+      var p = location.pathname;
+      if (p.indexOf('/p/') === 0) return;
+      var to = '/';
+      if (p.indexOf('/tag/') === 0) to = '/archive';
+      else if (p.indexOf('/author/') === 0) to = '/about';
+      else if (p !== '/') to = p.replace(/\/+$/, '');
+      location.replace('https://www.stateofplay.club' + to + location.search);
+    })();
+  </script>
+</head>
+<body style="font-family: Georgia, serif; max-width: 640px; margin: 48px auto; padding: 0 16px;">
+  {{{body}}}
+  <p><a href="https://www.stateofplay.club">Go to The State of Play</a></p>
+  {{ghost_foot}}
+</body>
+</html>

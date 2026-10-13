@@ -1,0 +1,8 @@
+{
+  "name": "tsop-redirect",
+  "description": "Sends every page of the-state-of-play.ghost.io to the same page on www.stateofplay.club. Ghost keeps the editor, members and newsletters.",
+  "version": "1.0.0",
+  "engines": { "ghost": ">=5.0.0" },
+  "license": "UNLICENSED",
+  "config": { "posts_per_page": 1 }
+}
