@@ -500,6 +500,8 @@ html.app-mode body {
 }
 html.app-mode [data-testid="mockup-header"] { padding-top: env(safe-area-inset-top); }
 html.app-mode .app-tab-bar { padding-bottom: env(safe-area-inset-bottom); }
+.app-tab-bar { background: color-mix(in srgb, var(--nav-bg) 90%, transparent); }
+.app-tab { font-family: var(--label-font), system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
 html.app-mode [data-testid="mockup-back-to-top"] { bottom: calc(72px + env(safe-area-inset-bottom)); }
 /* The header's back arrow does this job in the app. */
 html.app-mode .app-hide { display: none; }
