@@ -34,10 +34,13 @@ async function errorText(res, fallback) {
   return fallback;
 }
 
-/* The reader's GST invoice, one per payment (backend member_invoices.py).
-   It lists their payments, newest first, and fills the form in with the
-   details they used last time, so a repeat download is one click. */
-export const InvoiceRequestModal = ({ open, onClose }) => {
+/* GST invoices, one per payment (backend member_invoices.py). It lists
+   the payments, newest first, and fills the form in with the details used
+   last time, so a repeat download is one click. With `teamToken` it is the
+   team page's version: the team's payments, found through its link. */
+export const InvoiceRequestModal = ({ open, onClose, teamToken = null }) => {
+  const team = Boolean(teamToken);
+  const help = team ? 'prerna@stateofplay.club' : 'venkat@stateofplay.club';
   const [payments, setPayments] = useState(null);
   const [loadError, setLoadError] = useState('');
   const [paymentId, setPaymentId] = useState('');
@@ -55,15 +58,25 @@ export const InvoiceRequestModal = ({ open, onClose }) => {
     let live = true;
     (async () => {
       try {
-        const res = await fetch(`${API}/api/invoice/payments`, { headers: authHeader() });
+        const res = team
+          ? await fetch(`${API}/api/invoice/team/list`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: teamToken }),
+          })
+          : await fetch(`${API}/api/invoice/payments`, { headers: authHeader() });
         if (!res.ok) throw new Error(await errorText(res, 'Your payments did not load. Close this and try again.'));
         const data = await res.json();
         if (!live) return;
-        const list = data.payments || [];
+        const list = team
+          ? (data.invoices || []).map((i) => ({ ...i, payment_id: i.invoice_id, name: `Team of ${i.seats}` }))
+          : (data.payments || []);
         setPayments(list);
         const first = list.find((p) => !p.blocked);
         if (first) setPaymentId(first.payment_id);
         const b = data.billing;
+        if (team && !b) {
+          setLegalName(data.company_name || '');
+          setShowGstin(true);
+        }
         if (b) {
           setLegalName(b.legal_name || '');
           setAddress(b.address || '');
@@ -75,7 +88,7 @@ export const InvoiceRequestModal = ({ open, onClose }) => {
       }
     })();
     return () => { live = false; };
-  }, [open]);
+  }, [open, team, teamToken]);
 
   if (!open) return null;
 
@@ -99,11 +112,11 @@ export const InvoiceRequestModal = ({ open, onClose }) => {
     if (inRupees && !stateCode) { setError('Choose your state.'); return; }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/invoice/download`, {
+      const res = await fetch(`${API}/api/invoice/${team ? 'team/download' : 'download'}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        headers: { 'Content-Type': 'application/json', ...(team ? {} : authHeader()) },
         body: JSON.stringify({
-          payment_id: selected.payment_id,
+          ...(team ? { token: teamToken, invoice_id: selected.payment_id } : { payment_id: selected.payment_id }),
           legal_name: legalName.trim(),
           gstin: inRupees && g ? g : null,
           address: address.trim(),
@@ -157,8 +170,10 @@ export const InvoiceRequestModal = ({ open, onClose }) => {
 
           {payments && payments.length === 0 && (
             <p className="font-plex text-[15px] max-w-[50ch]" data-testid="invoice-none">
-              We can&rsquo;t find a payment on this account. If you paid with another email address, write
-              to <a className="underline underline-offset-4" href="mailto:venkat@stateofplay.club?subject=GST%20invoice">venkat@stateofplay.club</a> and
+              {team
+                ? 'We can\u2019t find a payment for this team. Write to '
+                : 'We can\u2019t find a payment on this account. If you paid with another email address, write to '}
+              <a className="underline underline-offset-4" href={`mailto:${help}?subject=GST%20invoice`}>{help}</a> and
               we&rsquo;ll send your invoice.
             </p>
           )}

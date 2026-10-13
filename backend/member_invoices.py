@@ -353,45 +353,56 @@ async def download_invoice(req: InvoiceDownloadRequest, request: Request):
     if blocked:
         raise HTTPException(status_code=409, detail=blocked)
 
-    currency = doc.get('currency') or 'INR'
+    what = _what(doc, gift)
+    return await _issue(
+        invoice_key=doc['payment_id'], owner=email, billing_key=email, req=req,
+        currency=doc.get('currency') or 'INR', net_minor=_net_minor(doc), paid_at=_paid_at(doc),
+        description=what['description'], period_start=what.get('period_start'),
+        period_end=what.get('period_end'), period_line=what.get('period_line'), ref=doc['payment_id'],
+    )
+
+
+def _buyer(req, currency: str) -> dict:
+    """Checks the billing details. A GSTIN fills in its own state."""
     gstin = (req.gstin or '').strip().upper() or None
     state_code = (req.state_code or '').strip() or None
-    if currency == 'INR':
-        if gstin and not validate_gstin(gstin):
-            raise HTTPException(status_code=400, detail='That GSTIN is not in the right format. It has 15 characters, like 29ABCDE1234F1Z5.')
-        if gstin and not state_code:
-            state_code = gstin[:2]
-        if state_code not in INDIAN_STATES:
-            raise HTTPException(status_code=400, detail='Choose your state.')
-        if gstin and gstin[:2] != state_code:
-            raise HTTPException(status_code=400, detail=f'Your GSTIN is registered in {INDIAN_STATES.get(gstin[:2], "another state")}. Choose that state.')
-    else:
-        gstin, state_code = None, None
+    if currency != 'INR':
+        return {'legal_name': req.legal_name.strip(), 'gstin': None, 'address': req.address.strip(), 'state_code': None}
+    if gstin and not validate_gstin(gstin):
+        raise HTTPException(status_code=400, detail='That GSTIN is not in the right format. It has 15 characters, like 29ABCDE1234F1Z5.')
+    if gstin and not state_code:
+        state_code = gstin[:2]
+    if state_code not in INDIAN_STATES:
+        raise HTTPException(status_code=400, detail='Choose your state.')
+    if gstin and gstin[:2] != state_code:
+        raise HTTPException(status_code=400, detail=f'Your GSTIN is registered in {INDIAN_STATES.get(gstin[:2], "another state")}. Choose that state.')
+    return {'legal_name': req.legal_name.strip(), 'gstin': gstin, 'address': req.address.strip(), 'state_code': state_code}
 
-    issued_at = _paid_at(doc)
-    rec = await _number_for(doc['payment_id'], issued_at, email)
-    issued_at = _aware(rec.get('issued_at')) or issued_at
-    buyer = {'legal_name': req.legal_name.strip(), 'gstin': gstin, 'address': req.address.strip(), 'state_code': state_code}
-    await _db.payment_invoices.update_one({'payment_id': doc['payment_id']},
+
+async def _issue(*, invoice_key: str, owner: str, billing_key: str, req, currency: str, net_minor: int,
+                 paid_at: datetime, description: str, period_start=None, period_end=None,
+                 period_line=None, ref: str) -> Response:
+    """Numbers (once), remembers the billing details and renders the PDF."""
+    buyer = _buyer(req, currency)
+    rec = await _number_for(invoice_key, paid_at, owner)
+    issued_at = _aware(rec.get('issued_at')) or paid_at
+    await _db.payment_invoices.update_one({'payment_id': invoice_key},
                                           {'$set': {'buyer': buyer, 'last_downloaded_at': datetime.now(timezone.utc)}})
-    await _db.invoice_billing.update_one({'email': email}, {'$set': {**buyer, 'email': email}}, upsert=True)
-
-    what = _what(doc, gift)
-    money = amounts(_net_minor(doc), currency, state_code)
+    await _db.invoice_billing.update_one({'email': billing_key}, {'$set': {**buyer, 'email': billing_key}}, upsert=True)
+    money = amounts(net_minor, currency, buyer['state_code'])
     pdf = build_invoice_pdf({
         'invoice_number': rec['invoice_number'],
         'issued_at': issued_at.astimezone(IST),
         'buyer': {
-            'name': buyer['legal_name'], 'gstin': gstin, 'address': buyer['address'],
-            'state_name': INDIAN_STATES.get(state_code or '', 'Outside India'),
-            'state_code': state_code or '96',
+            'name': buyer['legal_name'], 'gstin': buyer['gstin'], 'address': buyer['address'],
+            'state_name': INDIAN_STATES.get(buyer['state_code'] or '', 'Outside India'),
+            'state_code': buyer['state_code'] or '96',
             'is_international': currency != 'INR',
         },
-        'description_override': what['description'],
-        'period_start': what.get('period_start'), 'period_end': what.get('period_end'),
-        'period_line': what.get('period_line'),
-        'paid_on': _day(_paid_at(doc)),
-        'razorpay_ref': doc['payment_id'],
+        'description_override': description,
+        'period_start': period_start, 'period_end': period_end, 'period_line': period_line,
+        'paid_on': _day(paid_at),
+        'razorpay_ref': ref,
         'currency': currency,
         'taxable_value': money['taxable'],
         'tax': money['tax'],
@@ -399,3 +410,180 @@ async def download_invoice(req: InvoiceDownloadRequest, request: Request):
     filename = rec['invoice_number'].replace('/', '-')
     return Response(content=pdf, media_type='application/pdf',
                     headers={'Content-Disposition': f'attachment; filename="{filename}.pdf"'})
+
+
+# ─── teams ──────────────────────────────────────────────────────────────────
+# A team's invoices come from its Razorpay payments (admin email, plan
+# team-5/team-10), at what was actually charged, so a price change needs
+# no change here. A team set up by hand (paid outside Razorpay) has no
+# payment to read; it gets the founding-partner rate if it started on or
+# before December 31, 2026, the last day that rate was offered, and is
+# otherwise asked to write in.
+TEAM_FOUNDING_LAST_DAY = datetime(2026, 12, 31, 23, 59, 59, tzinfo=IST)
+TEAM_FOUNDING_TAXABLE = {5: 10000, 10: 20000}   # rupees, before GST
+TEAM_SEATS = {'team-5': 5, 'team-10': 10}
+TEAM_HELP = 'Write to prerna@stateofplay.club for this invoice.'
+
+
+def _add_year(dt: datetime) -> datetime:
+    try:
+        return dt.replace(year=dt.year + 1)
+    except ValueError:   # February 29
+        return dt + timedelta(days=365)
+
+
+def _less_year(dt: datetime) -> datetime:
+    try:
+        return dt.replace(year=dt.year - 1)
+    except ValueError:
+        return dt - timedelta(days=365)
+
+
+async def _team_from_token(token: str) -> dict:
+    """The team behind a /teams/manage link, checked with Apps Script."""
+    import httpx
+    from corporate import APPS_SCRIPT_URL
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            r = await client.get(APPS_SCRIPT_URL, params={'token': token})
+        body = r.json()
+    except Exception as e:
+        logger.error(f'team invoice: Apps Script lookup failed: {e!r}')
+        raise HTTPException(status_code=502, detail='Your team did not load. Try again in a minute.')
+    account = ((body.get('data') or {}).get('account') or {}) if body.get('success') else {}
+    if not account.get('account_id'):
+        if 'no longer active' in str(body.get('error') or '').lower():
+            raise HTTPException(status_code=403, detail=f'This team is no longer active. {TEAM_HELP}')
+        raise HTTPException(status_code=403, detail='This team link is not valid. Open the latest one from your email.')
+    return account
+
+
+async def _team_row(account_id: str) -> dict:
+    """The team's full Sheet row (created_at, amount_paid), or {}."""
+    try:
+        from corporate import fetch_accounts
+        return next((a for a in await fetch_accounts() if a.get('account_id') == account_id), {})
+    except Exception as e:
+        logger.warning(f'team invoice: Sheet row lookup failed for {account_id} (non-fatal): {e!r}')
+        return {}
+
+
+async def team_items(account: dict, row: dict) -> list[dict]:
+    """One entry per invoice the team can download, newest first."""
+    admin = (account.get('admin_email') or '').lower().strip()
+    docs, seen = [], set()
+    if _db is not None and admin:
+        async for d in _db.payments.find({'email': admin}):
+            if d.get('plan') in TEAM_PLANS and d.get('payment_id') not in seen:
+                seen.add(d['payment_id']); docs.append(d)
+        sheet_pid = (row.get('razorpay_payment_id') or '').strip()
+        if sheet_pid and sheet_pid not in seen:
+            d = await _db.payments.find_one({'payment_id': sheet_pid})
+            if d:
+                seen.add(sheet_pid); docs.append(d)
+    renewal = _aware(account.get('renewal_date') or row.get('renewal_date'))
+    items = []
+    if docs:
+        docs.sort(key=lambda d: _aware(d.get('razorpay_created_at')) or datetime.min.replace(tzinfo=timezone.utc))
+        prev_end = None
+        for i, d in enumerate(docs):
+            paid = _aware(d.get('razorpay_created_at'))
+            refunded = d.get('status') == 'refunded' or (_net_minor(d) or 0) <= 0
+            start = max(paid, prev_end) if (paid and prev_end) else paid
+            end = _add_year(start) if start else None
+            if i == len(docs) - 1 and renewal and not refunded:
+                end, start = renewal, _less_year(renewal)   # the Sheet holds the team's real end date
+            if not refunded:
+                prev_end = end
+            seats = TEAM_SEATS.get(d.get('plan')) or account.get('seats')
+            items.append({
+                'id': d['payment_id'], 'paid_at': paid, 'net_minor': _net_minor(d),
+                'shown_minor': _net_minor(d) if not refunded else d.get('amount'),
+                'currency': d.get('currency') or 'INR', 'seats': seats,
+                'start': start, 'end': end, 'ref': d['payment_id'],
+                'blocked': 'Refunded.' if refunded else ('' if paid and d.get('amount') is not None else TEAM_HELP),
+            })
+    elif renewal:
+        start = _less_year(renewal)
+        created = _aware(row.get('created_at')) or start
+        try:
+            seats = int(account.get('seats') or row.get('seats') or 0)
+        except (TypeError, ValueError):
+            seats = 0
+        taxable = TEAM_FOUNDING_TAXABLE.get(seats) if created <= TEAM_FOUNDING_LAST_DAY else None
+        now = datetime.now(timezone.utc)
+        items.append({
+            'id': f"team:{account['account_id']}:{start.astimezone(IST):%Y-%m-%d}",
+            # Paid by hand: the year's first day, or today if it hasn't started.
+            'paid_at': min(start, now), 'net_minor': taxable * 118 if taxable else None,
+            'shown_minor': taxable * 118 if taxable else None, 'currency': 'INR', 'seats': seats,
+            'start': start, 'end': renewal, 'ref': f"Team {account['account_id']}",
+            'blocked': '' if taxable else TEAM_HELP,
+        })
+    items.sort(key=lambda it: it['paid_at'] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    return items
+
+
+def _founding(row: dict, items: list[dict]) -> bool:
+    started = _aware(row.get('created_at')) or min((it['paid_at'] for it in items if it['paid_at']), default=None)
+    return bool(started and started <= TEAM_FOUNDING_LAST_DAY)
+
+
+class TeamInvoiceListRequest(BaseModel):
+    token: str = Field(..., min_length=8, max_length=200)
+
+
+@router.post('/api/invoice/team/list')
+async def list_team_invoices(req: TeamInvoiceListRequest):
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Invoices are unavailable right now. Try again in a few minutes.')
+    account = await _team_from_token(req.token)
+    row = await _team_row(account['account_id'])
+    items = await team_items(account, row)
+    out = []
+    for it in items:
+        rec = await _existing(it['id'])
+        out.append({
+            'invoice_id': it['id'], 'seats': it['seats'],
+            'amount': it['shown_minor'], 'currency': it['currency'],
+            'paid_on_day': _day(it['paid_at']),
+            'period_start': _day(it['start']), 'period_end': _day(it['end']),
+            'invoice_number': (rec or {}).get('invoice_number'),
+            'blocked': it['blocked'],
+        })
+    billing = await _db.invoice_billing.find_one({'email': f"team:{account['account_id']}"})
+    return {
+        'invoices': out,
+        'founding': _founding(row, items),
+        'company_name': account.get('company_name') or '',
+        'billing': {k: billing.get(k) for k in ('legal_name', 'gstin', 'address', 'state_code')} if billing else None,
+    }
+
+
+class TeamInvoiceDownloadRequest(BaseModel):
+    token: str = Field(..., min_length=8, max_length=200)
+    invoice_id: str = Field(..., min_length=4, max_length=120)
+    legal_name: str = Field(..., min_length=2, max_length=200)
+    gstin: Optional[str] = None
+    address: str = Field(..., min_length=5, max_length=500)
+    state_code: Optional[str] = None
+
+
+@router.post('/api/invoice/team/download')
+async def download_team_invoice(req: TeamInvoiceDownloadRequest):
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Invoices are unavailable right now. Try again in a few minutes.')
+    account = await _team_from_token(req.token)
+    row = await _team_row(account['account_id'])
+    it = next((x for x in await team_items(account, row) if x['id'] == req.invoice_id), None)
+    if not it:
+        raise HTTPException(status_code=404, detail='We could not find that payment.')
+    if it['blocked']:
+        raise HTTPException(status_code=409, detail=it['blocked'])
+    return await _issue(
+        invoice_key=it['id'], owner=(account.get('admin_email') or '').lower(),
+        billing_key=f"team:{account['account_id']}", req=req, currency=it['currency'],
+        net_minor=it['net_minor'], paid_at=it['paid_at'],
+        description=f"The State of Play, team membership for {it['seats']} people",
+        period_start=_day(it['start']), period_end=_day(it['end']), ref=it['ref'],
+    )

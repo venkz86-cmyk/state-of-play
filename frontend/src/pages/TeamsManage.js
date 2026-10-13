@@ -17,11 +17,7 @@ import { TeamInvoiceRequestModal } from '../components/TeamInvoiceRequestModal';
 const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbxuRQHvQZfZFYCxLirt8ry2mbiwYGlVKm7N3oe-Oy4-GuosggZZU1t5AV1Q97HmyIZ6Pg/exec';
 
-// Founding-rate billing — hard-coded by plan name (Apps Script doesn't return amounts).
-const PLAN_PRICE_INR = {
-  'Team-5': 11800,
-  'Team-10': 23600,
-};
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const shortDate = (iso) =>
@@ -204,6 +200,21 @@ const DashboardView = ({ token, account, members, onChange }) => {
   const [removeError, setRemoveError] = useState('');
   const [removing, setRemoving] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  // What the team last paid, and whether it's on the founding-partner
+  // rate, from its own payments (backend member_invoices.py).
+  const [billing, setBilling] = useState(null);
+  useEffect(() => {
+    let live = true;
+    fetch(`${API}/api/invoice/team/list`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (live && d) setBilling(d); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [token, invoiceOpen]);
+  const lastPaid = (billing?.invoices || []).find((i) => !i.blocked && i.amount && i.currency === 'INR');
+  const planPrice = lastPaid ? lastPaid.amount / 100 : null;
 
   const seatsUsed = members.length;
   const seatsTotal = account.seats;
@@ -227,7 +238,6 @@ const DashboardView = ({ token, account, members, onChange }) => {
   const domainHint = memberDomains.length > 1
     ? memberDomains.slice(0, -1).join(', ') + ' or ' + memberDomains.slice(-1)
     : (memberDomains[0] || 'your company');
-  const planPrice = PLAN_PRICE_INR[account.plan_name] || 0;
 
   // ─── Add member ───────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
@@ -525,13 +535,13 @@ const DashboardView = ({ token, account, members, onChange }) => {
             <div>
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">Plan</Overline>
               <p className="font-plex text-[14px] text-[var(--text)] tabular-nums">
-                {account.plan_name} · {inrFormat(planPrice)} / year
+                {account.plan_name}{planPrice ? ` · ${inrFormat(planPrice)} a year` : ''}
               </p>
             </div>
             <div>
               <Overline className="!normal-case !tracking-normal !text-xs block mb-1.5">Next renewal</Overline>
               <p className="font-plex text-[14px] text-[var(--text)] tabular-nums">
-                {inrFormat(planPrice)} · {shortDate(account.renewal_date)}
+                {shortDate(account.renewal_date)}
               </p>
             </div>
             <div className="md:text-right">
@@ -546,9 +556,11 @@ const DashboardView = ({ token, account, members, onChange }) => {
               </button>
             </div>
           </div>
-          <p className="font-plex text-[12px] text-[var(--text-muted)] mt-6 max-w-[55ch]">
-            Founding-partner rate locked. Team-5 plan ₹11,800 / year · Team-10 plan ₹23,600 / year (inclusive of 18% GST).
-          </p>
+          {billing?.founding && (
+            <p className="font-plex text-[12px] text-[var(--text-muted)] mt-6 max-w-[55ch]" data-testid="teams-founding-note">
+              Founding-partner rate locked. Prices include 18% GST.
+            </p>
+          )}
         </section>
 
         {/* SECTION G — Footer contact */}
@@ -569,8 +581,6 @@ const DashboardView = ({ token, account, members, onChange }) => {
         open={invoiceOpen}
         onClose={() => setInvoiceOpen(false)}
         token={token}
-        companyName={account.company_name}
-        planName={account.plan_name}
       />
     </MockupLayout>
   );
