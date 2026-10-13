@@ -503,3 +503,5 @@ html.app-mode .app-tab-bar { padding-bottom: env(safe-area-inset-bottom); }
 html.app-mode [data-testid="mockup-back-to-top"] { bottom: calc(72px + env(safe-area-inset-bottom)); }
 /* The header's back arrow does this job in the app. */
 html.app-mode .app-hide { display: none; }
+/* The app has its own navigation (the tab bar); the website footer stays on the website. */
+html.app-mode [data-testid="mockup-footer"] { display: none; }
