@@ -11,6 +11,7 @@ import { HomeMockup as Home } from "./pages/HomeMockup";
 import { ArticleMockup as ArticlePage } from "./pages/ArticleMockup";
 import { FeedMockup as StateOfPlay } from "./pages/FeedMockup";
 import { LeftFieldMockup as LeftField } from "./pages/LeftFieldMockup";
+import { LeftFieldNote } from "./pages/LeftFieldNotes";
 import { Archive } from "./pages/Archive";
 import { OutfieldMockup as Outfield } from "./pages/OutfieldMockup";
 import { LoginMockup as Login } from "./pages/LoginMockup";
@@ -83,6 +84,7 @@ function Shell() {
           <Route path="/" element={<Home />} />
           <Route path="/state-of-play" element={<StateOfPlay />} />
           <Route path="/left-field" element={<LeftField />} />
+          <Route path="/left-field/n/:id" element={<LeftFieldNote />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/topic/:slug" element={<Archive />} />
           <Route path="/outfield" element={<Outfield />} />

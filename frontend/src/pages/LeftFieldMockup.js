@@ -4,6 +4,8 @@ import axios from 'axios';
 import { ArrowUpRight } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { IS_APP_MODE } from '../lib/appMode';
+import { LeftFieldFeed } from './LeftFieldNotes';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const SUBSTACK_URL = 'https://theleftfield.substack.com';
@@ -91,7 +93,10 @@ const fmtDate = (iso) =>
     : '';
 
 
-export const LeftFieldMockup = () => {
+// In the home-screen app, The Left Field is a running feed of notes.
+export const LeftFieldMockup = () => (IS_APP_MODE ? <LeftFieldFeed /> : <LeftFieldWebsite />);
+
+const LeftFieldWebsite = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   // No stand-in briefs when the feed can't load: invented headlines must

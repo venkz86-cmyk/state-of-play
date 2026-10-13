@@ -2124,6 +2124,14 @@ except Exception as _e:
     logging.warning(f"error_log module not mounted: {_e!r}")
 
 
+# The Left Field as a running feed of notes, for the app (October 2026).
+try:
+    from left_field_notes import router as lf_notes_router, init as lf_notes_init
+    lf_notes_init(db)
+    app.include_router(lf_notes_router)
+except Exception as _e:
+    logging.warning(f"left_field_notes module not mounted: {_e!r}")
+
 # Phone notifications for new stories (October 2026).
 try:
     from push import router as push_router, init as push_init, watch_loop as push_watch_loop
