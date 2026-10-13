@@ -52,7 +52,7 @@ export const AppMenu = ({ open, onClose, anchorRef }) => {
           <div className="border-b border-[var(--text)] pb-3"><p className={label}>The State of Play</p></div>
           <ul>
             <Row to="/outfield" title="The Outfield" desc="Our events: small rooms, off the record" onGo={onClose} />
-            {!canAccessPremium && <Row to="/trial" title="The Ten" desc="Ten recent stories for ₹590" onGo={onClose} />}
+            {!canAccessPremium && <Row to="/trial" title="The Ten" desc="Ten recent stories for Rs 590" onGo={onClose} />}
             <Row to="/teams" title="For Teams" desc="Membership for your whole team" onGo={onClose} />
           </ul>
         </section>

@@ -12,8 +12,7 @@ const STALE_AFTER_MS = 30 * 60 * 1000;
 
    It borrows from the logo. The icons are drawn in the logo's square line
    (no rounded ends), Home is the logo's open frame with lines of type, and
-   the current tab is in the logo's blue with the frame's top corner above
-   it.
+   the current tab is in the logo's blue.
 
    A blue square on The Left Field marks an edition this reader hasn't
    opened yet (lib/leftFieldRead.js), checked when the app opens or comes
@@ -130,9 +129,6 @@ export const AppTabBar = () => {
       <ul className="flex max-w-[560px] mx-auto px-1">
         {tabs.map(({ to, label, key, icon, on }) => (
           <li key={label} className="flex-1 relative">
-            {/* the top corner of the logo's frame, over the current tab */}
-            <span aria-hidden="true"
-              className={`absolute top-[-1px] left-[22%] right-[22%] h-[7px] border-t-[2.5px] border-r-[2.5px] border-[var(--accent-blue)] transition-opacity duration-200 ${on ? 'opacity-100' : 'opacity-0'}`} />
             <Link
               to={to}
               onClick={() => track(label)}
