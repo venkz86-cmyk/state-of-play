@@ -33,7 +33,6 @@ import { PartnershipsMockup as Partnerships } from "./pages/PartnershipsMockup";
 import { TermsMockup as Terms } from "./pages/TermsMockup";
 import { PrivacyMockup as Privacy } from "./pages/PrivacyMockup";
 import { NotFoundMockup as NotFound } from "./pages/NotFoundMockup";
-import { SubscriptionCheckoutTest } from "./pages/SubscriptionCheckoutTest";
 const TeamsManage = lazy(() => import("./pages/TeamsManage").then((m) => ({ default: m.TeamsManage })));
 const TeamsLogin = lazy(() => import("./pages/TeamsLogin").then((m) => ({ default: m.TeamsLogin })));
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
@@ -112,8 +111,6 @@ function Shell() {
           <Route path="/admin/comments" element={<Navigate to="/admin/dashboard/comments" replace />} />
           <Route path="/admin/*" element={<AdminArea />} />
 
-          {/* Staging only: checkout test page, never on main */}
-          <Route path="/internal/subscription-test" element={<SubscriptionCheckoutTest />} />
 
           {/* Article catch-all (Ghost slug). MUST be last. */}
           <Route path="/:id" element={<ArticlePage />} />
