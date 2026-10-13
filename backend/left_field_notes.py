@@ -239,6 +239,11 @@ def _headline_block(block: dict) -> Optional[str]:
     return None
 
 
+def _title(text: str) -> str:
+    """A headline without the bullet Substack puts in front of one in a list."""
+    return re.sub(r'^[•·▪◦‣\-–—*]\s*', '', text).strip()
+
+
 def _segments(html: str) -> list:
     segs, cur = [], []
     has_body = lambda: any(_heading_level(b) is None and not _is_image(b) and b['text'] for b in cur)
@@ -285,14 +290,14 @@ def split_edition(html: str) -> list:
         else:
             kind = 'note'
             if len(heads) >= 2:
-                section_now = heads[0]['text']
-                headline = heads[-1]['text']
+                section_now = _title(heads[0]['text'])
+                headline = _title(heads[-1]['text'])
             elif heads:
-                headline = heads[0]['text']
+                headline = _title(heads[0]['text'])
                 if _heading_level(heads[0]) == 2:
                     section_now = None  # The Position, The Stack: their own note
             elif blocks and _headline_block(blocks[0]):
-                headline = blocks.pop(0)['text']
+                headline = _title(blocks.pop(0)['text'])
             section = section_now if headline != section_now else None
         body = clean(''.join(b['html'] for b in lead + blocks))
         words = len(re.sub(r'<[^>]+>', ' ', re.sub(r'<figure>.*?</figure>', ' ', body, flags=re.S)).split())
