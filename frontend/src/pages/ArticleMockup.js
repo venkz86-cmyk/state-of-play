@@ -26,6 +26,7 @@ import { addDollarAmounts } from '../lib/currency';
 import { DollarToggle, useShowDollars } from '../components/DollarToggle';
 import { StoryLabel } from '../components/StoryLabel';
 import { StoryEndOffer } from '../components/StoryEndOffer';
+import { StoryBody } from '../components/StoryLinkCard';
 import { ghostSrcSet } from '../lib/ghostImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -414,11 +415,11 @@ export const ArticleMockup = () => {
             )}
           </div>
         ) : (
-          <div
+          <StoryBody
+            html={bodyHtml}
             className="editorial-prose-quiet"
             data-testid="article-body"
             data-size={size}
-            dangerouslySetInnerHTML={{ __html: bodyHtml }}
           />
         )}
 

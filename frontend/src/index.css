@@ -364,6 +364,11 @@ a:visited { color: inherit; }
 .editorial-prose-quiet .kg-gallery-image { flex: 1 1 0; min-width: 0; }
 .editorial-prose-quiet .kg-gallery-image img { width: 100%; height: 100%; object-fit: cover; margin: 0; }
 /* Bookmark cards (a linked page with its title and picture). */
+/* "Also read" story cards (StoryLinkCard.jsx) sit inside the story body:
+   keep the body's link underline and image margins off them. */
+.editorial-prose-quiet .story-also-read a { text-decoration: none; color: inherit; }
+.editorial-prose-quiet .story-also-read img { margin: 0; max-width: none; }
+.editorial-prose-quiet .story-also-read { font-size: 16px; line-height: 1.5; }
 .editorial-prose-quiet .kg-bookmark-card { margin: 2rem 0; }
 .editorial-prose-quiet a.kg-bookmark-container { display: flex; border: 1px solid var(--rule); text-decoration: none; color: inherit; min-height: 120px; }
 .editorial-prose-quiet a.kg-bookmark-container:hover { border-color: var(--text); }
