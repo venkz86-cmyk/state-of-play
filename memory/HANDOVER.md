@@ -353,6 +353,14 @@ pages load on demand; Literata and Schibsted Grotesk are self-hosted in
      page's partner block.
   Parked by Venkat: Start here (now "the five latest stories"). No new
   Ghost tags for it; options are a fixed list in code or most-read.
+- Ghost comps for renewers (October 13): Razorpay members are comped by
+  hand in Ghost with a one-year expiry, which runs out at the old year end
+  even when they renew. Access is unaffected (labels), and the account
+  page now reads the ledger (server.py member-details, as the dashboard
+  does). But Ghost shows them as free until re-comped: Today lists them as
+  "paying members Ghost shows as free" with a "restore to" date. Re-comp
+  each one in Ghost to that date. First case: Saumil Majmudar, renewed
+  October 8, to October 8, 2027.
 - Team renewals (done October 11, backend live): a second Team-5/10 payment
   from an admin whose team is over 30 days old calls the Apps Script's
   `renew_account` (v7), which extends the same row a year from its
