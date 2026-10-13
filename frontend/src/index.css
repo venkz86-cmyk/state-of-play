@@ -486,3 +486,20 @@ a:visited { color: inherit; }
   .ten-stack-card, .ten-stack-card:first-child, .ten-stack-card.ten-stack-leaving { transition: none; }
   .ten-stack-inner, .ten-row-card { animation: none; }
 }
+
+/* ─── Home-screen app (lib/appMode.js, components/AppTabBar.js) ───────────
+   Only when opened from the home screen: room for the bottom tab bar and
+   the iPhone home bar, clear of the notch, and taps that feel native
+   (no grey flash, no double-tap zoom; pinch zoom stays for readers). */
+html.app-mode { -webkit-tap-highlight-color: transparent; }
+html.app-mode a, html.app-mode button { touch-action: manipulation; }
+html.app-mode body {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+html.app-mode [data-testid="mockup-header"] { padding-top: env(safe-area-inset-top); }
+html.app-mode .app-tab-bar { padding-bottom: env(safe-area-inset-bottom); }
+html.app-mode [data-testid="mockup-back-to-top"] { bottom: calc(72px + env(safe-area-inset-bottom)); }
+/* The header's back arrow does this job in the app. */
+html.app-mode .app-hide { display: none; }

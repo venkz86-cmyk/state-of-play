@@ -5,6 +5,7 @@ import { captureRef } from "./lib/attribution";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MockupBackToTop } from "./components/MockupBackToTop";
+import { AppTabBar } from "./components/AppTabBar";
 // Live page components (renamed → driven by the new editorial designs)
 import { HomeMockup as Home } from "./pages/HomeMockup";
 import { ArticleMockup as ArticlePage } from "./pages/ArticleMockup";
@@ -123,6 +124,7 @@ function Shell() {
         </Suspense>
       </div>
       <MockupBackToTop />
+      <AppTabBar />
       <Toaster position="top-right" />
     </div>
   );

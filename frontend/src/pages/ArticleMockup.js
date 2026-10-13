@@ -287,7 +287,7 @@ export const ArticleMockup = () => {
             neither half wraps into a cramped column of its own. */}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[var(--text-muted)]">
-            <Link to="/" className="hover:text-[var(--text-muted)] transition-colors duration-200">
+            <Link to="/" className="app-hide hover:text-[var(--text-muted)] transition-colors duration-200">
               ← The State of Play
             </Link>
             <span className="hidden sm:inline">
