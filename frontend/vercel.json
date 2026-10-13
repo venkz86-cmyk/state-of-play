@@ -117,7 +117,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare|ghost).*"
         }
       ],
       "destination": "https://stateofplay-backend.onrender.com/api/og/:slug"
