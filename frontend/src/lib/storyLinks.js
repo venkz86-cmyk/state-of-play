@@ -8,7 +8,7 @@ const SITE = String.raw`https?:\/\/(?:www\.)?stateofplay\.club\/([a-z0-9][a-z0-9
 // A paragraph holding nothing but one link to a site address.
 const BARE_LINK = new RegExp(String.raw`<p>\s*<a\s[^>]*href="${SITE}"[^>]*>[^<]*<\/a>\s*<\/p>`, 'gi');
 // Ghost's own bookmark card, when it points at the site.
-const BOOKMARK = new RegExp(String.raw`<figure class="kg-card kg-bookmark-card[^"]*">\s*<a class="kg-bookmark-container" href="${SITE}">[\s\S]*?<\/figure>`, 'gi');
+const BOOKMARK = new RegExp(String.raw`<figure[^>]*\bkg-bookmark-card\b[^>]*>\s*<a\s[^>]*href="${SITE}"[^>]*>[\s\S]*?<\/figure>`, 'gi');
 
 /* Splits story HTML into [{ html }] and [{ slugs, html }] segments, in
    order. Cards next to each other (only whitespace between) form one group.
