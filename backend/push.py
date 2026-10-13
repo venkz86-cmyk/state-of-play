@@ -17,6 +17,10 @@ story. It doesn't depend on email, so it never lands in Promotions.
     published in the last 6 hours count, so a backdated post stays quiet.
   * Dashboard: GET /api/admin/push (devices, last sent, paused),
     POST /api/admin/push/pause, POST /api/admin/push/test.
+  * Choices: each phone keeps its own (topics.stories, topics.mixed_zone,
+    both on until switched off at /app). Mixed Zone notes go only to phones
+    signed in as an annual member (mixed_zone.is_annual_member), checked at
+    the moment of sending: a new note, and a note marked confirmed.
 """
 from __future__ import annotations
 
@@ -161,7 +165,7 @@ async def subscribe(body: SubscribeBody, request: Request):
         {'$set': {'endpoint': body.endpoint, 'keys': {'p256dh': p256dh, 'auth': auth},
                   'email': (session.get('email') or '').lower() or None,
                   'agent': (request.headers.get('user-agent') or '')[:200], 'updated_at': now},
-         '$setOnInsert': {'created_at': now}},
+         '$setOnInsert': {'created_at': now, 'topics': {'stories': True, 'mixed_zone': True}}},
         upsert=True,
     )
     return {'ok': True}
@@ -176,6 +180,85 @@ async def unsubscribe(body: UnsubscribeBody):
     if _db is not None:
         await _db.push_subscriptions.delete_one({'_id': hashlib.sha1(body.endpoint.encode()).hexdigest()})
     return {'ok': True}
+
+
+class PrefsBody(BaseModel):
+    endpoint: str = Field(..., min_length=10, max_length=1000)
+    stories: Optional[bool] = None
+    mixed_zone: Optional[bool] = None
+
+
+def _topics(doc: Optional[dict]) -> dict:
+    t = (doc or {}).get('topics') or {}
+    return {'stories': t.get('stories', True) is not False, 'mixed_zone': t.get('mixed_zone', True) is not False}
+
+
+@router.post('/api/push/prefs')
+async def prefs(body: PrefsBody):
+    """What this phone gets. The endpoint is the phone's own secret address,
+    so it stands in for a sign-in here. Sending only the endpoint reads."""
+    if _db is None:
+        raise HTTPException(status_code=503, detail='Notifications are unavailable right now.')
+    key = hashlib.sha1(body.endpoint.encode()).hexdigest()
+    doc = await _db.push_subscriptions.find_one({'_id': key})
+    if not doc:
+        raise HTTPException(status_code=404, detail='Turn on notifications first.')
+    changes = {f'topics.{k}': v for k, v in (('stories', body.stories), ('mixed_zone', body.mixed_zone)) if v is not None}
+    if changes:
+        await _db.push_subscriptions.update_one({'_id': key}, {'$set': changes})
+        doc = await _db.push_subscriptions.find_one({'_id': key})
+    return _topics(doc)
+
+
+# ─── Mixed Zone ─────────────────────────────────────────────────────────────
+async def _annual_member(email: str) -> bool:
+    from tiers import find_ghost_member, is_genuinely_paid, _create_ghost_admin_token
+    from mixed_zone import is_annual_member
+    token = _create_ghost_admin_token()
+    member = await find_ghost_member(email, token) if token else None
+    if not member:
+        return False
+    labels = [(l.get('name') or '').lower() for l in (member.get('labels') or [])]
+    status = member.get('status', 'free')
+    return await is_annual_member({'email': email, 'label_names': labels, 'status': status,
+                                   'is_paid': await is_genuinely_paid(labels, status, email)})
+
+
+async def notify_mixed_zone(title: str, body: str) -> dict:
+    """Sends to phones signed in as annual members that haven't switched
+    Mixed Zone notes off. Membership is checked now, per email."""
+    if _db is None:
+        return {'sent': 0}
+    emails = set()
+    async for sub in _db.push_subscriptions.find({'topics.mixed_zone': {'$ne': False}}):
+        if sub.get('email'):
+            emails.add(sub['email'])
+    allowed = []
+    for email in emails:
+        try:
+            if await _annual_member(email):
+                allowed.append(email)
+        except Exception as e:
+            logger.warning(f'push: Mixed Zone member check failed for {email}: {e!r}')
+    if not allowed:
+        return {'sent': 0, 'gone': 0, 'failed': 0}
+    result = await send(title, body[:140], f'{PUBLIC_BASE_URL}/mixed-zone?source=push',
+                        {'email': {'$in': allowed}, 'topics.mixed_zone': {'$ne': False}})
+    logger.info(f'push: Mixed Zone "{title}" to {len(allowed)} members: {result}')
+    return result
+
+
+def notify_mixed_zone_later(title: str, body: str) -> None:
+    """Fire and forget, so posting a note never waits on push services."""
+    async def run():
+        try:
+            await notify_mixed_zone(title, body)
+        except Exception as e:
+            logger.error(f'push: Mixed Zone notification failed: {e!r}')
+    try:
+        asyncio.get_running_loop().create_task(run())
+    except RuntimeError:
+        pass
 
 
 # ─── new stories ────────────────────────────────────────────────────────────
@@ -230,7 +313,7 @@ async def check_new_stories() -> list:
             await _db.push_sent.update_one({'_id': p['id']}, {'$set': {'skipped': True, 'reason': 'paused'}})
             continue
         result = await send(p.get('title') or 'The State of Play', (p.get('custom_excerpt') or '')[:140],
-                            f"{PUBLIC_BASE_URL}/{p['slug']}?source=push")
+                            f"{PUBLIC_BASE_URL}/{p['slug']}?source=push", {'topics.stories': {'$ne': False}})
         await _db.push_sent.update_one({'_id': p['id']}, {'$set': {**result, 'sent_at': datetime.now(timezone.utc)}})
         logger.info(f"push: '{p.get('title')}' {result}")
         out.append({'title': p.get('title'), **result})

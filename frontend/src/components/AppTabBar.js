@@ -55,7 +55,7 @@ export const AppTabBar = () => {
     { to: '/', label: 'Home', on: pathname === '/' },
     { to: '/left-field', label: 'Left Field', on: pathname.startsWith('/left-field') },
     { to: '/search', label: 'Search', on: pathname.startsWith('/search') || pathname.startsWith('/archive') || pathname.startsWith('/topic/') },
-    { to: '/you', label: 'You', on: pathname.startsWith('/you') || pathname.startsWith('/account') },
+    { to: '/you', label: 'You', on: pathname.startsWith('/you') || pathname.startsWith('/account') || pathname === '/app' },
   ];
   const track = (tab) => {
     try { window.gtag && window.gtag('event', 'app_tab', { tab, from: pathname }); } catch (e) { /* analytics never blocks a tap */ }
