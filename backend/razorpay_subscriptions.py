@@ -198,6 +198,8 @@ def _renewal_thank_you_email_html() -> str:
             '<li>A direct line to me. Reply to this email for any issue. It comes to me, and I read '
             'everything.</li>'
             '</ul>'
+            f'<p>Your GST invoice is ready to download from '
+            f'<a href="{PUBLIC_BASE_URL}/account?invoice=1" style="color: #1A1A1A;">your account page</a>.</p>'
             '<p>What stays the same is the promise: independent reporting on the business of Indian sport. '
             'Who is paying. Who owns what. What changes because of it. What changes is that I intend to do it '
             'better: clearer writing, more sources on the record, and more support around the publication so '

@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { authHeader } from '../lib/sessionToken';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,6 +28,12 @@ export const AccountMockup = () => {
   const [saved, setSaved] = useState([]);
   const [details, setDetails] = useState(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  // ?invoice=1 (the link in payment emails) opens the invoice form.
+  const [searchParams] = useSearchParams();
+  const wantsInvoice = searchParams.get('invoice') === '1';
+  useEffect(() => {
+    if (wantsInvoice && !loading && isLoggedIn) setInvoiceOpen(true);
+  }, [wantsInvoice, loading, isLoggedIn]);
   const [justRenewed, setJustRenewed] = useState(false);
   const [giftModalOpen, setGiftModalOpen] = useState(false);
   // The Mixed Zone (annual members only): whether to show its row, and
@@ -88,8 +94,10 @@ export const AccountMockup = () => {
   // depend on exact state-batching order between the auth bootstrap's
   // setUser/setLoading calls to avoid a false "signed out" flash.
   useEffect(() => {
-    if (!loading && !isLoggedIn) navigate('/login', { replace: true });
-  }, [loading, isLoggedIn, navigate]);
+    if (!loading && !isLoggedIn) {
+      navigate(wantsInvoice ? `/login?next=${encodeURIComponent('/account?invoice=1')}` : '/login', { replace: true });
+    }
+  }, [loading, isLoggedIn, navigate, wantsInvoice]);
 
   if (loading || !isLoggedIn) {
     return null;
