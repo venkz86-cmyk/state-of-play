@@ -265,7 +265,9 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
     if invoice_data.get("paid_on"):
         _draw_text(c, MARGIN, cursor_y, f"Paid on {invoice_data['paid_on']}", "Helvetica", 8.5, GREY)
         cursor_y -= 12
-    _draw_text(c, MARGIN, cursor_y, f"Razorpay ref: {invoice_data['razorpay_ref']}", "Helvetica", 8.5, GREY)
+    ref = str(invoice_data['razorpay_ref'])
+    via_razorpay = ref.startswith("pay_")
+    _draw_text(c, MARGIN, cursor_y, f"{'Razorpay ref' if via_razorpay else 'Reference'}: {ref}", "Helvetica", 8.5, GREY)
     cursor_y -= 18
     c.setStrokeColor(RULE); c.setLineWidth(0.6)
     c.line(MARGIN, cursor_y, W - MARGIN, cursor_y)
@@ -313,7 +315,8 @@ def build_invoice_pdf(invoice_data: dict) -> bytes:
     _draw_label(c, MARGIN, cursor_y, "Notes")
     cursor_y -= 14
     notes = [
-        f"1. Payment received in full via Razorpay. This invoice is issued against transaction {invoice_data['razorpay_ref']}.",
+        (f"1. Payment received in full via Razorpay. This invoice is issued against transaction {ref}."
+         if via_razorpay else "1. Payment received in full."),
         "2. This invoice is computer-generated and does not require a signature.",
         f"3. For queries, write to {SELLER['email']}.",
     ]
