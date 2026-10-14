@@ -145,7 +145,7 @@ export const AppMockup = () => {
       track('push_on', { result: 'on' });
       setMessage('Notifications are on for this phone.');
     } catch (e) {
-      track('push_on', { result: e.message || 'error' });
+      track('push_on_failed', { result: e.message || 'error' });
       setMessage(e.message === 'blocked'
         ? 'Notifications are blocked for this site. Allow them in your phone’s settings, then try again.'
         : e.message === 'dismissed' ? '' : 'That didn’t work. Try again in a minute.');
