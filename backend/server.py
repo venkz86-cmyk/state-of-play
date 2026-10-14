@@ -764,8 +764,11 @@ async def get_article_preview(request: ArticlePreviewRequest, http_request: Requ
 
 # Dynamic OG Image Generator for social sharing
 @api_router.get("/og-image/{slug}")
-async def generate_og_image(slug: str):
-    """Generate a branded OG image for social media sharing - mobile optimized with logo"""
+async def generate_og_image(slug: str, format: str = 'link'):
+    """Generate a branded OG image for social media sharing - mobile optimized with logo.
+    format=story draws the same card at 1080x1920 for Instagram Stories
+    (the app's share sheet hands it to the phone's share menu)."""
+    story = format == "story"
     import httpx
     from fastapi.responses import Response, RedirectResponse
     from PIL import Image, ImageDraw, ImageFont, ImageEnhance
@@ -793,8 +796,9 @@ async def generate_og_image(slug: str):
         excerpt = article.get('custom_excerpt') or article.get('excerpt') or ''
         feature_image_url = article.get('feature_image')
         
-        # Image dimensions (1200x630 - standard OG size)
-        width, height = 1200, 630
+        # Image dimensions (1200x630 - standard OG size; 1080x1920 for Stories)
+        width, height = (1080, 1920) if story else (1200, 630)
+        pad = 90 if story else 50
         
         # Fetch feature image
         bg_img = None
@@ -853,7 +857,7 @@ async def generate_og_image(slug: str):
         GLOOCK = os.path.join(FONT_DIR, "Gloock.ttf")
         SCHIBSTED = os.path.join(FONT_DIR, "SchibstedGrotesk.ttf")
         try:
-            title_font = ImageFont.truetype(GLOOCK, 60)
+            title_font = ImageFont.truetype(GLOOCK, 96 if story else 60)
             masthead_font = ImageFont.truetype(GLOOCK, 22)
         except Exception as font_err:
             logger.warning(f"Editorial fonts failed, falling back: {font_err}")
@@ -866,16 +870,16 @@ async def generate_og_image(slug: str):
         # --- LOGO at top left: white, so it reads on the darkened photo ---
         try:
             logo = Image.open(os.path.join(os.path.dirname(__file__), "assets", "tsop-logo-white.png")).convert('RGBA')
-            logo_height = 56
+            logo_height = 96 if story else 56
             logo = logo.resize((int(logo_height * logo.width / logo.height), logo_height), Image.LANCZOS)
-            img.paste(logo, (50, 40), logo)
+            img.paste(logo, (pad, 200 if story else 40), logo)
         except Exception as e:
             logger.error(f"OG card logo failed: {e}")
 
         # No tag or Premium badges: the headline and the photo carry the card.
 
         # --- TITLE (pixel-measured wrap so Literata lays out cleanly) ---
-        max_text_width = width - 100  # 50px padding each side
+        max_text_width = width - 2 * pad
         words = title.split()
         title_lines = []
         current = ''
@@ -890,21 +894,22 @@ async def generate_og_image(slug: str):
                 current = w
         if current:
             title_lines.append(current)
-        # Cap at 4 lines, ellipsise the last if truncated
-        if len(title_lines) > 4:
-            title_lines = title_lines[:4]
+        # Cap at 4 lines (7 on a Story), ellipsise the last if truncated
+        max_lines = 7 if story else 4
+        if len(title_lines) > max_lines:
+            title_lines = title_lines[:max_lines]
             last = title_lines[-1].rstrip('.,;:')
             while last and (draw.textbbox((0, 0), last + '…', font=title_font)[2] > max_text_width):
                 last = last[:-1].rstrip()
             title_lines[-1] = (last + '…') if last else '…'
 
-        title_line_height = 70
+        title_line_height = 108 if story else 70
         title_block_h = title_line_height * len(title_lines)
         # vertically center the title in the middle band of the canvas
         title_start_y = max(170, (height - title_block_h) // 2 - 20)
 
         for i, line in enumerate(title_lines):
-            draw.text((50, title_start_y + i * title_line_height), line, fill=white, font=title_font)
+            draw.text((pad, title_start_y + i * title_line_height), line, fill=white, font=title_font)
 
         # Convert to RGB
         img = img.convert('RGB')
@@ -919,7 +924,7 @@ async def generate_og_image(slug: str):
             media_type="image/png",
             headers={
                 "Cache-Control": "public, max-age=86400",
-                "Content-Disposition": f"inline; filename={slug}-og.png"
+                "Content-Disposition": f"inline; filename={slug}-{'story' if story else 'og'}.png"
             }
         )
         
