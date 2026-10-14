@@ -68,9 +68,18 @@ export const GhostRestoreRow = ({ row, onAuthError }) => {
             Their access comes from: <strong>{PLAN_NAMES[pay.plan] || pay.plan}</strong>, {formatCurrency(pay.amount, pay.currency)},
             paid {formatDate(pay.paid_at)}.
           </p>
-          <p className="mb-2">
-            Access from <strong>{formatDate(pay.access_from)}</strong> to <strong>{formatDate(plan.access_to)}</strong>.
-          </p>
+          {/* A renewal paid before the last year ended starts when that year
+              ends (no days lost), so the dates differ from the payment's. */}
+          {new Date(pay.access_from) - new Date(pay.paid_at) > 86400000 ? (
+            <p className="mb-2" data-testid="ghost-restore-early">
+              They renewed before their last year ended on <strong>{formatDate(pay.access_from)}</strong>, so this year
+              runs from then to <strong>{formatDate(plan.access_to)}</strong>.
+            </p>
+          ) : (
+            <p className="mb-2">
+              Access from <strong>{formatDate(pay.access_from)}</strong> to <strong>{formatDate(plan.access_to)}</strong>.
+            </p>
+          )}
           <p className="mb-4 text-[var(--text-muted)]">Ghost shows them as {plan.ghost_status} now.</p>
           <div className="flex flex-wrap items-center gap-5">
             <button

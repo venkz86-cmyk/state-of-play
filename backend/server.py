@@ -2046,6 +2046,14 @@ try:
 except Exception as _e:
     logging.warning(f"annual_renewal module not mounted: {_e!r}")
 
+# A renewal moves the member's Ghost comp to the end of the year they paid
+# for (ghost_comp.py), as it's recorded and in the nightly renewal run.
+try:
+    from ghost_comp import init as ghost_comp_init
+    ghost_comp_init(db)
+except Exception as _e:
+    logging.warning(f"ghost_comp not started: {_e!r}")
+
 # Mount the Student plan application review queue (Sept 2026) -- after
 # admin_auth (for require_admin_key_or_session) and resend_email (for
 # send_email), both already mounted above.
