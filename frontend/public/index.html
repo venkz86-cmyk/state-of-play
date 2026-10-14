@@ -90,10 +90,34 @@
         Learn how to configure a non-root public URL by running `npm run build`.
         -->
         <title>The State of Play | Sports Business Intelligence</title>
+        <!--
+          Home-screen app: the app icon on the page background shows the
+          instant the app opens and is replaced when the page draws, so
+          there's no blank white screen first (iPhone has no splash screen
+          of its own; Android's comes from the manifest). Website visitors
+          never see it. Follows the reader's light or dark choice.
+        -->
+        <script>
+            (function () {
+                try {
+                    var app = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+                    if (!app) return;
+                    var saved = localStorage.getItem('tsop_theme');
+                    var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.className += ' boot-app' + (dark ? ' boot-dark' : '');
+                } catch (e) {}
+            })();
+        </script>
+        <style>
+            #boot { display: none; }
+            html.boot-app #boot { display: flex; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: #FAF9F7; }
+            html.boot-app.boot-dark #boot { background: #0F0F0F; }
+            #boot img { width: 88px; height: 88px; border-radius: 20px; }
+        </style>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
-        <div id="root"></div>
+        <div id="root"><div id="boot" aria-hidden="true"><img src="/icon-192.png" alt="" width="88" height="88" /></div></div>
         <script>
             !(function (t, e) {
                 var o, n, p, r;
