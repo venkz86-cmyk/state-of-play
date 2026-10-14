@@ -206,8 +206,22 @@ class GhostAPI {
   }
 
   // Transform Ghost post to our format
+  // Stories already seen in a list (home, archive, search), so a story page
+  // opened from one shows its headline, photo and byline at once while the
+  // rest loads (ArticleMockup).
+  peekPost(slug) {
+    return (this._seen && this._seen.get(slug)) || null;
+  }
+
   transformPost(post) {
     if (!post) return null;
+    const out = this._transformPost(post);
+    if (!this._seen) this._seen = new Map();
+    if (out.slug) this._seen.set(out.slug, out);
+    return out;
+  }
+
+  _transformPost(post) {
 
     // Get author name
     const authorName = post.authors?.[0]?.name || post.primary_author?.name || 'The State of Play';

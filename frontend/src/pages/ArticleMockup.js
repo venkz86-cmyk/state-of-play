@@ -82,9 +82,13 @@ export const ArticleMockup = () => {
   const effectiveSubscriberName = user?.name || (previewMember ? 'Preview Member' : '');
   const effectiveSubscriberGhostId = user?.id || '';
 
-  const [article, setArticle] = useState(null);
+  // A story opened from a list shows what the list already had (headline,
+  // dek, photo, byline) straight away; the body waits for the full fetch.
+  const peek = id ? ghostAPI.peekPost(id) : null;
+  const [article, setArticle] = useState(peek);
+  const [fetched, setFetched] = useState(false);
   const [related, setRelated] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!peek);
   const [size, setSize] = useArticleSize();
   const [giftModalOpen, setGiftModalOpen] = useState(false);
   const [editionNo, setEditionNo] = useState(null);
@@ -95,6 +99,8 @@ export const ArticleMockup = () => {
 
   useEffect(() => {
     let active = true;
+    const seen = id ? ghostAPI.peekPost(id) : null;
+    setArticle(seen); setLoading(!seen); setFetched(false); setFullHtml('');
     (async () => {
       try {
         let post;
@@ -105,6 +111,7 @@ export const ArticleMockup = () => {
         }
         if (!active) return;
         setArticle(post);
+        setFetched(true);
         // The story shows now; related stories and the season number load
         // underneath, side by side, instead of holding the page back.
         setLoading(false);
@@ -123,6 +130,7 @@ export const ArticleMockup = () => {
         ghostAPI.getSeasonStoryCount().then((count) => { if (active && count > 0) setEditionNo(count); }).catch(() => {});
       } catch (e) {
         console.error(e);
+        if (active) setFetched(true);
       } finally {
         if (active) setLoading(false);
       }
@@ -152,6 +160,9 @@ export const ArticleMockup = () => {
   // just tries the fetch and reads the result. A 403 here is an
   // expected "not in this trial" answer, not an error.
   const [fullContentReady, setFullContentReady] = useState(false);
+  // The full text for a member, kept apart from `article` so the story
+  // details landing after it (they're fetched side by side) can't undo it.
+  const [fullHtml, setFullHtml] = useState('');
   const [trialAllowed, setTrialAllowed] = useState(false);
   useEffect(() => {
     let active = true;
@@ -176,7 +187,7 @@ export const ArticleMockup = () => {
         );
         if (!active) return;
         if (r.data?.html) {
-          setArticle((prev) => ({ ...prev, content: fixContentLinks(r.data.html) }));
+          setFullHtml(fixContentLinks(r.data.html));
           if (isTrialTier) setTrialAllowed(true);
         }
       } catch (e) {
@@ -250,7 +261,8 @@ export const ArticleMockup = () => {
   // unlocks THIS story, nothing else -- a free-registered reader still
   // hits the real Paywall on any 'paid'-visibility story.
   const requiresRegistration = !!article.requires_registration;
-  const bodyStillLoading = article.is_premium && (isMember || isTrialTier || (requiresRegistration && isLoggedIn)) && !fullContentReady;
+  const bodyStillLoading = !fetched || (article.is_premium && (isMember || isTrialTier || (requiresRegistration && isLoggedIn)) && !fullContentReady);
+  const content = fullHtml || article.content;
   const canReadArticle = isMember || (isTrialTier && trialAllowed) || (requiresRegistration && isLoggedIn);
 
   // isGated: content is locked behind SOME gate, regardless of which.
@@ -269,8 +281,8 @@ export const ArticleMockup = () => {
   // the excerpt) -> the subtitle -- so there's always something real
   // above the gate even if the preview fetch is still loading or fails.
   const rupeeHtml = isGated
-    ? (gatedPreviewHtml || previewParagraphs(article.content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
-    : (article.content || article.preview_content || '');
+    ? (gatedPreviewHtml || previewParagraphs(content) || article.preview_content || (article.subtitle ? `<p>${article.subtitle}</p>` : ''))
+    : (content || article.preview_content || '');
   // Readers outside India can switch on a rounded dollar figure after
   // rupee amounts (lib/currency.js); the switch only appears when the
   // story has an amount to convert, and the story is unchanged until

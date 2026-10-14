@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+import asyncio
 import os
 import re
 import logging
@@ -493,14 +494,22 @@ class ArticleContentResponse(BaseModel):
     feature_image: Optional[str] = None
 
 # In-memory rate limiter for the article-content endpoint.
-# Keyed by lower-cased email + client IP. A burst of 6 requests is allowed,
-# replenished at 1 token / 10s. A leaked subscriber email can therefore fetch
-# at most ~360 articles/hour from a single IP — fast enough for genuine
-# reading, slow enough that bulk-scraping the archive is impractical.
+# Keyed by lower-cased email + client IP. A burst of 12 requests is allowed,
+# replenished at 1 token / 4s. A leaked subscriber email can therefore fetch
+# at most ~900 articles/hour from a single IP, slow enough that bulk-scraping
+# the archive is impractical. The old 6-burst, 1-per-10s limit could catch a
+# real reader moving from story to story in the app (Up next), who then got
+# a cut-off story with no explanation.
 from collections import defaultdict
-_ARTICLE_BUCKET: dict = defaultdict(lambda: {'tokens': 6.0, 'last': 0.0})
-_ARTICLE_BUCKET_BURST = 6.0
-_ARTICLE_BUCKET_REFILL_PER_SEC = 0.1  # 1 token / 10s
+_ARTICLE_BUCKET: dict = defaultdict(lambda: {'tokens': 12.0, 'last': 0.0})
+_ARTICLE_BUCKET_BURST = 12.0
+_ARTICLE_BUCKET_REFILL_PER_SEC = 0.25  # 1 token / 4s
+
+# Full stories fetched in the last minute, by slug, so a story opened again
+# (or by many readers at once, when a notification goes out) doesn't wait on
+# Ghost each time. Access is still checked on every request.
+_ARTICLE_CACHE: dict = {}
+_ARTICLE_CACHE_SECONDS = 60
 
 def _check_article_rate_limit(key: str) -> bool:
     """Token-bucket. Returns True if the request is allowed."""
@@ -553,11 +562,28 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
     
     try:
         async with httpx.AsyncClient() as http_client:
-            # First verify the user is a paid member
-            member_response = await http_client.get(
-                f'{GHOST_URL}/ghost/api/admin/members/',
-                params={'filter': f'email:{request.email}'},
-                headers={'Authorization': f'Ghost {token}'}
+            # The member lookup and the story fetch go to Ghost side by
+            # side; the story is only returned after the access checks below.
+            import time as _time
+            cached = _ARTICLE_CACHE.get(request.slug)
+            fresh = cached and _time.monotonic() - cached[0] < _ARTICLE_CACHE_SECONDS
+
+            async def _fetch_article():
+                if fresh:
+                    return None
+                return await http_client.get(
+                    f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
+                    params={'formats': 'html'},
+                    headers={'Authorization': f'Ghost {token}'}
+                )
+
+            member_response, article_response = await asyncio.gather(
+                http_client.get(
+                    f'{GHOST_URL}/ghost/api/admin/members/',
+                    params={'filter': f'email:{request.email}'},
+                    headers={'Authorization': f'Ghost {token}'}
+                ),
+                _fetch_article(),
             )
             
             if member_response.status_code != 200:
@@ -597,20 +623,18 @@ async def get_full_article_content(request: ArticleContentRequest, http_request:
             # published after they joined), so the article has to be in
             # hand before that check can run. Reordered from the old
             # is_paid-first version specifically to support this.
-            article_response = await http_client.get(
-                f'{GHOST_URL}/ghost/api/admin/posts/slug/{request.slug}/',
-                params={'formats': 'html'},
-                headers={'Authorization': f'Ghost {token}'}
-            )
-
-            if article_response.status_code != 200:
-                raise HTTPException(status_code=404, detail="Article not found")
-
-            posts = article_response.json().get('posts', [])
-            if not posts:
-                raise HTTPException(status_code=404, detail="Article not found")
-
-            post = posts[0]
+            if fresh:
+                post = cached[1]
+            else:
+                if article_response.status_code != 200:
+                    raise HTTPException(status_code=404, detail="Article not found")
+                posts = article_response.json().get('posts', [])
+                if not posts:
+                    raise HTTPException(status_code=404, detail="Article not found")
+                post = posts[0]
+                _ARTICLE_CACHE[request.slug] = (_time.monotonic(), post)
+                if len(_ARTICLE_CACHE) > 200:
+                    _ARTICLE_CACHE.pop(next(iter(_ARTICLE_CACHE)))
 
             if not is_paid and post.get('visibility') != 'members':
                 # 'members' visibility means any signed-up reader, free or
