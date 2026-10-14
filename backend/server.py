@@ -795,15 +795,6 @@ async def generate_og_image(slug: str):
         excerpt = article.get('custom_excerpt') or article.get('excerpt') or ''
         feature_image_url = article.get('feature_image')
         
-        # Get category/tag
-        tags = article.get('tags', [])
-        category = None
-        if tags:
-            category = tags[0].get('name', '').upper()
-        
-        # Determine if premium
-        is_premium = article.get('visibility') in ['paid', 'members']
-        
         # Image dimensions (1200x630 - standard OG size)
         width, height = 1200, 630
         
@@ -866,23 +857,16 @@ async def generate_og_image(slug: str):
         try:
             title_font = ImageFont.truetype(GLOOCK, 60)
             masthead_font = ImageFont.truetype(GLOOCK, 22)
-            badge_font = ImageFont.truetype(SCHIBSTED, 16)
-            try:
-                badge_font.set_variation_by_name('Bold')
-            except Exception:
-                pass
             byline_font = ImageFont.truetype(SCHIBSTED, 16)
         except Exception as font_err:
             logger.warning(f"Editorial fonts failed, falling back: {font_err}")
             title_font = ImageFont.load_default()
             masthead_font = ImageFont.load_default()
-            badge_font = ImageFont.load_default()
             byline_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
         coral = (255, 100, 100)
-        blue = (35, 75, 160)
         
         # --- LOGO at top left ---
         try:
@@ -905,38 +889,8 @@ async def generate_og_image(slug: str):
         except Exception as e:
             logger.error(f"Failed to fetch logo: {e}")
         
-        # --- BADGES at top right ---
-        badge_y = 45
-        badge_x = width - 50
-        
-        if category:
-            c_bbox = draw.textbbox((0, 0), category, font=badge_font)
-            c_w, c_h = c_bbox[2] - c_bbox[0], c_bbox[3] - c_bbox[1]
-            pad = 10
-            badge_x = badge_x - c_w - pad*2
-            
-            draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + c_w + pad*2, badge_y + c_h + pad*2],
-                radius=5,
-                fill=white
-            )
-            draw.text((badge_x + pad, badge_y + pad), category, fill=blue, font=badge_font)
-            badge_x -= 12
-        
-        if is_premium:
-            premium_text = "PREMIUM"
-            p_bbox = draw.textbbox((0, 0), premium_text, font=badge_font)
-            p_w, p_h = p_bbox[2] - p_bbox[0], p_bbox[3] - p_bbox[1]
-            pad = 10
-            badge_x = badge_x - p_w - pad*2
-            
-            draw.rounded_rectangle(
-                [badge_x, badge_y, badge_x + p_w + pad*2, badge_y + p_h + pad*2],
-                radius=5,
-                fill=coral
-            )
-            draw.text((badge_x + pad, badge_y + pad), premium_text, fill=white, font=badge_font)
-        
+        # No tag or Premium badges: the headline and the photo carry the card.
+
         # --- TITLE (pixel-measured wrap so Literata lays out cleanly) ---
         max_text_width = width - 100  # 50px padding each side
         words = title.split()
