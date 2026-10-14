@@ -405,6 +405,14 @@ already use what each team actually paid. Routine: trig_01Ccnea3Qht71AD3U2qKB6AZ
 - Open items before promoting /app: in home-screen mode there are no
   browser bars (no back button, no pull-to-refresh), so the site needs its
   own way back from a story and must respect the notch and home bar.
+- Whatever we build has to be seamless (Venkat, October 14). The app
+  will get its own announcement and airtime later; it isn't announced yet.
+- Analytics: every GA4 event carries app_mode (app/web) and platform
+  (ios/android/desktop), also set as user properties (index.html,
+  src/lib/analytics.js). App events: app_open, app_install,
+  app_install_prompt, app_install_steps_view, notification_open,
+  push_on/off/pref, app_tab, story_save/unsave/share/text_size/dollars/
+  gift_open, up_next, lf_edition_open, lf_contents_jump.
 - The app is its own product, not the website in a frame (Venkat,
   October 13): every screen gets an app version. Done so far: tab bar
   (Home, The Left Field, Search, You), app menu (what the tabs don't
