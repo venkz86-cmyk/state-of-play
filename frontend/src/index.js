@@ -14,9 +14,17 @@ if (IS_APP_MODE) {
 }
 
 // Analytics for the app (lib/analytics.js): an open per visit, a tap on a
-// notification (its link carries ?source=push), and an install (Android
-// says so; iPhone shows up as the first app_open).
+// notification (its link carries ?source=push), and an install. Only
+// Android reports installs (app_install), so app_first_open, sent the first
+// time the app opens on a phone, counts them on iPhone and Android alike
+// (the home-screen app keeps its own storage, apart from the browser's).
 if (IS_APP_MODE) {
+  try {
+    if (!localStorage.getItem('tsop_app_first_open')) {
+      localStorage.setItem('tsop_app_first_open', new Date().toISOString());
+      track('app_first_open');
+    }
+  } catch (e) { /* storage blocked: no install count */ }
   try {
     if (!sessionStorage.getItem('tsop_app_open')) {
       sessionStorage.setItem('tsop_app_open', '1');
