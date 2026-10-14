@@ -501,6 +501,8 @@ html.app-mode body {
 html.app-mode [data-testid="mockup-header"] { padding-top: env(safe-area-inset-top); }
 html.app-mode .app-tab-bar { padding-bottom: env(safe-area-inset-bottom); }
 .app-tab-bar { background: color-mix(in srgb, var(--nav-bg) 90%, transparent); }
+/* App versions of the website's pages (components/AppPage.js). */
+html.app-mode .app-title { font-size: 34px; line-height: 1.1; font-weight: 400; letter-spacing: normal; }
 /* A story open in the app: its own bar (components/StoryBar.js) replaces the tabs. */
 html.story-mode .app-tab-bar:not(.story-bar) { display: none; }
 .lf-edition-body [id^="lf-"] { scroll-margin-top: calc(88px + env(safe-area-inset-top)); }

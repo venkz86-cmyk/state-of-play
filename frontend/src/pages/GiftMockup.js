@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { newSignupAnnualPricing, isBeforeOctoberCutover } from '../lib/octoberPricing';
 
@@ -34,7 +35,8 @@ export const GiftMockup = () => {
 
   return (
     <MockupLayout testId="mockup-gift" seo={{ title: 'Gift a Subscription', path: '/gift', image: 'https://www.stateofplay.club/og/gift.png', description: 'Give someone a year of The State of Play: reported stories on the business of Indian sport, delivered weekly.' }}>
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="Give a year" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Give a subscription</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Gift</span>
@@ -42,7 +44,7 @@ export const GiftMockup = () => {
       </div>
 
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-8">
-        <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-6 max-w-[22ch]">
+        <h1 className="app-title font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-6 max-w-[22ch]">
           Give someone a year of <em className="italic font-normal">The State of Play.</em>
         </h1>
         <p className="font-plex text-base lg:text-lg text-[var(--text-muted)] max-w-[60ch] leading-relaxed mb-3">

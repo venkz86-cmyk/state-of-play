@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MockupLayout } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 
 const datelineDate = (d = new Date()) =>
   d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -75,7 +76,8 @@ export const LoginMockup = () => {
 
   return (
     <MockupLayout testId="page-login" seo={{ title: 'Sign In', path: '/login', noindex: true }}>
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="Sign in" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)] pb-3">
           <span className="font-plex text-[14px] text-[var(--text-muted)]">
             Bengaluru · {datelineDate()}
@@ -87,7 +89,7 @@ export const LoginMockup = () => {
       </div>
 
       <section className="max-w-[560px] mx-auto px-6 lg:px-0 pt-16 lg:pt-24 pb-32">
-        <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] mb-5">
+        <h1 className="app-title font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.06] mb-5">
           Welcome back.
         </h1>
 

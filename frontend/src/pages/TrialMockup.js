@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { trialUpgradePricing } from '../lib/octoberPricing';
 
@@ -91,7 +92,8 @@ export const TrialMockup = () => {
 
   return (
     <MockupLayout testId="mockup-trial" seo={{ title: 'The Ten', path: '/trial', image: 'https://www.stateofplay.club/og/trial.png', description: 'Ten of The State of Play’s most recent stories on the business of Indian sport, for ₹590. Stay the month and everything new is yours too.' }}>
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="The Ten" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru · {datelineDate()}</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">The Ten</span>
@@ -102,7 +104,7 @@ export const TrialMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-16 pb-16 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
         <div className="lg:col-span-6">
         <Overline className="mb-4 block">The State of Play</Overline>
-        <h1 className="font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
+        <h1 className="app-title font-editorial font-semibold tracking-tight text-[2.4rem] md:text-[3.5rem] leading-[1.05] mb-6 max-w-[16ch]">
           Ten stories.<br />Thirty days.<br /><em className={`italic font-normal ${priceHidden}`}>{isIndia ? '₹500.' : '$9.'}</em>
         </h1>
         <p className="font-plex text-lg text-[var(--text-muted)] leading-relaxed max-w-[54ch] mb-8">
