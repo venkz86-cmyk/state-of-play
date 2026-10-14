@@ -1,11 +1,13 @@
 import "@/index.css";
 import { useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { captureRef } from "./lib/attribution";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MockupBackToTop } from "./components/MockupBackToTop";
 import { AppTabBar } from "./components/AppTabBar";
+import { claimHandoff } from "./components/AppHandoff";
+import { track } from "./lib/analytics";
 // Live page components (renamed → driven by the new editorial designs)
 import { HomeMockup as Home } from "./pages/HomeMockup";
 import { ArticleMockup as ArticlePage } from "./pages/ArticleMockup";
@@ -74,6 +76,23 @@ function Shell() {
   useEffect(() => {
     if (navType !== 'POP' && !location.hash) window.scrollTo(0, 0);
   }, [location.pathname, location.hash, navType]);
+  // In the app: a story this phone handed over from its browser ("Read this
+  // in the app", components/AppHandoff.js) opens as the app opens or comes
+  // back to the front.
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!IS_APP_MODE) return undefined;
+    const check = async () => {
+      const path = await claimHandoff();
+      if (!path) return;
+      track('app_handoff_open', { path });
+      if (window.location.pathname !== path) navigate(`${path}?source=handoff`);
+    };
+    const onVis = () => { if (document.visibilityState === 'visible') check(); };
+    check();
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [navigate]);
   return (
     <div className="App theme-transition min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
       {/* Each page draws its own <main> (after its header), so this is a plain wrapper. */}
