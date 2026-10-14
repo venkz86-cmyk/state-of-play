@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
 import { track } from '../lib/analytics';
+import { APP_QR_PATH, APP_QR_SIZE } from '../lib/appQr';
 import { isStandalone, isIOS, isAndroid, iosBrowser, inAppBrowser, pushSupported, currentSubscription, turnOn, turnOff, getPrefs, setPref, mixedZoneEligible } from '../lib/push';
 
 /* /app: install the site on a phone and turn on notifications for new
@@ -24,6 +25,67 @@ const Choice = ({ title, desc, on, onChange, disabled, testId }) => (
 );
 
 const btn = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60';
+
+const label = 'font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4';
+const quietBtn = 'inline-flex items-center justify-center border border-[var(--text)] text-[var(--text)] hover:bg-[var(--text)] hover:text-[var(--bg)] font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60';
+
+// The icons a reader has to find on their phone, drawn inline so the step
+// shows exactly what to look for.
+const Glyph = ({ name, label: text }) => (
+  <span className="whitespace-nowrap">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" className="inline-block align-[-3px] mr-1"
+      fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      {name === 'share' && (<><path d="M12 3v12" /><path d="M8 7l4-4 4 4" /><path d="M8 10H6v11h12V10h-2" /></>)}
+      {name === 'menu' && (<><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></>)}
+      {name === 'kebab' && (<><circle cx="12" cy="5" r="1.2" fill="currentColor" /><circle cx="12" cy="12" r="1.2" fill="currentColor" /><circle cx="12" cy="19" r="1.2" fill="currentColor" /></>)}
+      {name === 'dots' && (<><circle cx="5" cy="12" r="1.2" fill="currentColor" /><circle cx="12" cy="12" r="1.2" fill="currentColor" /><circle cx="19" cy="12" r="1.2" fill="currentColor" /></>)}
+    </svg>
+    <strong>{text}</strong>
+  </span>
+);
+
+// The same last two steps on both phones: open the app, then the bell is
+// Menu › Notifications (components/AppMenu.js).
+const LastSteps = () => (
+  <>
+    <li>Open <strong>State of Play</strong> from your home screen.</li>
+    <li>Tap <Glyph name="menu" label="Menu" /> at the top right, then <strong>Notifications</strong> › <strong>Turn on notifications</strong>.</li>
+  </>
+);
+
+const IPhoneSteps = ({ browser, nested }) => (
+  <section className={nested ? 'mt-4' : 'border-t border-[var(--rule)] pt-6 mb-6'} data-testid={nested ? 'app-ios-steps-other' : 'app-ios-steps'}>
+    {!nested && <p className={label}>On iPhone</p>}
+    <ol className="font-plex text-[16px] leading-[1.7] space-y-3 list-decimal pl-5">
+      {browser === 'Chrome' && <li>Tap <Glyph name="share" label="Share" /> in Chrome’s address bar, then <strong>Add to Home Screen</strong>.</li>}
+      {browser === 'other' && <li>Tap your browser’s <Glyph name="share" label="Share" /> button, then <strong>Add to Home Screen</strong>. If it isn’t there, open this page in Safari.</li>}
+      {browser === 'Safari' && <li>In Safari, tap <Glyph name="share" label="Share" /> at the bottom of the screen, then <strong>Add to Home Screen</strong>.</li>}
+      <LastSteps />
+    </ol>
+  </section>
+);
+
+const AndroidSteps = ({ installEvent, onInstall, nested }) => (
+  <section className={nested ? 'mt-4' : 'border-t border-[var(--rule)] pt-6 mb-6'} data-testid={nested ? 'app-android-other' : 'app-install-android'}>
+    {!nested && <p className={label}>On Android</p>}
+    {installEvent ? (
+      <>
+        <button type="button" className={btn} onClick={onInstall} data-testid="app-install-button">Install the app</button>
+        <ol start={2} className="font-plex text-[16px] leading-[1.7] space-y-3 list-decimal pl-5 mt-5"><LastSteps /></ol>
+      </>
+    ) : (
+      // Samsung Internet and Firefox never offer Chrome's install prompt,
+      // and Chrome holds it back for a while once dismissed.
+      <>
+        <ol className="font-plex text-[16px] leading-[1.7] space-y-3 list-decimal pl-5" data-testid="app-android-steps">
+          <li>In Chrome, tap <Glyph name="kebab" label="Menu" /> at the top right, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+          <LastSteps />
+        </ol>
+        <p className="font-plex text-[14px] text-[var(--text-muted)] mt-4">Using Samsung Internet? Tap its menu, then Add page to › Home screen.</p>
+      </>
+    )}
+  </section>
+);
 
 export const AppMockup = () => {
   const [installEvent, setInstallEvent] = useState(null);
@@ -81,7 +143,7 @@ export const AppMockup = () => {
       await turnOn();
       setOn(true);
       track('push_on', { result: 'on' });
-      setMessage('Notifications are on for this phone. Choose below what you get.');
+      setMessage('Notifications are on for this phone.');
     } catch (e) {
       track('push_on', { result: e.message || 'error' });
       setMessage(e.message === 'blocked'
@@ -100,20 +162,63 @@ export const AppMockup = () => {
   };
 
   const iosNeedsInstall = ios && !installed;
-  const showsSteps = !installed && (inApp || ios || android);
+  const device = platform === 'desktop' ? 'computer' : 'phone';
+  const showsSteps = !installed && (inApp || ios || android || platform === 'desktop');
   useEffect(() => {
     if (showsSteps) track('app_install_steps_view', { platform, browser: inApp || browser || (android ? 'android' : '') });
   }, [showsSteps]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Turning notifications on from a browser that isn't the installed app:
+  // fine on Android and on a computer; an iPhone needs the app first.
+  const notifySection = !iosNeedsInstall && canPush && (
+    <section className={installed ? '' : 'border-t border-[var(--rule)] pt-6 mt-10'} data-testid="app-notifications">
+      {!installed && (
+        <>
+          <p className={label}>{platform === 'desktop' ? 'On this computer' : 'Or skip installing'}</p>
+          <p className="font-plex text-[15px] leading-[1.6] text-[var(--text-muted)] mb-5 max-w-[56ch]">
+            {platform === 'desktop'
+              ? 'You can also get them as notifications on this computer.'
+              : 'You can turn on notifications in this browser without adding it to your home screen.'}
+            {!on && ' Once they’re on, you choose which ones you get.'}
+          </p>
+        </>
+      )}
+      {on ? (
+        <div data-testid="app-push-choices">
+          <p className="font-plex text-[15px] text-[var(--text-muted)] mb-2">Choose which ones you get.</p>
+          <ul className="border-t border-[var(--rule)]">
+            <Choice title="New stories" desc="When a story is published" testId="app-pref-stories"
+              on={prefs ? prefs.stories : true} disabled={!prefs} onChange={(v) => choose('stories', v)} />
+            <Choice title="The Left Field" desc="Each new edition, twice a week" testId="app-pref-left-field"
+              on={prefs ? prefs.left_field : true} disabled={!prefs} onChange={(v) => choose('left_field', v)} />
+            {mzEligible && (
+              <Choice title="Mixed Zone notes" desc="New notes, and when one is confirmed" testId="app-pref-mixed-zone"
+                on={prefs ? prefs.mixed_zone : true} disabled={!prefs} onChange={(v) => choose('mixed_zone', v)} />
+            )}
+          </ul>
+          <button type="button" onClick={disable} disabled={busy} data-testid="app-push-off"
+            className="mt-5 font-plex text-[14px] text-[var(--text-muted)] underline underline-offset-4">Turn off all notifications</button>
+        </div>
+      ) : (
+        <button type="button" className={installed ? btn : quietBtn} onClick={enable} disabled={busy} data-testid="app-push-on">
+          {busy ? 'Turning on…' : 'Turn on notifications'}
+        </button>
+      )}
+    </section>
+  );
+
   return (
-    <MockupLayout testId="mockup-app" seo={{ title: 'On your phone', path: '/app', description: 'Add The State of Play to your phone and get each new story as a notification.' }}>
+    <MockupLayout testId="mockup-app" seo={{ title: 'On your phone', path: '/app', image: 'https://www.stateofplay.club/og/app.png', description: 'Add The State of Play to your phone and get a notification when a story is published or a new edition of The Left Field is out.' }}>
       <div className="max-w-[720px] mx-auto px-6 lg:px-0 pt-10 lg:pt-14 pb-20">
         {/* In the app it's installed already, so this is just the settings. */}
         {installed ? (
           <>
             <div className="border-b border-[var(--rule)] pb-3 mb-8"><Overline>Settings</Overline></div>
             <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-3" data-testid="app-heading">Notifications</h1>
-            <p className="font-plex text-[15px] text-[var(--text-muted)] mb-8">You choose what you get.</p>
+            {!on && <p className="font-plex text-[15px] text-[var(--text-muted)] mb-8">Turn them on, then choose which ones you get.</p>}
+            {canPush ? notifySection : (
+              <p className="font-plex text-[15px] text-[var(--text-muted)]">This phone can’t show notifications from the app. Update it to the latest iOS, then try again.</p>
+            )}
           </>
         ) : (
           <>
@@ -121,81 +226,64 @@ export const AppMockup = () => {
             <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-4" data-testid="app-heading">The State of Play, on your home screen.</h1>
             <p className="font-reading text-[18px] leading-[1.6] text-[var(--text-muted)] mb-10 max-w-[56ch]">
               Add it to your phone and get a notification when a story is published or a new edition of The Left Field is out.
-              You choose what you get.
             </p>
+
+            {inApp && (
+              <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-in-app-browser">
+                <p className={label}>Open it in {ios ? 'Safari' : 'Chrome'} first</p>
+                <p className="font-plex text-[16px] leading-[1.6]">
+                  {inApp}’s own browser can’t add sites to your home screen. Tap <Glyph name="dots" label="the menu" /> and open this page in {ios ? 'Safari' : 'Chrome'}, then follow the steps there.
+                </p>
+              </section>
+            )}
+
+            {platform === 'desktop' && (
+              <section className="border-t border-[var(--rule)] pt-6 mb-10 flex flex-col sm:flex-row gap-6 sm:items-center" data-testid="app-desktop">
+                <svg viewBox={`-2 -2 ${APP_QR_SIZE + 4} ${APP_QR_SIZE + 4}`} width="148" height="148" role="img" aria-label="QR code for stateofplay.club/app"
+                  className="shrink-0 bg-[var(--bg)] text-[var(--text)]" shapeRendering="crispEdges">
+                  <path d={APP_QR_PATH} fill="currentColor" />
+                </svg>
+                <div>
+                  <p className={label}>This is for your phone</p>
+                  <p className="font-plex text-[16px] leading-[1.6] max-w-[44ch]">
+                    Point your phone’s camera at the code to open this page there, then follow the steps for your phone below.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {!inApp && (ios || platform === 'desktop') && <IPhoneSteps browser={browser || 'Safari'} />}
+            {!inApp && (android || platform === 'desktop') && (
+              <AndroidSteps installEvent={android ? installEvent : null} onInstall={install} />
+            )}
+
+            {/* The other kind of phone, folded away. */}
+            {!inApp && ios && (
+              <details className="mt-6 font-plex text-[15px]" data-testid="app-other-android">
+                <summary className="cursor-pointer text-[var(--text-muted)] underline underline-offset-4">Using an Android phone?</summary>
+                <AndroidSteps installEvent={null} onInstall={install} nested />
+              </details>
+            )}
+            {!inApp && android && (
+              <details className="mt-6 font-plex text-[15px]" data-testid="app-other-iphone">
+                <summary className="cursor-pointer text-[var(--text-muted)] underline underline-offset-4">Using an iPhone?</summary>
+                <IPhoneSteps browser="Safari" nested />
+              </details>
+            )}
+
+            {/* A computer's browser offering to install the app (Chrome, Edge). */}
+            {platform === 'desktop' && installEvent && (
+              <section className="border-t border-[var(--rule)] pt-6 mt-10" data-testid="app-install">
+                <p className={label}>On this computer</p>
+                <p className="font-plex text-[15px] leading-[1.6] text-[var(--text-muted)] mb-5 max-w-[56ch]">Your browser can add The State of Play as an app on this computer too.</p>
+                <button type="button" className={quietBtn} onClick={install} data-testid="app-install-button">Install on this computer</button>
+              </section>
+            )}
+
+            {notifySection}
           </>
         )}
-
-        {inApp && !installed && (
-          <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-in-app-browser">
-            <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">Open it in {ios ? 'Safari' : 'Chrome'} first</p>
-            <p className="font-plex text-[16px] leading-[1.6]">
-              {inApp}’s own browser can’t add sites to your home screen. Tap the menu (•••) and open this page in {ios ? 'Safari' : 'Chrome'}, then follow the steps there.
-            </p>
-          </section>
-        )}
-
-        {iosNeedsInstall && !inApp && (
-          <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-ios-steps">
-            <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On iPhone</p>
-            <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5">
-              {browser === 'Safari' && <li>In Safari, tap the Share button, then <strong>Add to Home Screen</strong>.</li>}
-              {browser === 'Chrome' && <li>In Chrome, tap the Share button in the address bar, then <strong>Add to Home Screen</strong>.</li>}
-              {browser === 'other' && <li>Tap your browser’s Share button, then <strong>Add to Home Screen</strong>. If it isn’t there, open this page in Safari.</li>}
-              <li>Open State of Play from your home screen and turn on notifications from the menu.</li>
-            </ol>
-          </section>
-        )}
-
-        {!ios && !inApp && !installed && (installEvent || android) && (
-          <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-install">
-            {android && <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On Android</p>}
-            {installEvent ? (
-              <button type="button" className={btn} onClick={install} data-testid="app-install-button">Install the app</button>
-            ) : (
-              // Samsung Internet and Firefox never offer Chrome's install
-              // prompt, and Chrome holds it back for a while once dismissed.
-              <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5" data-testid="app-android-steps">
-                <li>In Chrome, tap the menu (⋮), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-                <li>Open State of Play from your home screen and turn on notifications from the menu.</li>
-              </ol>
-            )}
-            {!installEvent && (
-              <p className="font-plex text-[14px] text-[var(--text-muted)] mt-4">Using Samsung Internet? Tap the menu, then Add page to › Home screen.</p>
-            )}
-          </section>
-        )}
-
-        {!iosNeedsInstall && (
-          <section className={installed ? '' : 'border-t border-[var(--rule)] pt-6'} data-testid="app-notifications">
-            {!installed && <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">Notifications</p>}
-            {!canPush ? (
-              <p className="font-plex text-[15px] text-[var(--text-muted)]">
-                This browser can’t show notifications. Open stateofplay.club/app on your phone.
-              </p>
-            ) : on ? (
-              <div data-testid="app-push-choices">
-                <ul className="border-t border-[var(--rule)]">
-                  <Choice title="New stories" desc="When a story is published" testId="app-pref-stories"
-                    on={prefs ? prefs.stories : true} disabled={!prefs} onChange={(v) => choose('stories', v)} />
-                  <Choice title="The Left Field" desc="Each new edition, twice a week" testId="app-pref-left-field"
-                    on={prefs ? prefs.left_field : true} disabled={!prefs} onChange={(v) => choose('left_field', v)} />
-                  {mzEligible && (
-                    <Choice title="Mixed Zone notes" desc="New notes, and when one is confirmed" testId="app-pref-mixed-zone"
-                      on={prefs ? prefs.mixed_zone : true} disabled={!prefs} onChange={(v) => choose('mixed_zone', v)} />
-                  )}
-                </ul>
-                <button type="button" onClick={disable} disabled={busy} data-testid="app-push-off"
-                  className="mt-5 font-plex text-[14px] text-[var(--text-muted)] underline underline-offset-4">Turn off all notifications</button>
-              </div>
-            ) : (
-              <button type="button" className={btn} onClick={enable} disabled={busy} data-testid="app-push-on">
-                {busy ? 'Turning on…' : 'Turn on notifications'}
-              </button>
-            )}
-          </section>
-        )}
-        {message && <p className="font-plex text-[14px] mt-4" role="status" data-testid="app-message">{message}</p>}
+        {message && <p className="font-plex text-[14px] mt-4" role="status" data-testid="app-message">{message.replace('this phone', `this ${device}`)}</p>}
       </div>
     </MockupLayout>
   );

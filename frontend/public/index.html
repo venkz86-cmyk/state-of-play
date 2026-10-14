@@ -3,7 +3,10 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#A0291C" />
+        <!-- Browser bar and app status bar: the header's own colour, so the top
+             of the screen reads as one piece (same as manifest.webmanifest). -->
+        <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
 
         <!--
           Google Search Console — domain verification.
