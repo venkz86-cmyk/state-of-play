@@ -1911,6 +1911,15 @@ try:
 except Exception as _e:
     logging.warning(f"story_graphics module not mounted: {_e!r}")
 
+# "Read this in the app": a story handed from the browser to the
+# home-screen app on the same phone (handoff.py).
+try:
+    from handoff import router as handoff_router, init as handoff_init
+    handoff_init(db)
+    app.include_router(handoff_router)
+except Exception as _e:
+    logging.warning(f"handoff module not mounted: {_e!r}")
+
 try:
     from resend_email import router as resend_email_router, init as resend_email_init
     resend_email_init(db)

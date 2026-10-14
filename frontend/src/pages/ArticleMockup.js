@@ -30,6 +30,7 @@ import { StoryBody } from '../components/StoryLinkCard';
 import { ghostSrcSet } from '../lib/ghostImage';
 import { IS_APP_MODE } from '../lib/appMode';
 import { StoryBar } from '../components/StoryBar';
+import { AppHandoff } from '../components/AppHandoff';
 import { GraphicShare } from '../components/GraphicShare';
 import { track } from '../lib/analytics';
 
@@ -380,6 +381,8 @@ export const ArticleMockup = () => {
               </>
             )}
           </p>
+
+          {!IS_APP_MODE && <AppHandoff path={`/${article.slug || article.id}`} />}
 
           <ColdLinkAdminButton
             user={user}
