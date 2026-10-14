@@ -20,6 +20,7 @@ import { LeftFieldReadersPanel } from '../components/admin/LeftFieldReadersPanel
 import { BackfillPanel } from '../components/admin/BackfillPanel';
 import { ComplimentaryPanel } from '../components/admin/ComplimentaryPanel';
 import { MixedZonePanel } from '../components/admin/MixedZonePanel';
+import { PushPanel } from '../components/admin/PushPanel';
 import { InviteLinksPanel } from '../components/admin/InviteLinksPanel';
 
 const todayLine = () =>
@@ -74,6 +75,7 @@ export const AdminDashboard = () => {
             <Route path="renewals" element={<RenewalsPanel onAuthError={onAuthError} />} />
             <Route path="comments" element={<CommentsPanel onAuthError={onAuthError} />} />
             <Route path="mixed-zone" element={<MixedZonePanel onAuthError={onAuthError} />} />
+            <Route path="notifications" element={<PushPanel onAuthError={onAuthError} label="section-label text-[var(--text-label)] block mb-3" />} />
             <Route path="nominated" element={<NominatedReadersPanel onAuthError={onAuthError} />} />
             <Route path="corporate" element={<CorporateAccountsPanel onAuthError={onAuthError} />} />
             <Route path="trials" element={<TrialsPanel onAuthError={onAuthError} />} />

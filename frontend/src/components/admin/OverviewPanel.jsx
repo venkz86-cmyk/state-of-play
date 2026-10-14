@@ -4,7 +4,6 @@ import { KPITile } from './KPITile';
 import { adminFetch, AdminAuthError } from '../../lib/adminFetch';
 import { formatCurrency, formatDate, formatDateTime } from '../../lib/format';
 import { GhostRestoreRow } from './GhostRestoreRow';
-import { PushPanel } from './PushPanel';
 
 // Phase 6, the checkpoint the whole build was aimed at: one page that
 // answers "who's subscribed, what did they pay, what's expiring, what
@@ -293,8 +292,6 @@ export const OverviewPanel = ({ onAuthError }) => {
           </ul>
         </section>
       )}
-
-      <PushPanel onAuthError={onAuthError} label={label} />
 
       {errors.length > 0 && (
         <section className="mb-10" id="today-errors" data-testid="today-errors">
