@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Share2 } from 'lucide-react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
@@ -6,6 +6,7 @@ import { StoryBody } from '../components/StoryLinkCard';
 import { IS_APP_MODE } from '../lib/appMode';
 import { markRead, readSlugs } from '../lib/leftFieldRead';
 import { track } from '../lib/analytics';
+import { ShareSheet } from '../components/ShareSheet';
 
 /* The Left Field in the app (backend left_field_notes.py, read from
    Substack). Built around how it gets read: most visits are for the newest
@@ -81,8 +82,11 @@ const Contents = ({ contents }) => {
 
 const Edition = ({ ed, isNew, latest }) => {
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const closeShare = useCallback(() => setSharing(false), []);
+  const url = `https://www.stateofplay.club/left-field/e/${ed.slug}`;
   const share = async () => {
-    const url = `https://www.stateofplay.club/left-field/e/${ed.slug}`;
+    if (IS_APP_MODE) { setSharing(true); return; }
     try {
       if (navigator.share) { await navigator.share({ title: ed.title, url }); return; }
       await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000);
@@ -112,6 +116,9 @@ const Edition = ({ ed, isNew, latest }) => {
           <Share2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" /> {copied ? 'Link copied' : 'Share'}
         </button>
       </div>
+      <ShareSheet open={sharing} onClose={closeShare}
+        onNote={() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+        item={{ kind: 'edition', id: ed.slug, title: ed.title, url, image: ed.image || '/og/left-field.png' }} />
     </article>
   );
 };

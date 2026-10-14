@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { isBookmarked, toggleBookmark } from './Bookmarks';
 import { track } from '../lib/analytics';
+import { ShareSheet } from './ShareSheet';
 
 /* The bar at the bottom of a story in the home-screen app, in place of the
    tab bar (ArticleMockup marks <html class="story-mode"> while a story is
@@ -62,19 +63,10 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
     track(now ? 'story_save' : 'story_unsave', { story: article.slug || article.id });
     flash(now ? 'Saved to You' : 'Removed from saved');
   };
-  const share = async () => {
-    const url = `https://www.stateofplay.club/${article.slug || article.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: article.title, url });
-        track('story_share', { story: article.slug || article.id, method: 'share_sheet' });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      track('story_share', { story: article.slug || article.id, method: 'copy_link' });
-      flash('Link copied');
-    } catch (e) { /* share sheet closed */ }
-  };
+  const [sharing, setSharing] = useState(false);
+  const closeShare = useCallback(() => setSharing(false), []);
+  const id = article?.slug || article?.id;
+  const shareItem = { kind: 'story', id, title: article?.title, url: `https://www.stateofplay.club/${id}` };
 
   const btn = 'flex-1 flex flex-col items-center justify-center gap-[5px] h-[58px] text-[var(--text-muted)] app-tab';
   const lbl = 'whitespace-nowrap text-[11px] leading-none tracking-[0.02em] font-medium';
@@ -125,7 +117,7 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
           <Icon name="save" on={saved} />
           <span className={lbl}>{saved ? 'Saved' : 'Save'}</span>
         </button>
-        <button type="button" onClick={share} data-testid="story-share" className={btn}>
+        <button type="button" onClick={() => { setSheet(false); setSharing(true); }} aria-haspopup="dialog" data-testid="story-share" className={btn}>
           <Icon name="share" />
           <span className={lbl}>Share</span>
         </button>
@@ -136,6 +128,7 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
           </button>
         )}
       </div>
+      <ShareSheet open={sharing} onClose={closeShare} item={shareItem} onNote={flash} />
     </nav>
   );
 };
