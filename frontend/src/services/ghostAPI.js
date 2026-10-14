@@ -38,15 +38,19 @@ const INTERNAL_TAGS = new Set(['state-of-play', 'left-field', 'leftfield', 'publ
 // are editorial plumbing, e.g. #start-here, and never shown to readers.
 const isHiddenTag = (slug) => !slug || INTERNAL_TAGS.has(slug) || slug.startsWith('hash-');
 
-// A story's format, set in Ghost with an internal tag: #format-analysis
-// arrives as slug 'hash-format-analysis'. Reportage when none is set.
+// A story's format: an internal tag such as #format-analysis (slug
+// 'hash-format-analysis') if there is one, else a plain tag named after a
+// format ("Analysis"), else Reportage.
 const FORMATS = {
   reportage: 'Reportage', analysis: 'Analysis', interview: 'Interview', explainer: 'Explainer',
   profile: 'Profile', opinion: 'Opinion', data: 'Data', 'q-and-a': 'Q&A', transcript: 'Transcript',
 };
 const storyFormat = (tags) => {
   const tag = (tags || []).find((t) => (t.slug || '').startsWith('hash-format-'));
-  if (!tag) return 'Reportage';
+  if (!tag) {
+    const plain = (tags || []).find((t) => FORMATS[t.slug]);
+    return plain ? FORMATS[plain.slug] : 'Reportage';
+  }
   const key = tag.slug.slice('hash-format-'.length);
   return FORMATS[key] || (tag.name || '').replace(/^#\s*format[-:\s]*/i, '').replace(/^\w/, (c) => c.toUpperCase()) || 'Reportage';
 };
