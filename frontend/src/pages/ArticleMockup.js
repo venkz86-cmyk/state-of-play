@@ -28,6 +28,8 @@ import { StoryLabel } from '../components/StoryLabel';
 import { StoryEndOffer } from '../components/StoryEndOffer';
 import { StoryBody } from '../components/StoryLinkCard';
 import { ghostSrcSet } from '../lib/ghostImage';
+import { IS_APP_MODE } from '../lib/appMode';
+import { StoryBar } from '../components/StoryBar';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -86,6 +88,10 @@ export const ArticleMockup = () => {
   const [size, setSize] = useArticleSize();
   const [giftModalOpen, setGiftModalOpen] = useState(false);
   const [editionNo, setEditionNo] = useState(null);
+  // App only: the story to read next, so a reader can keep going without
+  // going back (the next older story, or the newest when this is the
+  // oldest one in reach).
+  const [upNext, setUpNext] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -105,6 +111,13 @@ export const ArticleMockup = () => {
         if (!post) return;
         addToReadingHistory(post);
         ghostAPI.getRelatedPosts(post, 3).then((rel) => { if (active) setRelated(rel); }).catch(() => {});
+        if (IS_APP_MODE) {
+          ghostAPI.getPosts({ limit: 8 }).then((list) => {
+            if (!active || !list?.length) return;
+            const i = list.findIndex((p) => p.id === post.id);
+            setUpNext((i >= 0 && list[i + 1]) || list.find((p) => p.id !== post.id) || null);
+          }).catch(() => {});
+        }
         // Same real edition count HomeMockup.js uses for its own dateline
         // -- so the two never disagree on which season it is.
         ghostAPI.getSeasonStoryCount().then((count) => { if (active && count > 0) setEditionNo(count); }).catch(() => {});
@@ -116,6 +129,13 @@ export const ArticleMockup = () => {
     })();
     return () => { active = false; };
   }, [id]);
+
+  // App: the story bar takes the tab bar's place while a story is open.
+  useEffect(() => {
+    if (!IS_APP_MODE) return undefined;
+    document.documentElement.classList.add('story-mode');
+    return () => document.documentElement.classList.remove('story-mode');
+  }, []);
 
   // For paid members reading a premium article, fetch the full HTML
   // from the Admin API. The Content API truncates body at the paywall,
@@ -281,8 +301,8 @@ export const ArticleMockup = () => {
       <MockupHeader />
       <main id="main-content">
 
-      {/* DATELINE STRIP */}
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      {/* DATELINE STRIP (the app has its back arrow, and the date goes in the byline) */}
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         {/* Phones: back link on one line, "date · Season" on the next, so
             neither half wraps into a cramped column of its own. */}
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between border-b border-[var(--rule)] pb-3">
@@ -306,7 +326,7 @@ export const ArticleMockup = () => {
       </div>
 
       {/* ARTICLE BODY — max 680px per spec */}
-      <article className="max-w-[680px] mx-auto px-6 lg:px-0 pt-12 lg:pt-16 pb-20 lg:pb-24">
+      <article className={`max-w-[680px] mx-auto px-6 lg:px-0 ${IS_APP_MODE ? 'pt-8' : 'pt-12'} lg:pt-16 pb-20 lg:pb-24`}>
         <header className="mb-8 lg:mb-10">
           <StoryLabel post={article} className="mb-5" />
           <h1 className="font-editorial font-semibold tracking-tight text-[30px] md:text-[44px] lg:text-[50px] leading-[1.05] text-[var(--text)] mb-5 max-w-[22ch]">
@@ -320,7 +340,8 @@ export const ArticleMockup = () => {
           <p className="font-plex text-[14px] text-[var(--text)] mb-6">
             By {article.author || 'Venkat Ananth'}
             {article.read_time ? <span className="text-[var(--text-label)]"> · {article.read_time} min read</span> : null}
-            {isVenkatByline && (
+            {IS_APP_MODE && <span className="text-[var(--text-label)]"> · {longDate(article.created_at)}</span>}
+            {isVenkatByline && !IS_APP_MODE && (
               <>
                 <span className="text-[var(--text-label)]"> · </span>
                 <a
@@ -354,7 +375,7 @@ export const ArticleMockup = () => {
 
           {/* Utility strip: Text-size toggle (leftmost, prioritised for
               discoverability per audit) + Save + Share row */}
-          <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
+          <div className="app-hide flex flex-wrap items-center justify-between gap-y-3 gap-x-6 pt-4 border-t border-[var(--rule)]">
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               <MockupFontSizeToggle value={size} onChange={setSize} />
               {hasAmounts && <DollarToggle on={showDollars} onChange={setShowDollars} />}
@@ -429,7 +450,7 @@ export const ArticleMockup = () => {
         {/* A second, small Share line at the end of a story the reader
             could open, for whoever finishes it. The full row stays at the top. */}
         {!isGated && (
-          <div className="mt-12" data-testid="story-end-share">
+          <div className="app-hide mt-12" data-testid="story-end-share">
             <ShareRow title={article.title} />
           </div>
         )}
@@ -507,6 +528,21 @@ export const ArticleMockup = () => {
       )}
 
 
+      {/* UP NEXT (app): the next story, large, so reading carries on. */}
+      {IS_APP_MODE && upNext && (
+        <section className="max-w-[680px] mx-auto px-6 pb-14" data-testid="up-next">
+          <Link to={`/${upNext.id}`} className="group block border-t-2 border-[var(--text)] pt-5">
+            <SectionLabel className="mb-3 block">Up next</SectionLabel>
+            <StoryLabel post={upNext} small className="mb-2" />
+            <h2 className="font-editorial font-semibold text-[26px] leading-[1.15] group-hover:text-[var(--text-muted)] transition-colors">{upNext.title}</h2>
+            {upNext.subtitle && <p className="font-reading text-[16px] leading-[1.5] text-[var(--text-muted)] mt-2 line-clamp-3">{upNext.subtitle}</p>}
+            <p className="font-plex text-[12px] text-[var(--text-label)] mt-3 tabular-nums">
+              {longDate(upNext.created_at)}{upNext.read_time ? ` · ${upNext.read_time} min read` : ''}
+            </p>
+          </Link>
+        </section>
+      )}
+
       {/* MORE ON THIS TOPIC — 2-3 related, no images, no deks. Sits after
           Nominate deliberately: an exit link to another article shouldn't
           come before the on-page ask. */}
@@ -515,7 +551,7 @@ export const ArticleMockup = () => {
           <div className="border-t border-[var(--rule)] pt-8">
             <SectionLabel className="mb-6 block">More on this topic</SectionLabel>
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-0">
-              {related.map((a) => (
+              {related.filter((a) => !upNext || a.id !== upNext.id).map((a) => (
                 <li key={a.id} className="border-t border-[var(--rule)] md:border-t-0">
                   <Link
                     to={`/${a.id}`}
@@ -551,6 +587,18 @@ export const ArticleMockup = () => {
         articleSlug={article?.slug || article?.id || ''}
       />
       </Suspense>
+
+      {IS_APP_MODE && (
+        <StoryBar
+          article={article}
+          size={size}
+          onSize={setSize}
+          hasAmounts={hasAmounts}
+          showDollars={showDollars}
+          onDollars={setShowDollars}
+          onGift={isMember ? () => setGiftModalOpen(true) : undefined}
+        />
+      )}
 
       {/* Gift-article modal — opened via the Gift icon in the ShareRow.
           Uses the same backend as nominations; only reader-facing copy
