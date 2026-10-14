@@ -20,7 +20,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "/og/signup.html"
@@ -31,7 +31,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "/og/trial.html"
@@ -42,7 +42,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "/og/students.html"
@@ -53,10 +53,21 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "/og/teams.html"
+    },
+    {
+      "source": "/app",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
+        }
+      ],
+      "destination": "/og/app.html"
     },
     {
       "source": "/gift",
@@ -64,7 +75,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "/og/gift.html"
@@ -75,7 +86,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare).*"
         }
       ],
       "destination": "https://stateofplay-backend.onrender.com/api/group-links/:code/og"
@@ -117,7 +128,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterest|skypeuripreview|embedly|instagram|redditbot|vkshare|ghost).*"
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|pinterestbot|skypeuripreview|embedly|redditbot|vkshare|ghost).*"
         }
       ],
       "destination": "https://stateofplay-backend.onrender.com/api/og/:slug"
