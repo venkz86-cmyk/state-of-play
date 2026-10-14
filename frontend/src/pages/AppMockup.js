@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
-import { isStandalone, isIOS, pushSupported, currentSubscription, turnOn, turnOff, getPrefs, setPref, mixedZoneEligible } from '../lib/push';
+import { isStandalone, isIOS, isAndroid, pushSupported, currentSubscription, turnOn, turnOff, getPrefs, setPref, mixedZoneEligible } from '../lib/push';
 
 /* /app: install the site on a phone and turn on notifications for new
    stories (lib/push.js). What it shows depends on the phone: iPhone needs
@@ -33,6 +33,7 @@ export const AppMockup = () => {
   const [prefs, setPrefs] = useState(null);
   const [mzEligible, setMzEligible] = useState(false);
   const ios = isIOS();
+  const android = isAndroid();
   const canPush = pushSupported();
 
   useEffect(() => {
@@ -122,9 +123,19 @@ export const AppMockup = () => {
           </section>
         )}
 
-        {!ios && !installed && installEvent && (
+        {!ios && !installed && (installEvent || android) && (
           <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-install">
-            <button type="button" className={btn} onClick={install} data-testid="app-install-button">Install the app</button>
+            {android && <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On Android</p>}
+            {installEvent ? (
+              <button type="button" className={btn} onClick={install} data-testid="app-install-button">Install the app</button>
+            ) : (
+              // Samsung Internet and Firefox never offer Chrome's install
+              // prompt, and Chrome holds it back for a while once dismissed.
+              <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5" data-testid="app-android-steps">
+                <li>In Chrome, tap the menu (⋮), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+                <li>Open State of Play from your home screen and come back to this page to turn on notifications.</li>
+              </ol>
+            )}
           </section>
         )}
 
