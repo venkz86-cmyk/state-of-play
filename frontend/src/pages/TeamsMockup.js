@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { isBeforeOctoberCutover } from '../lib/octoberPricing';
 
@@ -30,7 +31,8 @@ export const TeamsMockup = () => {
 
   return (
     <MockupLayout testId="mockup-teams" seo={{ title: 'Teams & Newsrooms', path: '/teams', image: 'https://www.stateofplay.club/og/teams.png', description: 'Give your team a working view of Indian sport. Team plans for consulting and law firms, agencies, broadcasters, investors, analysts, franchises and operators.' }}>
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="For Teams" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">For Teams</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Corporate plans</span>
@@ -41,7 +43,7 @@ export const TeamsMockup = () => {
           in one letter, ending with a signature, the way the rest of the
           site's editorial pages (see /about) already read. */}
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-8">
-        <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-8 max-w-[24ch]">
+        <h1 className="app-title font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-8 max-w-[24ch]">
           A note for the desk <em className="italic font-normal">that needs this.</em>
         </h1>
         <div className="max-w-[65ch] space-y-5">

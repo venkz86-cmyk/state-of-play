@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 import { useAuth } from '../contexts/AuthContext';
 import { authHeader } from '../lib/sessionToken';
 
@@ -285,7 +286,8 @@ export const MixedZoneMockup = () => {
       hideFooterHeroCta
       seo={{ title: 'Mixed Zone', path: '/mixed-zone', description: 'Short notes from Venkat Ananth for annual members of The State of Play.', noindex: true }}
     >
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="Mixed Zone" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Mixed Zone</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)]">For annual members</span>
@@ -295,7 +297,7 @@ export const MixedZoneMockup = () => {
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-16">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-8">
-            <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-6">Mixed Zone</h1>
+            <h1 className="app-title font-editorial font-semibold tracking-tight text-[28px] md:text-[2.75rem] leading-[1.1] mb-6">Mixed Zone</h1>
             <div className="max-w-[65ch] space-y-4 mb-10">
               <P>
                 At a stadium, the mixed zone is the corridor where reporters catch players walking off after a game, before anything is official. This page is mine: short notes on what I've heard about the business of Indian sport, posted before they become stories.

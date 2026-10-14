@@ -1,4 +1,5 @@
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 
 const ROUNDTABLES = [
   { period: 'May', city: 'Mumbai', done: true, heldDate: '07 May 2026' },
@@ -54,7 +55,8 @@ const Sched = ({ rows }) => (
 
 export const OutfieldMockup = () => (
   <MockupLayout testId="mockup-outfield" seo={{ title: 'Outfield', path: '/outfield', description: 'The Outfield: The State of Play’s in-person events on the business of Indian sport. Small rooms, off the record.' }}>
-    <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+    <AppStrip label="The Outfield" />
+    <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
       <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
         <Overline className="!normal-case !tracking-normal !text-sm">The Outfield</Overline>
         <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">Events · 2026</span>
@@ -63,7 +65,7 @@ export const OutfieldMockup = () => (
 
     <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12 pb-10">
       <Overline className="mb-4 block">In person</Overline>
-      <h1 className="font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
+      <h1 className="app-title font-editorial font-semibold tracking-tight text-[28px] md:text-[2.5rem] leading-[1.1] mb-4 max-w-[20ch]">
         Three rooms. No stage.
       </h1>
       <p className="font-plex text-base md:text-lg text-[var(--text-muted)] max-w-[55ch] leading-relaxed">

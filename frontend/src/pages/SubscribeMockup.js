@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ghostAPI } from '../services/ghostAPI';
 import { useGeoPricing } from '../hooks/useGeoPricing';
 import { MockupLayout, Overline } from '../components/MockupLayout';
+import { AppStrip } from '../components/AppPage';
 import { useAuth } from '../contexts/AuthContext';
 import { RazorpayCheckoutButton } from '../components/RazorpayCheckoutButton';
 import { annualPricingFor, isExistingReaderWindow, leftFieldOfferPricing } from '../lib/octoberPricing';
@@ -65,7 +66,8 @@ export const SubscribeMockup = () => {
 
   return (
     <MockupLayout testId="mockup-subscribe" seo={{ title: 'Subscribe', path: '/signup', image: 'https://www.stateofplay.club/og/signup.png', description: 'Subscribe to The State of Play, India’s sports business publication: one reported story a week and the full archive.' }}>
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
+      <AppStrip label="Membership" />
+      <div className="app-hide max-w-[1280px] mx-auto px-6 lg:px-12 pt-10 lg:pt-12">
         <div className="flex items-baseline justify-between border-b border-[var(--rule)]/15 pb-3">
           <Overline className="!normal-case !tracking-normal !text-sm">Bengaluru</Overline>
           <span className="font-editorial italic text-sm text-[var(--text-muted)] tabular-nums">
@@ -76,7 +78,7 @@ export const SubscribeMockup = () => {
 
       <section className="max-w-[1280px] mx-auto px-6 lg:px-12 pt-12 lg:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8">
-          <h1 className="font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[22ch]">
+          <h1 className="app-title font-editorial font-semibold tracking-tight text-[2rem] sm:text-[2.5rem] lg:text-[3.25rem] leading-[1.05] mb-6 max-w-[22ch]">
             The desk that tracks <em className="italic font-normal">where the money in Indian sport actually goes.</em>
           </h1>
           <p className="font-plex text-lg lg:text-xl text-[var(--text-muted)] leading-relaxed max-w-[55ch]">

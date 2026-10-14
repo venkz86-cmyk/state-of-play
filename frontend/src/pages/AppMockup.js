@@ -94,12 +94,23 @@ export const AppMockup = () => {
   return (
     <MockupLayout testId="mockup-app" seo={{ title: 'On your phone', path: '/app', description: 'Add The State of Play to your phone and get each new story as a notification.' }}>
       <div className="max-w-[720px] mx-auto px-6 lg:px-0 pt-10 lg:pt-14 pb-20">
-        <Overline className="!normal-case !tracking-normal !text-sm block mb-4">On your phone</Overline>
-        <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-4">The State of Play, on your home screen.</h1>
-        <p className="font-reading text-[18px] leading-[1.6] text-[var(--text-muted)] mb-10 max-w-[56ch]">
-          Add it to your phone and each new story reaches you as a notification when it’s published.
-          You choose what you get.
-        </p>
+        {/* In the app it's installed already, so this is just the settings. */}
+        {installed ? (
+          <>
+            <div className="border-b border-[var(--rule)] pb-3 mb-8"><Overline>Settings</Overline></div>
+            <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-3" data-testid="app-heading">Notifications</h1>
+            <p className="font-plex text-[15px] text-[var(--text-muted)] mb-8">You choose what you get.</p>
+          </>
+        ) : (
+          <>
+            <Overline className="!normal-case !tracking-normal !text-sm block mb-4">On your phone</Overline>
+            <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-4" data-testid="app-heading">The State of Play, on your home screen.</h1>
+            <p className="font-reading text-[18px] leading-[1.6] text-[var(--text-muted)] mb-10 max-w-[56ch]">
+              Add it to your phone and each new story reaches you as a notification when it’s published.
+              You choose what you get.
+            </p>
+          </>
+        )}
 
         {iosNeedsInstall && (
           <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-ios-steps">
@@ -118,8 +129,8 @@ export const AppMockup = () => {
         )}
 
         {!iosNeedsInstall && (
-          <section className="border-t border-[var(--rule)] pt-6" data-testid="app-notifications">
-            <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">Notifications</p>
+          <section className={installed ? '' : 'border-t border-[var(--rule)] pt-6'} data-testid="app-notifications">
+            {!installed && <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">Notifications</p>}
             {!canPush ? (
               <p className="font-plex text-[15px] text-[var(--text-muted)]">
                 This browser can’t show notifications. Open stateofplay.club/app on your phone.
