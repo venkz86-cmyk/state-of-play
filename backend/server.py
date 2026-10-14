@@ -771,8 +771,6 @@ async def generate_og_image(slug: str):
     from PIL import Image, ImageDraw, ImageFont, ImageEnhance
     from io import BytesIO
     
-    LOGO_URL = "https://the-state-of-play.ghost.io/content/images/2025/09/TSOP-Logo-Final-Colour-4.png"
-    
     try:
         # Fetch article from Ghost
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -857,38 +855,23 @@ async def generate_og_image(slug: str):
         try:
             title_font = ImageFont.truetype(GLOOCK, 60)
             masthead_font = ImageFont.truetype(GLOOCK, 22)
-            byline_font = ImageFont.truetype(SCHIBSTED, 16)
         except Exception as font_err:
             logger.warning(f"Editorial fonts failed, falling back: {font_err}")
             title_font = ImageFont.load_default()
             masthead_font = ImageFont.load_default()
-            byline_font = ImageFont.load_default()
         
         # Colors
         white = (255, 255, 255)
-        coral = (255, 100, 100)
         
-        # --- LOGO at top left ---
+        # --- LOGO at top left: white, so it reads on the darkened photo ---
         try:
-            # Ghost CDN redirects /content/images/... to storage.ghost.io —
-            # httpx does NOT follow redirects by default, which silently
-            # drops the logo. Explicitly enable follow_redirects.
-            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as logo_client:
-                logo_response = await logo_client.get(LOGO_URL)
-                if logo_response.status_code == 200:
-                    logo = Image.open(BytesIO(logo_response.content))
-                    logo = logo.convert('RGBA')
-                    
-                    # Scale logo
-                    logo_height = 50
-                    logo_ratio = logo.width / logo.height
-                    logo_width = int(logo_height * logo_ratio)
-                    logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
-                    
-                    img.paste(logo, (50, 40), logo)
+            logo = Image.open(os.path.join(os.path.dirname(__file__), "assets", "tsop-logo-white.png")).convert('RGBA')
+            logo_height = 56
+            logo = logo.resize((int(logo_height * logo.width / logo.height), logo_height), Image.LANCZOS)
+            img.paste(logo, (50, 40), logo)
         except Exception as e:
-            logger.error(f"Failed to fetch logo: {e}")
-        
+            logger.error(f"OG card logo failed: {e}")
+
         # No tag or Premium badges: the headline and the photo carry the card.
 
         # --- TITLE (pixel-measured wrap so Literata lays out cleanly) ---
@@ -923,16 +906,6 @@ async def generate_og_image(slug: str):
         for i, line in enumerate(title_lines):
             draw.text((50, title_start_y + i * title_line_height), line, fill=white, font=title_font)
 
-        # --- BYLINE (bottom-left) ---
-        authors = article.get('authors') or []
-        author_name = (authors[0] or {}).get('name') if authors else 'The State of Play'
-        byline_text = f"{author_name.upper()}  ·  STATEOFPLAY.CLUB"
-        byline_y = height - 60
-        draw.text((50, byline_y), byline_text, fill=(220, 220, 220), font=byline_font)
-
-        # subtle accent rule above byline
-        draw.rectangle([50, byline_y - 14, 130, byline_y - 12], fill=coral)
-        
         # Convert to RGB
         img = img.convert('RGB')
         
