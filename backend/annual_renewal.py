@@ -695,9 +695,19 @@ async def annual_renewal_sweep(
     except Exception as e:
         logger.warning(f'complimentary sweep failed: {e!r}')
 
+    # Renewers whose Ghost comp still ends with the year they renewed
+    # (ghost_comp.py): moved to the end of the year they paid for.
+    comps_extended = 0
+    if not dry_run:
+        try:
+            from ghost_comp import extend_renewed_comps
+            comps_extended = len(await extend_renewed_comps(token))
+        except Exception as e:
+            logger.warning(f'ghost comp check failed: {e!r}')
+
     result = {'checked': checked, 'reminded': reminded, 'grace_started': grace_started,
               'downgraded': downgraded, 'downgraded_still_comped': still_comped, 'restored': restored,
-              'dry_run': dry_run}
+              'comps_extended': comps_extended, 'dry_run': dry_run}
     if not dry_run:
         # The dashboard's Today page shows the last run, and flags it when
         # the nightly one hasn't happened (the cron has failed silently
