@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { isBookmarked, toggleBookmark } from './Bookmarks';
+import { track } from '../lib/analytics';
 
 /* The bar at the bottom of a story in the home-screen app, in place of the
    tab bar (ArticleMockup marks <html class="story-mode"> while a story is
@@ -58,13 +59,19 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
   const save = () => {
     const now = toggleBookmark(article);
     setSaved(now);
+    track(now ? 'story_save' : 'story_unsave', { story: article.slug || article.id });
     flash(now ? 'Saved to You' : 'Removed from saved');
   };
   const share = async () => {
     const url = `https://www.stateofplay.club/${article.slug || article.id}`;
     try {
-      if (navigator.share) { await navigator.share({ title: article.title, url }); return; }
+      if (navigator.share) {
+        await navigator.share({ title: article.title, url });
+        track('story_share', { story: article.slug || article.id, method: 'share_sheet' });
+        return;
+      }
       await navigator.clipboard.writeText(url);
+      track('story_share', { story: article.slug || article.id, method: 'copy_link' });
       flash('Link copied');
     } catch (e) { /* share sheet closed */ }
   };
@@ -84,7 +91,7 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
             <p className="font-plex text-[11px] uppercase tracking-[0.1em] text-[var(--text-label)] mb-3">Text size</p>
             <div className="grid grid-cols-3 border border-[var(--rule)]" role="radiogroup" aria-label="Text size">
               {SIZES.map(([key, name, px], i) => (
-                <button key={key} type="button" role="radio" aria-checked={size === key} onClick={() => onSize(key)}
+                <button key={key} type="button" role="radio" aria-checked={size === key} onClick={() => { onSize(key); track('story_text_size', { size: key }); }}
                   data-testid={`story-size-${key}`}
                   className={`h-14 flex flex-col items-center justify-center gap-1 ${i ? 'border-l border-[var(--rule)]' : ''} ${size === key ? 'bg-[var(--text)] text-[var(--bg)]' : 'text-[var(--text)]'}`}>
                   <span className="font-editorial leading-none" style={{ fontSize: px }}>A</span>
@@ -95,7 +102,7 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
             {hasAmounts && (
               <label className="flex items-center justify-between gap-6 mt-5 cursor-pointer">
                 <span className="font-plex text-[15px]">Show US dollars</span>
-                <input type="checkbox" role="switch" className="sr-only peer" checked={showDollars} onChange={(e) => onDollars(e.target.checked)} data-testid="story-dollars" />
+                <input type="checkbox" role="switch" className="sr-only peer" checked={showDollars} onChange={(e) => { onDollars(e.target.checked); track('story_dollars', { on: e.target.checked }); }} data-testid="story-dollars" />
                 <span aria-hidden="true"
                   className="relative shrink-0 h-7 w-12 rounded-full bg-[var(--rule)] peer-checked:bg-[var(--accent-blue)] transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:h-[22px] after:w-[22px] after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5" />
               </label>
@@ -123,7 +130,7 @@ export const StoryBar = ({ article, size, onSize, hasAmounts, showDollars, onDol
           <span className={lbl}>Share</span>
         </button>
         {onGift && (
-          <button type="button" onClick={onGift} data-testid="story-gift" className={btn}>
+          <button type="button" onClick={() => { track('story_gift_open', { story: article.slug || article.id }); onGift(); }} data-testid="story-gift" className={btn}>
             <Icon name="gift" />
             <span className={lbl}>Gift</span>
           </button>

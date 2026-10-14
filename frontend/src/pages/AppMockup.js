@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MockupLayout, Overline } from '../components/MockupLayout';
-import { isStandalone, isIOS, isAndroid, pushSupported, currentSubscription, turnOn, turnOff, getPrefs, setPref, mixedZoneEligible } from '../lib/push';
+import { track } from '../lib/analytics';
+import { isStandalone, isIOS, isAndroid, iosBrowser, inAppBrowser, pushSupported, currentSubscription, turnOn, turnOff, getPrefs, setPref, mixedZoneEligible } from '../lib/push';
 
 /* /app: install the site on a phone and turn on notifications for new
    stories (lib/push.js). What it shows depends on the phone: iPhone needs
@@ -34,6 +35,9 @@ export const AppMockup = () => {
   const [mzEligible, setMzEligible] = useState(false);
   const ios = isIOS();
   const android = isAndroid();
+  const inApp = inAppBrowser();
+  const browser = ios ? iosBrowser() : null;
+  const platform = ios ? 'ios' : android ? 'android' : 'desktop';
   const canPush = pushSupported();
 
   useEffect(() => {
@@ -55,6 +59,7 @@ export const AppMockup = () => {
 
   const choose = async (name, value) => {
     setPrefs((p) => ({ ...p, [name]: value }));
+    track('push_pref', { name, on: value });
     try { setPrefs(await setPref(name, value)); } catch (e) {
       setPrefs((p) => ({ ...p, [name]: !value }));
       setMessage('That didn’t save. Try again in a minute.');
@@ -65,6 +70,7 @@ export const AppMockup = () => {
     if (!installEvent) return;
     installEvent.prompt();
     const choice = await installEvent.userChoice.catch(() => null);
+    track('app_install_prompt', { outcome: choice ? choice.outcome : 'unknown' });
     if (choice && choice.outcome === 'accepted') setInstalled(true);
     setInstallEvent(null);
   };
@@ -74,8 +80,10 @@ export const AppMockup = () => {
     try {
       await turnOn();
       setOn(true);
+      track('push_on', { result: 'on' });
       setMessage('Notifications are on for this phone. Choose below what you get.');
     } catch (e) {
+      track('push_on', { result: e.message || 'error' });
       setMessage(e.message === 'blocked'
         ? 'Notifications are blocked for this site. Allow them in your phone’s settings, then try again.'
         : e.message === 'dismissed' ? '' : 'That didn’t work. Try again in a minute.');
@@ -87,10 +95,15 @@ export const AppMockup = () => {
   const disable = async () => {
     setBusy(true);
     await turnOff().catch(() => {});
+    track('push_off');
     setOn(false); setMessage('Notifications are off.'); setBusy(false);
   };
 
   const iosNeedsInstall = ios && !installed;
+  const showsSteps = !installed && (inApp || ios || android);
+  useEffect(() => {
+    if (showsSteps) track('app_install_steps_view', { platform, browser: inApp || browser || (android ? 'android' : '') });
+  }, [showsSteps]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <MockupLayout testId="mockup-app" seo={{ title: 'On your phone', path: '/app', description: 'Add The State of Play to your phone and get each new story as a notification.' }}>
@@ -113,17 +126,28 @@ export const AppMockup = () => {
           </>
         )}
 
-        {iosNeedsInstall && (
+        {inApp && !installed && (
+          <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-in-app-browser">
+            <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">Open it in {ios ? 'Safari' : 'Chrome'} first</p>
+            <p className="font-plex text-[16px] leading-[1.6]">
+              {inApp}’s own browser can’t add sites to your home screen. Tap the menu (•••) and open this page in {ios ? 'Safari' : 'Chrome'}, then follow the steps there.
+            </p>
+          </section>
+        )}
+
+        {iosNeedsInstall && !inApp && (
           <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-ios-steps">
             <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On iPhone</p>
             <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5">
-              <li>In Safari, tap the Share button, then <strong>Add to Home Screen</strong>.</li>
+              {browser === 'Safari' && <li>In Safari, tap the Share button, then <strong>Add to Home Screen</strong>.</li>}
+              {browser === 'Chrome' && <li>In Chrome, tap the Share button in the address bar, then <strong>Add to Home Screen</strong>.</li>}
+              {browser === 'other' && <li>Tap your browser’s Share button, then <strong>Add to Home Screen</strong>. If it isn’t there, open this page in Safari.</li>}
               <li>Open State of Play from your home screen and turn on notifications from the menu.</li>
             </ol>
           </section>
         )}
 
-        {!ios && !installed && (installEvent || android) && (
+        {!ios && !inApp && !installed && (installEvent || android) && (
           <section className="border-t border-[var(--rule)] pt-6 mb-10" data-testid="app-install">
             {android && <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On Android</p>}
             {installEvent ? (

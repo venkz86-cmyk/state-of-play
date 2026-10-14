@@ -30,6 +30,7 @@ import { StoryBody } from '../components/StoryLinkCard';
 import { ghostSrcSet } from '../lib/ghostImage';
 import { IS_APP_MODE } from '../lib/appMode';
 import { StoryBar } from '../components/StoryBar';
+import { track } from '../lib/analytics';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -543,7 +544,7 @@ export const ArticleMockup = () => {
       {/* UP NEXT (app): the next story, large, so reading carries on. */}
       {IS_APP_MODE && upNext && (
         <section className="max-w-[680px] mx-auto px-6 pb-14" data-testid="up-next">
-          <Link to={`/${upNext.id}`} className="group block border-t-2 border-[var(--text)] pt-5">
+          <Link to={`/${upNext.id}`} onClick={() => track('up_next', { from: article.slug || article.id, to: upNext.id })} className="group block border-t-2 border-[var(--text)] pt-5">
             <SectionLabel className="mb-3 block">Up next</SectionLabel>
             <StoryLabel post={upNext} small className="mb-2" />
             <h2 className="font-editorial font-semibold text-[26px] leading-[1.15] group-hover:text-[var(--text-muted)] transition-colors">{upNext.title}</h2>

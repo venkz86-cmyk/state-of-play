@@ -5,6 +5,7 @@ import { MockupLayout, Overline } from '../components/MockupLayout';
 import { StoryBody } from '../components/StoryLinkCard';
 import { IS_APP_MODE } from '../lib/appMode';
 import { markRead, readSlugs } from '../lib/leftFieldRead';
+import { track } from '../lib/analytics';
 
 /* The Left Field in the app (backend left_field_notes.py, read from
    Substack). Built around how it gets read: most visits are for the newest
@@ -43,6 +44,7 @@ const groupContents = (contents) => {
 };
 
 const jump = (id) => {
+  track('lf_contents_jump', { to: id });
   const el = document.getElementById(id);
   if (!el) return;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -204,6 +206,7 @@ const useEdition = (slugOrLatest) => {
         if (!IS_APP_MODE && slugOrLatest && ed.url) { window.location.replace(ed.url); return; }
         const isNew = !readSlugs().has(ed.slug);
         markRead(ed.slug);
+        track('lf_edition_open', { edition: ed.slug, latest: !slugOrLatest, first_time: isNew });
         setState({ ed, missing: false, isNew, latestSlug });
       } catch (e) {
         if (live) setState((s) => ({ ...s, missing: true }));

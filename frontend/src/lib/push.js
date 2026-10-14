@@ -11,6 +11,26 @@ export const isIOS = () =>
 
 export const isAndroid = () => /android/i.test(navigator.userAgent);
 
+// Which browser on an iPhone: since iOS 16.4, Chrome and the others can add
+// a site to the Home Screen too, from their own Share button.
+export const iosBrowser = () => {
+  const ua = navigator.userAgent;
+  if (/CriOS/.test(ua)) return 'Chrome';
+  if (/FxiOS|EdgiOS|OPiOS|Brave/.test(ua)) return 'other';
+  return 'Safari';
+};
+
+// Links opened inside these apps show in their own browser, which can't add
+// anything to the home screen.
+export const inAppBrowser = () => {
+  const ua = navigator.userAgent;
+  if (/Instagram/.test(ua)) return 'Instagram';
+  if (/FBAN|FBAV|FB_IAB/.test(ua)) return 'Facebook';
+  if (/LinkedInApp/.test(ua)) return 'LinkedIn';
+  if (/\bLine\//.test(ua)) return 'Line';
+  return null;
+};
+
 export const pushSupported = () =>
   'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
