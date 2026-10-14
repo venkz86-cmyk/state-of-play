@@ -55,7 +55,9 @@ const Icon = ({ name, on }) => {
       )}
       {name === 'you' && (
         <>
-          <path d="M6 3.5H18V20.5L12 16L6 20.5Z" {...stroke} {...tint} />
+          {/* a person in the square line; the head fills in when on */}
+          <rect x="8.5" y="3" width="7" height="7.5" {...stroke} fill="currentColor" fillOpacity={on ? 1 : 0} />
+          <path d="M4.5 20.5V16.5L8.5 13.5H15.5L19.5 16.5V20.5" {...stroke} {...tint} />
         </>
       )}
     </svg>
