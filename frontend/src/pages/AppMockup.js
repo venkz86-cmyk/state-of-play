@@ -74,7 +74,7 @@ export const AppMockup = () => {
     try {
       await turnOn();
       setOn(true);
-      setMessage('Notifications are on. You’ll get the next story here.');
+      setMessage('Notifications are on for this phone. Choose below what you get.');
     } catch (e) {
       setMessage(e.message === 'blocked'
         ? 'Notifications are blocked for this site. Allow them in your phone’s settings, then try again.'
@@ -107,7 +107,7 @@ export const AppMockup = () => {
             <Overline className="!normal-case !tracking-normal !text-sm block mb-4">On your phone</Overline>
             <h1 className="font-editorial text-[34px] md:text-[44px] leading-[1.1] mb-4" data-testid="app-heading">The State of Play, on your home screen.</h1>
             <p className="font-reading text-[18px] leading-[1.6] text-[var(--text-muted)] mb-10 max-w-[56ch]">
-              Add it to your phone and each new story reaches you as a notification when it’s published.
+              Add it to your phone and get a notification when a story is published or a new edition of The Left Field is out.
               You choose what you get.
             </p>
           </>
@@ -118,7 +118,7 @@ export const AppMockup = () => {
             <p className="font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4">On iPhone</p>
             <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5">
               <li>In Safari, tap the Share button, then <strong>Add to Home Screen</strong>.</li>
-              <li>Open State of Play from your home screen and come back to this page to turn on notifications.</li>
+              <li>Open State of Play from your home screen and turn on notifications from the menu.</li>
             </ol>
           </section>
         )}
@@ -133,8 +133,11 @@ export const AppMockup = () => {
               // prompt, and Chrome holds it back for a while once dismissed.
               <ol className="font-plex text-[16px] leading-[1.6] space-y-3 list-decimal pl-5" data-testid="app-android-steps">
                 <li>In Chrome, tap the menu (⋮), then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
-                <li>Open State of Play from your home screen and come back to this page to turn on notifications.</li>
+                <li>Open State of Play from your home screen and turn on notifications from the menu.</li>
               </ol>
+            )}
+            {!installEvent && (
+              <p className="font-plex text-[14px] text-[var(--text-muted)] mt-4">Using Samsung Internet? Tap the menu, then Add page to › Home screen.</p>
             )}
           </section>
         )}
