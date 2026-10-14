@@ -1883,6 +1883,34 @@ try:
 except Exception as _e:
     logging.warning(f"complimentary module not mounted: {_e!r}")
 
+# Graphics readers can share from a story in the app (story_graphics.py).
+async def _story_for_graphics(slug: str):
+    """The story with its full HTML (graphics can sit below the paywall),
+    from the one-minute story cache when it's there."""
+    import httpx
+    import time as _time
+    cached = _ARTICLE_CACHE.get(slug)
+    if cached and _time.monotonic() - cached[0] < _ARTICLE_CACHE_SECONDS:
+        return cached[1]
+    token = create_ghost_admin_token()
+    if not token:
+        return None
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r = await client.get(f'{GHOST_URL}/ghost/api/admin/posts/slug/{slug}/',
+                             params={'formats': 'html'}, headers={'Authorization': f'Ghost {token}'})
+    posts = r.json().get('posts') if r.status_code == 200 else None
+    if not posts or posts[0].get('status') != 'published':
+        return None
+    _ARTICLE_CACHE[slug] = (_time.monotonic(), posts[0])
+    return posts[0]
+
+try:
+    from story_graphics import router as story_graphics_router, init as story_graphics_init
+    story_graphics_init(_story_for_graphics)
+    app.include_router(story_graphics_router)
+except Exception as _e:
+    logging.warning(f"story_graphics module not mounted: {_e!r}")
+
 try:
     from resend_email import router as resend_email_router, init as resend_email_init
     resend_email_init(db)

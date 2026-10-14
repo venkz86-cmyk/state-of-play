@@ -30,6 +30,7 @@ import { StoryBody } from '../components/StoryLinkCard';
 import { ghostSrcSet } from '../lib/ghostImage';
 import { IS_APP_MODE } from '../lib/appMode';
 import { StoryBar } from '../components/StoryBar';
+import { GraphicShare } from '../components/GraphicShare';
 import { track } from '../lib/analytics';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -600,6 +601,8 @@ export const ArticleMockup = () => {
         articleSlug={article?.slug || article?.id || ''}
       />
       </Suspense>
+
+      {IS_APP_MODE && <GraphicShare html={bodyHtml} article={article} />}
 
       {IS_APP_MODE && (
         <StoryBar
