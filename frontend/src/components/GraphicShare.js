@@ -7,7 +7,7 @@ import { track } from '../lib/analytics';
    share sheet with the graphic framed in the house style
    (backend story_graphics.py). Graphics are counted in the order they
    appear, as the server counts them. The website shows no button. */
-const MARK = /^\s*graphic\s*:/i;
+const MARK = /^\s*graphic\b[^:]*:/i;
 const ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"><path d="M12 3.5V14.5"/><path d="M8 7.5L12 3.5L16 7.5"/><path d="M8.5 10.5H5V20.5H19V10.5H15.5"/></svg>';
 
 export const GraphicShare = ({ html, article }) => {

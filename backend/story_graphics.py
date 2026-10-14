@@ -3,8 +3,10 @@
 Venkat marks a graphic in Ghost by starting the image's alt text with
 "Graphic:" (alt text shows nowhere: not on the website, in the app or in
 emails). The app puts a share button on each one and asks here for the
-graphic framed in the house style: the logo above it, its caption as the
-source line, the story's headline below.
+graphic framed in the house style: its caption as the source line, the
+story's headline below. His graphics carry the logo themselves, so the
+frame adds it only for one marked "Graphic, add logo:" (any alt starting
+"Graphic" with "logo" before the colon).
 
   GET /api/story-graphic/{slug}/{n}?format=post   1080x1350, for WhatsApp,
                                                     LinkedIn and the feed
@@ -42,7 +44,7 @@ RED = (160, 41, 28)
 _IMG = re.compile(r'<img\b[^>]*>', re.I)
 _ATTR = lambda name: re.compile(rf'\b{name}\s*=\s*"([^"]*)"', re.I)
 _SRC, _ALT = _ATTR('src'), _ATTR('alt')
-_MARK = re.compile(r'^\s*graphic\s*:', re.I)
+_MARK = re.compile(r'^\s*graphic\b([^:]*):', re.I)
 
 
 def init(get_post: Callable[[str], Awaitable[Optional[dict]]]):
@@ -55,18 +57,20 @@ def _text(fragment: str) -> str:
 
 
 def graphics(body: str) -> list:
-    """The story's marked graphics, in order: [{src, caption}]."""
+    """The story's marked graphics, in order: [{src, caption, add_logo}]."""
     out = []
     for m in _IMG.finditer(body or ''):
         tag = m.group(0)
         alt, src = _ALT.search(tag), _SRC.search(tag)
-        if not (alt and src and _MARK.match(htmllib.unescape(alt.group(1)))):
+        mark = _MARK.match(htmllib.unescape(alt.group(1))) if alt and src else None
+        if not mark:
             continue
         rest = body[m.end():]
         end = rest.find('</figure>')
         within = rest[:end] if end >= 0 else ''
         cap = re.search(r'<figcaption[^>]*>(.*?)</figcaption>', within, re.S | re.I)
-        out.append({'src': htmllib.unescape(src.group(1)), 'caption': _text(cap.group(1)) if cap else ''})
+        out.append({'src': htmllib.unescape(src.group(1)), 'caption': _text(cap.group(1)) if cap else '',
+                    'add_logo': 'logo' in mark.group(1).lower()})
     return out
 
 
@@ -91,7 +95,7 @@ def _wrap(draw, text, font, width, max_lines):
     return lines
 
 
-def render(graphic_bytes: bytes, title: str, caption: str, fmt: str) -> bytes:
+def render(graphic_bytes: bytes, title: str, caption: str, fmt: str, add_logo: bool = False) -> bytes:
     from PIL import Image, ImageDraw, ImageFont
 
     story = fmt == 'story'
@@ -106,13 +110,15 @@ def render(graphic_bytes: bytes, title: str, caption: str, fmt: str) -> bytes:
     head_font = ImageFont.truetype(os.path.join(ASSETS, 'fonts', 'Gloock.ttf'), 50 if story else 44)
     cap_font = ImageFont.truetype(os.path.join(ASSETS, 'fonts', 'SchibstedGrotesk.ttf'), 26 if story else 24)
 
-    logo = Image.open(os.path.join(ASSETS, 'tsop-logo-blue.png')).convert('RGBA')
-    lh = 72 if story else 64
-    logo = logo.resize((int(lh * logo.width / logo.height), lh), Image.LANCZOS)
-    img.paste(logo, (pad, top), logo)
+    lh = 0
+    if add_logo:
+        logo = Image.open(os.path.join(ASSETS, 'tsop-logo-blue.png')).convert('RGBA')
+        lh = 72 if story else 64
+        logo = logo.resize((int(lh * logo.width / logo.height), lh), Image.LANCZOS)
+        img.paste(logo, (pad, top), logo)
 
     # The graphic, its source line, a rule and the headline, as one block
-    # centred in the space below the logo.
+    # centred in the space below the logo (or the top edge).
     inner = W - 2 * pad
     head = _wrap(d, title, head_font, inner, 3)
     head_lh = int(head_font.size * 1.18)
@@ -120,7 +126,7 @@ def render(graphic_bytes: bytes, title: str, caption: str, fmt: str) -> bytes:
     cap_lh = int(cap_font.size * 1.4)
     cap_h = 18 + cap_lh * len(cap) if cap else 0
     text_h = cap_h + 40 + 1 + 36 + head_lh * len(head)
-    area_top, area_bottom = top + lh + 56, H - bottom
+    area_top, area_bottom = (top + lh + 56 if lh else top), H - bottom
 
     g = Image.open(BytesIO(graphic_bytes))
     g = g.convert('RGBA') if g.mode in ('P', 'LA', 'RGBA') else g.convert('RGB')
@@ -156,7 +162,7 @@ async def story_graphic(slug: str, n: int, format: str = 'post'):
     found = graphics(post.get('html') or '')
     if not 0 <= n < len(found):
         raise HTTPException(status_code=404, detail='Graphic not found')
-    key = (slug, n, fmt, post.get('updated_at'))
+    key = (slug, n, fmt, found[n]['add_logo'], post.get('updated_at'))
     png = _CACHE.get(key)
     if png is None:
         src = found[n]['src']
@@ -166,7 +172,7 @@ async def story_graphic(slug: str, n: int, format: str = 'post'):
             async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
                 r = await client.get(src)
             r.raise_for_status()
-            png = render(r.content, post.get('title') or 'The State of Play', found[n]['caption'], fmt)
+            png = render(r.content, post.get('title') or 'The State of Play', found[n]['caption'], fmt, found[n]['add_logo'])
         except Exception as e:
             logger.error(f'story graphic {slug}/{n} failed: {e!r}')
             raise HTTPException(status_code=502, detail='Graphic could not be made')
