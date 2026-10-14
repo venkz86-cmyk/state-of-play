@@ -73,7 +73,18 @@
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-KGVM7X1KN7');
+          // The home-screen app and the website, and the kind of device,
+          // on every event and as user properties (src/lib/analytics.js).
+          (function () {
+            var ua = navigator.userAgent;
+            var app = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+            var platform = (/iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ? 'ios'
+              : /android/i.test(ua) ? 'android' : 'desktop';
+            var ctx = { app_mode: app ? 'app' : 'web', platform: platform };
+            gtag('set', 'user_properties', ctx);
+            gtag('set', ctx);
+            gtag('config', 'G-KGVM7X1KN7', ctx);
+          })();
         </script>
         
         <!--

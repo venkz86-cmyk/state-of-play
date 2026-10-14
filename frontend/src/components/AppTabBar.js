@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { IS_APP_MODE } from '../lib/appMode';
 import { latestSlug, readSlugs } from '../lib/leftFieldRead';
+import { track as trackEvent } from '../lib/analytics';
 
 const STALE_AFTER_MS = 30 * 60 * 1000;
 
@@ -117,7 +118,7 @@ export const AppTabBar = () => {
     { to: '/you', label: 'You', key: 'you', icon: 'you', on: pathname.startsWith('/you') || pathname.startsWith('/account') || pathname === '/app' },
   ];
   const track = (tab) => {
-    try { window.gtag && window.gtag('event', 'app_tab', { tab, from: pathname }); } catch (e) { /* analytics never blocks a tap */ }
+    trackEvent('app_tab', { tab, from: pathname });
   };
 
   return (
