@@ -41,6 +41,10 @@ export const NAV_GROUPS = [
     pages: [{ path: 'mixed-zone', label: 'Mixed Zone', title: 'Mixed Zone', description: 'Your notes for annual members, and their private replies. Nothing here sends an email.' }],
   },
   {
+    key: 'notifications', label: 'Notifications',
+    pages: [{ path: 'notifications', label: 'Notifications', title: 'Notifications', description: 'Phone notifications for new stories, and the line under each headline.' }],
+  },
+  {
     key: 'tools', label: 'Tools',
     pages: [
       { path: 'tools/invites', label: 'Invite links', title: 'Invite links', description: 'A first year at ₹2,499 + GST for people you invite: one person by email, or a room full of people with a QR code. Never shown on the site.' },

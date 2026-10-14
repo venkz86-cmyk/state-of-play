@@ -80,8 +80,13 @@ export const PushPanel = ({ onAuthError, label }) => {
     if (e instanceof AdminAuthError) { onAuthError?.(); return; }
     setNote(e.message || 'That didn’t work.');
   };
-  useEffect(() => { adminFetch('/api/admin/push').then(setS).catch(() => {}); }, []);
-  if (!s) return null;
+  useEffect(() => {
+    adminFetch('/api/admin/push').then(setS).catch((e) => {
+      if (e instanceof AdminAuthError) onAuthError?.();
+      else setNote('Couldn’t load notifications. Refresh to try again.');
+    });
+  }, [onAuthError]);
+  if (!s) return <p className="font-plex text-[14px] text-[var(--text-muted)]" role="status">{note || 'Loading…'}</p>;
 
   const togglePause = async () => {
     setBusy(true); setNote('');
