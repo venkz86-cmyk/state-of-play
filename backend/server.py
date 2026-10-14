@@ -998,13 +998,45 @@ async def generate_og_image(slug: str):
         
     except Exception as e:
         logger.error(f"OG image generation error for {slug}: {e}")
-        return RedirectResponse(
-            url=f"https://the-state-of-play.ghost.io/content/images/2026/02/rcb-rr-bid-story.png",
-            status_code=302
-        )
+        # The site card, never a story's picture (this used to be an image
+        # from the first version of the site).
+        return RedirectResponse(url="https://www.stateofplay.club/og-default.png", status_code=302)
 
 # OG Meta endpoint for social sharing
-@api_router.get("/og/{slug}")
+def _page_preview_html(meta: dict, noindex: bool = False) -> str:
+    e = _escape_html
+    t = meta['title'] if meta['title'] == 'The State of Play' else f"{meta['title']} | The State of Play"
+    robots = '\n  <meta name="robots" content="noindex">' if noindex else ''
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{e(t)}</title>{robots}
+  <meta name="description" content="{e(meta['description'])}">
+  <link rel="canonical" href="{e(meta['url'])}">
+  <meta property="og:type" content="{meta['type']}">
+  <meta property="og:url" content="{e(meta['url'])}">
+  <meta property="og:title" content="{e(t)}">
+  <meta property="og:description" content="{e(meta['description'])}">
+  <meta property="og:image" content="{e(meta['image'])}">
+  <meta property="og:image:secure_url" content="{e(meta['image'])}">
+  <meta property="og:site_name" content="The State of Play">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@stateofplayclub">
+  <meta name="twitter:title" content="{e(t)}">
+  <meta name="twitter:description" content="{e(meta['description'])}">
+  <meta name="twitter:image" content="{e(meta['image'])}">
+</head>
+<body>
+  <h1>{e(meta['title'])}</h1>
+  <p>{e(meta['description'])}</p>
+  <p><a href="{e(meta['url'])}">The State of Play</a></p>
+</body>
+</html>'''
+
+
+@api_router.get("/og/{slug:path}")
 async def get_og_meta(slug: str, request: Request):
     """Serve Open Graph meta tags for social-media crawlers.
 
@@ -1022,6 +1054,16 @@ async def get_og_meta(slug: str, request: Request):
         return (text.replace('&', '&amp;').replace('<', '&lt;')
                     .replace('>', '&gt;').replace('"', '&quot;')
                     .replace("'", '&#039;'))
+
+    # Pages that aren't stories (/about, /left-field/e/..., /topic/...) get
+    # their own preview; Vercel's rule doesn't keep them away from here.
+    import page_previews
+    page = await page_previews.page_meta(slug, db)
+    if page:
+        return HTMLResponse(content=_page_preview_html(page), status_code=200, headers={
+            'Cache-Control': 'public, max-age=300, s-maxage=3600',
+        })
+    slug = slug.strip('/')
 
     article_url = f"https://www.stateofplay.club/{slug}"
     site_default_image = f"https://www.stateofplay.club/api/og-image/{slug}"
@@ -1398,12 +1440,23 @@ def _escape_html(text) -> str:
             .replace('"', '&quot;').replace("'", '&#039;'))
 
 
-@api_router.get("/story/{slug}")
+@api_router.get("/story/{slug:path}")
 async def get_story_ssr(slug: str, request: Request):
     """Full article HTML for search-engine crawlers. See module docstring above."""
     import json as _json
     import httpx
     from fastapi.responses import HTMLResponse
+    import page_previews
+
+    # Search bots reach here for /about and the other pages too; a 404 would
+    # tell Google those pages don't exist.
+    page = await page_previews.page_meta(slug, db, strict=True)
+    if page:
+        private = slug.strip('/').split('/')[0] in page_previews.NOINDEX
+        return HTMLResponse(content=_page_preview_html(page, noindex=private), status_code=200, headers={
+            'Cache-Control': 'public, max-age=300, s-maxage=3600',
+        })
+    slug = slug.strip('/')
 
     article_url = f"https://www.stateofplay.club/{slug}"
     site_default_image = f"https://www.stateofplay.club/api/og-image/{slug}"
