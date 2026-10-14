@@ -30,8 +30,9 @@ const Cover = ({ cover, width }) =>
     </div>
   );
 
-/* The covers of The Ten (GET /api/trial/the-ten/covers: Venkat's
-   curated list, titles and images only). A fanned pile on desktop, a
+/* The covers of The Ten (GET /api/trial/the-ten/covers: the ten most
+   recent paid stories, so a new one shows within ten minutes of going
+   live; titles and images only). A fanned pile on desktop, a
    row of overlapping thumbnails on phones. Not links: the stack shows
    what a buyer gets, it isn't a way in. Renders nothing if the covers
    don't load, so the page falls back to how it looked before. */
