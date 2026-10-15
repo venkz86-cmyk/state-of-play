@@ -515,6 +515,16 @@ html.story-mode .app-tab-bar:not(.story-bar) { display: none; }
 }
 .graphic-share:active { color: var(--accent-blue); }
 .lf-edition-body [id^="lf-"] { scroll-margin-top: calc(88px + env(safe-area-inset-top)); }
+/* Substack's buttons in an edition (Subscribe, Read the full story),
+   kept by backend left_field_notes._buttons. */
+.lf-edition-body p.lf-button { margin: 1.75rem 0; text-align: center; }
+.lf-edition-body p.lf-button a {
+  display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 14px 20px;
+  background: var(--accent-burgundy); color: #fff; text-decoration: none;
+  font-family: 'Schibsted Grotesk', -apple-system, sans-serif; font-size: 13px; font-weight: 500;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.lf-edition-body p.lf-button a:hover { background: var(--accent-burgundy-hover, var(--accent-burgundy)); color: #fff; }
 .app-tab { font-family: var(--label-font), system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
 html.app-mode [data-testid="mockup-back-to-top"] { bottom: calc(72px + env(safe-area-inset-bottom)); }
 /* The header's back arrow does this job in the app. */
