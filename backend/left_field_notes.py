@@ -312,13 +312,58 @@ def split_edition(html: str) -> list:
     return notes
 
 
+SUBSCRIBE_URL = 'https://theleftfield.substack.com/subscribe'
+_SITE_LINK = re.compile(r'^https?://(?:www\.)?stateofplay\.club(/[a-z0-9][a-z0-9-]*(?:/[a-z0-9-]+)*)/?(?:[?#].*)?$', re.I)
+
+
+def _button(href: str, text: str) -> str:
+    """A Substack button as the app shows it. A link to a State of Play
+    story stays in the app (a path, opened in place)."""
+    m = _SITE_LINK.match(href)
+    if m:
+        return (f'<p class="lf-button"><a href="{htmllib.escape(m.group(1), quote=True)}" target="_self">'
+                f'{htmllib.escape(text)}</a></p>')
+    return (f'<p class="lf-button"><a href="{htmllib.escape(href, quote=True)}" target="_blank" '
+            f'rel="noopener noreferrer">{htmllib.escape(text)}</a></p>')
+
+
+def _buttons(block: dict, out: list) -> list:
+    """What a Substack widget becomes in the app: its button (with the
+    caption above it, for a captioned one), a Subscribe button for a
+    subscribe box (its email form can't work here), nothing for a share
+    widget (the app has Share)."""
+    cls = (block['attrs'].get('class') or '').lower()
+    if 'share-button' in cls and 'subscri' not in cls:
+        return []
+    link = re.search(r'<a\b[^>]*\bhref="(https?://[^"]+)"[^>]*>(.*?)</a>', block['html'], re.S | re.I)
+    parts = []
+    if link:
+        href = htmllib.unescape(link.group(1))
+        text = re.sub(r'\s+', ' ', htmllib.unescape(re.sub(r'<[^>]+>', ' ', link.group(2)))).strip()
+        if not text:
+            return []
+        caption = re.search(r'class="[^"]*preamble[^"]*"[^>]*>(.*?)</div>', block['html'], re.S | re.I)
+        if caption:
+            parts.append(clean(caption.group(1)))
+        parts.append(_button(href, text))
+    elif 'subscri' in cls:
+        parts.append(_button(SUBSCRIBE_URL, 'Subscribe'))
+    parts = [x for x in parts if x]
+    # Never the same button twice in a row.
+    if parts and out and out[-1] == parts[-1]:
+        return []
+    return parts
+
+
 def clean_edition(html: str) -> str:
     """The whole edition for the app, as written: its headings (H2 and H3,
     the bullet and Substack's link buttons taken off), dividers, photos with
-    their credits and the text, minus subscribe boxes and buttons."""
+    their credits and the text. Substack's buttons stay as buttons
+    (_buttons); share widgets go."""
     out = []
     for b in blocks_of(html):
         if _is_widget(b):
+            out.extend(_buttons(b, out))
             continue
         if _is_hr(b):
             if out and out[-1] != '<hr>':
