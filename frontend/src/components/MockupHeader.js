@@ -161,7 +161,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/login"
                   data-testid="mockup-header-login"
-                  className="font-plex text-[15px] text-[var(--text)] hover:text-[var(--text-muted)] transition-colors duration-200"
+                  className="font-editorial text-[17px] text-[var(--text)] hover:text-[var(--text-muted)] transition-colors duration-200"
                 >
                   Sign in
                 </Link>
@@ -231,7 +231,7 @@ export const MockupHeader = () => {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="font-plex text-base text-[var(--text)]"
+                    className="font-editorial text-[17px] text-[var(--text)]"
                   >
                     Sign in
                   </Link>
