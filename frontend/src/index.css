@@ -190,6 +190,37 @@ a:active .headline-lock {
   text-transform: none;
 }
 
+/* The main button on the reader site and in the app (October 2026): the
+   burgundy kept, the action set in the headline serif with an arrow that
+   moves on hover. Where a button takes payment and the price isn't shown
+   just above it, data-detail="₹3,539 a year" puts the price beside the
+   action. Flat, square, capped at 420px so it never becomes a long bar. */
+.btn-cta {
+  display: inline-flex; align-items: center; gap: 18px;
+  min-height: 56px; padding: 0 22px; max-width: 420px;
+  background: var(--accent-burgundy); color: #fff !important;
+  border: 0; border-radius: 0; text-decoration: none;
+  font-family: Gloock, 'Playfair Display', Georgia, serif !important;
+  font-size: 21px; font-weight: 400; line-height: 1.1; letter-spacing: 0.005em; text-transform: none;
+  transition: background-color 200ms ease;
+}
+.btn-cta::after {
+  content: '\2192'; font-family: 'Schibsted Grotesk', system-ui, sans-serif; font-size: 15px;
+  transition: transform 200ms ease;
+}
+.btn-cta[data-detail] { display: flex; width: 100%; }
+.btn-cta[data-detail]::before {
+  content: attr(data-detail); order: 1; margin-left: auto;
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif; font-size: 13.5px; opacity: 0.9; white-space: nowrap;
+}
+.btn-cta[data-detail]::after { order: 2; margin-left: -6px; }
+.btn-cta:hover:not(:disabled) { background: var(--accent-burgundy-hover); }
+.btn-cta:hover:not(:disabled)::after, .btn-cta:active::after { transform: translateX(4px); }
+.btn-cta:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.btn-cta:disabled { opacity: 0.6; cursor: default; }
+.btn-cta-sm { min-height: 40px; padding: 0 16px; gap: 12px; font-size: 17px; }
+.btn-cta-sm::after { font-size: 13px; }
+
 .section-label {
   font-family: var(--label-font), 'IBM Plex Sans', system-ui, sans-serif;
   font-size: 11px;
@@ -516,15 +547,17 @@ html.story-mode .app-tab-bar:not(.story-bar) { display: none; }
 .graphic-share:active { color: var(--accent-blue); }
 .lf-edition-body [id^="lf-"] { scroll-margin-top: calc(88px + env(safe-area-inset-top)); }
 /* Substack's buttons in an edition (Subscribe, Read the full story),
-   kept by backend left_field_notes._buttons. */
-.lf-edition-body p.lf-button { margin: 1.75rem 0; text-align: center; }
+   kept by backend left_field_notes._buttons: the site's main button. */
+.lf-edition-body p.lf-button { margin: 1.75rem 0; }
 .lf-edition-body p.lf-button a {
-  display: block; width: 100%; max-width: 420px; margin: 0 auto; padding: 14px 20px;
+  display: inline-flex; align-items: center; gap: 18px; min-height: 56px; padding: 0 22px;
   background: var(--accent-burgundy); color: #fff; text-decoration: none;
-  font-family: 'Schibsted Grotesk', -apple-system, sans-serif; font-size: 13px; font-weight: 500;
-  letter-spacing: 0.05em; text-transform: uppercase;
+  font-family: Gloock, 'Playfair Display', Georgia, serif; font-size: 21px; line-height: 1.1;
+  transition: background-color 200ms ease;
 }
-.lf-edition-body p.lf-button a:hover { background: var(--accent-burgundy-hover, var(--accent-burgundy)); color: #fff; }
+.lf-edition-body p.lf-button a::after { content: '\2192'; font-family: 'Schibsted Grotesk', system-ui, sans-serif; font-size: 15px; transition: transform 200ms ease; }
+.lf-edition-body p.lf-button a:hover { background: var(--accent-burgundy-hover); }
+.lf-edition-body p.lf-button a:hover::after { transform: translateX(4px); }
 .app-tab { font-family: var(--label-font), system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
 html.app-mode [data-testid="mockup-back-to-top"] { bottom: calc(72px + env(safe-area-inset-bottom)); }
 /* The header's back arrow does this job in the app. */

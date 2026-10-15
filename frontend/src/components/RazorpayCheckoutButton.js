@@ -224,7 +224,7 @@ export const RazorpayCheckoutButton = ({
         onClick={() => startCheckout()}
         disabled={status === 'loading'}
         data-testid={`${dataTestId}-submit`}
-        className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 disabled:opacity-60"
+        className="inline-flex items-center justify-center btn-cta disabled:opacity-60"
         style={{ borderRadius: 'var(--control-radius)' }}
       >
         {status === 'loading' ? 'Opening…' : buttonLabel}

@@ -120,7 +120,7 @@ export const EmailGate = () => {
             type="submit"
             disabled={status === 'loading'}
             data-testid="email-gate-submit"
-            className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 disabled:opacity-60"
+            className="inline-flex items-center justify-center btn-cta disabled:opacity-60"
             style={{ borderRadius: 'var(--control-radius)' }}
           >
             {status === 'loading' ? 'Please wait…' : 'Continue reading'}

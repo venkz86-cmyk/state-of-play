@@ -145,7 +145,7 @@ export const StudentsMockup = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="students-apply-cta"
-                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200"
+                className="inline-flex items-center justify-center btn-cta"
                 style={{ borderRadius: 'var(--control-radius)' }}
               >
                 Apply with your student ID

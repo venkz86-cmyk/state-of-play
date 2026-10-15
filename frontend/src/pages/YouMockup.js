@@ -118,7 +118,7 @@ const MembershipCard = ({ m, details, canAccessPremium }) => {
       {details && !canAccessPremium && details.tier !== 'trial' && (
         <div className="mt-4">
           <p className="font-plex text-[14px] text-[var(--text-muted)] mb-4">Membership opens every story, and the archive.</p>
-          <Link to="/signup" className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors">
+          <Link to="/signup" className="inline-flex items-center justify-center btn-cta">
             Become a member
           </Link>
         </div>
@@ -220,7 +220,7 @@ export const YouMockup = () => {
             </p>
             <div className="flex flex-wrap items-center gap-6">
               <Link to="/login" data-testid="you-sign-in"
-                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors">
+                className="inline-flex items-center justify-center btn-cta">
                 Sign in
               </Link>
               <Link to="/signup" className="font-plex text-[15px] underline underline-offset-4 decoration-[var(--rule)] hover:decoration-[var(--text)]">

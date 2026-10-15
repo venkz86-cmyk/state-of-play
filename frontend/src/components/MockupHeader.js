@@ -168,7 +168,7 @@ export const MockupHeader = () => {
                 <Link
                   to="/signup"
                   data-testid="mockup-header-subscribe"
-                  className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-5 transition-colors duration-200"
+                  className="inline-flex items-center justify-center btn-cta btn-cta-sm"
                   style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   Subscribe
@@ -238,7 +238,7 @@ export const MockupHeader = () => {
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] text-white font-plex btn-type h-12 px-5 w-fit"
+                    className="inline-flex items-center justify-center btn-cta w-fit"
                     style={{ borderRadius: 'var(--control-radius)' }}
                   >
                     Subscribe

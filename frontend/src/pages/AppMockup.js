@@ -24,7 +24,7 @@ const Choice = ({ title, desc, on, onChange, disabled, testId }) => (
   </li>
 );
 
-const btn = 'inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60';
+const btn = 'inline-flex items-center justify-center btn-cta disabled:opacity-60';
 
 const label = 'font-plex text-[11px] uppercase tracking-[0.08em] text-[var(--text-label)] mb-4';
 const quietBtn = 'inline-flex items-center justify-center border border-[var(--text)] text-[var(--text)] hover:bg-[var(--text)] hover:text-[var(--bg)] font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60';

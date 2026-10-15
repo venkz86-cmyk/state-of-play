@@ -127,7 +127,7 @@ export const LoginMockup = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="login-submit"
-                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 disabled:opacity-60"
+                className="inline-flex items-center justify-center btn-cta disabled:opacity-60"
               >
                 {submitting ? 'Sending…' : 'Send code'}
               </button>
@@ -177,7 +177,7 @@ export const LoginMockup = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="login-submit"
-                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 disabled:opacity-60"
+                className="inline-flex items-center justify-center btn-cta disabled:opacity-60"
               >
                 {submitting ? 'Verifying…' : 'Sign in'}
               </button>

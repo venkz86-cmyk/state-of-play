@@ -8,7 +8,7 @@ export const StoriesUnavailable = ({ onRetry }) => (
     <button
       type="button"
       onClick={onRetry}
-      className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-11 px-6 transition-colors"
+      className="inline-flex items-center justify-center btn-cta"
       style={{ borderRadius: 'var(--control-radius)' }}
     >
       Try again
