@@ -98,7 +98,7 @@ export const TeamsLogin = () => {
                 type="submit"
                 disabled={submitting}
                 data-testid="teams-login-submit"
-                className="h-12 px-8 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-70"
+                className="h-12 btn-cta disabled:opacity-70"
                 style={{ borderRadius: 'var(--control-radius)' }}
               >
                 {submitting ? 'Sending…' : 'Email me the link'}

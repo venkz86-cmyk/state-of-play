@@ -190,7 +190,7 @@ export const GiftArticleModal = ({
               </p>
               <a
                 href="/signup"
-                className="inline-block h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type leading-[44px] transition-colors"
+                className="btn-cta"
                 style={{ borderRadius: 'var(--control-radius)' }}
                 data-testid="gift-modal-subscribe-cta"
               >
@@ -222,7 +222,7 @@ export const GiftArticleModal = ({
                       type="button"
                       onClick={onCopyLink}
                       data-testid="gift-link-copy"
-                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors"
+                      className="h-11 btn-cta"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
                       {linkCopied ? 'Copied' : 'Copy link'}
@@ -364,7 +364,7 @@ export const GiftArticleModal = ({
                       type="submit"
                       disabled={submitting}
                       data-testid="gift-modal-submit"
-                      className="h-11 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-70"
+                      className="h-11 btn-cta disabled:opacity-70"
                       style={{ borderRadius: 'var(--control-radius)' }}
                     >
                       {submitting ? 'Sending…' : 'Nominate'}

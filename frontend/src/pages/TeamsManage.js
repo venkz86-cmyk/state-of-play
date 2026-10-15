@@ -404,7 +404,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                   type="submit"
                   disabled={submitting}
                   data-testid="teams-add-submit"
-                  className="h-12 px-6 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type transition-colors disabled:opacity-70"
+                  className="h-12 btn-cta disabled:opacity-70"
                   style={{ borderRadius: 'var(--control-radius)' }}
                 >
                   {submitting ? 'Adding…' : 'Add'}
@@ -500,7 +500,7 @@ const DashboardView = ({ token, account, members, onChange }) => {
                             onClick={() => confirmRemove(m.member_id)}
                             disabled={removing}
                             data-testid={`teams-remove-confirm-${m.member_id}`}
-                            className="h-9 px-4 bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex text-[13px] transition-colors disabled:opacity-70"
+                            className="btn-cta btn-cta-sm disabled:opacity-70"
                             style={{ borderRadius: 'var(--control-radius)' }}
                           >
                             {removing ? 'Removing…' : 'Confirm removal'}

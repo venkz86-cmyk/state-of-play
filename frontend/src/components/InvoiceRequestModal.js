@@ -270,7 +270,7 @@ export const InvoiceRequestModal = ({ open, onClose, teamToken = null }) => {
 
                   <div className="flex items-center gap-6 pt-1">
                     <button type="submit" disabled={submitting} data-testid="invoice-submit"
-                      className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors disabled:opacity-60"
+                      className="inline-flex items-center justify-center btn-cta disabled:opacity-60"
                       style={{ borderRadius: 'var(--control-radius)' }}>
                       {submitting ? 'Preparing…' : 'Download invoice'}
                     </button>

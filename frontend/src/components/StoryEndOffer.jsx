@@ -26,14 +26,11 @@ export const StoryEndOffer = () => {
         <Link
           to="/signup?ref=story-end"
           data-testid="story-end-subscribe"
-          className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors duration-200 self-start"
+          className="btn-cta self-start"
+          data-detail={isIndia ? `${annual.total} a year` : `${annual.amount} a year`}
         >
           Subscribe
         </Link>
-        <p className="font-plex text-[14px] text-[var(--text-muted)]">
-          <span className="text-[var(--text)]">{annual.amount}</span>
-          {isIndia ? ` + GST a year (${annual.total} in all)` : ' a year'}
-        </p>
       </div>
       {!user?.trial_expired && (
         <p className="font-plex text-[14px] text-[var(--text-muted)] mt-5">

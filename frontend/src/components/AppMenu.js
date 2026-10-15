@@ -84,7 +84,7 @@ export const AppMenu = ({ open, onClose, anchorRef }) => {
           ) : (
             <div className="flex flex-wrap items-center gap-6">
               <Link to="/login" onClick={onClose} data-testid="app-menu-signin"
-                className="inline-flex items-center justify-center bg-[var(--accent-burgundy)] hover:bg-[var(--accent-burgundy-hover)] text-white font-plex btn-type h-12 px-8 transition-colors">
+                className="inline-flex items-center justify-center btn-cta">
                 Sign in
               </Link>
               <Link to="/signup" onClick={onClose} className="font-plex text-[15px] underline underline-offset-4 decoration-[var(--rule)] hover:decoration-[var(--text)]">
